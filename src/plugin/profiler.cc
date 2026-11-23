@@ -204,7 +204,7 @@ static uint32_t profilerApplyConfig(const ncclProfilerConfig_t* config) {
   return mode;
 }
 
-static void profilerApplyPluginConfig(struct ncclProfilerPlugin* plugin, const ncclProfilerConfig_t* config) {
+static void profilerApplyPluginConfig(struct ncclProfilerPlugin* plugin, const ncclProfilerConfig_t* config) { /* 中文索引·体内调用 profilerApplyConfig。 */
   uint32_t mode = profilerApplyConfig(config);
   uint32_t expected = COMPILER_ATOMIC_LOAD(&plugin->tsMode, std::memory_order_relaxed);
   while (mode) {
@@ -223,7 +223,7 @@ static void profilerApplyPluginConfig(struct ncclProfilerPlugin* plugin, const n
 
 // Read the CPU clock the plugin selected. Returns NCCL_PROFILER_TS_NONE when
 // no plugin opted in, which is also what every unrecognized clock maps to.
-static inline uint64_t profilerCpuNow(uint32_t mode) {
+static inline uint64_t profilerCpuNow(uint32_t mode) { /* 中文索引·体内调用 clock_gettime。 */
   clockid_t id;
   switch (PROF_TS_MODE_CLOCK(mode)) {
   case ncclProfilerCpuClockMonotonic:
@@ -243,7 +243,7 @@ static inline uint64_t profilerCpuNow(uint32_t mode) {
 // CLOCK_MONOTONIC regardless of what the plugin selected. Used only to
 // schedule recalibration, which must not be thrown off by a CLOCK_REALTIME
 // step.
-static inline uint64_t profilerMonoNow(void) {
+static inline uint64_t profilerMonoNow(void) { /* 中文索引·体内调用 clock_gettime。 */
   struct timespec t;
   clock_gettime(CLOCK_MONOTONIC, &t);
   return (uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec;
@@ -259,7 +259,7 @@ static inline uint64_t profilerMonoNow(void) {
 // read/written by the owning profiler thread.
 static thread_local struct ncclProfilerClockCalib* profilerTlCalib = nullptr;
 
-static void profilerClockCalibInit(struct ncclProfilerClockCalib* c) {
+static void profilerClockCalibInit(struct ncclProfilerClockCalib* c) { /* 中文索引·体内调用 memset、cudaStreamCreateWithFlags。 */
   memset(c, 0, sizeof(*c));
   c->slope = 1.0;
   if (cudaStreamCreateWithFlags(&c->stream, cudaStreamNonBlocking) != cudaSuccess) {
@@ -275,7 +275,7 @@ static void profilerClockCalibInit(struct ncclProfilerClockCalib* c) {
   c->ready = true;
 }
 
-static void profilerClockCalibFree(struct ncclProfilerClockCalib* c) {
+static void profilerClockCalibFree(struct ncclProfilerClockCalib* c) { /* 中文索引·体内调用 cudaFreeHost、cudaStreamDestroy。 */
   if (c->pinned) {
     cudaFreeHost(c->pinned);
     c->pinned = nullptr;
@@ -317,7 +317,7 @@ static inline void profilerClockKeepBest(struct ncclProfilerClockCalib* c, uint6
 // sample whose CPU round-trip was shortest (its midpoint best approximates the
 // instant the GPU read its clock).
 static bool profilerClockProbe(struct ncclProfilerClockCalib* c, uint32_t mode, uint64_t* gpuOut, uint64_t* cpuOut,
-                               uint64_t* uncOut) {
+                               uint64_t* uncOut) { /* 中文索引·体内调用 profilerCpuNow、ncclProfilerProbeGpuClock。 */
   if (!c->ready) return false;
   uint64_t bestLat = ~0ull;
   bool got = false;
@@ -344,7 +344,7 @@ static bool profilerClockProbe(struct ncclProfilerClockCalib* c, uint32_t mode, 
 // refine the slope. globaltimer and the CPU clock both advance
 // ~1ns/tick, so a sane slope is within a few percent of 1.0; values
 // outside that come from a perturbed sample and are rejected.
-static void profilerClockCalibUpdate(struct ncclProfilerClockCalib* c, uint32_t mode) {
+static void profilerClockCalibUpdate(struct ncclProfilerClockCalib* c, uint32_t mode) { /* 中文索引·体内调用 profilerClockProbe。 */
   uint64_t gpu, cpu, unc;
   if (!profilerClockProbe(c, mode, &gpu, &cpu, &unc)) return;
   if (c->havePrev && gpu > c->prevGpu) {
@@ -362,7 +362,7 @@ static void profilerClockCalibUpdate(struct ncclProfilerClockCalib* c, uint32_t 
 
 // Recalibrate on first use and roughly once per
 // NCCL_PROF_CLOCK_RECALIB_NS.
-static void profilerClockCalibMaybe(struct ncclProfilerClockCalib* c, uint32_t mode) {
+static void profilerClockCalibMaybe(struct ncclProfilerClockCalib* c, uint32_t mode) { /* 中文索引·体内调用 profilerMonoNow、profilerClockCalibUpdate。 */
   uint64_t now = profilerMonoNow();
   if (!c->valid || now >= c->nextCalibCpu) {
     profilerClockCalibUpdate(c, mode);
@@ -434,7 +434,7 @@ static bool profilerGetPlugin(void* lib, struct ncclProfilerPlugin* plugin) {
   return false;
 }
 
-static bool profilerPluginAdd(void* lib, int listPosition, const char* requestedName) {
+static bool profilerPluginAdd(void* lib, int listPosition, const char* requestedName) { /* 中文索引·体内调用 ncclClosePluginLibHandle、profilerGetPlugin。 */
   for (int i = 0; i < profilerPluginCount; i++) {
     if (profilerPlugins[i].lib == lib) {
       INFO(NCCL_INIT, "External profiler plugin is already loaded, skipping it");
@@ -465,7 +465,7 @@ static bool profilerPluginAdd(void* lib, int listPosition, const char* requested
   return true;
 }
 
-static ncclResult_t ncclProfilerPluginLoad(void) {
+static ncclResult_t ncclProfilerPluginLoad(void) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   if (profilerPluginLoadFailed == profilerPluginStatus) return ncclSuccess;
 
   std::lock_guard<std::mutex> lock(profilerMutex);
@@ -555,7 +555,7 @@ static ncclResult_t ncclProfilerPluginLoad(void) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclProfilerPluginUnload(void) {
+static ncclResult_t ncclProfilerPluginUnload(void) { /* 中文索引·体内调用 ncclClosePluginLibHandle、memset。 */
   std::lock_guard<std::mutex> lock(profilerMutex);
   if (profilerPluginRefCount == 0) return ncclSuccess;
   if (--profilerPluginRefCount == 0) {
@@ -674,7 +674,7 @@ static bool ncclProfilerRasOverrideActive = false;
 static int ncclProfilerRasOverrideMask = 0;
 
 // Print enabled profiler event types
-static void printProfilerEventMask(int mask, const char* name) {
+static void printProfilerEventMask(int mask, const char* name) { /* 中文索引·体内调用 sprintf。 */
   if (!mask && !name) return;
 
   char enabled[512] = {0};
@@ -768,7 +768,7 @@ static int profilerPluginEffectiveMask(const struct ncclProfilerPlugin* plugin) 
 // Called from the enqueue and proxy-progress hot paths, so it must not write
 // ncclProfilerEventMask in steady state: that word is read by every enqueueing
 // thread and dirtying it from the proxy thread false-shares the line.
-static int profilerRefreshEventMask() {
+static int profilerRefreshEventMask() { /* 中文索引·体内调用 profilerMaskWithDeps、profilerPluginEffectiveMask。 */
   if (COMPILER_ATOMIC_LOAD(&ncclProfilerRasOverrideActive, std::memory_order_acquire)) {
     int mask = COMPILER_ATOMIC_LOAD(&ncclProfilerRasOverrideMask, std::memory_order_relaxed);
     COMPILER_ATOMIC_STORE(&ncclProfilerEventMask, mask, std::memory_order_relaxed);
@@ -792,7 +792,7 @@ static int profilerRefreshEventMask() {
   return mask;
 }
 
-int ncclProfilerCurrentEventMask(void) {
+int ncclProfilerCurrentEventMask(void) { /* 中文索引·体内调用 profilerRefreshEventMask。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) {
     return COMPILER_ATOMIC_LOAD(&ncclProfilerEventMask, std::memory_order_relaxed);
   }
@@ -801,7 +801,7 @@ int ncclProfilerCurrentEventMask(void) {
 
 // After a successful init(), enforce KernelPhase dependencies through maskPtr
 // so the plugin and NCCL observe the same value.
-static int profilerApplyMaskDeps(struct ncclProfilerPlugin* plugin) {
+static int profilerApplyMaskDeps(struct ncclProfilerPlugin* plugin) { /* 中文索引·体内调用 ncclProfilerEnforceMaskDeps。 */
   int mask = COMPILER_ATOMIC_LOAD(plugin->maskPtr, std::memory_order_relaxed);
   mask = ncclProfilerEnforceMaskDeps(mask, plugin->api.name, plugin->legacyNetPlugin);
   COMPILER_ATOMIC_STORE(plugin->maskPtr, mask, std::memory_order_relaxed);
@@ -829,7 +829,7 @@ enum profilerTimestampKind {
 };
 
 static void profilerStampDescr(ncclProfilerEventDescr_t* descr, uint32_t mode, profilerTimestampKind kind,
-                               uint64_t tsGpu) {
+                               uint64_t tsGpu) { /* 中文索引·体内调用 profilerCpuNow、profilerTsModeGet。 */
   descr->tsCpu = NCCL_PROFILER_TS_NONE;
   descr->tsCpuUncertainty = 0;
   if (kind == profilerTimestampHost) {
@@ -840,7 +840,7 @@ static void profilerStampDescr(ncclProfilerEventDescr_t* descr, uint32_t mode, p
 }
 
 static void profilerStampArgs(ncclProfilerEventStateArgs_t* args, uint32_t mode, profilerTimestampKind kind,
-                              uint64_t tsGpu) {
+                              uint64_t tsGpu) { /* 中文索引·体内调用 profilerCpuNow、profilerTsModeGet。 */
   args->tsCpu = NCCL_PROFILER_TS_NONE;
   args->tsCpuUncertainty = 0;
   if (kind == profilerTimestampHost) {
@@ -859,7 +859,7 @@ static void profilerStampArgs(ncclProfilerEventStateArgs_t* args, uint32_t mode,
 static void profilerStartDispatch(void* ctx, struct ncclProfilerEventRef* out, ncclProfilerEventDescr_t* descr,
                                   const struct ncclProfilerEventRef* parent,
                                   const struct ncclProfilerEventRef* parentGroup, profilerTimestampKind timestampKind,
-                                  uint64_t tsGpu) {
+                                  uint64_t tsGpu) { /* 中文索引·体内调用 memset、profilerStampDescr。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) return;
   memset(out, 0, sizeof(*out));
   if (COMPILER_EXPECT(profilerPluginCount <= 1, 1)) {
@@ -892,18 +892,18 @@ static void profilerStart(void* ctx, struct ncclProfilerEventRef* out, ncclProfi
 
 static void profilerStartNone(void* ctx, struct ncclProfilerEventRef* out, ncclProfilerEventDescr_t* descr,
                               const struct ncclProfilerEventRef* parent,
-                              const struct ncclProfilerEventRef* parentGroup) {
+                              const struct ncclProfilerEventRef* parentGroup) { /* 中文索引·体内调用 profilerStartDispatch。 */
   profilerStartDispatch(ctx, out, descr, parent, parentGroup, profilerTimestampNone, 0);
 }
 
 static void profilerStartGpu(void* ctx, struct ncclProfilerEventRef* out, ncclProfilerEventDescr_t* descr,
                              const struct ncclProfilerEventRef* parent, const struct ncclProfilerEventRef* parentGroup,
-                             uint64_t tsGpu) {
+                             uint64_t tsGpu) { /* 中文索引·体内调用 profilerStartDispatch。 */
   profilerStartDispatch(ctx, out, descr, parent, parentGroup, profilerTimestampGpu, tsGpu);
 }
 
 static void profilerStopDispatch(struct ncclProfilerEventRef* event, profilerTimestampKind timestampKind,
-                                 uint64_t tsGpu) {
+                                 uint64_t tsGpu) { /* 中文索引·体内调用 profilerStampDescr、profilerTsModeGet。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) return;
   if (COMPILER_EXPECT(profilerPluginCount <= 1, 1)) {
     if (event->h[0]) {
@@ -938,7 +938,7 @@ static void profilerStopGpu(struct ncclProfilerEventRef* event, uint64_t tsGpu) 
 
 static void profilerRecordDispatch(struct ncclProfilerEventRef* event, ncclProfilerEventState_t eState,
                                    ncclProfilerEventStateArgs_t* args, profilerTimestampKind timestampKind,
-                                   uint64_t tsGpu) {
+                                   uint64_t tsGpu) { /* 中文索引·体内调用 profilerLive、profilerStampArgs。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1) || !profilerLive(event)) return;
   if (COMPILER_EXPECT(profilerPluginCount <= 1, 1)) {
     profilerStampArgs(args, profilerTsModeGet(), timestampKind, tsGpu);
@@ -956,14 +956,14 @@ static void profilerRecordDispatch(struct ncclProfilerEventRef* event, ncclProfi
 }
 
 static void profilerRecord(struct ncclProfilerEventRef* event, ncclProfilerEventState_t eState,
-                           ncclProfilerEventStateArgs_t* args) {
+                           ncclProfilerEventStateArgs_t* args) { /* 中文索引·体内调用 profilerRecordDispatch。 */
   ncclProfilerEventStateArgs_t local = {};
   if (args == nullptr) args = &local;
   profilerRecordDispatch(event, eState, args, profilerTimestampHost, 0);
 }
 
 static void profilerRecordGpu(struct ncclProfilerEventRef* event, ncclProfilerEventState_t eState,
-                              ncclProfilerEventStateArgs_t* args, uint64_t tsGpu) {
+                              ncclProfilerEventStateArgs_t* args, uint64_t tsGpu) { /* 中文索引·体内调用 profilerRecordDispatch。 */
   ncclProfilerEventStateArgs_t local = {};
   if (args == nullptr) args = &local;
   profilerRecordDispatch(event, eState, args, profilerTimestampGpu, tsGpu);
@@ -974,7 +974,7 @@ static void profilerRecordGpu(struct ncclProfilerEventRef* event, ncclProfilerEv
 // One plugin: pass through the plugin's own handle (same as before this work).
 // Several plugins: malloc a boxed EventRef for the lifetime of that net event.
 static void profilerStartNet(void* ctx, void** eHandle, ncclProfilerEventDescr_t* descr,
-                             const struct ncclProfilerEventRef* parent) {
+                             const struct ncclProfilerEventRef* parent) { /* 中文索引·体内调用 profilerStart、profilerLive。 */
   struct ncclProfilerEventRef event = {};
   profilerStart(ctx, &event, descr, parent, nullptr);
   if (profilerPluginCount <= 1) {
@@ -991,7 +991,7 @@ static void profilerStartNet(void* ctx, void** eHandle, ncclProfilerEventDescr_t
   *eHandle = box;
 }
 
-static void profilerStopNet(void** eHandle) {
+static void profilerStopNet(void** eHandle) { /* 中文索引·体内调用 profilerStop、free。 */
   if (!*eHandle) return;
   if (profilerPluginCount <= 1) {
     struct ncclProfilerEventRef event = {};
@@ -1007,7 +1007,7 @@ static void profilerStopNet(void** eHandle) {
 // A NULL eHandle is a net plugin one-off event (no prior start). It is forwarded to
 // every loaded plugin's recordEventState as a NULL handle, as before multi-plugin support;
 // plugins are responsible for ignoring or handling NULL handles
-static void profilerRecordNet(void* eHandle, ncclProfilerEventState_t eState, ncclProfilerEventStateArgs_t* args) {
+static void profilerRecordNet(void* eHandle, ncclProfilerEventState_t eState, ncclProfilerEventStateArgs_t* args) { /* 中文索引·体内调用 profilerTsModeGet、profilerStampArgs。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) return;
   if (!eHandle) {
     for (int slot = 0; slot < profilerPluginCount; slot++) {
@@ -1032,7 +1032,7 @@ static void profilerRecordNet(void* eHandle, ncclProfilerEventState_t eState, nc
 }
 
 static ncclResult_t profilerInitMulti(void** output, uint64_t commId, const char* commName, int nNodes, int nranks,
-                                      int rank, ncclProfilerConfig_t* commConfig) {
+                                      int rank, ncclProfilerConfig_t* commConfig) { /* 中文索引·体内调用 calloc、profilerActivate。 */
   struct ncclProfilerMultiContext* context = (struct ncclProfilerMultiContext*)calloc(1, sizeof(*context));
   if (!context) return ncclSystemError;
   context->count = profilerPluginCount;
@@ -1066,7 +1066,7 @@ static ncclResult_t profilerInitMulti(void** output, uint64_t commId, const char
   return ncclSuccess;
 }
 
-static void profilerFinalizeMulti(void* opaque) {
+static void profilerFinalizeMulti(void* opaque) { /* 中文索引·体内调用 profilerActivate、free。 */
   struct ncclProfilerMultiContext* context = (struct ncclProfilerMultiContext*)opaque;
   if (!context) return;
   for (int slot = 0; slot < context->count; slot++) {
@@ -1078,7 +1078,7 @@ static void profilerFinalizeMulti(void* opaque) {
   free(context);
 }
 
-void ncclProfilerSetRasOverride(int mask) {
+void ncclProfilerSetRasOverride(int mask) { /* 中文索引·体内调用 ncclProfilerEnforceMaskDeps、printProfilerEventMask。 */
   // A RAS-set mask must satisfy the same KernelPhase->KernelCh dependency as any other.
   // It must also preserve proxy ancestors when a legacy plugin requests NetPlugin.
   bool legacyNetPlugin = COMPILER_ATOMIC_LOAD(&profilerLegacyNetPlugin, std::memory_order_relaxed);
@@ -1095,7 +1095,7 @@ void ncclProfilerSetRasOverride(int mask) {
   }
 }
 
-ncclResult_t ncclProfilerPluginInit(struct ncclComm* comm) {
+ncclResult_t ncclProfilerPluginInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclProfilerPluginLoad、profilerActivate。 */
   TIME_START_EVENT(elapsed);
   TIME_START_EVENT(init);
   NCCLCHECK(ncclProfilerPluginLoad());
@@ -1145,7 +1145,7 @@ ncclResult_t ncclProfilerPluginInit(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerPluginFinalize(struct ncclComm* comm) {
+ncclResult_t ncclProfilerPluginFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 profilerActivate、profilerFinalizeMulti。 */
   TIME_START_EVENT(finalize);
   // Only finalize a context this comm actually created: init() may have failed here
   // while another comm keeps the plugin loaded. Clearing the flag also keeps a second
@@ -1170,7 +1170,7 @@ ncclResult_t ncclProfilerPluginFinalize(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartGroupApiEvent(struct ncclInfo* info, bool isGraphCaptured) {
+ncclResult_t ncclProfilerStartGroupApiEvent(struct ncclInfo* info, bool isGraphCaptured) { /* 中文索引·体内调用 ncclProfilerCurrentEventMask、profilerEventGate。 */
   ncclProfilerEventDescr_t eDescr = {0};
   eDescr.type = ncclProfileGroupApi;
   eDescr.rank = info->comm->rank;
@@ -1196,7 +1196,7 @@ ncclResult_t ncclProfilerStopGroupApiEvent() {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerRecordGroupApiEventState(ncclProfilerEventState_t eState) {
+ncclResult_t ncclProfilerRecordGroupApiEventState(ncclProfilerEventState_t eState) { /* 中文索引·体内调用 profilerRecord。 */
   bool shouldRecord = false;
   if (eState == ncclProfilerGroupStartApiStop && ncclProfilerApiState.state == ncclProfilerGroupApiStartStateStarted) {
     ncclProfilerApiState.state = ncclProfilerGroupApiStartStateStopped;
@@ -1210,7 +1210,7 @@ ncclResult_t ncclProfilerRecordGroupApiEventState(ncclProfilerEventState_t eStat
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartP2pApiEvent(struct ncclInfo* info, bool isGraphCaptured) {
+ncclResult_t ncclProfilerStartP2pApiEvent(struct ncclInfo* info, bool isGraphCaptured) { /* 中文索引·体内调用 ncclFuncToString、ncclDatatypeToString。 */
   ncclProfilerEventDescr_t eDescr = {0};
   eDescr.type = ncclProfileP2pApi;
   eDescr.rank = info->comm->rank;
@@ -1240,7 +1240,7 @@ ncclResult_t ncclProfilerStopP2pApiEvent() {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartCollApiEvent(struct ncclInfo* info, bool isGraphCaptured) {
+ncclResult_t ncclProfilerStartCollApiEvent(struct ncclInfo* info, bool isGraphCaptured) { /* 中文索引·体内调用 ncclFuncToString、ncclDatatypeToString。 */
   ncclProfilerEventDescr_t eDescr = {0};
   eDescr.type = ncclProfileCollApi;
   eDescr.rank = info->comm->rank;
@@ -1271,7 +1271,7 @@ ncclResult_t ncclProfilerStopCollApiEvent() {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartKernelLaunchEvent(struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclProfilerStartKernelLaunchEvent(struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclIntruQueueHead、profilerStart。 */
   ncclProfilerEventDescr_t eDescr = {0};
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0)) {
     const struct ncclProfilerEventRef* groupParent = nullptr;
@@ -1311,7 +1311,7 @@ ncclResult_t ncclProfilerStopKernelLaunchEvent(struct ncclKernelPlan* plan) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartGroupEvent(struct ncclKernelPlan* plan) {
+ncclResult_t ncclProfilerStartGroupEvent(struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、profilerEventGate。 */
   TIME_START_EVENT(groupStart);
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0)) {
     struct ncclTaskColl* ct = ncclIntruQueueHead(&plan->collTaskQueue);
@@ -1343,14 +1343,14 @@ ncclResult_t ncclProfilerStartGroupEvent(struct ncclKernelPlan* plan) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopGroupEvent(struct ncclKernelPlan* plan) {
+ncclResult_t ncclProfilerStopGroupEvent(struct ncclKernelPlan* plan) { /* 中文索引·体内调用 profilerStop。 */
   TIME_START_EVENT(groupStop);
   profilerStop(&plan->groupEventHandle);
   TIME_STOP_EVENT(groupStop);
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartTaskEvents(struct ncclKernelPlan* plan) {
+ncclResult_t ncclProfilerStartTaskEvents(struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、profilerEventGate。 */
   TIME_START_EVENT(taskStart);
   struct ncclTaskColl* ct = ncclIntruQueueHead(&plan->collTaskQueue);
   while (ct) {
@@ -1423,7 +1423,7 @@ ncclResult_t ncclProfilerStartTaskEvents(struct ncclKernelPlan* plan) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopTaskEvents(struct ncclKernelPlan* plan) {
+ncclResult_t ncclProfilerStopTaskEvents(struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、profilerStop。 */
   TIME_START_EVENT(taskStop);
   struct ncclTaskColl* ct = ncclIntruQueueHead(&plan->collTaskQueue);
   while (ct) {
@@ -1444,7 +1444,7 @@ ncclResult_t ncclProfilerStopTaskEvents(struct ncclKernelPlan* plan) {
 // made of sliceSteps steps rather than one step. In the profiler we are still
 // interested in whole network transfers though, so we account for this when
 // computing the actual network step number.
-ncclResult_t ncclProfilerStartProxyOpEvent(int s, struct ncclProxyArgs* args) {
+ncclResult_t ncclProfilerStartProxyOpEvent(int s, struct ncclProxyArgs* args) { /* 中文索引·体内调用 profilerEventGate、profilerStart。 */
   TIME_START_EVENT(proxyOpStart);
   struct ncclProxySubArgs* sub = &args->subs[s];
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && (sub->eActivationMask & profilerEventGate(ncclProfileProxyOp))) {
@@ -1463,14 +1463,14 @@ ncclResult_t ncclProfilerStartProxyOpEvent(int s, struct ncclProxyArgs* args) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopProxyOpEvent(int s, struct ncclProxyArgs* args) {
+ncclResult_t ncclProfilerStopProxyOpEvent(int s, struct ncclProxyArgs* args) { /* 中文索引·体内调用 profilerStop。 */
   TIME_START_EVENT(proxyOpStop);
   profilerStop(&args->subs[s].opEventHandle);
   TIME_STOP_EVENT(proxyOpStop);
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartSendProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) {
+ncclResult_t ncclProfilerStartSendProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) { /* 中文索引·体内调用 profilerEventGate、profilerStart。 */
   TIME_START_EVENT(proxyStepStart);
   struct ncclProxySubArgs* sub = &args->subs[s];
   int step_ = DIVUP(stepId, args->sliceSteps);
@@ -1488,7 +1488,7 @@ ncclResult_t ncclProfilerStartSendProxyStepEvent(int s, struct ncclProxyArgs* ar
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartRecvProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) {
+ncclResult_t ncclProfilerStartRecvProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) { /* 中文索引·体内调用 profilerEventGate、profilerStart。 */
   TIME_START_EVENT(proxyStepStart);
   struct ncclProxySubArgs* sub = &args->subs[s];
   int step_ = DIVUP(stepId, args->sliceSteps);
@@ -1506,7 +1506,7 @@ ncclResult_t ncclProfilerStartRecvProxyStepEvent(int s, struct ncclProxyArgs* ar
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) {
+ncclResult_t ncclProfilerStopProxyStepEvent(int s, struct ncclProxyArgs* args, int stepId) { /* 中文索引·体内调用 profilerStop。 */
   TIME_START_EVENT(proxyStepStop);
   int step_ = DIVUP(stepId, args->sliceSteps);
   profilerStop(&args->subs[s].pHandles[step_ % NCCL_STEPS].stepEventHandle);
@@ -1514,7 +1514,7 @@ ncclResult_t ncclProfilerStopProxyStepEvent(int s, struct ncclProxyArgs* args, i
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartProxyCtrlEvent(void* profilerContext, struct ncclProfilerEventRef* eHandle) {
+ncclResult_t ncclProfilerStartProxyCtrlEvent(void* profilerContext, struct ncclProfilerEventRef* eHandle) { /* 中文索引·体内调用 memset、profilerRefreshEventMask。 */
   TIME_START_EVENT(proxyCtrlStart);
   memset(eHandle, 0, sizeof(*eHandle));
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && (profilerRefreshEventMask() & ncclProfileProxyCtrl)) {
@@ -1526,14 +1526,14 @@ ncclResult_t ncclProfilerStartProxyCtrlEvent(void* profilerContext, struct ncclP
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopProxyCtrlEvent(struct ncclProfilerEventRef* eHandle) {
+ncclResult_t ncclProfilerStopProxyCtrlEvent(struct ncclProfilerEventRef* eHandle) { /* 中文索引·体内调用 profilerStop。 */
   TIME_START_EVENT(proxyCtrlStop);
   profilerStop(eHandle);
   TIME_STOP_EVENT(proxyCtrlStop);
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartKernelChEvent(struct ncclProfilerWorkOp* op, uint64_t start) {
+ncclResult_t ncclProfilerStartKernelChEvent(struct ncclProfilerWorkOp* op, uint64_t start) { /* 中文索引·体内调用 profilerStartGpu。 */
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && (op->eActivationMask & ncclProfileKernelCh)) {
     ncclProfilerEventDescr_t eDescr = {};
     eDescr.type = ncclProfileKernelCh;
@@ -1544,7 +1544,7 @@ ncclResult_t ncclProfilerStartKernelChEvent(struct ncclProfilerWorkOp* op, uint6
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopKernelChEvent(struct ncclProfilerWorkOp* op, uint64_t stop) {
+ncclResult_t ncclProfilerStopKernelChEvent(struct ncclProfilerWorkOp* op, uint64_t stop) { /* 中文索引·体内调用 profilerLive、profilerRecordGpu。 */
   if (profilerLive(&op->kernelEventHandle)) {
     ncclProfilerEventStateArgs_t a = {};
     a.kernelCh.pTimer = stop;
@@ -1554,7 +1554,7 @@ ncclResult_t ncclProfilerStopKernelChEvent(struct ncclProfilerWorkOp* op, uint64
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerRecordProxyOpEventState(int s, struct ncclProxyArgs* args, ncclProfilerEventState_t eState) {
+ncclResult_t ncclProfilerRecordProxyOpEventState(int s, struct ncclProxyArgs* args, ncclProfilerEventState_t eState) { /* 中文索引·体内调用 profilerRecord。 */
   TIME_START_EVENT(proxyOpRecord);
   ncclProfilerEventStateArgs_t a = {};
   profilerRecord(&args->subs[s].opEventHandle, eState, &a);
@@ -1563,7 +1563,7 @@ ncclResult_t ncclProfilerRecordProxyOpEventState(int s, struct ncclProxyArgs* ar
 }
 
 ncclResult_t ncclProfilerRecordProxyStepEventState(int s, struct ncclProxyArgs* args, int stepId,
-                                                   ncclProfilerEventState_t eState) {
+                                                   ncclProfilerEventState_t eState) { /* 中文索引·体内调用 profilerRecord。 */
   TIME_START_EVENT(proxyStepRecord);
   int step_ = DIVUP(stepId, args->sliceSteps);
   ncclProfilerEventStateArgs_t a = {};
@@ -1574,7 +1574,7 @@ ncclResult_t ncclProfilerRecordProxyStepEventState(int s, struct ncclProxyArgs* 
 }
 
 ncclResult_t ncclProfilerRecordProxyCtrlEventState(struct ncclProfilerEventRef* eHandle, int appended,
-                                                   ncclProfilerEventState_t eState) {
+                                                   ncclProfilerEventState_t eState) { /* 中文索引·体内调用 profilerRefreshEventMask、profilerRecord。 */
   TIME_START_EVENT(proxyCtrlRecord);
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && (profilerRefreshEventMask() & ncclProfileProxyCtrl)) {
     ncclProfilerEventStateArgs_t args = {};
@@ -1596,7 +1596,7 @@ static struct ncclProfilerWorkOp* profilerAllocOp(struct ncclProfilerThread* pt)
 }
 
 // Caller must hold pt->mutex.
-static void profilerRecycleList(struct ncclProfilerThread* pt, struct ncclProfilerWorkOp* head) {
+static void profilerRecycleList(struct ncclProfilerThread* pt, struct ncclProfilerWorkOp* head) { /* 中文索引·体内调用 profilerStop、ncclMemoryPoolFree。 */
   while (head) {
     struct ncclProfilerWorkOp* next = head->next;
     profilerStop(&head->kernelEventHandle);
@@ -1608,7 +1608,7 @@ static void profilerRecycleList(struct ncclProfilerThread* pt, struct ncclProfil
 
 static const char* profilerPhaseNames[] = {"initial_sync", "compute", "final_sync"};
 
-static void profilerFireKernelPhaseEvents(struct ncclProfilerWorkOp* op) {
+static void profilerFireKernelPhaseEvents(struct ncclProfilerWorkOp* op) { /* 中文索引·体内调用 memcpy、profilerStartGpu。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) return;
   if (!(op->eActivationMask & ncclProfileKernelPhase)) return;
   if (op->workPhases == nullptr) return;
@@ -1660,7 +1660,7 @@ static void profilerFireKernelPhaseEvents(struct ncclProfilerWorkOp* op) {
 // until cleanupAndStop clears it. That ordering keeps a comm's
 // profilerContext alive across the plugin callbacks below.
 static struct ncclProfilerWorkOp* profilerProgressOps(struct ncclProfilerThread* pt,
-                                                      struct ncclProfilerWorkOp** outNewTail) {
+                                                      struct ncclProfilerWorkOp** outNewTail) { /* 中文索引·体内调用 ncclProfilerStartKernelChEvent、profilerFireKernelPhaseEvents。 */
   struct ncclProfilerWorkOp* recycled = nullptr;
   struct ncclProfilerWorkOp* prev = nullptr;
   struct ncclProfilerWorkOp* op = pt->active;
@@ -1718,7 +1718,7 @@ static inline void appendWorkToActiveQueue(struct ncclProfilerThread* pt) {
 // Block until there is work or a stop/abort request. On exit, pending has
 // been folded into active and pt->iterationActive is set to true (paired
 // with cleanupAndStop) when the returned action is PROGRESS/CLEANUP_AND_STOP.
-static inline ncclProfilerThreadAction waitForAction(struct ncclProfilerThread* pt, bool* outStop) {
+static inline ncclProfilerThreadAction waitForAction(struct ncclProfilerThread* pt, bool* outStop) { /* 中文索引·体内调用 pt->cond.wait、appendWorkToActiveQueue。 */
   std::unique_lock<std::mutex> lock(pt->mutex);
   bool aborted = pt->abortFlag && COMPILER_ATOMIC_LOAD(pt->abortFlag, std::memory_order_relaxed);
   while (pt->pending == nullptr && pt->active == nullptr && !pt->stop && !aborted) {
@@ -1738,7 +1738,7 @@ static inline ncclProfilerThreadAction waitForAction(struct ncclProfilerThread* 
 // drain ops whose kernels will never run. Clears iterationActive so
 // ncclProfilerThreadDestroy can proceed. Returns true to exit the thread.
 static inline bool cleanupAndStop(struct ncclProfilerThread* pt, struct ncclProfilerWorkOp* recycled,
-                                  struct ncclProfilerWorkOp* newActiveTail, bool drainStuck) {
+                                  struct ncclProfilerWorkOp* newActiveTail, bool drainStuck) { /* 中文索引·体内调用 profilerRecycleList、pt->condIterationInactive.notify_all。 */
   std::lock_guard<std::mutex> lock(pt->mutex);
   profilerRecycleList(pt, recycled);
   pt->activeTail = newActiveTail;
@@ -1760,7 +1760,7 @@ static inline unsigned updateProgressInterval(struct ncclProfilerThread* pt, uns
   return spinUs < 10 ? spinUs * 2 : 10;
 }
 
-static void* ncclProfilerThreadFunc(void* arg) {
+static void* ncclProfilerThreadFunc(void* arg) { /* 中文索引·体内调用 cudaSetDevice、cudaGetErrorString。 */
   struct ncclProfilerThread* pt = (struct ncclProfilerThread*)arg;
 
   // The thread only reads host-pinned memory, but plugins it dispatches
@@ -1833,7 +1833,7 @@ static void* ncclProfilerThreadFunc(void* arg) {
   return nullptr;
 }
 
-ncclResult_t ncclProfilerThreadCreate(struct ncclComm* comm, struct ncclComm* parent) {
+ncclResult_t ncclProfilerThreadCreate(struct ncclComm* comm, struct ncclComm* parent) { /* 中文索引·体内调用 ncclProfilerPluginLoaded、ncclMemoryStackConstruct。 */
   if (!ncclProfilerPluginLoaded()) return ncclSuccess;
   if (parent && parent->shareResources && parent->profiler.profilerThread) {
     comm->profiler.profilerThread = parent->profiler.profilerThread;
@@ -1866,7 +1866,7 @@ ncclResult_t ncclProfilerThreadCreate(struct ncclComm* comm, struct ncclComm* pa
 // Splice out and recycle every op referencing `ctx`; returns new list tail.
 // Caller must hold mutex.
 static struct ncclProfilerWorkOp* profilerPurgeByContext(struct ncclProfilerThread* pt,
-                                                         struct ncclProfilerWorkOp** list, void* ctx) {
+                                                         struct ncclProfilerWorkOp** list, void* ctx) { /* 中文索引·体内调用 profilerStop、ncclMemoryPoolFree。 */
   struct ncclProfilerWorkOp* lastKept = nullptr;
   struct ncclProfilerWorkOp** link = list;
   while (*link) {
@@ -1884,7 +1884,7 @@ static struct ncclProfilerWorkOp* profilerPurgeByContext(struct ncclProfilerThre
   return lastKept;
 }
 
-ncclResult_t ncclProfilerThreadDestroy(struct ncclComm* comm) {
+ncclResult_t ncclProfilerThreadDestroy(struct ncclComm* comm) { /* 中文索引·体内调用 pt->condIterationInactive.wait、profilerPurgeByContext。 */
   struct ncclProfilerThread* pt = comm->profiler.profilerThread;
   if (pt == nullptr) return ncclSuccess;
   bool shouldJoin = false;
@@ -1920,7 +1920,7 @@ ncclResult_t ncclProfilerThreadDestroy(struct ncclComm* comm) {
 // send/recv pair (which the device counts as one fused work per channel) can
 // post against the same device slot.
 static void profilerEnqueueOp(struct ncclProfilerThread* pt, struct ncclComm* comm, int channelId, uint64_t wc,
-                              int eActivationMask, struct ncclProfilerEventRef taskEventHandle, bool sym) {
+                              int eActivationMask, struct ncclProfilerEventRef taskEventHandle, bool sym) { /* 中文索引·体内调用 profilerAllocOp、pt->cond.notify_one。 */
   bool dropped = false;
   uint64_t dropTotal = 0;
   size_t inflightAtDrop = 0;
@@ -1987,7 +1987,7 @@ static void profilerEnqueueOp(struct ncclProfilerThread* pt, struct ncclComm* co
 //   * Bump comm->profiler.workCounter[channelId] exactly once per call,
 //     even on allocation failure, to stay in lock-step with the device kernel.
 static ncclResult_t profilerPostWorkInternal(struct ncclComm* comm, int channelId, int eActivationMask,
-                                             struct ncclProfilerEventRef taskEventHandle) {
+                                             struct ncclProfilerEventRef taskEventHandle) { /* 中文索引·体内调用 profilerEnqueueOp。 */
   struct ncclProfilerThread* pt = comm->profiler.profilerThread;
   if (pt == nullptr || !(eActivationMask & ncclProfileKernelCh)) return ncclSuccess;
   uint64_t wc = ++comm->profiler.workCounter[channelId];
@@ -2000,7 +2000,7 @@ static ncclResult_t profilerPostWorkInternal(struct ncclComm* comm, int channelI
 // matching KernelCh ops are enqueued later by ncclProfilerPostPlanWork() from the host
 // callback. No-op for the clean kernel (graph capture / profiling off). Uses the
 // dedicated sym counters, which never share the regular/p2p sequence (ncclProfilerCommState).
-static uint64_t* profilerGetSymCounters(struct ncclKernelPlan* plan, struct ncclTaskColl* task) {
+static uint64_t* profilerGetSymCounters(struct ncclKernelPlan* plan, struct ncclTaskColl* task) { /* 中文索引·体内调用 ncclGenkKernelMask、ncclSymkGetProfilerCounters。 */
   if ((1ull << task->devFuncId) & ncclGenkKernelMask()) {
     struct ncclGenkDevWorkArgs* args = (struct ncclGenkDevWorkArgs*)plan->kernelSymArgs;
     return args->profilerMode ? ncclSymkGetProfilerCounters(args) : nullptr;
@@ -2009,7 +2009,7 @@ static uint64_t* profilerGetSymCounters(struct ncclKernelPlan* plan, struct nccl
   return args->profilerMode ? ncclSymkGetProfilerCounters(args) : nullptr;
 }
 
-void ncclProfilerReserveSymCounters(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+void ncclProfilerReserveSymCounters(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclProfilerPluginLoaded、ncclIntruQueueHead。 */
   if (!ncclProfilerPluginLoaded() || comm->profiler.profilerThread == nullptr) return;
   if (!plan->isSymColl) return;
   struct ncclTaskColl* sct = ncclIntruQueueHead(&plan->collTaskQueue);
@@ -2023,7 +2023,7 @@ void ncclProfilerReserveSymCounters(struct ncclComm* comm, struct ncclKernelPlan
 // Enqueue the KernelCh ops for a sym plan using the counters reserved pre-launch by
 // ncclProfilerReserveSymCounters() (read back from the args buffer, not re-bumped).
 // No-op for the clean kernel (graph capture / profiling off).
-static void profilerPostPlanWorkSym(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+static void profilerPostPlanWorkSym(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、profilerGetSymCounters。 */
   struct ncclTaskColl* sct = ncclIntruQueueHead(&plan->collTaskQueue);
   if (sct == nullptr || !(sct->eActivationMask & ncclProfileKernelCh)) return;
   struct ncclProfilerThread* pt = comm->profiler.profilerThread;
@@ -2054,7 +2054,7 @@ static void profilerPostPlanWorkSym(struct ncclComm* comm, struct ncclKernelPlan
 // Drift breaks the slot-counter invariant in profilerProgressOps, leaks
 // ops into pt->active, and (eventually) corrupts unrelated CUDA driver
 // state by exhausting the op pool. Return value is discarded by callers.
-ncclResult_t ncclProfilerPostPlanWork(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclProfilerPostPlanWork(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclProfilerPluginLoaded、profilerPostPlanWorkSym。 */
   if (!ncclProfilerPluginLoaded() || !comm->profiler.profilerThread) return ncclSuccess;
 
   if (plan->isSymColl) {
@@ -2108,7 +2108,7 @@ bool ncclProfilerPluginLoaded(void) {
   return (COMPILER_EXPECT(ncclProfiler != NULL, 0));
 }
 
-uint8_t ncclProfilerDeviceMode(int eActivationMask) {
+uint8_t ncclProfilerDeviceMode(int eActivationMask) { /* 中文索引·体内调用 ncclProfilerPluginLoaded。 */
   if (!ncclProfilerPluginLoaded()) return ncclDevProfilerModeNone;
 
   uint8_t mode = ncclDevProfilerModeNone;
@@ -2119,7 +2119,7 @@ uint8_t ncclProfilerDeviceMode(int eActivationMask) {
   return mode;
 }
 
-ncclResult_t ncclProfilerCallback(void** eHandle, int type, void* pHandle, int64_t pluginId, void* extData) {
+ncclResult_t ncclProfilerCallback(void** eHandle, int type, void* pHandle, int64_t pluginId, void* extData) { /* 中文索引·体内调用 profilerStartNet、profilerStopNet。 */
   if (COMPILER_EXPECT(ncclProfiler == NULL, 1)) return ncclSuccess;
   if (type == ncclProfilerNetEventStart) {
     struct ncclProxyEventHandle* proxyEvent = (struct ncclProxyEventHandle*)pHandle;
@@ -2148,7 +2148,7 @@ ncclResult_t ncclProfilerCallback(void** eHandle, int type, void* pHandle, int64
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartCeCollEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclProfilerStartCeCollEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 profilerRefreshEventMask、profilerEventGate。 */
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && (profilerRefreshEventMask() & profilerEventGate(ncclProfileCeColl))) {
     ncclProfilerEventDescr_t eDescr = {0};
     eDescr.type = ncclProfileCeColl;
@@ -2172,7 +2172,7 @@ ncclResult_t ncclProfilerStartCeCollEvent(struct ncclComm* comm, struct ncclCeCo
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStopCeCollEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclProfilerStopCeCollEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 profilerStopNone。 */
   (void)comm;
   (void)stream;
   if (args) profilerStopNone(&args->ceCollProfHandle);
@@ -2180,7 +2180,7 @@ ncclResult_t ncclProfilerStopCeCollEvent(struct ncclComm* comm, struct ncclCeCol
 }
 
 ncclResult_t ncclProfilerStartCeSyncEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream,
-                                          struct ncclProfilerEventRef* ceSyncHandle) {
+                                          struct ncclProfilerEventRef* ceSyncHandle) { /* 中文索引·体内调用 memset、profilerLive。 */
   (void)stream;
   memset(ceSyncHandle, 0, sizeof(*ceSyncHandle));
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && args && profilerLive(&args->ceCollProfHandle) &&
@@ -2196,7 +2196,7 @@ ncclResult_t ncclProfilerStartCeSyncEvent(struct ncclComm* comm, struct ncclCeCo
 }
 
 ncclResult_t ncclProfilerStopCeSyncEvent(struct ncclComm* comm, struct ncclProfilerEventRef* ceSyncHandle,
-                                         cudaStream_t stream) {
+                                         cudaStream_t stream) { /* 中文索引·体内调用 profilerStopNone。 */
   (void)comm;
   (void)stream;
   profilerStopNone(ceSyncHandle);
@@ -2205,7 +2205,7 @@ ncclResult_t ncclProfilerStopCeSyncEvent(struct ncclComm* comm, struct ncclProfi
 
 ncclResult_t ncclProfilerStartCeBatchEvent(struct ncclComm* comm, struct ncclCeCollArgs* args,
                                            struct ncclCeBatchOpsParams* params, cudaStream_t stream,
-                                           struct ncclProfilerEventRef* ceBatchHandle) {
+                                           struct ncclProfilerEventRef* ceBatchHandle) { /* 中文索引·体内调用 memset、profilerLive。 */
   (void)stream;
   memset(ceBatchHandle, 0, sizeof(*ceBatchHandle));
   if (COMPILER_EXPECT(ncclProfiler != NULL, 0) && args && profilerLive(&args->ceCollProfHandle) &&
@@ -2224,7 +2224,7 @@ ncclResult_t ncclProfilerStartCeBatchEvent(struct ncclComm* comm, struct ncclCeC
 }
 
 ncclResult_t ncclProfilerStopCeBatchEvent(struct ncclComm* comm, struct ncclProfilerEventRef* ceBatchHandle,
-                                          cudaStream_t stream) {
+                                          cudaStream_t stream) { /* 中文索引·体内调用 profilerStopNone。 */
   (void)comm;
   (void)stream;
   profilerStopNone(ceBatchHandle);

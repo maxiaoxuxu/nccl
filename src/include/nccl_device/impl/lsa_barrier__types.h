@@ -27,7 +27,7 @@ struct ncclLsaBarrierSession_internal {
   ncclMultimemHandle mmHandle;
   uint32_t epoch;
 
-  NCCL_DEVICE_INLINE uint32_t* mcInbox(bool multimem) {
+  NCCL_DEVICE_INLINE uint32_t* mcInbox(bool multimem) { /* 中文索引·体内调用 ncclGetResourceBufferMultimemPointer、ncclGetResourceBufferLocalPointer。 */
     uint32_t* state;
     if (multimem) {
       // multicast

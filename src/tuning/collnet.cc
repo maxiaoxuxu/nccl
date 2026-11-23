@@ -9,7 +9,7 @@
 #include "comm.h"
 
 ncclResult_t ncclTuningCollnetModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                        struct ncclTuningModelState* /*internal*/) {
+                                        struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 memset、ncclTuningExpandId。 */
   ncclResult_t ret = ncclSuccess;
   if (!comm->ncclCollNet) {
     memset(enabled, 0, NCCL_NUM_FUNCTIONS * sizeof(int));
@@ -120,7 +120,7 @@ ncclResult_t ncclTuningCollnetModelInit(struct ncclComm* comm, int id, int enabl
 }
 
 ncclResult_t ncclTuningCollnetModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                       struct ncclTuningModelState* /*internal*/) {
+                                       struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclTuningGetTime。 */
   ncclResult_t ret = ncclSuccess;
   int collnetSupport = inputs->collNetSupport;
   if (!collnetSupport) {

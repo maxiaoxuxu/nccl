@@ -54,7 +54,7 @@ static ncclResult_t ncclTuningGenkGetChannels(struct ncclTuningInput_t* const in
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGenkGetAlgorithmProtocol(enum ncclSymkKernelId kernelId, int* algorithm, int* protocol) {
+static ncclResult_t ncclGenkGetAlgorithmProtocol(enum ncclSymkKernelId kernelId, int* algorithm, int* protocol) { /* 中文索引·体内调用 ncclGenkKernelMask。 */
   if ((ncclGenkKernelMask() >> kernelId & 1) == 0) return ncclInternalError;
 
   bool const isTree = kernelId == ncclSymkKernelId_AllReduce_Tree_Simple ||
@@ -93,7 +93,7 @@ static ncclResult_t ncclGenkGetAlgorithmProtocol(enum ncclSymkKernelId kernelId,
   return ncclSuccess;
 }
 
-ncclResult_t ncclTuningGenkModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning) {
+ncclResult_t ncclTuningGenkModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning) { /* 中文索引·体内调用 ncclGenkGetAlgorithmProtocol、ncclTuningTreeModelSim。 */
   int algorithm;
   int protocol;
   NCCLCHECK(ncclGenkGetAlgorithmProtocol((enum ncclSymkKernelId)tuning->symKernelId, &algorithm, &protocol));

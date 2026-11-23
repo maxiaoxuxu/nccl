@@ -20,7 +20,7 @@
 
 template <typename Backend, int SlicesPerChunk, int MaxPeers>
 NCCL_DEVICE_INLINE int ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::threadRole(
-  int nWorkerWarps, int nSendPeers, int nRecvPeers, int nParts, int part, int const* partWorkerWarps, int* rolePeer) {
+  int nWorkerWarps, int nSendPeers, int nRecvPeers, int nParts, int part, int const* partWorkerWarps, int* rolePeer) { /* 中文索引·体内调用 ncclFlowGetSignalWarpsPerPart、ncclFlowPartWorkerWarp0。 */
   constexpr int warpSize = 32;
   constexpr int signalWarpsPerPart = ncclFlowGetSignalWarpsPerPart(Backend::Protocol);
   int const t = (int)threadIdx.x;
@@ -96,7 +96,7 @@ NCCL_DEVICE_INLINE ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::ncclFlowBase
 }
 
 template <typename Backend, int SlicesPerChunk, int MaxPeers>
-NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::initShmem() {
+NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::initShmem() { /* 中文索引·体内调用 partThreads.thread_rank、partThreads.sync。 */
   if (partThreads.thread_rank() == 0) {
     for (int peer = 0; peer < MaxPeers; peer++) {
       partShmem->sendBuf[peer] = nullptr;
@@ -131,7 +131,7 @@ NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::process
 template <ncclFlowProtocol Protocol>
 NCCL_DEVICE_INLINE void ncclFlowConnection<0, Protocol>::construct(
   ncclDevComm const& comm, ncclFlowConfig<0> const& config, int peer, int connectionIndex, int maxPeers, int channelId,
-  int nParts, int part, int type, bool /*waitRole*/, bool recvPost) {
+  int nParts, int part, int type, bool /*waitRole*/, bool recvPost) { /* 中文索引·体内调用 assert。 */
   int const nSlices = config.nSlices;
   assert(config.channelSize % (ncclFlowFifoSlots * nParts * maxPeers) == 0);
   size_t const stepSize = config.channelSize / (ncclFlowFifoSlots * nParts * maxPeers);
@@ -200,7 +200,7 @@ NCCL_DEVICE_INLINE bool ncclFlowConnection<0, Protocol>::usesGin() const {
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
 NCCL_DEVICE_INLINE void ncclFlowConnection<GinBackendMask, Protocol>::construct(
   ncclDevComm const& comm, ncclFlowConfig<GinBackendMask> const& config, int peer, int connectionIndex, int maxPeers,
-  int channelId, int nParts, int part, int type, bool waitRole, bool recvPost) {
+  int channelId, int nParts, int part, int type, bool waitRole, bool recvPost) { /* 中文索引·体内调用 assert、ncclTeamWorld。 */
   int const nSlices = config.nSlices;
   assert(config.channelSize % (ncclFlowFifoSlots * nParts * maxPeers) == 0);
   size_t const stepSize = config.channelSize / (ncclFlowFifoSlots * nParts * maxPeers);
@@ -250,7 +250,7 @@ NCCL_DEVICE_INLINE void ncclFlowConnection<GinBackendMask, Protocol>::postSend(s
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
 NCCL_DEVICE_INLINE void ncclFlowConnection<GinBackendMask, Protocol>::postSend(
-  size_t bytes, bool direct, ncclSymPtr<char> output, ncclSymPtr<char> source) {
+  size_t bytes, bool direct, ncclSymPtr<char> output, ncclSymPtr<char> source) { /* 中文索引·体内调用 storage.gin.postSendDirect、storage.gin.postSendFrom。 */
   if (useGin) {
     if (direct) storage.gin.postSendDirect(bytes, output, source);
     else if (source.window != nullptr) storage.gin.postSendFrom(bytes, source);

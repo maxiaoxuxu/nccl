@@ -17,7 +17,7 @@
 
 NCCL_PARAM(SymNoWinEnable, "SYM_NOWIN_ENABLE", 0);
 
-void ncclTuningResultListFree(struct ncclTuningResultList_t* list) {
+void ncclTuningResultListFree(struct ncclTuningResultList_t* list) { /* 中文索引·体内调用 free。 */
   struct ncclTuningResultListNode* node = list->head;
   while (node != nullptr) {
     struct ncclTuningResultListNode* next = node->next;
@@ -27,7 +27,7 @@ void ncclTuningResultListFree(struct ncclTuningResultList_t* list) {
   list->head = nullptr;
 }
 
-ncclResult_t ncclTuningResultListPushFront(struct ncclTuningResultList_t* list, struct ncclTuningResult_t result) {
+ncclResult_t ncclTuningResultListPushFront(struct ncclTuningResultList_t* list, struct ncclTuningResult_t result) { /* 中文索引·体内调用 ncclCalloc。 */
   struct ncclTuningResultListNode* node = nullptr;
   NCCLCHECK(ncclCalloc(&node, 1));
   node->result = result;
@@ -39,7 +39,7 @@ ncclResult_t ncclTuningResultListPushFront(struct ncclTuningResultList_t* list, 
 /*
   Initialize the tuning subsystem.
 */
-ncclResult_t ncclTuningInit(struct ncclComm* comm) {
+ncclResult_t ncclTuningInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningCostModelPreInit、ncclTunerPluginLoad。 */
   ncclResult_t ret = ncclSuccess;
 
   NCCLCHECKGOTO(ncclTuningCostModelPreInit(comm), ret, fail);
@@ -107,7 +107,7 @@ fail:
 /*
   Finalize the tuning subsystem.
 */
-ncclResult_t ncclTuningFinalize(struct ncclComm* comm) {
+ncclResult_t ncclTuningFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningCostModelFinalize、comm->tuner->finalize。 */
   ncclResult_t ret = ncclSuccess;
   NCCLCHECKGOTO(ncclTuningCostModelFinalize(comm), ret, fail);
   if (comm->tuner != NULL) {
@@ -124,7 +124,7 @@ fail:
   Get all valid tunings for the given input.
 */
 ncclResult_t ncclTuningComputeAllTunings(struct ncclTuningInput_t* const input,
-                                         struct ncclTuningResultList_t* const tunings) {
+                                         struct ncclTuningResultList_t* const tunings) { /* 中文索引·体内调用 ncclTuningExpandId、ncclTuningComputeTuning。 */
   ncclResult_t ret = ncclSuccess;
 
   for (int i = 0; i < NCCL_TUNING_COUNT; i++) {
@@ -151,7 +151,7 @@ fail:
   The tuning with the lowest simulated time/cost is determined to be best.
 */
 static ncclResult_t ncclTuningSelectBestTuning(
-  struct ncclTuningResultList_t* tunings, struct ncclTuningResult_t* const bestTuning, uint64_t kernelExcludeMask = 0) {
+  struct ncclTuningResultList_t* tunings, struct ncclTuningResult_t* const bestTuning, uint64_t kernelExcludeMask = 0) { /* 中文索引·体内调用 ncclAlgoToString、ncclProtoToString。 */
   bestTuning->timeUs = FLT_MAX;
   float bestSelectionTimeUs = FLT_MAX;
   struct ncclTuningResultListNode* node = tunings->head;
@@ -177,7 +177,7 @@ static ncclResult_t ncclTuningSelectBestTuning(
   Simulates the all tunings for the given input and engages the tuner plugin if defined.
   Then selects the best tuning from all the tuning results and returns that to the caller.
 */
-ncclResult_t ncclTuningCompute(struct ncclTuningInput_t* const input, struct ncclTuningResult_t* const result) {
+ncclResult_t ncclTuningCompute(struct ncclTuningInput_t* const input, struct ncclTuningResult_t* const result) { /* 中文索引·体内调用 ncclFuncToString、ncclSymkLLKernelMask。 */
   ncclResult_t ret = ncclSuccess;
   TRACE(NCCL_TUNING,
         "Input: { .comm = %p, .tuningMask = 0x%lx, .func = %s, .redOp = %d, .devRedop = %d, .dataType = %d, .nBytes = "
@@ -345,7 +345,7 @@ exit:
   Collect the tuning results.
 */
 ncclResult_t ncclTuningComputeTuning(int id, struct ncclTuningInput_t* const input,
-                                     struct ncclTuningResult_t* const result) {
+                                     struct ncclTuningResult_t* const result) { /* 中文索引·体内调用 ncclTuningCostModelSimModel。 */
   NCCLCHECK(ncclTuningCostModelSimModel(id, input, result));
   return ncclSuccess;
 }

@@ -112,7 +112,7 @@ static void ncclDevCommCopyResourceWindowOldToNew_v23000(ncclResourceWindow_vidm
 }
 
 static ncclResult_t ncclDevCommCopyNewToOld_v23000(ncclComm_t comm, void* oldDevComm,
-                                                   struct ncclDevComm const* newDevComm) {
+                                                   struct ncclDevComm const* newDevComm) { /* 中文索引·体内调用 memset、ncclDevCommCopyResourceWindowNewToOld_v23000。 */
   struct ncclDevComm_v23000* old = (struct ncclDevComm_v23000*)oldDevComm;
 
   memset(old, '\0', sizeof(*old));
@@ -152,7 +152,7 @@ static ncclResult_t ncclDevCommCopyNewToOld_v23000(ncclComm_t comm, void* oldDev
 }
 
 static ncclResult_t ncclDevCommCopyOldToNew_v23000(ncclComm_t comm, struct ncclDevComm* newDevComm,
-                                                   void const* oldDevComm) {
+                                                   void const* oldDevComm) { /* 中文索引·体内调用 ncclDevCommCopyResourceWindowOldToNew_v23000、memcpy。 */
   struct ncclDevComm_v23000 const* old = (struct ncclDevComm_v23000 const*)oldDevComm;
 
   newDevComm->magic = old->magic;

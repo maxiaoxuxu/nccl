@@ -213,13 +213,13 @@ const char *qp_attr_to_string(int attr) {
     return "UNKNOWN";
 }
 
-void print_if_missing_attr(int required_attr_mask, int attr_mask, int attr_to_check) {
+void print_if_missing_attr(int required_attr_mask, int attr_mask, int attr_to_check) { /* 中文索引·体内调用 qp_attr_to_string。 */
     if ((required_attr_mask & attr_to_check) != 0 && (attr_mask & attr_to_check) == 0)
         DOCA_LOG(LOG_ERR, "%s is required but diabled in attr_mask (%d)",
                  qp_attr_to_string(attr_to_check), attr_mask);
 }
 
-void print_missing_attrs(int required_attr_mask, int attr_mask) {
+void print_missing_attrs(int required_attr_mask, int attr_mask) { /* 中文索引·体内调用 print_if_missing_attr。 */
     print_if_missing_attr(required_attr_mask, attr_mask, DOCA_VERBS_QP_ATTR_ALLOW_REMOTE_WRITE);
     print_if_missing_attr(required_attr_mask, attr_mask, DOCA_VERBS_QP_ATTR_ALLOW_REMOTE_READ);
     print_if_missing_attr(required_attr_mask, attr_mask, DOCA_VERBS_QP_ATTR_MAX_QP_RD_ATOMIC);
@@ -292,7 +292,7 @@ bool is_X2err_attrs_valid(int attr_mask) {
     return true;
 }
 
-bool is_rst2init_attrs_valid(int attr_mask, uint32_t qp_type) {
+bool is_rst2init_attrs_valid(int attr_mask, uint32_t qp_type) { /* 中文索引·体内调用 print_missing_attrs。 */
     int required_attr = rst2init_requested_attr[qp_type];
     int valid_attr = required_attr | DOCA_VERBS_QP_ATTR_CURRENT_STATE |
                      DOCA_VERBS_QP_ATTR_NEXT_STATE | DOCA_VERBS_QP_ATTR_ATOMIC_MODE |
@@ -322,7 +322,7 @@ bool is_init2init_attrs_valid(int attr_mask, uint32_t qp_type) {
     return true;
 }
 
-bool is_init2rtr_attrs_valid(int attr_mask, uint32_t qp_type) {
+bool is_init2rtr_attrs_valid(int attr_mask, uint32_t qp_type) { /* 中文索引·体内调用 print_missing_attrs。 */
     int required_attr = init2rtr_requested_attr[qp_type];
     int valid_attr = required_attr | init2rtr_optional_attr[qp_type];
 
@@ -339,7 +339,7 @@ bool is_init2rtr_attrs_valid(int attr_mask, uint32_t qp_type) {
     return true;
 }
 
-bool is_rtr2rts_attrs_valid(int attr_mask, uint32_t qp_type) {
+bool is_rtr2rts_attrs_valid(int attr_mask, uint32_t qp_type) { /* 中文索引·体内调用 print_missing_attrs。 */
     int required_attr = rtr2rts_requested_attr[qp_type];
     int valid_attr = required_attr | rtr2rts_optional_attr[qp_type];
 
@@ -423,7 +423,7 @@ void convert_doca_verbs_qp_attr_mask_to_legal_mlx5_qp_opt_param_mask(
 }
 
 doca_error_t query_roce_version(struct ibv_context *ctx, uint8_t sgid_index,
-                                uint8_t &roce_version) noexcept {
+                                uint8_t &roce_version) noexcept { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_general_cmd。 */
     uint32_t in[MLX5_ST_SZ_DW(query_roce_address_in)] = {0};
     constexpr auto out_size =
         MLX5_ST_SZ_DW(query_roce_address_out) + MLX5_ST_SZ_DW(roce_addr_layout);
@@ -508,7 +508,7 @@ int random_in_range(int min, int max) { return min + rand() % (max - min + 1); }
 doca_error_t resolve_remote_mac(ibv_pd *pd_handle, uint8_t local_port_num, uint32_t local_gid_index,
                                 uint8_t remote_gid[PRIV_DOCA_GID_BYTE_LENGTH], uint8_t hop_limit,
                                 uint8_t is_global,
-                                uint8_t mac[PRIV_DOCA_MAC_BYTE_LENGTH]) noexcept {
+                                uint8_t mac[PRIV_DOCA_MAC_BYTE_LENGTH]) noexcept { /* 中文索引·体内调用 memcpy、doca_verbs_wrapper_ibv_create_ah。 */
     struct ibv_ah_attr attr = {};
 
     attr.port_num = local_port_num;
@@ -685,7 +685,7 @@ bool doca_verbs_qp_open::is_qp_attr_port_num_valid(uint16_t port_num) noexcept {
 }
 
 bool doca_verbs_qp_open::is_qp_attr_valid(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                          int attr_mask) noexcept {
+                                          int attr_mask) noexcept { /* 中文索引·体内调用 is_qp_attr_state_valid、is_qp_attr_path_mtu_valid。 */
     if ((attr_mask & DOCA_VERBS_QP_ATTR_CURRENT_STATE) &&
         !is_qp_attr_state_valid(verbs_qp_attr->current_state))
         return false;
@@ -722,7 +722,7 @@ doca_verbs_qp_state doca_verbs_qp_open::get_current_state() const noexcept {
 doca_error_t doca_verbs_qp_open::create_qp_obj(
     uint32_t uar_id, uint32_t log_rq_size, uint32_t log_sq_size_wqebb, uint32_t log_stride,
     uint64_t dbr_umem_offset, uint32_t dbr_umem_id, uint64_t wq_umem_offset, uint32_t wq_umem_id,
-    struct doca_verbs_qp_init_attr_open *verbs_qp_init_attr) noexcept {
+    struct doca_verbs_qp_init_attr_open *verbs_qp_init_attr) noexcept { /* 中文索引·体内调用 memset、doca_verbs_wrapper_mlx5dv_init_obj。 */
     create_qp_in create_in{0};
     create_qp_out create_out{0};
 
@@ -833,7 +833,7 @@ doca_error_t doca_verbs_qp_open::create_qp_obj(
 }
 
 doca_error_t doca_verbs_qp_open::rst2init(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                          int attr_mask) noexcept {
+                                          int attr_mask) noexcept { /* 中文索引·体内调用 is_rst2init_attrs_valid、is_lag_tx_port_affinity_attr_valid。 */
     rst2init_qp_in in{0};
     rst2init_qp_out out{0};
 
@@ -894,7 +894,7 @@ doca_error_t doca_verbs_qp_open::rst2init(struct doca_verbs_qp_attr_open *verbs_
 }
 
 doca_error_t doca_verbs_qp_open::init2init(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                           int attr_mask) noexcept {
+                                           int attr_mask) noexcept { /* 中文索引·体内调用 is_init2init_attrs_valid、is_lag_tx_port_affinity_attr_valid。 */
     init2init_qp_in in{0};
     init2init_qp_out out{0};
 
@@ -954,7 +954,7 @@ doca_error_t doca_verbs_qp_open::init2init(struct doca_verbs_qp_attr_open *verbs
 }
 
 doca_error_t doca_verbs_qp_open::init2rtr(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                          int attr_mask) noexcept {
+                                          int attr_mask) noexcept { /* 中文索引·体内调用 is_init2rtr_attrs_valid、convert_doca_mtu_size_to_prm_mtu_size。 */
     if (!is_init2rtr_attrs_valid(attr_mask, m_qp_type)) {
         DOCA_LOG(LOG_ERR, "init2rtr attrs are invalid");
         return DOCA_ERROR_INVALID_VALUE;
@@ -1129,7 +1129,7 @@ doca_error_t doca_verbs_qp_open::init2rtr(struct doca_verbs_qp_attr_open *verbs_
 }
 
 doca_error_t doca_verbs_qp_open::rtr2rts(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                         int attr_mask) noexcept {
+                                         int attr_mask) noexcept { /* 中文索引·体内调用 is_rtr2rts_attrs_valid、doca_internal_utils_log2。 */
     rtr2rts_qp_in in{0};
     rtr2rts_qp_out out{0};
 
@@ -1186,7 +1186,7 @@ doca_error_t doca_verbs_qp_open::rtr2rts(struct doca_verbs_qp_attr_open *verbs_q
 }
 
 doca_error_t doca_verbs_qp_open::rts2rts(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                         int attr_mask) noexcept {
+                                         int attr_mask) noexcept { /* 中文索引·体内调用 is_rts2rts_attrs_valid、query_roce_version。 */
     if (!is_rts2rts_attrs_valid(attr_mask, m_qp_type)) {
         DOCA_LOG(LOG_ERR, "rts2rts attrs are invalid");
         return DOCA_ERROR_INVALID_VALUE;
@@ -1270,7 +1270,7 @@ doca_error_t doca_verbs_qp_open::rts2rts(struct doca_verbs_qp_attr_open *verbs_q
 }
 
 doca_error_t doca_verbs_qp_open::qp2err(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                        int attr_mask) noexcept {
+                                        int attr_mask) noexcept { /* 中文索引·体内调用 is_X2err_attrs_valid、doca_verbs_wrapper_mlx5dv_devx_obj_modify。 */
     qp_2err_in in{0};
     qp_2err_out out{0};
 
@@ -1297,7 +1297,7 @@ doca_error_t doca_verbs_qp_open::qp2err(struct doca_verbs_qp_attr_open *verbs_qp
 }
 
 doca_error_t doca_verbs_qp_open::qp2rst(struct doca_verbs_qp_attr_open *verbs_qp_attr,
-                                        int attr_mask) noexcept {
+                                        int attr_mask) noexcept { /* 中文索引·体内调用 is_X2rst_attrs_valid、doca_verbs_wrapper_mlx5dv_devx_obj_modify。 */
     qp_2rst_in in{0};
     qp_2rst_out out{0};
 
@@ -1325,7 +1325,7 @@ doca_error_t doca_verbs_qp_open::qp2rst(struct doca_verbs_qp_attr_open *verbs_qp
 
 doca_error_t doca_verbs_qp_open::query_qp(
     struct doca_verbs_qp_attr_open *verbs_qp_attr,
-    struct doca_verbs_qp_init_attr_open *verbs_qp_init_attr) noexcept {
+    struct doca_verbs_qp_init_attr_open *verbs_qp_init_attr) noexcept { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_obj_query、convert_prm_qp_state_to_doca_verbs_qp_state。 */
     query_qp_in in{0};
     query_qp_out out{0};
 
@@ -1421,7 +1421,7 @@ doca_error_t doca_verbs_qp_open::query_qp(
     return DOCA_SUCCESS;
 }
 
-void doca_verbs_qp_open::create() {
+void doca_verbs_qp_open::create() { /* 中文索引·体内调用 doca_verbs_query_device、doca_internal_utils_next_power_of_two。 */
     auto status{DOCA_SUCCESS};
     m_pd = m_init_attr.pd;
 
@@ -1693,7 +1693,7 @@ void doca_verbs_qp_open::create() {
     DOCA_LOG(LOG_INFO, "DOCA IB Verbs QP %p: has been successfully created", this);
 }
 
-doca_error_t doca_verbs_qp_open::destroy() noexcept {
+doca_error_t doca_verbs_qp_open::destroy() noexcept { /* 中文索引·体内调用 doca_verbs_device_attr_free、doca_verbs_wrapper_mlx5dv_devx_obj_destroy。 */
     doca_error_t ret = DOCA_SUCCESS;
 
     if (m_verbs_device_attr) {
@@ -1738,7 +1738,7 @@ doca_error_t doca_verbs_qp_open::destroy() noexcept {
 
 doca_verbs_qp_open::doca_verbs_qp_open(struct ibv_context *ibv_ctx,
                                        struct doca_verbs_qp_init_attr_open *verbs_qp_init_attr)
-    : m_ibv_ctx(ibv_ctx) {
+    : m_ibv_ctx(ibv_ctx) { /* 中文索引·体内调用 std::invalid_argument、create。 */
     if (verbs_qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to create QP, verbs_qp_init_attr is NULL");
         throw std::invalid_argument("verbs_qp_init_attr is NULL");
@@ -1817,7 +1817,7 @@ bool doca_verbs_qp_open::get_emulate_no_dbr_ext() const noexcept {
  * Public API functions
  *********************************************************************************************************************/
 
-doca_error_t doca_verbs_qp_init_attr_create(doca_verbs_qp_init_attr_t **qp_init_attr) {
+doca_error_t doca_verbs_qp_init_attr_create(doca_verbs_qp_init_attr_t **qp_init_attr) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_qp_init_attr_create。 */
     doca_verbs_qp_init_attr_t *attr_ = nullptr;
 
     attr_ = (doca_verbs_qp_init_attr_t *)calloc(1, sizeof(doca_verbs_qp_init_attr_t));
@@ -1864,7 +1864,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_qp_init_attr_destroy(doca_verbs_qp_init_attr_t *qp_init_attr) {
+doca_error_t doca_verbs_qp_init_attr_destroy(doca_verbs_qp_init_attr_t *qp_init_attr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_destroy、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (qp_init_attr == nullptr) {
@@ -1899,7 +1899,7 @@ exit:
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_pd(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                            doca_dev_t *net_dev) {
+                                            doca_dev_t *net_dev) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_pd、net_dev->open->get_pd。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set pd: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -1936,7 +1936,7 @@ doca_error_t doca_verbs_qp_init_attr_set_pd(doca_verbs_qp_init_attr_t *qp_init_a
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_send_cq(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                 doca_verbs_cq_t *send_cq) {
+                                                 doca_verbs_cq_t *send_cq) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_send_cq。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set send_cq: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -1968,7 +1968,7 @@ doca_error_t doca_verbs_qp_init_attr_set_send_cq(doca_verbs_qp_init_attr_t *qp_i
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_receive_cq(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                    doca_verbs_cq_t *receive_cq) {
+                                                    doca_verbs_cq_t *receive_cq) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_receive_cq。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set receive_cq: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2001,7 +2001,7 @@ doca_error_t doca_verbs_qp_init_attr_set_receive_cq(doca_verbs_qp_init_attr_t *q
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_sq_sig_all(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                    int sq_sig_all) {
+                                                    int sq_sig_all) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_sq_sig_all。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set sq_sig_all: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2029,7 +2029,7 @@ doca_error_t doca_verbs_qp_init_attr_set_sq_sig_all(doca_verbs_qp_init_attr_t *q
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_sq_wr(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                               uint32_t sq_wr) {
+                                               uint32_t sq_wr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_sq_wr。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set sq_wr: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2056,7 +2056,7 @@ doca_error_t doca_verbs_qp_init_attr_set_sq_wr(doca_verbs_qp_init_attr_t *qp_ini
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_rq_wr(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                               uint32_t rq_wr) {
+                                               uint32_t rq_wr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_rq_wr。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set rq_wr: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2083,7 +2083,7 @@ doca_error_t doca_verbs_qp_init_attr_set_rq_wr(doca_verbs_qp_init_attr_t *qp_ini
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_send_max_sges(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                       uint32_t send_max_sges) {
+                                                       uint32_t send_max_sges) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_send_max_sges。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set send_max_sges: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2111,7 +2111,7 @@ doca_error_t doca_verbs_qp_init_attr_set_send_max_sges(doca_verbs_qp_init_attr_t
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_receive_max_sges(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                          uint32_t receive_max_sges) {
+                                                          uint32_t receive_max_sges) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_receive_max_sges。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set receive_max_sges: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2139,7 +2139,7 @@ doca_error_t doca_verbs_qp_init_attr_set_receive_max_sges(doca_verbs_qp_init_att
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_max_inline_data(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                         uint32_t max_inline_data) {
+                                                         uint32_t max_inline_data) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_max_inline_data。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set max_inline_data: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2167,7 +2167,7 @@ doca_error_t doca_verbs_qp_init_attr_set_max_inline_data(doca_verbs_qp_init_attr
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_user_index(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                    uint32_t user_index) {
+                                                    uint32_t user_index) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_user_index。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set user_index: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2195,7 +2195,7 @@ doca_error_t doca_verbs_qp_init_attr_set_user_index(doca_verbs_qp_init_attr_t *q
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_qp_type(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                 uint32_t qp_type) {
+                                                 uint32_t qp_type) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_qp_type。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set qp_type: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2223,7 +2223,7 @@ doca_error_t doca_verbs_qp_init_attr_set_qp_type(doca_verbs_qp_init_attr_t *qp_i
 
 doca_error_t doca_verbs_qp_init_attr_set_external_umem(doca_verbs_qp_init_attr_t *qp_init_attr,
                                                        doca_verbs_umem_t *external_umem,
-                                                       uint64_t external_umem_offset) {
+                                                       uint64_t external_umem_offset) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_external_umem。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_umem: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2258,7 +2258,7 @@ doca_error_t doca_verbs_qp_init_attr_set_external_umem(doca_verbs_qp_init_attr_t
 
 doca_error_t doca_verbs_qp_init_attr_set_external_umem_dbr(doca_verbs_qp_init_attr_t *qp_init_attr,
                                                            doca_verbs_umem_t *external_umem_dbr,
-                                                           uint64_t external_umem_dbr_offset) {
+                                                           uint64_t external_umem_dbr_offset) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_external_umem_dbr。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_umem_dbr: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2292,7 +2292,7 @@ doca_error_t doca_verbs_qp_init_attr_set_external_umem_dbr(doca_verbs_qp_init_at
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_external_uar(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                      doca_verbs_uar_t *external_uar) {
+                                                      doca_verbs_uar_t *external_uar) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_external_uar。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_uar: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2325,7 +2325,7 @@ doca_error_t doca_verbs_qp_init_attr_set_external_uar(doca_verbs_qp_init_attr_t 
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_qp_context(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                    void *qp_context) {
+                                                    void *qp_context) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_qp_context。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set qp_context: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2353,7 +2353,7 @@ doca_error_t doca_verbs_qp_init_attr_set_qp_context(doca_verbs_qp_init_attr_t *q
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_core_direct_master(doca_verbs_qp_init_attr_t *qp_init_attr,
-                                                            uint8_t core_direct_master) {
+                                                            uint8_t core_direct_master) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_core_direct_master。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set core_direct_master: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2387,7 +2387,7 @@ doca_error_t doca_verbs_qp_init_attr_set_core_direct_master(doca_verbs_qp_init_a
 }
 
 doca_error_t doca_verbs_qp_init_attr_set_send_dbr_mode(
-    doca_verbs_qp_init_attr_t *qp_init_attr, enum doca_verbs_qp_send_dbr_mode send_dbr_mode) {
+    doca_verbs_qp_init_attr_t *qp_init_attr, enum doca_verbs_qp_send_dbr_mode send_dbr_mode) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_send_dbr_mode。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set send_dbr_mode: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2416,7 +2416,7 @@ doca_error_t doca_verbs_qp_init_attr_set_send_dbr_mode(
 
 doca_error_t doca_verbs_qp_init_attr_get_send_dbr_mode(
     const doca_verbs_qp_init_attr_t *qp_init_attr,
-    enum doca_verbs_qp_send_dbr_mode *send_dbr_mode) {
+    enum doca_verbs_qp_send_dbr_mode *send_dbr_mode) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_get_send_dbr_mode。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set send_dbr_mode: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2480,7 +2480,7 @@ doca_error_t doca_verbs_qp_init_attr_get_emulate_no_dbr_ext(
 
 doca_error_t doca_verbs_qp_init_attr_set_ordering_semantic(
     doca_verbs_qp_init_attr_t *qp_init_attr,
-    enum doca_verbs_qp_ordering_semantic ordering_semantic) {
+    enum doca_verbs_qp_ordering_semantic ordering_semantic) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_set_ordering_semantic。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set ordering_semantic: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2523,7 +2523,7 @@ doca_error_t doca_verbs_qp_init_attr_set_ordering_semantic(
 
 doca_error_t doca_verbs_qp_init_attr_get_ordering_semantic(
     const doca_verbs_qp_init_attr_t *qp_init_attr,
-    enum doca_verbs_qp_ordering_semantic *ordering_semantic) {
+    enum doca_verbs_qp_ordering_semantic *ordering_semantic) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_init_attr_get_ordering_semantic。 */
     if (qp_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get ordering_semantic: parameter qp_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2561,7 +2561,7 @@ doca_error_t doca_verbs_qp_init_attr_get_ordering_semantic(
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_create(doca_verbs_qp_attr_t **qp_attr) {
+doca_error_t doca_verbs_qp_attr_create(doca_verbs_qp_attr_t **qp_attr) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_qp_attr_create。 */
     doca_verbs_qp_attr_t *attr_ = nullptr;
 
     attr_ = (doca_verbs_qp_attr_t *)calloc(1, sizeof(doca_verbs_qp_attr_t));
@@ -2608,7 +2608,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_qp_attr_destroy(doca_verbs_qp_attr_t *qp_attr) {
+doca_error_t doca_verbs_qp_attr_destroy(doca_verbs_qp_attr_t *qp_attr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_destroy、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (qp_attr == nullptr) {
@@ -2643,7 +2643,7 @@ exit:
 }
 
 doca_error_t doca_verbs_qp_attr_set_next_state(doca_verbs_qp_attr_t *qp_attr,
-                                               enum doca_verbs_qp_state next_state) {
+                                               enum doca_verbs_qp_state next_state) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_next_state。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set next_state: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2670,7 +2670,7 @@ doca_error_t doca_verbs_qp_attr_set_next_state(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_set_current_state(doca_verbs_qp_attr_t *qp_attr,
-                                                  enum doca_verbs_qp_state current_state) {
+                                                  enum doca_verbs_qp_state current_state) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_current_state。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set current_state: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2697,7 +2697,7 @@ doca_error_t doca_verbs_qp_attr_set_current_state(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_get_current_state(doca_verbs_qp_attr_t *qp_attr,
-                                                  enum doca_verbs_qp_state *current_state) {
+                                                  enum doca_verbs_qp_state *current_state) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_get_current_state。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set current_state: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2724,7 +2724,7 @@ doca_error_t doca_verbs_qp_attr_get_current_state(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_set_path_mtu(doca_verbs_qp_attr_t *qp_attr,
-                                             enum doca_verbs_mtu_size path_mtu) {
+                                             enum doca_verbs_mtu_size path_mtu) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_path_mtu。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set path_mtu: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2750,7 +2750,7 @@ doca_error_t doca_verbs_qp_attr_set_path_mtu(doca_verbs_qp_attr_t *qp_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_rq_psn(doca_verbs_qp_attr_t *qp_attr, uint32_t rq_psn) {
+doca_error_t doca_verbs_qp_attr_set_rq_psn(doca_verbs_qp_attr_t *qp_attr, uint32_t rq_psn) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_rq_psn。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set rq_psn: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2776,7 +2776,7 @@ doca_error_t doca_verbs_qp_attr_set_rq_psn(doca_verbs_qp_attr_t *qp_attr, uint32
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_sq_psn(doca_verbs_qp_attr_t *qp_attr, uint32_t sq_psn) {
+doca_error_t doca_verbs_qp_attr_set_sq_psn(doca_verbs_qp_attr_t *qp_attr, uint32_t sq_psn) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_sq_psn。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set sq_psn: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2803,7 +2803,7 @@ doca_error_t doca_verbs_qp_attr_set_sq_psn(doca_verbs_qp_attr_t *qp_attr, uint32
 }
 
 doca_error_t doca_verbs_qp_attr_set_dest_qp_num(doca_verbs_qp_attr_t *qp_attr,
-                                                uint32_t dest_qp_num) {
+                                                uint32_t dest_qp_num) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_dest_qp_num。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set dest_qp_num: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2830,7 +2830,7 @@ doca_error_t doca_verbs_qp_attr_set_dest_qp_num(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_set_allow_remote_write(doca_verbs_qp_attr_t *qp_attr,
-                                                       int allow_remote_write) {
+                                                       int allow_remote_write) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_allow_remote_write。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set allow_remote_write: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2858,7 +2858,7 @@ doca_error_t doca_verbs_qp_attr_set_allow_remote_write(doca_verbs_qp_attr_t *qp_
 }
 
 doca_error_t doca_verbs_qp_attr_set_allow_remote_read(doca_verbs_qp_attr_t *qp_attr,
-                                                      int allow_remote_read) {
+                                                      int allow_remote_read) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_allow_remote_read。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set allow_remote_read: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2886,7 +2886,7 @@ doca_error_t doca_verbs_qp_attr_set_allow_remote_read(doca_verbs_qp_attr_t *qp_a
 }
 
 doca_error_t doca_verbs_qp_attr_set_atomic_mode(doca_verbs_qp_attr_t *qp_attr,
-                                                enum doca_verbs_qp_atomic_mode atomic_mode) {
+                                                enum doca_verbs_qp_atomic_mode atomic_mode) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_atomic_mode。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set atomic_mode: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2912,7 +2912,7 @@ doca_error_t doca_verbs_qp_attr_set_atomic_mode(doca_verbs_qp_attr_t *qp_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_pkey_index(doca_verbs_qp_attr_t *qp_attr, uint16_t pkey_index) {
+doca_error_t doca_verbs_qp_attr_set_pkey_index(doca_verbs_qp_attr_t *qp_attr, uint16_t pkey_index) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_pkey_index。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set pkey_index: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2938,7 +2938,7 @@ doca_error_t doca_verbs_qp_attr_set_pkey_index(doca_verbs_qp_attr_t *qp_attr, ui
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_port_num(doca_verbs_qp_attr_t *qp_attr, uint16_t port_num) {
+doca_error_t doca_verbs_qp_attr_set_port_num(doca_verbs_qp_attr_t *qp_attr, uint16_t port_num) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_port_num。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set port_num: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2965,7 +2965,7 @@ doca_error_t doca_verbs_qp_attr_set_port_num(doca_verbs_qp_attr_t *qp_attr, uint
 }
 
 doca_error_t doca_verbs_qp_attr_set_ack_timeout(doca_verbs_qp_attr_t *qp_attr,
-                                                uint16_t ack_timeout) {
+                                                uint16_t ack_timeout) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_ack_timeout。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set ack_timeout: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -2991,7 +2991,7 @@ doca_error_t doca_verbs_qp_attr_set_ack_timeout(doca_verbs_qp_attr_t *qp_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_retry_cnt(doca_verbs_qp_attr_t *qp_attr, uint16_t retry_cnt) {
+doca_error_t doca_verbs_qp_attr_set_retry_cnt(doca_verbs_qp_attr_t *qp_attr, uint16_t retry_cnt) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_retry_cnt。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set retry_cnt: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3017,7 +3017,7 @@ doca_error_t doca_verbs_qp_attr_set_retry_cnt(doca_verbs_qp_attr_t *qp_attr, uin
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_attr_set_rnr_retry(doca_verbs_qp_attr_t *qp_attr, uint16_t rnr_retry) {
+doca_error_t doca_verbs_qp_attr_set_rnr_retry(doca_verbs_qp_attr_t *qp_attr, uint16_t rnr_retry) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_rnr_retry。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set rnr_retry: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3044,7 +3044,7 @@ doca_error_t doca_verbs_qp_attr_set_rnr_retry(doca_verbs_qp_attr_t *qp_attr, uin
 }
 
 doca_error_t doca_verbs_qp_attr_set_min_rnr_timer(doca_verbs_qp_attr_t *qp_attr,
-                                                  uint16_t min_rnr_timer) {
+                                                  uint16_t min_rnr_timer) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_min_rnr_timer。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set min_rnr_timer: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3071,7 +3071,7 @@ doca_error_t doca_verbs_qp_attr_set_min_rnr_timer(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_set_max_rd_atomic(doca_verbs_qp_attr_t *qp_attr,
-                                                  uint8_t max_rd_atomic) {
+                                                  uint8_t max_rd_atomic) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_max_rd_atomic、doca_internal_utils_is_power_of_two。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set max_rd_atomic: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3105,7 +3105,7 @@ doca_error_t doca_verbs_qp_attr_set_max_rd_atomic(doca_verbs_qp_attr_t *qp_attr,
 }
 
 doca_error_t doca_verbs_qp_attr_set_max_dest_rd_atomic(doca_verbs_qp_attr_t *qp_attr,
-                                                       uint8_t max_dest_rd_atomic) {
+                                                       uint8_t max_dest_rd_atomic) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_max_dest_rd_atomic、doca_internal_utils_is_power_of_two。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set max_dest_rd_atomic: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3140,7 +3140,7 @@ doca_error_t doca_verbs_qp_attr_set_max_dest_rd_atomic(doca_verbs_qp_attr_t *qp_
 }
 
 doca_error_t doca_verbs_qp_attr_set_lag_tx_port_affinity(doca_verbs_qp_attr_t *qp_attr,
-                                                         uint8_t lag_tx_port_affinity) {
+                                                         uint8_t lag_tx_port_affinity) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_lag_tx_port_affinity。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set lag_tx_port_affinity: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3168,7 +3168,7 @@ doca_error_t doca_verbs_qp_attr_set_lag_tx_port_affinity(doca_verbs_qp_attr_t *q
 }
 
 doca_error_t doca_verbs_qp_attr_set_cc_group(doca_verbs_qp_attr_t *qp_attr,
-                                             doca_verbs_cc_group_t *cc_group) {
+                                             doca_verbs_cc_group_t *cc_group) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_cc_group。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set cc_group: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3218,7 +3218,7 @@ doca_error_t doca_verbs_qp_attr_set_counter_set_id(doca_verbs_qp_attr_t *qp_attr
 }
 
 doca_error_t doca_verbs_qp_attr_set_ah_attr(doca_verbs_qp_attr_t *qp_attr,
-                                            doca_verbs_ah_attr_t *ah_attr) {
+                                            doca_verbs_ah_attr_t *ah_attr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_attr_set_ah_attr、memcpy。 */
     if (qp_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set ah_attr: parameter qp_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3253,7 +3253,7 @@ doca_error_t doca_verbs_qp_attr_set_ah_attr(doca_verbs_qp_attr_t *qp_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_ah_attr_create(doca_dev_t *net_dev, doca_verbs_ah_attr_t **ah_attr) {
+doca_error_t doca_verbs_ah_attr_create(doca_dev_t *net_dev, doca_verbs_ah_attr_t **ah_attr) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_ah_attr_create。 */
     doca_verbs_ah_attr_t *attr_ = nullptr;
 
     if (ah_attr == nullptr) {
@@ -3306,7 +3306,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_ah_attr_destroy(doca_verbs_ah_attr_t *ah_attr) {
+doca_error_t doca_verbs_ah_attr_destroy(doca_verbs_ah_attr_t *ah_attr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_destroy、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (ah_attr == nullptr) {
@@ -3340,7 +3340,7 @@ exit:
     return status;
 }
 
-doca_error_t doca_verbs_ah_attr_set_gid(doca_verbs_ah_attr_t *ah_attr, struct doca_verbs_gid gid) {
+doca_error_t doca_verbs_ah_attr_set_gid(doca_verbs_ah_attr_t *ah_attr, struct doca_verbs_gid gid) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_gid。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set gid: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3367,7 +3367,7 @@ doca_error_t doca_verbs_ah_attr_set_gid(doca_verbs_ah_attr_t *ah_attr, struct do
 }
 
 doca_error_t doca_verbs_ah_attr_set_addr_type(doca_verbs_ah_attr_t *ah_attr,
-                                              enum doca_verbs_addr_type addr_type) {
+                                              enum doca_verbs_addr_type addr_type) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_addr_type。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set addr_type: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3393,7 +3393,7 @@ doca_error_t doca_verbs_ah_attr_set_addr_type(doca_verbs_ah_attr_t *ah_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_ah_attr_set_dlid(doca_verbs_ah_attr_t *ah_attr, uint32_t dlid) {
+doca_error_t doca_verbs_ah_attr_set_dlid(doca_verbs_ah_attr_t *ah_attr, uint32_t dlid) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_dlid。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set dlid: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3419,7 +3419,7 @@ doca_error_t doca_verbs_ah_attr_set_dlid(doca_verbs_ah_attr_t *ah_attr, uint32_t
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_ah_attr_set_sl(doca_verbs_ah_attr_t *ah_attr, uint8_t sl) {
+doca_error_t doca_verbs_ah_attr_set_sl(doca_verbs_ah_attr_t *ah_attr, uint8_t sl) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_sl。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set sl: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3445,7 +3445,7 @@ doca_error_t doca_verbs_ah_attr_set_sl(doca_verbs_ah_attr_t *ah_attr, uint8_t sl
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_ah_attr_set_sgid_index(doca_verbs_ah_attr_t *ah_attr, uint8_t sgid_index) {
+doca_error_t doca_verbs_ah_attr_set_sgid_index(doca_verbs_ah_attr_t *ah_attr, uint8_t sgid_index) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_sgid_index。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set sgid_index: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3472,7 +3472,7 @@ doca_error_t doca_verbs_ah_attr_set_sgid_index(doca_verbs_ah_attr_t *ah_attr, ui
 }
 
 doca_error_t doca_verbs_ah_attr_set_static_rate(doca_verbs_ah_attr_t *ah_attr,
-                                                uint8_t static_rate) {
+                                                uint8_t static_rate) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_static_rate。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set static_rate: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3498,7 +3498,7 @@ doca_error_t doca_verbs_ah_attr_set_static_rate(doca_verbs_ah_attr_t *ah_attr,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_ah_attr_set_hop_limit(doca_verbs_ah_attr_t *ah_attr, uint8_t hop_limit) {
+doca_error_t doca_verbs_ah_attr_set_hop_limit(doca_verbs_ah_attr_t *ah_attr, uint8_t hop_limit) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_hop_limit。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set hop_limit: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3525,7 +3525,7 @@ doca_error_t doca_verbs_ah_attr_set_hop_limit(doca_verbs_ah_attr_t *ah_attr, uin
 }
 
 doca_error_t doca_verbs_ah_attr_set_traffic_class(doca_verbs_ah_attr_t *ah_attr,
-                                                  uint8_t traffic_class) {
+                                                  uint8_t traffic_class) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ah_attr_set_traffic_class。 */
     if (ah_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set traffic_class: parameter ah_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3552,7 +3552,7 @@ doca_error_t doca_verbs_ah_attr_set_traffic_class(doca_verbs_ah_attr_t *ah_attr,
 }
 
 doca_error_t doca_verbs_qp_create(doca_dev_t *net_dev, doca_verbs_qp_init_attr_t *qp_init_attr,
-                                  doca_verbs_qp_t **verbs_qp) {
+                                  doca_verbs_qp_t **verbs_qp) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_qp_create。 */
     doca_verbs_qp_t *qp_ = nullptr;
 
     if (qp_init_attr == nullptr) {
@@ -3603,7 +3603,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_qp_destroy(doca_verbs_qp_t *verbs_qp) {
+doca_error_t doca_verbs_qp_destroy(doca_verbs_qp_t *verbs_qp) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_destroy、verbs_qp->open->destroy。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (verbs_qp == nullptr) {
@@ -3644,7 +3644,7 @@ exit:
 }
 
 doca_error_t doca_verbs_qp_modify(doca_verbs_qp_t *verbs_qp, doca_verbs_qp_attr_t *qp_attr,
-                                  int attr_mask) {
+                                  int attr_mask) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_modify、verbs_qp->open->is_qp_attr_valid。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to modify verbs_qp: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3726,7 +3726,7 @@ invalid_input:
 }
 
 doca_error_t doca_verbs_qp_query(doca_verbs_qp_t *verbs_qp, doca_verbs_qp_attr_t *qp_attr,
-                                 doca_verbs_qp_init_attr_t *qp_init_attr, int *attr_mask) {
+                                 doca_verbs_qp_init_attr_t *qp_init_attr, int *attr_mask) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_query、verbs_qp->open->query_qp。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to query verbs_qp: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3770,7 +3770,7 @@ doca_error_t doca_verbs_qp_query(doca_verbs_qp_t *verbs_qp, doca_verbs_qp_attr_t
     return verbs_qp->open->query_qp(qp_attr->open, qp_init_attr->open);
 }
 
-doca_error_t doca_verbs_qp_get_qpn(const doca_verbs_qp_t *verbs_qp, uint32_t *qpn) {
+doca_error_t doca_verbs_qp_get_qpn(const doca_verbs_qp_t *verbs_qp, uint32_t *qpn) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_get_qpn、verbs_qp->open->get_qpn。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get_qpn: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3801,7 +3801,7 @@ doca_error_t doca_verbs_qp_get_qpn(const doca_verbs_qp_t *verbs_qp, uint32_t *qp
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_get_dbr_addr(const doca_verbs_qp_t *verbs_qp, void **dbr_addr) {
+doca_error_t doca_verbs_qp_get_dbr_addr(const doca_verbs_qp_t *verbs_qp, void **dbr_addr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_get_dbr_addr、verbs_qp->open->get_dbr_addr。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get_dbr_addr: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3832,7 +3832,7 @@ doca_error_t doca_verbs_qp_get_dbr_addr(const doca_verbs_qp_t *verbs_qp, void **
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_qp_get_uar_addr(const doca_verbs_qp_t *verbs_qp, void **uar_addr) {
+doca_error_t doca_verbs_qp_get_uar_addr(const doca_verbs_qp_t *verbs_qp, void **uar_addr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_get_uar_addr、verbs_qp->open->get_uar_addr。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get_uar_addr: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3865,7 +3865,7 @@ doca_error_t doca_verbs_qp_get_uar_addr(const doca_verbs_qp_t *verbs_qp, void **
 
 doca_error_t doca_verbs_qp_get_wq(const doca_verbs_qp_t *verbs_qp, void **sq_buf,
                                   uint32_t *sq_num_entries, void **rq_buf, uint32_t *rq_num_entries,
-                                  uint32_t *rwqe_size_bytes) {
+                                  uint32_t *rwqe_size_bytes) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_qp_get_wq、verbs_qp->open->get_sq_buf。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get_wq: parameter verbs_qp is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -3928,7 +3928,7 @@ struct doca_verbs_srq *doca_verbs_qp_init_attr_get_srq(
     return qp_init_attr->open->srq;
 }
 
-bool doca_verbs_qp_get_emulate_no_dbr_ext(const doca_verbs_qp_t *verbs_qp) {
+bool doca_verbs_qp_get_emulate_no_dbr_ext(const doca_verbs_qp_t *verbs_qp) { /* 中文索引·体内调用 verbs_qp->open->get_emulate_no_dbr_ext。 */
     if (verbs_qp == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get emulate_no_dbr_ext: parameter verbs_qp is NULL");
         return false;

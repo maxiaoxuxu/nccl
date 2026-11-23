@@ -54,7 +54,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
     return NCCL_LL_FLAG(sendStep[i] + 1);
   }
 
-  inline __device__ void barrier() {
+  inline __device__ void barrier() { /* 中文索引·体内调用 __syncwarp、barrier_sync。 */
     if (nthreads == WARP_SIZE) {
       __syncwarp();
     } else {
@@ -64,7 +64,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
 
   int abort = 0;
 
-  inline __device__ void waitSend(int nbytes) {
+  inline __device__ void waitSend(int nbytes) { /* 中文索引·体内调用 checkAbort、barrier。 */
     if (sendConnHeadPtr) {
       int spins = 0;
       while (sendConnHeadCache + NCCL_STEPS < sendConnHead + 1) {
@@ -90,7 +90,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
     if (recvConnHeadPtr) *recvConnHeadPtr = recvConnHead += 1;
   }
 
-  inline __device__ void incSend(int i, int offset) {
+  inline __device__ void incSend(int i, int offset) { /* 中文索引·体内调用 storeLL、sendPtr。 */
     // LL Cleanup : write all flags in the slice to make sure we don't have
     // data corruption when flag loops over.
     if ((sendStep[i] & NCCL_LL_CLEAN_MASK) == NCCL_LL_CLEAN_MASK) {
@@ -99,7 +99,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
     sendStep[i]++;
   }
 
-  __device__ uint64_t readLL(int offset, int i) {
+  __device__ uint64_t readLL(int offset, int i) { /* 中文索引·体内调用 recvPtr、recvFlag。 */
     union ncclLLFifoLine* src = recvPtr(i) + offset;
     uint32_t flag = recvFlag(i);
     uint32_t data1, flag1, data2, flag2;
@@ -116,7 +116,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
   }
 
   template <int BeginIx>
-  __device__ void readLLBeginAll(int offset, ncclLLFifoLine (&line)[MaxRecv ? MaxRecv : 1]) {
+  __device__ void readLLBeginAll(int offset, ncclLLFifoLine (&line)[MaxRecv ? MaxRecv : 1]) { /* 中文索引·体内调用 fan.nrecv、recvPtr。 */
     NVCC_PRAGMA_UNROLL_AUTO
     for (int i = BeginIx; i < MaxRecv; i++) {
       // Yes, for some template arguments this code will be unreachable.  That's fine.
@@ -130,7 +130,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
       }
     }
   }
-  __device__ uint64_t readLLFinish(int offset, ncclLLFifoLine (&line)[MaxRecv ? MaxRecv : 1], int i) {
+  __device__ uint64_t readLLFinish(int offset, ncclLLFifoLine (&line)[MaxRecv ? MaxRecv : 1], int i) { /* 中文索引·体内调用 recvPtr、recvFlag。 */
     union ncclLLFifoLine* src = recvPtr(i) + offset;
     uint32_t flag = recvFlag(i);
     int spins = 0;
@@ -191,7 +191,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
       T elt[EltPerLine];
     };
 
-    __device__ void loadBegin(T* src, int eltN) {
+    __device__ void loadBegin(T* src, int eltN) { /* 中文索引·体内调用 uintptr_t、load。 */
       if (sizeof(T) <= 2) {
         misalign = reinterpret_cast<uintptr_t>(src) % 4;
         uint32_t* p = reinterpret_cast<uint32_t*>(reinterpret_cast<uintptr_t>(src) & -uintptr_t(4));
@@ -209,7 +209,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
       }
     }
 
-    __device__ uint64_t loadFinish() {
+    __device__ uint64_t loadFinish() { /* 中文索引·体内调用 __funnelshift_r。 */
       if (sizeof(T) <= 2) {
         u4[0] = __funnelshift_r(u4[0], u4[1], 8 * misalign);
         // u4[2] would be simpler, but that throws warnings on some compilers
@@ -236,7 +236,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
   }
 
   template <int RECV, int SEND, int SrcBuf, int DstBuf>
-  __device__ __forceinline__ void LLGenericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) {
+  __device__ __forceinline__ void LLGenericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) { /* 中文索引·体内调用 waitSend、divUp。 */
     constexpr int SRC = SrcBuf != -1 ? 1 : 0;
     constexpr int DST = DstBuf != -1 ? 1 : 0;
     T* srcElts = SrcBuf == -1 ? nullptr : userBufs[SrcBuf] + srcIx;
@@ -314,7 +314,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
     recvStep[i] = conn->step;
     if (wid == i) recvConn = conn;
   }
-  __device__ __forceinline__ void loadRecvSync() {
+  __device__ __forceinline__ void loadRecvSync() { /* 中文索引·体内调用 fan.nrecv。 */
     if (tid >= nthreads - WARP_SIZE && wid < fan.nrecv()) {
       recvConnHeadPtr = recvConn->head;
       recvConnHead = recvConn->step;
@@ -326,7 +326,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
     sendStep[i] = conn->step;
     if (wid == i) sendConn = conn;
   }
-  __device__ __forceinline__ void loadSendSync() {
+  __device__ __forceinline__ void loadSendSync() { /* 中文索引·体内调用 fan.nsend。 */
     if (tid < fan.nsend()) {
       sendConnHeadPtr = sendConn->head;
       sendConnHeadCache = *sendConnHeadPtr;
@@ -341,7 +341,7 @@ public:
                         uint8_t connIndexRecv = 0, uint8_t connIndexSend = 0, struct ncclDevWorkColl* e = nullptr,
                         bool ipcReg = false, bool netReg = false, int stepSize_ = 0)
     : redOp(redOpArg), tid(tid), nthreads(nthreads), wid(tid % WARP_SIZE), group(group),
-      stepLines(ncclShmem.comm.buffSizes[NCCL_PROTO_LL] / NCCL_STEPS / sizeof(ncclLLFifoLine)) {
+      stepLines(ncclShmem.comm.buffSizes[NCCL_PROTO_LL] / NCCL_STEPS / sizeof(ncclLLFifoLine)) { /* 中文索引·体内调用 loadRecvConn、loadSendConn。 */
     auto* channel = &ncclShmem.channel;
     // If we are going to support oneshot collNet + LL, then we would need to add connector index here
     int nrecv = 0, nsend = 0;
@@ -366,7 +366,7 @@ public:
     setDataPtrs(inputBuf, outputBuf);
   }
 
-  __device__ ~Primitives() {
+  __device__ ~Primitives() { /* 中文索引·体内调用 fan.nrecv、fan.nsend。 */
     // Save steps for the next operation
     if (tid >= nthreads - WARP_SIZE && wid < fan.nrecv()) recvConn->step = recvConnHead;
     if (tid < fan.nsend()) sendConn->step = sendConnHead;

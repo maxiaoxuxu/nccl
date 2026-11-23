@@ -21,7 +21,7 @@ int64_t ncclParamMaxCTAs();
 static ncclResult_t preTuningEnqueueRawTask(struct ncclComm* comm, struct ncclRawTask* raw,
                                             struct ncclTaskTuningInfoQueue* tiq);
 
-static ncclResult_t fillCollTuningInput(struct ncclComm* comm, struct ncclRawTaskColl* raw, ncclTuningInput_t* in) {
+static ncclResult_t fillCollTuningInput(struct ncclComm* comm, struct ncclRawTaskColl* raw, ncclTuningInput_t* in) { /* 中文索引·体内调用 ncclDefaultChunkStep、ncclDefaultSliceStep。 */
   size_t userElementSize;
   size_t sendbuffSize;
   size_t recvbuffSize;
@@ -87,7 +87,7 @@ static ncclResult_t fillCollTuningInput(struct ncclComm* comm, struct ncclRawTas
 }
 
 static ncclResult_t fillSendRecvTuningInput(struct ncclComm* comm, struct ncclRawTaskSendRecv* raw,
-                                            ncclTuningInput_t* in) {
+                                            ncclTuningInput_t* in) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   struct ncclReg* regBuf;
   bool isValid;
 
@@ -107,7 +107,7 @@ static ncclResult_t fillSendRecvTuningInput(struct ncclComm* comm, struct ncclRa
   return ncclSuccess;
 }
 
-static ncclResult_t fillRmaTuningInput(struct ncclComm* comm, struct ncclRawTaskRma* raw, ncclTuningInput_t* in) {
+static ncclResult_t fillRmaTuningInput(struct ncclComm* comm, struct ncclRawTaskRma* raw, ncclTuningInput_t* in) { /* 中文索引·体内调用 ncclTypeSize。 */
   in->comm = comm;
   in->tuningMask = NCCL_TUNING_MASK_ALL;
   in->func = raw->func;
@@ -129,7 +129,7 @@ static ncclResult_t fillRmaTuningInput(struct ncclComm* comm, struct ncclRawTask
 }
 
 static ncclResult_t fillAllGatherVTuningInput(struct ncclComm* comm, struct ncclRawTaskAllGatherV* raw,
-                                              ncclTuningInput_t* in) {
+                                              ncclTuningInput_t* in) { /* 中文索引·体内调用 ncclTypeSize。 */
   size_t elementSize = ncclTypeSize(raw->datatype);
 
   in->comm = comm;
@@ -165,7 +165,7 @@ static bool preTuningAllGatherVRootUsed(struct ncclRawTaskAllGatherV* agv, int r
 }
 
 static ncclResult_t preTuningAddBcastToAllGatherV(struct ncclComm* comm, struct ncclRawTaskAllGatherV* agv,
-                                                  struct ncclRawTaskColl* bcast) {
+                                                  struct ncclRawTaskColl* bcast) { /* 中文索引·体内调用 ncclTypeSize。 */
   if (bcast->root < 0 || bcast->root >= agv->nRanks) return ncclInvalidArgument;
 
   agv->stream = bcast->stream;
@@ -186,7 +186,7 @@ static bool preTuningBcastFallsBack(struct ncclRawTaskColl* bcast) {
   return true;
 }
 
-static bool preTuningBcastFitsAllGatherV(struct ncclRawTaskAllGatherV* agv, struct ncclRawTaskColl* bcast) {
+static bool preTuningBcastFitsAllGatherV(struct ncclRawTaskAllGatherV* agv, struct ncclRawTaskColl* bcast) { /* 中文索引·体内调用 preTuningAllGatherVRootUsed。 */
   if (bcast->stream != agv->stream) return false;
   if (preTuningAllGatherVRootUsed(agv, bcast->root)) return false;
   return true;
@@ -194,7 +194,7 @@ static bool preTuningBcastFitsAllGatherV(struct ncclRawTaskAllGatherV* agv, stru
 
 static ncclResult_t preTuningRemoveBcastRawFromQueue(
   struct ncclComm* comm, struct ncclIntruQueue<struct ncclRawTask, &ncclRawTask::next>* bcastQueue,
-  struct ncclRawTask* bcastRaw, bool freeRaw) {
+  struct ncclRawTask* bcastRaw, bool freeRaw) { /* 中文索引·体内调用 ncclIntruQueueDelete、ncclMemoryPoolFree。 */
   ncclIntruQueueDelete(bcastQueue, bcastRaw, preTuningRawTaskPtrEqual);
   if (freeRaw) ncclMemoryPoolFree(&comm->memPool_ncclRawTask, bcastRaw);
   return ncclSuccess;
@@ -202,7 +202,7 @@ static ncclResult_t preTuningRemoveBcastRawFromQueue(
 
 static ncclResult_t preTuningMergeBcastQueue(struct ncclComm* comm,
                                              struct ncclIntruQueue<struct ncclRawTask, &ncclRawTask::next>* bcastQueue,
-                                             struct ncclTaskTuningInfoQueue* tiq) {
+                                             struct ncclTaskTuningInfoQueue* tiq) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueHead。 */
   while (!ncclIntruQueueEmpty(bcastQueue)) {
     struct ncclRawTask* agvRaw = nullptr;
 
@@ -239,7 +239,7 @@ static ncclResult_t preTuningMergeBcastQueue(struct ncclComm* comm,
 }
 
 static ncclResult_t preTuningEnqueueRawTask(struct ncclComm* comm, struct ncclRawTask* raw,
-                                            struct ncclTaskTuningInfoQueue* tiq) {
+                                            struct ncclTaskTuningInfoQueue* tiq) { /* 中文索引·体内调用 fillCollTuningInput、fillSendRecvTuningInput。 */
   struct ncclTaskTuningInfo* pt = ncclMemoryStackAlloc<struct ncclTaskTuningInfo>(&comm->memScoped);
   pt->raw = raw;
   pt->tuningOut = NCCL_TUNING_RESULT_INIT;
@@ -264,7 +264,7 @@ static ncclResult_t preTuningEnqueueRawTask(struct ncclComm* comm, struct ncclRa
 }
 
 ncclResult_t ncclTaskPreTuning(struct ncclComm* comm, struct ncclRawTaskQueue* rtq,
-                               struct ncclTaskTuningInfoQueue* tiq) {
+                               struct ncclTaskTuningInfoQueue* tiq) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   struct ncclRawTask* raw;
 
   if (comm == nullptr || rtq == nullptr || tiq == nullptr) return ncclInvalidArgument;

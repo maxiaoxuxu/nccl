@@ -25,21 +25,21 @@ struct comboCtx {
 };
 
 template <typename T, size_t N>
-ncclResult_t comboResolve(const void* ctx, const char* input, T& out) {
+ncclResult_t comboResolve(const void* ctx, const char* input, T& out) { /* 中文索引·体内调用 c->base.resolve。 */
   auto* c = static_cast<const comboCtx<T, N>*>(ctx);
   if (oneOfResolve<T, N>(&c->options, input, out) == ncclSuccess) return ncclSuccess;
   return c->base.resolve(input, out);
 }
 
 template <typename T, size_t N>
-bool comboValidate(const void* ctx, const T& val) {
+bool comboValidate(const void* ctx, const T& val) { /* 中文索引·体内调用 oneOfLookup、c->base.validate。 */
   auto* c = static_cast<const comboCtx<T, N>*>(ctx);
   if (oneOfLookup(c->options, val) != nullptr) return true;
   return c->base.validate(val);
 }
 
 template <typename T, size_t N>
-std::string comboToString(const void* ctx, const T& val) {
+std::string comboToString(const void* ctx, const T& val) { /* 中文索引·体内调用 oneOfLookup、c->base.toString。 */
   auto* c = static_cast<const comboCtx<T, N>*>(ctx);
   if (const char* name = oneOfLookup(c->options, val)) return name;
   return c->base.toString(val);
@@ -53,7 +53,7 @@ std::string comboToString(const void* ctx, const T& val) {
 // Options are checked first (case-insensitive name match). If no option matches,
 // resolve/validate/toString delegate to the base parser.
 template <typename T, size_t N>
-ncclParamParser<T> ncclParamCombo(ncclParamParser<T> base, ncclOptionSet<T, N> options) {
+ncclParamParser<T> ncclParamCombo(ncclParamParser<T> base, ncclOptionSet<T, N> options) { /* 中文索引·体内调用 std::move。 */
   using namespace nccl::param::parser;
   std::string d = base.desc + ", or one of:";
   for (const auto& opt : options) {

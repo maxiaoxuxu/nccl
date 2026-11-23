@@ -57,7 +57,7 @@ ncclResult_t wrap_ibv_destroy_comp_channel(struct ibv_comp_channel* channel);
 ncclResult_t wrap_ibv_create_cq(struct ibv_cq** ret, struct ibv_context* context, int cqe, void* cq_context,
                                 struct ibv_comp_channel* channel, int comp_vector);
 ncclResult_t wrap_ibv_destroy_cq(struct ibv_cq* cq);
-static inline ncclResult_t wrap_ibv_poll_cq(struct ibv_cq* cq, int num_entries, struct ibv_wc* wc, int* num_done) {
+static inline ncclResult_t wrap_ibv_poll_cq(struct ibv_cq* cq, int num_entries, struct ibv_wc* wc, int* num_done) { /* 中文索引·体内调用 cq->context->ops.poll_cq。 */
   int done = cq->context->ops.poll_cq(cq, num_entries,
                                       wc); /*returns the number of wcs or 0 on success, a negative number otherwise*/
   if (done < 0) {
@@ -74,7 +74,7 @@ ncclResult_t wrap_ibv_query_ece(struct ibv_qp* qp, struct ibv_ece* ece, int* sup
 ncclResult_t wrap_ibv_set_ece(struct ibv_qp* qp, struct ibv_ece* ece, int* supported);
 ncclResult_t wrap_ibv_query_port_speed(struct ibv_context* context, uint8_t port_num, uint64_t* speed);
 
-static inline ncclResult_t wrap_ibv_post_send(struct ibv_qp* qp, struct ibv_send_wr* wr, struct ibv_send_wr** bad_wr) {
+static inline ncclResult_t wrap_ibv_post_send(struct ibv_qp* qp, struct ibv_send_wr* wr, struct ibv_send_wr** bad_wr) { /* 中文索引·体内调用 qp->context->ops.post_send、strerror。 */
   int ret = qp->context->ops.post_send(
     qp, wr, bad_wr); /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
   if (ret != IBV_SUCCESS) {
@@ -84,7 +84,7 @@ static inline ncclResult_t wrap_ibv_post_send(struct ibv_qp* qp, struct ibv_send
   return ncclSuccess;
 }
 
-static inline ncclResult_t wrap_ibv_post_recv(struct ibv_qp* qp, struct ibv_recv_wr* wr, struct ibv_recv_wr** bad_wr) {
+static inline ncclResult_t wrap_ibv_post_recv(struct ibv_qp* qp, struct ibv_recv_wr* wr, struct ibv_recv_wr** bad_wr) { /* 中文索引·体内调用 qp->context->ops.post_recv、strerror。 */
   int ret = qp->context->ops.post_recv(
     qp, wr, bad_wr); /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
   if (ret != IBV_SUCCESS) {
@@ -99,7 +99,7 @@ ncclResult_t wrap_ibv_event_type_str(char** ret, enum ibv_event_type event);
 // converts a GID into a readable string. On success, returns a non-null pointer to gidStr.
 // NULL is returned if there was an error, with errno set to indicate the error.
 // errno = ENOSPC if the converted string would exceed strLen.
-static inline const char* ibvGetGidStr(union ibv_gid* gid, char* gidStr, size_t strLen) {
+static inline const char* ibvGetGidStr(union ibv_gid* gid, char* gidStr, size_t strLen) { /* 中文索引·体内调用 inet_ntop。 */
   // GID is a 16B handle, to convert it to a readable form, we use inet_ntop
   // sizeof(ibv_gid) == sizeof(struct in6_addr), so using AF_INET6
   static_assert(sizeof(union ibv_gid) == sizeof(struct in6_addr),

@@ -39,7 +39,7 @@ struct ncclParamParserDefault {
 // Specialization for bool
 template <>
 struct ncclParamParserDefault<bool> {
-  static ncclResult_t resolve(const char* input, bool& out) {
+  static ncclResult_t resolve(const char* input, bool& out) { /* 中文索引·体内调用 iequals。 */
     if (input == nullptr) return ncclInvalidArgument;
     std::string s(input);
     using nccl::param::utils::iequals;
@@ -89,7 +89,7 @@ struct ncclParamParserDefault<const char*> {
 // Helper base for integer types
 template <typename T>
 struct ncclIntegerParser {
-  static ncclResult_t resolve(const char* input, T& out) {
+  static ncclResult_t resolve(const char* input, T& out) { /* 中文索引·体内调用 std::strtoll、std::strtoull。 */
     if (input == nullptr || *input == '\0') return ncclInvalidArgument;
     char* endPtr = nullptr;
     errno = 0;
@@ -198,7 +198,7 @@ const ncclParamParser<T>& ncclParamDefault() {
 // ncclParamBounded: is based on default parser with upper and lower bounds
 // using resolve and toString of the default parser, customize validate function
 template <typename T>
-ncclParamParser<T> ncclParamBounded(T lower, T upper) {
+ncclParamParser<T> ncclParamBounded(T lower, T upper) { /* 中文索引·体内调用 std::to_string、std::move。 */
   using namespace nccl::param::parser;
   auto ctx = std::make_shared<boundedCtx<T>>(boundedCtx<T>{lower, upper});
   std::string d = "Integer in range [" + std::to_string(lower) + ", " + std::to_string(upper) + "]";

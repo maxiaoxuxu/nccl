@@ -25,7 +25,7 @@ const char* oneOfLookup(const ncclOptionSet<T, N>& opts, const T& value) {
 }
 
 template <typename T, size_t N>
-ncclResult_t oneOfResolve(const void* ctx, const char* input, T& out) {
+ncclResult_t oneOfResolve(const void* ctx, const char* input, T& out) { /* 中文索引·体内调用 nccl::param::utils::trim、std::string。 */
   if (input == nullptr) return ncclInvalidArgument;
   auto& opts = *static_cast<const ncclOptionSet<T, N>*>(ctx);
   std::string token = nccl::param::utils::trim(std::string(input));
@@ -45,7 +45,7 @@ bool oneOfValidate(const void*, const T&) {
 }
 
 template <typename T, size_t N>
-std::string oneOfToString(const void* ctx, const T& value) {
+std::string oneOfToString(const void* ctx, const T& value) { /* 中文索引·体内调用 oneOfLookup、std::string。 */
   auto& opts = *static_cast<const ncclOptionSet<T, N>*>(ctx);
   const char* name = oneOfLookup(opts, value);
   return name ? std::string(name) : std::string("<unknown>");
@@ -57,7 +57,7 @@ std::string oneOfToString(const void* ctx, const T& value) {
 
 // ncclParamOneOf: create parser for mapping enum string to value
 template <typename T, size_t N>
-ncclParamParser<T> ncclParamOneOf(ncclOptionSet<T, N> options) {
+ncclParamParser<T> ncclParamOneOf(ncclOptionSet<T, N> options) { /* 中文索引·体内调用 std::move。 */
   using namespace nccl::param::parser;
   auto ctx = std::make_shared<ncclOptionSet<T, N>>(std::move(options));
   std::string d = "One of:";

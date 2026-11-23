@@ -13,7 +13,7 @@
 
 NCCL_PROFILER_SHIM_BEGIN(1)
 
-static uint8_t ncclStringToFunc(const char* func) {
+static uint8_t ncclStringToFunc(const char* func) { /* 中文索引·体内调用 strcmp。 */
   if (0 == strcmp(func, "AllGather")) return ncclFuncAllGather;
   if (0 == strcmp(func, "AllReduce")) return ncclFuncAllReduce;
   if (0 == strcmp(func, "Broadcast")) return ncclFuncBroadcast;
@@ -24,7 +24,7 @@ static uint8_t ncclStringToFunc(const char* func) {
   return ncclFuncSend;
 }
 
-static uint8_t ncclStringToAlgo(const char* algo) {
+static uint8_t ncclStringToAlgo(const char* algo) { /* 中文索引·体内调用 strcmp。 */
   if (0 == strcmp(algo, "TREE")) return NCCL_ALGO_TREE;
   if (0 == strcmp(algo, "RING")) return NCCL_ALGO_RING;
   if (0 == strcmp(algo, "COLLNET_DIRECT")) return NCCL_ALGO_COLLNET_DIRECT;
@@ -34,13 +34,13 @@ static uint8_t ncclStringToAlgo(const char* algo) {
   return NCCL_ALGO_PAT;
 }
 
-static uint8_t ncclStringToProto(const char* proto) {
+static uint8_t ncclStringToProto(const char* proto) { /* 中文索引·体内调用 strcmp。 */
   if (0 == strcmp(proto, "LL")) return NCCL_PROTO_LL;
   if (0 == strcmp(proto, "LL128")) return NCCL_PROTO_LL128;
   return NCCL_PROTO_SIMPLE;
 }
 
-static uint8_t ncclStringToDatatype(const char* dt) {
+static uint8_t ncclStringToDatatype(const char* dt) { /* 中文索引·体内调用 strcmp。 */
   if (0 == strcmp(dt, "ncclInt8")) return ncclInt8;
   if (0 == strcmp(dt, "ncclInt32")) return ncclInt32;
   if (0 == strcmp(dt, "ncclUint32")) return ncclUint32;
@@ -54,7 +54,7 @@ static uint8_t ncclStringToDatatype(const char* dt) {
   return ncclFloat64;
 }
 
-static ncclResult_t ncclProfiler_startEvent(void* context, void** eHandle, ncclProfilerEventDescr_t* eDescr) {
+static ncclResult_t ncclProfiler_startEvent(void* context, void** eHandle, ncclProfilerEventDescr_t* eDescr) { /* 中文索引·体内调用 ncclStringToFunc、ncclStringToDatatype。 */
   *eHandle = NULL;
   ncclProfilerEventDescr_v1_t eDescr_v1 = {0};
   eDescr_v1.type = eDescr->type;
@@ -157,7 +157,7 @@ static ncclResult_t ncclProfiler_init(void** context, uint64_t commId __attribut
                                       const char* commName __attribute__((unused)), int nNodes __attribute__((unused)),
                                       int nranks __attribute__((unused)), int rank __attribute__((unused)),
                                       ncclDebugLogger_t logfn __attribute__((unused)),
-                                      ncclProfilerConfig_t* config __attribute__((unused))) {
+                                      ncclProfilerConfig_t* config __attribute__((unused))) { /* 中文索引·体内调用 getActiveProfiler、p->init。 */
   ncclProfilerShim_t* p = getActiveProfiler();
   if (p == nullptr) return ncclInternalError;
   NCCLCHECK(p->init(context, eActivationMask));

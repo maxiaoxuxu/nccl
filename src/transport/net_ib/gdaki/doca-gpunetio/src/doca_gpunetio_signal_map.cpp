@@ -20,14 +20,14 @@ class signal_map_lifecycle_guard {
     signal_map_lifecycle_guard &operator=(const signal_map_lifecycle_guard &) = delete;
 };
 
-static void priv_signal_lookup_destroy(struct doca_gpu_verbs_signal_map *map) {
+static void priv_signal_lookup_destroy(struct doca_gpu_verbs_signal_map *map) { /* 中文索引·体内调用 free。 */
     for (size_t i = 0; i < DOCA_GPUNETIO_VERBS_SIGNAL_LOOKUP_BLOCK_COUNT; ++i) {
         free(map->lookup_blocks[i]);
         map->lookup_blocks[i] = nullptr;
     }
 }
 
-static doca_error_t priv_signal_lookup_build(struct doca_gpu_verbs_signal_map *map) {
+static doca_error_t priv_signal_lookup_build(struct doca_gpu_verbs_signal_map *map) { /* 中文索引·体内调用 priv_signal_lookup_destroy、calloc。 */
     priv_signal_lookup_destroy(map);
 
     for (auto &registered_signal : *map->entries) {
@@ -52,7 +52,7 @@ static doca_error_t priv_signal_lookup_build(struct doca_gpu_verbs_signal_map *m
 
 static doca_error_t priv_signal_page_acquire(struct doca_gpu_verbs_signal_map *map,
                                              uintptr_t page_base,
-                                             struct doca_gpu_verbs_signal_page **out_page) {
+                                             struct doca_gpu_verbs_signal_page **out_page) { /* 中文索引·体内调用 map->pages->find、map->pages->end。 */
     auto it = map->pages->find(page_base);
     if (it != map->pages->end()) {
         it->second->refcount++;
@@ -121,7 +121,7 @@ static doca_error_t priv_signal_page_acquire(struct doca_gpu_verbs_signal_map *m
 }
 
 static doca_error_t priv_signal_page_release(struct doca_gpu_verbs_signal_map *map,
-                                             struct doca_gpu_verbs_signal_page *page) {
+                                             struct doca_gpu_verbs_signal_page *page) { /* 中文索引·体内调用 doca_gpu_gdrcopy_destroy_mapping、map->pages->erase。 */
     if (--page->refcount != 0) return DOCA_SUCCESS;
 
     if (page->gdr_data_direct_mh != nullptr)
@@ -134,7 +134,7 @@ static doca_error_t priv_signal_page_release(struct doca_gpu_verbs_signal_map *m
 }
 
 static doca_error_t priv_signal_slot_unregister(struct doca_gpu_verbs_signal_map *map,
-                                                uintptr_t gpu_addr) {
+                                                uintptr_t gpu_addr) { /* 中文索引·体内调用 map->registered_slots->erase。 */
     if (map->registered_slots->erase(gpu_addr) == 0) {
         DOCA_LOG(LOG_ERR, "Signal slot at %lx is missing from the registration set", gpu_addr);
         return DOCA_ERROR_UNEXPECTED;
@@ -142,7 +142,7 @@ static doca_error_t priv_signal_slot_unregister(struct doca_gpu_verbs_signal_map
     return DOCA_SUCCESS;
 }
 
-static bool priv_signal_map_probe_data_direct() {
+static bool priv_signal_map_probe_data_direct() { /* 中文索引·体内调用 cudaMalloc、cudaGetErrorString。 */
     void *allocation = nullptr;
     void *gdr_mh = nullptr;
     void *cpu_base = nullptr;
@@ -175,7 +175,7 @@ out:
     return supported;
 }
 
-doca_error_t doca_gpu_verbs_signal_map_create(struct doca_gpu_verbs_signal_map **out_map) {
+doca_error_t doca_gpu_verbs_signal_map_create(struct doca_gpu_verbs_signal_map **out_map) { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、calloc。 */
     if (out_map == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     if (!doca_gpu_gdrcopy_is_supported()) {
@@ -206,7 +206,7 @@ doca_error_t doca_gpu_verbs_signal_map_create(struct doca_gpu_verbs_signal_map *
 }
 
 doca_error_t doca_gpu_verbs_signal_register(struct doca_gpu_verbs_signal_map *map, uint32_t sig_id,
-                                            doca_gpu_verbs_signal_value_t *gpu_addr) {
+                                            doca_gpu_verbs_signal_value_t *gpu_addr) { /* 中文索引·体内调用 cudaPointerGetAttributes、cudaDeviceGetAttribute。 */
     if (map == nullptr || gpu_addr == nullptr) return DOCA_ERROR_INVALID_VALUE;
     if (sig_id >= DOCA_GPUNETIO_VERBS_SIGNAL_MAX_SIGNALS) return DOCA_ERROR_INVALID_VALUE;
     if (((uintptr_t)gpu_addr & (DOCA_GPUNETIO_VERBS_SIGNAL_SLOT_SIZE - 1)) != 0)
@@ -275,7 +275,7 @@ doca_error_t doca_gpu_verbs_signal_register(struct doca_gpu_verbs_signal_map *ma
 }
 
 doca_error_t doca_gpu_verbs_signal_unregister(struct doca_gpu_verbs_signal_map *map,
-                                              uint32_t sig_id) {
+                                              uint32_t sig_id) { /* 中文索引·体内调用 map->entries->find、map->entries->end。 */
     if (map == nullptr) return DOCA_ERROR_INVALID_VALUE;
     signal_map_lifecycle_guard lifecycle_guard;
     if (map->attached_to_service) return DOCA_ERROR_IN_USE;
@@ -292,7 +292,7 @@ doca_error_t doca_gpu_verbs_signal_unregister(struct doca_gpu_verbs_signal_map *
     return page_status;
 }
 
-doca_error_t doca_gpu_verbs_signal_reset(struct doca_gpu_verbs_signal_map *map, uint32_t sig_id) {
+doca_error_t doca_gpu_verbs_signal_reset(struct doca_gpu_verbs_signal_map *map, uint32_t sig_id) { /* 中文索引·体内调用 map->entries->find、map->entries->end。 */
     if (map == nullptr) return DOCA_ERROR_INVALID_VALUE;
     signal_map_lifecycle_guard lifecycle_guard;
     auto it = map->entries->find(sig_id);
@@ -312,7 +312,7 @@ doca_error_t doca_gpu_verbs_signal_reset(struct doca_gpu_verbs_signal_map *map, 
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_gpu_verbs_signal_map_destroy(struct doca_gpu_verbs_signal_map *map) {
+doca_error_t doca_gpu_verbs_signal_map_destroy(struct doca_gpu_verbs_signal_map *map) { /* 中文索引·体内调用 map->entries->empty、map->pages->empty。 */
     if (map == nullptr) return DOCA_ERROR_INVALID_VALUE;
     signal_map_lifecycle_guard lifecycle_guard;
     if (map->attached_to_service) return DOCA_ERROR_IN_USE;
@@ -345,7 +345,7 @@ doca_error_t doca_gpu_verbs_signal_map_destroy(struct doca_gpu_verbs_signal_map 
 }
 
 doca_error_t priv_signal_map_replace_attachment(struct doca_gpu_verbs_signal_map *old_map,
-                                                struct doca_gpu_verbs_signal_map *new_map) {
+                                                struct doca_gpu_verbs_signal_map *new_map) { /* 中文索引·体内调用 priv_signal_lookup_build、priv_signal_lookup_destroy。 */
     signal_map_lifecycle_guard lifecycle_guard;
     if (old_map == new_map) return DOCA_SUCCESS;
     if (new_map != nullptr && new_map->attached_to_service) return DOCA_ERROR_IN_USE;

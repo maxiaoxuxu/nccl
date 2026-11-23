@@ -78,7 +78,7 @@ inline ncclResult_t ncclGroupErrCheck(ncclResult_t ret) {
 }
 
 // Add comm to this thread's group
-inline void ncclGroupCommJoin(struct ncclComm* comm, int type) {
+inline void ncclGroupCommJoin(struct ncclComm* comm, int type) { /* 中文索引·体内调用 ncclMemoryStackPush、memset。 */
   if (comm->groupNext[type] == reinterpret_cast<struct ncclComm*>(NCCL_COMM_GROUP_INVALID)) {
     // Insert comm into ncclGroupCommHead adjacent to sibling comms. This preserves
     // the users program order yet insures siblings occur consecutively. This
@@ -125,7 +125,7 @@ inline void ncclGroupCommPreconnect(struct ncclComm* comm) {
 }
 
 // Comm has left group
-inline ncclResult_t ncclGroupCommLeave(struct ncclComm* comm, int type) {
+inline ncclResult_t ncclGroupCommLeave(struct ncclComm* comm, int type) { /* 中文索引·体内调用 ncclMemoryStackPop。 */
   comm->groupNext[type] = reinterpret_cast<struct ncclComm*>(NCCL_COMM_GROUP_INVALID);
   if (type == ncclGroupTaskTypeCollective || type == ncclGroupTaskTypeRawTask) ncclMemoryStackPop(&comm->memScoped);
   return ncclSuccess;

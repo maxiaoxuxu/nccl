@@ -81,7 +81,7 @@ static std::mutex netPluginMutex;
 static std::once_flag initPluginLibsOnceFlag;
 
 #if defined(NCCL_OS_LINUX)
-static ncclResult_t ncclNetPluginUnload(netPluginLib_t* pluginLib) {
+static ncclResult_t ncclNetPluginUnload(netPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclClosePluginLib。 */
   if ((pluginLib->dlHandle) && ((pluginLib->ncclNetPluginRefCount) == 0)) {
     INFO(NCCL_DESTROY | NCCL_NET, "Unloading plugin %s", pluginLib->name);
     NCCLCHECK(ncclClosePluginLib(pluginLib->dlHandle, ncclPluginTypeNet));
@@ -100,7 +100,7 @@ static ncclResult_t ncclNetPluginUnload(netPluginLib_t* pluginLib) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclNetPluginLoad(netPluginLib_t* pluginLib) {
+static ncclResult_t ncclNetPluginLoad(netPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclOpenNetPluginLib、ncclGetEnv。 */
   pluginLib->dlHandle = ncclOpenNetPluginLib(pluginLib->name);
 
   if (pluginLib->dlHandle == nullptr) goto fail;
@@ -150,7 +150,7 @@ fail:
 }
 #endif
 
-ncclResult_t ncclNetCheckDeviceVersion(struct ncclComm* comm, ncclNet_t* net, int dev) {
+ncclResult_t ncclNetCheckDeviceVersion(struct ncclComm* comm, ncclNet_t* net, int dev) { /* 中文索引·体内调用 net->getProperties。 */
   ncclNetProperties_t props;
 
   NCCLCHECK(net->getProperties(dev, &props));
@@ -183,7 +183,7 @@ static ncclProfilerCallback_t ncclNetGetProfilerCallback() {
 #endif
 }
 
-static ncclResult_t ncclNetPluginInit(struct ncclComm* comm, netPluginLib_t* pluginLib) {
+static ncclResult_t ncclNetPluginInit(struct ncclComm* comm, netPluginLib_t* pluginLib) { /* 中文索引·体内调用 pluginLib->ncclNet->init、ncclNetGetProfilerCallback。 */
   int ndev;
   bool initCompleted = false;
   // Init must be called for each new comm to set the right context
@@ -235,7 +235,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclNetPluginAssignToComm(struct ncclComm* comm, int pluginIndex, bool* isAssigned) {
+static ncclResult_t ncclNetPluginAssignToComm(struct ncclComm* comm, int pluginIndex, bool* isAssigned) { /* 中文索引·体内调用 ncclNetCheckDeviceVersion。 */
   *isAssigned = false;
 
   if (ncclSuccess != ncclNetCheckDeviceVersion(comm, netPluginLibs[pluginIndex].ncclNet, 0)) return ncclSuccess;
@@ -254,7 +254,7 @@ static ncclResult_t ncclNetPluginAssignToComm(struct ncclComm* comm, int pluginI
   return ncclSuccess;
 }
 
-static ncclResult_t ncclNetPluginDisableOtherExternal(int pluginIndex) {
+static ncclResult_t ncclNetPluginDisableOtherExternal(int pluginIndex) { /* 中文索引·体内调用 snprintf、strlen。 */
   // Only if an external plugin is enabled, disable other external plugins
   if (pluginIndex >= (pluginCount - NCCL_NET_NUM_INTERNAL_PLUGINS)) return ncclSuccess;
   char names[MAX_STR_LEN * (NCCL_NET_MAX_PLUGINS - NCCL_NET_NUM_INTERNAL_PLUGINS)] = {0};
@@ -285,7 +285,7 @@ static void ncclNetPluginRegisterInternal(int* pluginCounter, ncclNet_t* net, in
   (*pluginCounter)++;
 }
 
-static void initPluginLibsOnceFunc() {
+static void initPluginLibsOnceFunc() { /* 中文索引·体内调用 memset、ncclGetEnv。 */
   int pluginCounter = 0;
   memset(netPluginLibs, 0, NCCL_NET_MAX_PLUGINS * sizeof(netPluginLib_t));
 #if defined(NCCL_OS_LINUX)
@@ -339,7 +339,7 @@ static void initPluginLibsOnceFunc() {
   pluginCount = pluginCounter;
 }
 
-static ncclResult_t ncclNetPluginFinalize(struct ncclComm* comm, int pluginIndex) {
+static ncclResult_t ncclNetPluginFinalize(struct ncclComm* comm, int pluginIndex) { /* 中文索引·体内调用 ncclNetPluginUnload。 */
   NCCLCHECK(netPluginLibs[pluginIndex].ncclNet->finalize(comm->netContext));
   if (netPluginLibs[pluginIndex].ncclCollNet &&
       netPluginLibs[pluginIndex].ncclCollNetPluginState == ncclNetPluginStateEnabled) {
@@ -354,7 +354,7 @@ static ncclResult_t ncclNetPluginFinalize(struct ncclComm* comm, int pluginIndex
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetInit(struct ncclComm* comm) {
+ncclResult_t ncclNetInit(struct ncclComm* comm) { /* 中文索引·体内调用 std::call_once、ncclNetPluginLoad。 */
   bool ncclNetPluginInitialized = false;
   comm->ncclCollNet = nullptr;
   std::call_once(initPluginLibsOnceFlag, initPluginLibsOnceFunc);
@@ -389,7 +389,7 @@ ncclResult_t ncclNetInit(struct ncclComm* comm) {
   return ncclInvalidUsage;
 }
 
-ncclResult_t ncclNetInitFromParent(struct ncclComm* comm, struct ncclComm* parent) {
+ncclResult_t ncclNetInitFromParent(struct ncclComm* comm, struct ncclComm* parent) { /* 中文索引·体内调用 strcasecmp。 */
   ncclResult_t ret = ncclSuccess;
   comm->netContext = parent->netContext;
   comm->collNetContext = parent->collNetContext;
@@ -408,7 +408,7 @@ ncclResult_t ncclNetInitFromParent(struct ncclComm* comm, struct ncclComm* paren
   return ret;
 }
 
-ncclResult_t ncclNetFinalize(struct ncclComm* comm) {
+ncclResult_t ncclNetFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclNetPluginFinalize。 */
   int pluginIndex = comm->netPluginIndex;
   std::lock_guard<std::mutex> lock(netPluginMutex);
   NCCLCHECK(ncclNetPluginFinalize(comm, pluginIndex));
@@ -461,7 +461,7 @@ fail:
   return ncclInternalError;
 }
 
-ncclResult_t ncclGpuGdrSupport(struct ncclComm* comm, int* gdrSupport) {
+ncclResult_t ncclGpuGdrSupport(struct ncclComm* comm, int* gdrSupport) { /* 中文索引·体内调用 cudaDriverGetVersion、cudaGetDevice。 */
   constexpr int GPU_BUF_SIZE = 2 * 1024 * 1024;
 #if CUDART_VERSION >= 11030
   // In CUDA 11.3 and later we can now query the cudaDevAttrGPUDirectRDMASupported attribute

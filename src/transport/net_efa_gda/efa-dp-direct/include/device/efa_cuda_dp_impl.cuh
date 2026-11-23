@@ -75,7 +75,7 @@ __device__ static inline int efa_cuda_get_cqe_phase(efa_cuda_cq *cq, uint32_t po
 }
 
 __device__ static inline void *efa_cuda_cq_poll(efa_cuda_cq *cq, uint32_t position)
-{
+{ /* 中文索引·体内调用 efa_cuda_get_cqe、efa_cuda_get_cqe_phase。 */
 	efa_io_cdesc_common *cqe = efa_cuda_get_cqe(cq, position);
 	int cqe_phase = efa_cuda_get_cqe_phase(cq, position);
 
@@ -87,7 +87,7 @@ __device__ static inline void *efa_cuda_cq_poll(efa_cuda_cq *cq, uint32_t positi
 	return nullptr;
 }
 __device__ static inline int efa_cuda_cq_pop(efa_cuda_cq *cq, uint32_t amount)
-{
+{ /* 中文索引·体内调用 efa_cuda_get_cqe_phase。 */
 	cq->phase = efa_cuda_get_cqe_phase(cq, amount);
 	cq->cc += amount;
 
@@ -149,7 +149,7 @@ __device__ static inline bool efa_cuda_wc_has_imm(void *wc_buf)
 }
 
 __device__ static inline uint32_t efa_cuda_wc_read_imm_data(void *wc_buf)
-{
+{ /* 中文索引·体内调用 efa_container_of。 */
 	struct efa_io_rx_cdesc *rcqe;
 
 	rcqe = efa_container_of(wc_buf, struct efa_io_rx_cdesc, common);
@@ -158,7 +158,7 @@ __device__ static inline uint32_t efa_cuda_wc_read_imm_data(void *wc_buf)
 }
 
 __device__ static inline uint32_t efa_cuda_wc_read_byte_len(void *wc_buf)
-{
+{ /* 中文索引·体内调用 efa_container_of。 */
 	struct efa_io_cdesc_common *cqe = (struct efa_io_cdesc_common *)wc_buf;
 	struct efa_io_rx_cdesc_ex *rcqe;
 	uint32_t length;
@@ -183,7 +183,7 @@ __device__ static inline uint32_t efa_cuda_wc_read_qp_num(void *wc_buf)
 }
 
 __device__ static inline uint32_t efa_cuda_wc_read_src_qp(void *wc_buf)
-{
+{ /* 中文索引·体内调用 efa_container_of。 */
 	struct efa_io_rx_cdesc *rcqe;
 
 	rcqe = efa_container_of(wc_buf, struct efa_io_rx_cdesc, common);
@@ -192,7 +192,7 @@ __device__ static inline uint32_t efa_cuda_wc_read_src_qp(void *wc_buf)
 }
 
 __device__ static inline uint32_t efa_cuda_wc_read_slid(void *wc_buf)
-{
+{ /* 中文索引·体内调用 efa_container_of。 */
 	struct efa_io_rx_cdesc *rcqe;
 
 	rcqe = efa_container_of(wc_buf, struct efa_io_rx_cdesc, common);
@@ -207,13 +207,13 @@ private:
 	struct efa_io_tx_meta_desc *md;
 
 	__device__ inline struct efa_io_remote_mem_addr *remote_mem()
-	{
+	{ /* 中文索引·体内调用 __ldg。 */
 		return (struct efa_io_remote_mem_addr *)(wr_buf +
 			__ldg(&wr_ctx->remote_mem_offset));
 	}
 
 	__device__ inline void set_remote_mem(uint32_t rkey, uint64_t remote_addr)
-	{
+	{ /* 中文索引·体内调用 remote_mem。 */
 		struct efa_io_remote_mem_addr *rmem = remote_mem();
 
 		rmem->rkey = rkey;
@@ -229,7 +229,7 @@ private:
 	}
 
 	__device__ inline int init_wr(enum efa_io_send_op_type op_type, uint64_t wr_id)
-	{
+	{ /* 中文索引·体内调用 __ldg。 */
 		uint16_t wqe_size = __ldg(&wr_ctx->wqe_size);
 		uint64_t *dst = (uint64_t *)wr_buf;
 
@@ -261,7 +261,7 @@ public:
 	}
 
 	__device__ inline int init_send_imm(uint64_t wr_id, uint32_t imm_data)
-	{
+	{ /* 中文索引·体内调用 init_wr、set_imm_data。 */
 		int ret = init_wr(EFA_IO_SEND, wr_id);
 		if (ret)
 			return ret;
@@ -271,7 +271,7 @@ public:
 	}
 
 	__device__ inline int init_rdma_write(uint64_t wr_id, uint32_t rkey, uint64_t remote_addr)
-	{
+	{ /* 中文索引·体内调用 init_wr、set_remote_mem。 */
 		int ret = init_wr(EFA_IO_RDMA_WRITE, wr_id);
 		if (ret)
 			return ret;
@@ -282,7 +282,7 @@ public:
 
 	__device__ inline int init_rdma_write_imm(uint64_t wr_id, uint32_t rkey,
 						  uint64_t remote_addr, uint32_t imm_data)
-	{
+	{ /* 中文索引·体内调用 init_rdma_write、set_imm_data。 */
 		int ret = init_rdma_write(wr_id, rkey, remote_addr);
 		if (ret)
 			return ret;
@@ -292,7 +292,7 @@ public:
 	}
 
 	__device__ inline int init_rdma_read(uint64_t wr_id, uint32_t rkey, uint64_t remote_addr)
-	{
+	{ /* 中文索引·体内调用 init_wr、set_remote_mem。 */
 		int ret = init_wr(EFA_IO_RDMA_READ, wr_id);
 		if (ret)
 			return ret;
@@ -302,7 +302,7 @@ public:
 	}
 
 	__device__ inline int set_inline_data(void *addr, size_t length)
-	{
+	{ /* 中文索引·体内调用 __ldg、remote_mem。 */
 		uint32_t max_inline = __ldg(&wr_ctx->max_inline_data);
 		uint8_t op_type;
 		uint8_t offset;
@@ -333,7 +333,7 @@ public:
 	}
 
 	__device__ inline int set_sge(uint32_t lkey, uint64_t addr, uint32_t length)
-	{
+	{ /* 中文索引·体内调用 __ldg、remote_mem。 */
 		struct efa_io_tx_buf_desc *tx_buf;
 		uint8_t op_type;
 		uint8_t offset;
@@ -387,7 +387,7 @@ __device__ static inline int efa_cuda_get_wqe_phase(efa_cuda_wq *wq, uint32_t in
 }
 
 __device__ static inline void efa_cuda_flush_sq_wrs(efa_cuda_qp *qp)
-{
+{ /* 中文索引·体内调用 efa_cuda_get_wqe_phase、__threadfence_system。 */
 	if (!qp->sq.wq.wqes_pending)
 		return;
 
@@ -401,7 +401,7 @@ __device__ static inline void efa_cuda_flush_sq_wrs(efa_cuda_qp *qp)
 }
 
 __device__ static inline int efa_cuda_start_sq_batch(efa_cuda_qp *qp, int batch_size)
-{
+{ /* 中文索引·体内调用 efa_cuda_flush_sq_wrs。 */
 	// TODO: check free space
 
 	if (qp->sq.wq.wqes_pending + batch_size > qp->sq.wq.max_batch)
@@ -412,7 +412,7 @@ __device__ static inline int efa_cuda_start_sq_batch(efa_cuda_qp *qp, int batch_
 }
 
 __device__ static inline int efa_cuda_sq_batch_place_wr(efa_cuda_qp *qp, int index_in_batch, void *wr_buf)
-{
+{ /* 中文索引·体内调用 efa_cuda_get_wqe_phase、__ldg。 */
 	struct efa_io_tx_meta_desc *meta = (struct efa_io_tx_meta_desc *)wr_buf;
 	uint32_t sq_desc_offset, queue_mask;
 	efa_cuda_sq *sq = &qp->sq;
@@ -438,7 +438,7 @@ __device__ static inline int efa_cuda_sq_batch_place_wr(efa_cuda_qp *qp, int ind
 }
 
 __device__ static inline int efa_cuda_post_recv_wr(efa_cuda_qp *qp, uint16_t req_id, uint64_t addr, uint32_t length, uint32_t lkey)
-{
+{ /* 中文索引·体内调用 memcpy、__threadfence_system。 */
 	struct efa_io_rx_desc wqe = {0};
 	uint32_t rq_desc_offset;
 
@@ -471,7 +471,7 @@ __device__ static inline int efa_cuda_post_recv_wr(efa_cuda_qp *qp, uint16_t req
 }
 
 __device__ static inline void efa_cuda_flush_rq_wrs(efa_cuda_qp *qp)
-{
+{ /* 中文索引·体内调用 __threadfence_system。 */
 	if (!qp->rq.wq.wqes_pending)
 		return;
 

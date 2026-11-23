@@ -14,12 +14,12 @@ static ncclGin_v14_t* ncclGin_v14;
 static ncclGin_t ncclGin;
 
 static ncclResult_t ncclGin_v14_connect(void* ctx, void* handles[], int nranks, int rank, void* listenComm,
-                                        void** collComm, volatile uint32_t* abortFlag) {
+                                        void** collComm, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclGin_v14->connect。 */
   (void)abortFlag;
   return ncclGin_v14->connect(ctx, handles, nranks, rank, listenComm, collComm);
 }
 
-static ncclResult_t ncclGin_v14_getGinProperties(ncclGinProperties_t* ginProps) {
+static ncclResult_t ncclGin_v14_getGinProperties(ncclGinProperties_t* ginProps) { /* 中文索引·体内调用 memset、ncclGin_v14->getGinProperties。 */
   ncclGinProperties_v14_t ginProps_v14;
   memset(&ginProps_v14, 0, sizeof(ginProps_v14));
   NCCLCHECK(ncclGin_v14->getGinProperties(&ginProps_v14));
@@ -31,7 +31,7 @@ static ncclResult_t ncclGin_v14_getGinProperties(ncclGinProperties_t* ginProps) 
 }
 
 static ncclResult_t ncclGin_v14_createContext(void* collComm, ncclGinConfig_v15_t* config, void** ginCtx,
-                                              ncclNetDeviceHandle_v11_t** devHandle) {
+                                              ncclNetDeviceHandle_v11_t** devHandle) { /* 中文索引·体内调用 memset、ncclGin_v14->createContext。 */
   ncclGinConfig_v14_t config_v14;
   memset(&config_v14, 0, sizeof(config_v14));
   config_v14.nSignals = config->nSignals;
@@ -44,7 +44,7 @@ static ncclResult_t ncclGin_v14_createContext(void* collComm, ncclGinConfig_v15_
   return ncclGin_v14->createContext(collComm, &config_v14, ginCtx, devHandle);
 }
 
-ncclGin_t* getNcclGin_v14(void* lib) {
+ncclGin_t* getNcclGin_v14(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclGin_v14 = (ncclGin_v14_t*)dlsym(lib, "ncclGinPlugin_v14");
   if (ncclGin_v14) {
     INFO(NCCL_INIT | NCCL_NET, "GIN/Plugin: Loaded gin plugin %s (v14)", ncclGin_v14->name);

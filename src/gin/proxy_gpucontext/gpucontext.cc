@@ -29,7 +29,7 @@ void ncclGinProxyGpuCtx_initCurrent(void* ctxArray, int idx, int nranks, uint32_
 ncclResult_t ncclGinProxyGpuCtx_init(int version, void* ctxArray, int idx, int nranks, uint32_t queueSize,
                                      ncclGinProxyGfd_t* queues, uint32_t* pis, uint32_t* cis, uint64_t* counters,
                                      uint64_t* signals, uint64_t* signalOffsets, uint32_t* lastIssuedGet,
-                                     uint32_t* lastVisibleGet, bool flushesAllPutsOnAnySignal) {
+                                     uint32_t* lastVisibleGet, bool flushesAllPutsOnAnySignal) { /* 中文索引·体内调用 ncclGinProxyGpuCtx_v1_init、ncclGinProxyGpuCtx_v2_init。 */
   switch (version) {
   case 1:
     ncclGinProxyGpuCtx_v1_init(ctxArray, idx, nranks, queueSize, queues, pis, cis, counters, signals);

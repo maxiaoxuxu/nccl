@@ -36,13 +36,13 @@ struct rasDiagnosticsEnvKey {
   uint16_t len;
 };
 
-static int rasDiagnosticsEnvEntryCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsEnvEntryCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 strcmp。 */
   const char* e1 = *(char* const*)p1;
   const char* e2 = *(char* const*)p2;
   return strcmp(e1, e2);
 }
 
-static int rasDiagnosticsEnvKeyCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsEnvKeyCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 strncmp。 */
   const struct rasDiagnosticsEnvKey* k1 = (const struct rasDiagnosticsEnvKey*)p1;
   const struct rasDiagnosticsEnvKey* k2 = (const struct rasDiagnosticsEnvKey*)p2;
   size_t minLen = k1->len < k2->len ? k1->len : k2->len;
@@ -53,7 +53,7 @@ static int rasDiagnosticsEnvKeyCompare(const void* p1, const void* p2) {
 }
 
 static bool rasDiagnosticsEnvNextEntry(const struct rasDiagnosticsNcclEnvData* envData, int* offset, const char** entry,
-                                       size_t* entryLen) {
+                                       size_t* entryLen) { /* 中文索引·体内调用 memchr。 */
   const char* start;
   const void* end;
 
@@ -71,7 +71,7 @@ static bool rasDiagnosticsEnvNextEntry(const struct rasDiagnosticsNcclEnvData* e
 }
 
 static const char* rasDiagnosticsEnvFindValue(const struct rasDiagnosticsNcclEnvData* envData, const char* key,
-                                              size_t keyLen) {
+                                              size_t keyLen) { /* 中文索引·体内调用 rasDiagnosticsEnvNextEntry、memchr。 */
   int offset = 0;
   const char* entry;
   size_t entryLen;
@@ -84,13 +84,13 @@ static const char* rasDiagnosticsEnvFindValue(const struct rasDiagnosticsNcclEnv
   return nullptr;
 }
 
-static bool rasDiagnosticsEnvValuesEqual(const char* v1, const char* v2) {
+static bool rasDiagnosticsEnvValuesEqual(const char* v1, const char* v2) { /* 中文索引·体内调用 strcmp。 */
   // nullptr means the environment variable is not set on that rank.
   if (v1 == nullptr || v2 == nullptr) return v1 == v2;
   return strcmp(v1, v2) == 0;
 }
 
-static const char* rasDiagnosticsEnvKeyDisplay(const struct rasDiagnosticsEnvKey* key, char* buf, size_t bufLen) {
+static const char* rasDiagnosticsEnvKeyDisplay(const struct rasDiagnosticsEnvKey* key, char* buf, size_t bufLen) { /* 中文索引·体内调用 memcpy。 */
   size_t limit;
   size_t i;
 
@@ -108,7 +108,7 @@ static const char* rasDiagnosticsEnvKeyDisplay(const struct rasDiagnosticsEnvKey
   return buf;
 }
 
-static const char* rasDiagnosticsEnvValueDisplay(const char* value, char* buf, size_t bufLen) {
+static const char* rasDiagnosticsEnvValueDisplay(const char* value, char* buf, size_t bufLen) { /* 中文索引·体内调用 snprintf、memcpy。 */
   size_t limit;
   size_t i;
 
@@ -133,7 +133,7 @@ static const char* rasDiagnosticsEnvValueDisplay(const char* value, char* buf, s
 
 static ncclResult_t rasDiagnosticsNcclEnvReportMismatch(const struct rasDiagnosticsReporter* reporter,
                                                         const struct rasDiagnosticsRankHeader* startRank,
-                                                        const char* keyDisplay) {
+                                                        const char* keyDisplay) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO,
                               "NCCL environment: mismatch across %d ranks in comm 0x%lx for %s", startRank->commNRanks,
                               startRank->commId.commHash, keyDisplay);
@@ -141,13 +141,13 @@ static ncclResult_t rasDiagnosticsNcclEnvReportMismatch(const struct rasDiagnost
 
 static ncclResult_t rasDiagnosticsNcclEnvReportValue(const struct rasDiagnosticsReporter* reporter,
                                                      const char* keyDisplay, const char* valueDisplay,
-                                                     const char* rankSet) {
+                                                     const char* rankSet) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO, "NCCL environment: %s=%s on rank(s) %s", keyDisplay,
                               valueDisplay, rankSet);
 }
 
 static ncclResult_t rasDiagnosticsNcclEnvReportTruncated(const struct rasDiagnosticsReporter* reporter,
-                                                         int nTruncated) {
+                                                         int nTruncated) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO,
                               "NCCL environment: %d rank(s) had >%d bytes of NCCL_* env vars; comparison may be "
                               "partial",
@@ -155,14 +155,14 @@ static ncclResult_t rasDiagnosticsNcclEnvReportTruncated(const struct rasDiagnos
 }
 
 static ncclResult_t rasDiagnosticsNcclEnvReportConsistent(const struct rasDiagnosticsReporter* reporter, int commNRanks,
-                                                          const struct rasCommId* commId) {
+                                                          const struct rasCommId* commId) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_OK,
                               "NCCL environment: NCCL_* env vars consistent across %d ranks in comm 0x%lx", commNRanks,
                               commId->commHash);
 }
 
 static ncclResult_t rasDiagnosticsNcclEnvReportMismatchSummary(const struct rasDiagnosticsReporter* reporter,
-                                                               int nMismatch, const struct rasCommId* commId) {
+                                                               int nMismatch, const struct rasCommId* commId) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO,
                               "NCCL environment: %d NCCL_* env var(s) differ across ranks in comm 0x%lx", nMismatch,
                               commId->commHash);
@@ -177,7 +177,7 @@ static bool rasDiagnosticsNcclEnvDataValid(const struct rasDiagnosticsNcclEnvDat
   return envData->bytesUsed == 0 || envData->data[envData->bytesUsed - 1] == '\0';
 }
 
-static int rasDiagnosticsEnvCountCandidateKeys(const char* records, size_t recordStride, int start, int end) {
+static int rasDiagnosticsEnvCountCandidateKeys(const char* records, size_t recordStride, int start, int end) { /* 中文索引·体内调用 rasDiagnosticsNcclEnvDataFromRecord、rasDiagnosticsEnvNextEntry。 */
   int nKeys = 0;
 
   for (int i = start; i < end; i++) {
@@ -195,7 +195,7 @@ static int rasDiagnosticsEnvCountCandidateKeys(const char* records, size_t recor
 }
 
 static void rasDiagnosticsEnvFillCandidateKeys(const char* records, size_t recordStride, int start, int end,
-                                               struct rasDiagnosticsEnvKey* keys) {
+                                               struct rasDiagnosticsEnvKey* keys) { /* 中文索引·体内调用 rasDiagnosticsNcclEnvDataFromRecord、rasDiagnosticsEnvNextEntry。 */
   int nKeys = 0;
 
   for (int i = start; i < end; i++) {
@@ -215,7 +215,7 @@ static void rasDiagnosticsEnvFillCandidateKeys(const char* records, size_t recor
   }
 }
 
-static ncclResult_t rasDiagnosticsNcclEnvFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) {
+static ncclResult_t rasDiagnosticsNcclEnvFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) { /* 中文索引·体内调用 strncmp、ncclCalloc。 */
   struct rasDiagnosticsNcclEnvData* envData = (struct rasDiagnosticsNcclEnvData*)checkData;
   char** entries = nullptr;
   int nEntries = 0;
@@ -252,7 +252,7 @@ static ncclResult_t rasDiagnosticsNcclEnvFillLocalData(const struct rasDiagnosti
 }
 
 ncclResult_t rasDiagnosticsNcclEnvCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                               struct rasDiagnosticsLocalData* data) {
+                                               struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsNcclEnvData),
                                               rasDiagnosticsNcclEnvFillLocalData, data));
   return ncclSuccess;
@@ -261,7 +261,7 @@ ncclResult_t rasDiagnosticsNcclEnvCollectLocal(const struct rasDiagnosticsContex
 static ncclResult_t rasDiagnosticsNcclEnvReportKey(const struct rasDiagnosticsReporter* reporter, const char* records,
                                                    size_t recordStride, int start, int end,
                                                    const struct rasDiagnosticsRankHeader* startRank,
-                                                   const struct rasDiagnosticsEnvKey* key, int* nMismatch) {
+                                                   const struct rasDiagnosticsEnvKey* key, int* nMismatch) { /* 中文索引·体内调用 ncclCalloc、rasDiagnosticsEnvFindValue。 */
   ncclResult_t ret = ncclSuccess;
   bool anyDiff = false;
   int nGroupRanks = end - start;
@@ -318,7 +318,7 @@ exit:
 }
 
 ncclResult_t rasDiagnosticsNcclEnvSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsNcclEnvData));

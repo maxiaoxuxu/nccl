@@ -22,7 +22,7 @@ cudaEvent_t ncclCollConfigGetLaunchCompletionEvent(const ncclCollConfig_t* c) {
 }
 
 // Helper function to set aggregation isolation
-bool ncclCollConfigNeedAggIsolate(const ncclCollConfig_t* config) {
+bool ncclCollConfigNeedAggIsolate(const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclCollConfigHasAlgSelection、ncclCollConfigGetLaunchCompletionEvent。 */
   if (config->size == 0) {
     // zero size config indicate no user config is passed, no aggregation isolation
     return false;
@@ -45,7 +45,7 @@ bool ncclCollConfigNeedAggIsolate(const ncclCollConfig_t* config) {
 // user config was passed (used to isolate configured collectives from aggregation), non-zero
 // otherwise. Later commits add per-call resource knobs, resolved (env > per-call > comm) by their
 // consumers via resolveCollRes.
-ncclResult_t ncclParseCollConfig(const ncclCollConfig_t* config, ncclCollConfig_t* internal_config) {
+ncclResult_t ncclParseCollConfig(const ncclCollConfig_t* config, ncclCollConfig_t* internal_config) { /* 中文索引·体内调用 memcpy。 */
   *internal_config = NCCL_COLLCONFIG_INITIALIZER;
   internal_config->magic = 0;
   if (config != nullptr) {
@@ -80,7 +80,7 @@ ncclResult_t ncclParseCollConfig(const ncclCollConfig_t* config, ncclCollConfig_
   return ncclSuccess;
 }
 
-ncclResult_t ncclCollConfigGetAlgMask(const ncclCollConfig_t* config, ncclFunc_t func, uint64_t* outMask) {
+ncclResult_t ncclCollConfigGetAlgMask(const ncclCollConfig_t* config, ncclFunc_t func, uint64_t* outMask) { /* 中文索引·体内调用 ncclCollConfigHasAlgSelection、ncclAlgParse。 */
   // Each set bit keeps that algorithm in the filter; 0 == no selection == automatic (the
   // consumers skip narrowing when the mask is 0).
   *outMask = 0;

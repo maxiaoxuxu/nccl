@@ -12,14 +12,14 @@
 #include "../tuning_int.h"
 #include "pipeline_model.h"
 
-static ncclResult_t getTreeNsteps(struct ncclComm* comm, ncclFunc_t func, int* nStepsIntra, int* nStepsInter) {
+static ncclResult_t getTreeNsteps(struct ncclComm* comm, ncclFunc_t func, int* nStepsIntra, int* nStepsInter) { /* 中文索引·体内调用 log2i。 */
   if (func != ncclFuncAllReduce) return ncclInternalError;
   *nStepsIntra = 2 * (comm->maxLocalRanks - 1);
   *nStepsInter = 2 * log2i(comm->nNodes);
   return ncclSuccess;
 }
 
-static float treeMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning) {
+static float treeMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning) { /* 中文索引·体内调用 ncclTuningProtoBW。 */
   struct ncclComm* comm = inputs->comm;
   const struct ncclTopoGraph* graph = &comm->graphs[tuning->algo];
   float algofactor = ((float)(comm->nRanks - 1)) / comm->nRanks;
@@ -32,7 +32,7 @@ static float treeMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTun
 
 static ncclResult_t ncclTuningPipelineTreeGetAlgoStep(struct ncclComm* comm, int proto, int algo, ncclFunc_t func,
                                                       /*output*/ struct ncclTuningPipelineStep* intra,
-                                                      struct ncclTuningPipelineStep* inter) {
+                                                      struct ncclTuningPipelineStep* inter) { /* 中文索引·体内调用 getTreeNsteps、ncclTuningProtoBWFactor。 */
   int nStepsInter, nStepsIntra;
   NCCLCHECK(getTreeNsteps(comm, func, &nStepsIntra, &nStepsInter));
   const struct ncclTopoGraph* graph = &comm->graphs[algo];
@@ -56,7 +56,7 @@ static int ncclTuningPipelineTreeIsValid(struct ncclTuningInput_t* const inputs,
 
 static inline ncclResult_t ncclTuningPipelineTreeComputePipeline(struct ncclTuningInput_t* const inputs,
                                                                  struct ncclTuningResult_t* tuning,
-                                                                 struct ncclTuningPipeline* pipeline /*output*/) {
+                                                                 struct ncclTuningPipeline* pipeline /*output*/) { /* 中文索引·体内调用 ncclTuningPreComputePipeline。 */
   NCCLCHECK(ncclTuningPreComputePipeline(inputs, tuning, pipeline));
 
   // Counts the number of slices transferred through a link.

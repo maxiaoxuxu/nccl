@@ -118,7 +118,7 @@ struct rasDiagnosticsXidData {
   };
 };
 
-static bool rasDiagnosticsXidNow(uint64_t* monotonicUsec, time_t* realtimeSec) {
+static bool rasDiagnosticsXidNow(uint64_t* monotonicUsec, time_t* realtimeSec) { /* 中文索引·体内调用 clock_gettime。 */
   struct timespec monotonic;
   struct timespec realtime;
 
@@ -128,7 +128,7 @@ static bool rasDiagnosticsXidNow(uint64_t* monotonicUsec, time_t* realtimeSec) {
   return true;
 }
 
-void rasDiagnosticsInit() {
+void rasDiagnosticsInit() { /* 中文索引·体内调用 memset、rasDiagnosticsXidNow。 */
   // Capture the Xid/SXid lower bound before the asynchronous RAS thread starts so that the first scan covers the
   // complete RAS lifetime, including events reported immediately after communicator initialization.
   memset(&rasDiagnosticsXidCursor, 0, sizeof(rasDiagnosticsXidCursor));
@@ -139,7 +139,7 @@ void rasDiagnosticsInit() {
   rasDiagnosticsXidCursor.initialized = true;
 }
 
-static bool rasDiagnosticsXidCaptureWindow(struct rasDiagnosticsXidWindow* window) {
+static bool rasDiagnosticsXidCaptureWindow(struct rasDiagnosticsXidWindow* window) { /* 中文索引·体内调用 rasDiagnosticsXidNow。 */
   uint64_t monotonicUsec;
   time_t realtimeSec;
 
@@ -159,7 +159,7 @@ static bool rasDiagnosticsXidCaptureWindow(struct rasDiagnosticsXidWindow* windo
   return true;
 }
 
-static bool rasDiagnosticsXidParseBdf(const char* begin, const char* end, int64_t* bdf) {
+static bool rasDiagnosticsXidParseBdf(const char* begin, const char* end, int64_t* bdf) { /* 中文索引·体内调用 strncasecmp、memcpy。 */
   char text[64];
   unsigned int domain, bus, device, function = 0;
   int consumed = 0;
@@ -186,7 +186,7 @@ static bool rasDiagnosticsXidParseBdf(const char* begin, const char* end, int64_
   return true;
 }
 
-static bool rasDiagnosticsXidParseCode(const char* afterParen, uint32_t* code, const char** afterCode) {
+static bool rasDiagnosticsXidParseCode(const char* afterParen, uint32_t* code, const char** afterCode) { /* 中文索引·体内调用 strtoul。 */
   char* end = nullptr;
   unsigned long value;
 
@@ -200,7 +200,7 @@ static bool rasDiagnosticsXidParseCode(const char* afterParen, uint32_t* code, c
   return true;
 }
 
-static bool rasDiagnosticsXidParseLine(const char* line, struct rasDiagnosticsXidEvent* event) {
+static bool rasDiagnosticsXidParseLine(const char* line, struct rasDiagnosticsXidEvent* event) { /* 中文索引·体内调用 memset、strstr。 */
   const char* start;
   const char* close;
   const char* afterCode;
@@ -282,7 +282,7 @@ static bool rasDiagnosticsXidSameEvent(const struct rasDiagnosticsXidEvent* a, c
          a->bdfValid == b->bdfValid && (!a->bdfValid || a->bdf == b->bdf);
 }
 
-static void rasDiagnosticsXidAddEvent(struct rasDiagnosticsXidScan* scan, const struct rasDiagnosticsXidEvent* event) {
+static void rasDiagnosticsXidAddEvent(struct rasDiagnosticsXidScan* scan, const struct rasDiagnosticsXidEvent* event) { /* 中文索引·体内调用 rasDiagnosticsXidSameEvent。 */
   for (int i = 0; i < scan->nStored; i++) {
     if (rasDiagnosticsXidSameEvent(scan->events + i, event)) {
       if (scan->events[i].count == UINT16_MAX) scan->events[i].countSaturated = true;
@@ -299,7 +299,7 @@ static void rasDiagnosticsXidAddEvent(struct rasDiagnosticsXidScan* scan, const 
   scan->nStored++;
 }
 
-static bool rasDiagnosticsXidKmsgTimestamp(const char* line, uint64_t* timestampUsec, const char** message) {
+static bool rasDiagnosticsXidKmsgTimestamp(const char* line, uint64_t* timestampUsec, const char** message) { /* 中文索引·体内调用 strchr、strtoull。 */
   const char* comma1;
   const char* comma2;
   const char* comma3;
@@ -324,7 +324,7 @@ static bool rasDiagnosticsXidKmsgTimestamp(const char* line, uint64_t* timestamp
 }
 
 static void rasDiagnosticsXidScanKmsgLine(const char* line, const struct rasDiagnosticsXidWindow* window,
-                                          struct rasDiagnosticsXidScan* scan) {
+                                          struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 rasDiagnosticsXidKmsgTimestamp、rasDiagnosticsXidParseLine。 */
   struct rasDiagnosticsXidEvent event;
   uint64_t timestampUsec;
   const char* message;
@@ -334,7 +334,7 @@ static void rasDiagnosticsXidScanKmsgLine(const char* line, const struct rasDiag
   if (rasDiagnosticsXidParseLine(message, &event)) rasDiagnosticsXidAddEvent(scan, &event);
 }
 
-static bool rasDiagnosticsXidDmesgTimestamp(const char* line, uint64_t* timestampUsec, const char** message) {
+static bool rasDiagnosticsXidDmesgTimestamp(const char* line, uint64_t* timestampUsec, const char** message) { /* 中文索引·体内调用 strchr、strtoull。 */
   const char* begin = strchr(line, '[');
   char* end = nullptr;
   unsigned long long seconds;
@@ -366,7 +366,7 @@ static bool rasDiagnosticsXidDmesgTimestamp(const char* line, uint64_t* timestam
 }
 
 static void rasDiagnosticsXidScanDmesgText(const char* text, const struct rasDiagnosticsXidWindow* window,
-                                           struct rasDiagnosticsXidScan* scan) {
+                                           struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 strchr、strlen。 */
   const char* line = text;
   while (line != nullptr && *line != '\0') {
     char copy[RAS_DIAG_XID_LINE_BYTES];
@@ -391,7 +391,7 @@ static void rasDiagnosticsXidScanDmesgText(const char* text, const struct rasDia
 }
 
 static bool rasDiagnosticsXidScanKmsg(const struct rasDiagnosticsXidWindow* window,
-                                      struct rasDiagnosticsXidScan* scan) {
+                                      struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 memset、open。 */
   char buffer[16384];
   size_t bytesRead = 0;
   int fd;
@@ -435,7 +435,7 @@ static bool rasDiagnosticsXidFormatDmesgTime(time_t value, char* text, size_t te
 }
 
 static bool rasDiagnosticsXidScanDmesg(const struct rasDiagnosticsXidWindow* window,
-                                       struct rasDiagnosticsXidScan* scan) {
+                                       struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 memset、rasDiagnosticsXidFormatDmesgTime。 */
   ncclUniquePtr<char> output;
   char command[256];
   char since[32];
@@ -462,7 +462,7 @@ static bool rasDiagnosticsXidScanDmesg(const struct rasDiagnosticsXidWindow* win
   return true;
 }
 
-static bool rasDiagnosticsXidParseIsoWallTime(const char* line, time_t* eventTime) {
+static bool rasDiagnosticsXidParseIsoWallTime(const char* line, time_t* eventTime) { /* 中文索引·体内调用 strptime、strlen。 */
   struct tm tmValue = {};
   const char* end;
   int offsetSeconds = 0;
@@ -499,7 +499,7 @@ static bool rasDiagnosticsXidParseIsoWallTime(const char* line, time_t* eventTim
   return *eventTime != (time_t)-1;
 }
 
-static bool rasDiagnosticsXidParseSyslogWallTime(const char* line, time_t now, time_t* eventTime) {
+static bool rasDiagnosticsXidParseSyslogWallTime(const char* line, time_t now, time_t* eventTime) { /* 中文索引·体内调用 localtime_r、strlen。 */
   static const char months[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
   struct tm nowTm;
   struct tm tmValue;
@@ -534,7 +534,7 @@ static bool rasDiagnosticsXidParseSyslogWallTime(const char* line, time_t now, t
   return *eventTime != (time_t)-1;
 }
 
-static char* rasDiagnosticsXidFgetsUntil(FILE* file, long end, char* line, size_t lineBytes) {
+static char* rasDiagnosticsXidFgetsUntil(FILE* file, long end, char* line, size_t lineBytes) { /* 中文索引·体内调用 ftell、fgets。 */
   long position = ftell(file);
   if (position < 0 || position >= end || lineBytes < 2) return nullptr;
   long remaining = end - position;
@@ -543,7 +543,7 @@ static char* rasDiagnosticsXidFgetsUntil(FILE* file, long end, char* line, size_
 }
 
 static bool rasDiagnosticsXidScanLogFile(const char* path, const struct rasDiagnosticsXidWindow* window,
-                                         struct rasDiagnosticsXidScan* scan) {
+                                         struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 fopen、memset。 */
   FILE* file;
   long end;
   char line[RAS_DIAG_XID_LINE_BYTES];
@@ -607,7 +607,7 @@ fail:
 }
 
 static void rasDiagnosticsXidScanLocal(const struct rasDiagnosticsXidWindow* window,
-                                       struct rasDiagnosticsXidScan* scan) {
+                                       struct rasDiagnosticsXidScan* scan) { /* 中文索引·体内调用 rasDiagnosticsXidScanKmsg、rasDiagnosticsXidScanDmesg。 */
   static const char* logs[] = {"/var/log/kern.log", "/var/log/messages", "/var/log/syslog"};
   if (rasDiagnosticsXidScanKmsg(window, scan)) return;
   if (rasDiagnosticsXidScanDmesg(window, scan)) return;
@@ -625,7 +625,7 @@ static bool rasDiagnosticsXidCodeInSet(uint32_t code, const uint16_t (&values)[N
   return false;
 }
 
-static rasDiagnosticsXidGuidance rasDiagnosticsXidClassify(uint32_t code) {
+static rasDiagnosticsXidGuidance rasDiagnosticsXidClassify(uint32_t code) { /* 中文索引·体内调用 rasDiagnosticsXidCodeInSet。 */
   static const uint16_t noUserAction[] = {63, 106, 107};
   static const uint16_t restartApplication[] = {8,   11,  13,  25,  31,  32,  39,  40,  41,  60,  68,  69,
                                                 70,  71,  72,  75,  76,  77,  80,  82,  83,  84,  85,  86,
@@ -639,7 +639,7 @@ static rasDiagnosticsXidGuidance rasDiagnosticsXidClassify(uint32_t code) {
   return RAS_DIAG_XID_GUIDANCE_CHECK_DOCUMENTATION;
 }
 
-static rasDiagnosticsXidGuidance rasDiagnosticsSxidClassify(const struct rasDiagnosticsXidEvent* event) {
+static rasDiagnosticsXidGuidance rasDiagnosticsSxidClassify(const struct rasDiagnosticsXidEvent* event) { /* 中文索引·体内调用 rasDiagnosticsXidCodeInSet。 */
   static const uint16_t noUserAction[] = {11012, 11021, 11022, 11023, 12021, 12023, 15008, 15011, 19049, 19055,
                                           19057, 19059, 19062, 19065, 19068, 19071, 22013, 24001, 24002, 24003};
 
@@ -649,7 +649,7 @@ static rasDiagnosticsXidGuidance rasDiagnosticsSxidClassify(const struct rasDiag
 }
 
 ncclResult_t rasDiagnosticsXidCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                           struct rasDiagnosticsLocalData* data) {
+                                           struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 memset、rasDiagnosticsCommMatchesContext。 */
   struct rasDiagnosticsXidScan scan;
   struct rasDiagnosticsXidWindow window;
   ncclUniquePtr<char> records;
@@ -762,7 +762,7 @@ static int rasDiagnosticsXidCompareUint64(uint64_t a, uint64_t b) {
   return a < b ? -1 : (a > b ? 1 : 0);
 }
 
-static int rasDiagnosticsXidInstanceCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsXidInstanceCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 rasDiagnosticsXidCompareUint64。 */
   const struct rasDiagnosticsXidInstance* a = (const struct rasDiagnosticsXidInstance*)p1;
   const struct rasDiagnosticsXidInstance* b = (const struct rasDiagnosticsXidInstance*)p2;
   int cmp = rasDiagnosticsXidCompareUint64(a->hostHash, b->hostHash);
@@ -789,7 +789,7 @@ static int rasDiagnosticsXidFindHost(const struct rasDiagnosticsXidHost* hosts, 
   return -1;
 }
 
-static int rasDiagnosticsXidHostCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsXidHostCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 rasDiagnosticsXidCompareUint64。 */
   const struct rasDiagnosticsXidHost* a = (const struct rasDiagnosticsXidHost*)p1;
   const struct rasDiagnosticsXidHost* b = (const struct rasDiagnosticsXidHost*)p2;
   return rasDiagnosticsXidCompareUint64(a->hostHash, b->hostHash);
@@ -802,7 +802,7 @@ static const char* rasDiagnosticsSxidClassName(uint8_t sxidClass) {
 }
 
 static void rasDiagnosticsXidFormatLinks(const struct rasDiagnosticsXidFinding* finding, const int16_t* links,
-                                         char* text, size_t textBytes) {
+                                         char* text, size_t textBytes) { /* 中文索引·体内调用 snprintf。 */
   int pos = snprintf(text, textBytes, "{");
   for (int linkIdx = 0; linkIdx < finding->nLinks && pos > 0 && (size_t)pos < textBytes; linkIdx++) {
     pos += snprintf(text + pos, textBytes - pos, "%s%d", linkIdx == 0 ? "" : ",", links[finding->firstLink + linkIdx]);
@@ -812,7 +812,7 @@ static void rasDiagnosticsXidFormatLinks(const struct rasDiagnosticsXidFinding* 
 
 static ncclResult_t rasDiagnosticsXidReportFinding(const struct rasDiagnosticsReporter* reporter,
                                                    const struct rasDiagnosticsXidFinding* finding,
-                                                   const int16_t* linkIds, const char* hostName) {
+                                                   const int16_t* linkIds, const char* hostName) { /* 中文索引·体内调用 rasDiagnosticsXidFormatLinks、rasDiagnosticsReport。 */
   const char* countPrefix = finding->countSaturated ? "at least " : "";
   const char* occurrence = finding->count == 1 && !finding->countSaturated ? "time" : "times";
   const char* tag = finding->guidance == RAS_DIAG_XID_GUIDANCE_NO_USER_ACTION ? RAS_DIAG_TAG_OK : RAS_DIAG_TAG_INFO;
@@ -876,7 +876,7 @@ static ncclResult_t rasDiagnosticsXidReportFinding(const struct rasDiagnosticsRe
 }
 
 ncclResult_t rasDiagnosticsXidSummarize(const struct rasDiagnosticsContext* ctx,
-                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 ncclCalloc、memchr。 */
   ncclResult_t ret = ncclSuccess;
   struct rasDiagnosticsXidHost* hosts = nullptr;
   struct rasDiagnosticsXidInstance* instances = nullptr;

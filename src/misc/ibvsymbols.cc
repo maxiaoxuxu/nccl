@@ -72,7 +72,7 @@ ncclResult_t buildIbvSymbols(struct ncclIbvSymbols* ibvSymbols) {
 #define IBVERBS_VERSION "IBVERBS_1.1"
 #define NCCL_IBVERBS_LIBS 3
 
-ncclResult_t buildIbvSymbols(struct ncclIbvSymbols* ibvSymbols) {
+ncclResult_t buildIbvSymbols(struct ncclIbvSymbols* ibvSymbols) { /* 中文索引·体内调用 ncclGetEnv、dlopen。 */
   static void* ibvhandle = NULL;
   void* tmp;
   void** cast;

@@ -54,7 +54,7 @@ __device__ static inline uint64_t* gpi_flush_tickets_get_ptr(gpi_gpu_channel_t* 
 }
 
 template <typename T, enum gpi_resource_sharing_mode resource_sharing_mode>
-__device__ static inline T gpi_atomic_add(T* ptr, T value) {
+__device__ static inline T gpi_atomic_add(T* ptr, T value) { /* 中文索引·体内调用 ptr_aref.fetch_add。 */
   if (resource_sharing_mode == GPI_RESOURCE_SHARING_MODE_EXCLUSIVE) {
     T old_val = *ptr;
     *ptr += value;
@@ -95,7 +95,7 @@ __device__ static inline void gpi_gpu_channel_write_ci_shadow(gpi_gpu_channel_t*
 }
 
 template <enum gpi_resource_sharing_mode resource_sharing_mode>
-__device__ static inline uint64_t gpi_gpu_channel_get_pi(gpi_gpu_channel_t* ch, uint64_t slots, uint32_t optFlags) {
+__device__ static inline uint64_t gpi_gpu_channel_get_pi(gpi_gpu_channel_t* ch, uint64_t slots, uint32_t optFlags) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   uint64_t pi = gpi_atomic_add<uint64_t, resource_sharing_mode>((uint64_t*)&(ch->queue.pi), slots);
   if (optFlags & ncclGinOptFlagsMaySkipCreditCheck) {
@@ -114,12 +114,12 @@ __device__ static inline uint64_t gpi_gpu_channel_get_pi(gpi_gpu_channel_t* ch, 
   }
   return pi;
 }
-__device__ static inline uint64_t gpi_gpu_channel_get_idx(gpi_gpu_channel_t* ch, uint64_t pi) {
+__device__ static inline uint64_t gpi_gpu_channel_get_idx(gpi_gpu_channel_t* ch, uint64_t pi) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   const size_t size = 1UL << loadConst(&ch->queue.log_depth);
   return pi & (size - 1);
 }
-__device__ static inline void gpi_gpu_channel_set_gfd_flag(gpi_gpu_channel_t* ch, gpi_gfd_t* gfd, uint64_t pi) {
+__device__ static inline void gpi_gpu_channel_set_gfd_flag(gpi_gpu_channel_t* ch, gpi_gfd_t* gfd, uint64_t pi) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   NVCC_PRAGMA_UNROLL_AUTO
   for (int i = 0; i < GPI_GFD_SEG_MAX; i += 1) {
@@ -131,29 +131,29 @@ __device__ static inline uint64_t gpi_gpu_channel_get_counter_value(gpi_gpu_chan
   return GPI_READ_ONCE(ch->counter[idx].value);
 }
 
-__device__ static inline void gpi_gpu_channel_reset_signal(gpi_gpu_channel_t* ch, uint32_t idx) {
+__device__ static inline void gpi_gpu_channel_reset_signal(gpi_gpu_channel_t* ch, uint32_t idx) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   gpi_signal_t* ptr = loadConst(&ch->signal) + idx;
   GPI_WRITE_ONCE(ptr->value, 0);
 }
-__device__ static inline void gpi_gpu_channel_reset_signal_flag(gpi_gpu_channel_t* ch, uint32_t idx) {
+__device__ static inline void gpi_gpu_channel_reset_signal_flag(gpi_gpu_channel_t* ch, uint32_t idx) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   gpi_signal_t* ptr = loadConst(&ch->signal) + idx;
   GPI_WRITE_ONCE(ptr->flags, 0);
 }
 
-__device__ static inline void gpi_gpu_channel_reset_counter(gpi_gpu_channel_t* ch, uint32_t idx) {
+__device__ static inline void gpi_gpu_channel_reset_counter(gpi_gpu_channel_t* ch, uint32_t idx) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   uint64_t* ptr = (uint64_t*)(loadConst(&ch->counter) + idx);
   GPI_WRITE_ONCE(*ptr, 0);
 }
 
-__device__ static inline uint64_t gpi_gpu_channel_get_signal_value(gpi_gpu_channel_t* ch, uint32_t idx) {
+__device__ static inline uint64_t gpi_gpu_channel_get_signal_value(gpi_gpu_channel_t* ch, uint32_t idx) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   gpi_signal_t* sig = loadConst(&ch->signal);
   return GPI_READ_ONCE(sig[idx].value);
 }
-__device__ static inline bool gpi_gpu_channel_is_signal_flags(gpi_gpu_channel_t* ch, uint32_t idx) {
+__device__ static inline bool gpi_gpu_channel_is_signal_flags(gpi_gpu_channel_t* ch, uint32_t idx) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   gpi_signal_t* sig = loadConst(&ch->signal);
   return (GPI_READ_ONCE(sig[idx].flags) & GPI_SIGNAL_COUNTED_FLAG) == GPI_SIGNAL_COUNTED_FLAG;
@@ -170,7 +170,7 @@ __device__ __inline__ uint64_t __as_ptr_gmem(const void* __ptr) {
   return static_cast<uint64_t>(__cvta_generic_to_global(__ptr));
 }
 
-__device__ __inline__ void TmaCopy(void* dstMem, const void* srcMem, uint32_t& size) {
+__device__ __inline__ void TmaCopy(void* dstMem, const void* srcMem, uint32_t& size) { /* 中文索引·体内调用 __as_ptr_gmem、__as_ptr_smem。 */
   asm volatile("fence.proxy.async.shared::cta;" : : : "memory");
   asm volatile("cp.async.bulk.global.shared::cta.bulk_group [%0], [%1], %2; // 3. "
                :
@@ -187,7 +187,7 @@ __device__ __inline__ void TmaWait() {
 }
 
 template <enum gpi_resource_sharing_mode resource_sharing_mode>
-__device__ static inline void gpi_gpu_channel_post_gfd_tma(gpi_gpu_channel_t* ch, gpi_gfd_t* gfd, uint32_t optFlags) {
+__device__ static inline void gpi_gpu_channel_post_gfd_tma(gpi_gpu_channel_t* ch, gpi_gfd_t* gfd, uint32_t optFlags) { /* 中文索引·体内调用 gpi_gpu_channel_get_idx、gpi_gpu_channel_set_gfd_flag。 */
   using nccl::utility::loadConst;
   uint32_t size = sizeof(gpi_gfd_t);
   uint64_t pi = gpi_gpu_channel_get_pi<resource_sharing_mode>(ch, 1, optFlags);
@@ -209,7 +209,7 @@ __device__ static inline void gpi_gpu_channel_post_gfd_tma(gpi_gpu_channel_t* ch
  */
 template <enum gpi_resource_sharing_mode resource_sharing_mode>
 __device__ static inline void gpi_gpu_channel_post_gfd_thread(gpi_gpu_channel_t* ch, gpi_gfd_t* gfd,
-                                                              uint32_t optFlags) {
+                                                              uint32_t optFlags) { /* 中文索引·体内调用 gpi_gpu_channel_get_idx、gpi_gpu_channel_set_gfd_flag。 */
   using nccl::utility::loadConst;
   uint64_t pi = gpi_gpu_channel_get_pi<resource_sharing_mode>(ch, 1, optFlags);
   uint64_t idx = gpi_gpu_channel_get_idx(ch, pi);
@@ -328,7 +328,7 @@ NCCL_DEVICE_INLINE static void putImplMode(ncclGinCtx ctx, Coop coop, int peer, 
                                            ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp,
                                            uint64_t signalOpArg, bool hasCounter, ncclGinCounter_t counterId,
                                            bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
-                                           cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) {
+                                           cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::utility::loadConst;
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -408,7 +408,7 @@ NCCL_DEVICE_INLINE static void putValueImplMode(ncclGinCtx ctx, Coop coop, int p
                                                 size_t dstOff, T srcVal, ncclGinSignalDescriptor signal,
                                                 ncclGinSignalOp_t signalOp, uint64_t signalOpArg, bool hasDescriptor,
                                                 ncclGinDescriptorSmem* descriptor, cuda::thread_scope required,
-                                                cuda::thread_scope given, uint32_t optFlags) {
+                                                cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     gpi_gfd_op_t op = GPI_GFD_DATA_OP_WRITE_INLINE;
@@ -634,7 +634,7 @@ struct ncclGinApi_SupportsStrongSignal<NCCL_NET_DEVICE_GIN_GPI> {
 
 template <>
 struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_GPI> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 nccl::gin::gpi::gpi_gpu_channel_get_ptr、nccl::gin::gpi::gpi_gpu_build_control_gfd。 */
     gpi_gpu_channel_t* gpi_ctx = nccl::gin::gpi::gpi_gpu_channel_get_ptr(ctx);
     gpi_gfd_t gfd;
     nccl::gin::gpi::gpi_gpu_build_control_gfd(&gfd, GPI_GFD_CTRL_OP_COUNTER_RESET, 0, counterId, 0);
@@ -656,7 +656,7 @@ struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_GPI> {
 
 template <>
 struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_GPI> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) { /* 中文索引·体内调用 nccl::gin::gpi::gpi_gpu_channel_get_ptr、nccl::gin::gpi::gpi_gpu_channel_is_signal_flags。 */
     gpi_gpu_channel_t* gpi_ctx = nccl::gin::gpi::gpi_gpu_channel_get_ptr(ctx);
     if (signal.type == NCCL_GIN_SIGNAL_TYPE_INDEXED) {
       uint32_t signalId = signal.indexedSignal.signalId;
@@ -692,7 +692,7 @@ struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_GPI> {
 
 template <>
 struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_GPI> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 nccl::gin::gpi::gpi_gpu_channel_get_ptr、loadConst。 */
     using nccl::utility::loadConst;
     gpi_gpu_channel_t* gpi_ctx = nccl::gin::gpi::gpi_gpu_channel_get_ptr(ctx);
     return {(uint64_t*)(loadConst(&gpi_ctx->counter) + counterId), 0};
@@ -701,7 +701,7 @@ struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_GPI> {
 
 template <>
 struct ncclGinApi_GetSignalPtr<NCCL_NET_DEVICE_GIN_GPI> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) { /* 中文索引·体内调用 nccl::gin::gpi::gpi_gpu_channel_get_ptr、loadConst。 */
     using nccl::utility::loadConst;
     gpi_gpu_channel_t* gpi_ctx = nccl::gin::gpi::gpi_gpu_channel_get_ptr(ctx);
     return {(uint64_t*)(loadConst(&gpi_ctx->signal) + signalId), 0};
@@ -766,7 +766,7 @@ struct ncclGinApi_Get<NCCL_NET_DEVICE_GIN_GPI> {
   template <typename Coop>
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t remoteWin, size_t remoteOff,
                                       ncclGinWindow_t localWin, size_t localOff, size_t bytes, bool hasDescriptor,
-                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
     using nccl::utility::loadConst;
     coop.sync();
     if (coop.thread_rank() == 0) {
@@ -800,7 +800,7 @@ struct ncclGinApi_Get<NCCL_NET_DEVICE_GIN_GPI> {
 template <>
 struct ncclGinApi_FlushAsync<NCCL_NET_DEVICE_GIN_GPI> {
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, int peer, ncclGinRequest_t* outRequest, bool hasDescriptor,
-                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags) {
+                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags) { /* 中文索引·体内调用 nccl::gin::gpi::gpi_gpu_channel_get_ptr、nccl::gin::gpi::gpi_flush_tickets_get_ptr。 */
     using nccl::utility::loadConst;
     uint64_t gfd_local[GPI_GFD_SEG_MAX];
     gpi_gfd_t* gfd = hasDescriptor ? (gpi_gfd_t*)descriptor : (gpi_gfd_t*)gfd_local;

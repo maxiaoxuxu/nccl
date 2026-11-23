@@ -168,7 +168,7 @@ struct rasDiagnosticsRdmaTopoCache {
   char sample[RAS_DIAG_RDMA_TOPO_SAMPLE_BYTES];
 };
 
-static bool rasDiagnosticsPciValidBdf(const char* bdf) {
+static bool rasDiagnosticsPciValidBdf(const char* bdf) { /* 中文索引·体内调用 strnlen、isxdigit。 */
   size_t domainLen;
   size_t len;
 
@@ -190,7 +190,7 @@ static bool rasDiagnosticsPciValidBdf(const char* bdf) {
   return true;
 }
 
-static bool rasDiagnosticsPciBdfFromPath(const char* pciPath, char* bdf, size_t bdfLen) {
+static bool rasDiagnosticsPciBdfFromPath(const char* pciPath, char* bdf, size_t bdfLen) { /* 中文索引·体内调用 strlen、memcpy。 */
   char tmp[RAS_DIAG_PCI_BDF_BYTES];
   const char* start;
   const char* end;
@@ -213,7 +213,7 @@ static bool rasDiagnosticsPciBdfFromPath(const char* pciPath, char* bdf, size_t 
   return true;
 }
 
-static bool rasDiagnosticsPciDevicePath(const char* bdf, char* path, size_t pathLen) {
+static bool rasDiagnosticsPciDevicePath(const char* bdf, char* path, size_t pathLen) { /* 中文索引·体内调用 rasDiagnosticsPciValidBdf、snprintf。 */
   int n;
 
   if (!rasDiagnosticsPciValidBdf(bdf) || path == nullptr || pathLen == 0) return false;
@@ -221,7 +221,7 @@ static bool rasDiagnosticsPciDevicePath(const char* bdf, char* path, size_t path
   return n >= 0 && (size_t)n < pathLen;
 }
 
-static struct rasDiagnosticsIommuGroup rasDiagnosticsPciReadIommuGroup(const char* bdf) {
+static struct rasDiagnosticsIommuGroup rasDiagnosticsPciReadIommuGroup(const char* bdf) { /* 中文索引·体内调用 rasDiagnosticsPciDevicePath、open。 */
   struct rasDiagnosticsIommuGroup group = {RAS_DIAG_IOMMU_GROUP_UNAVAILABLE, -1};
   char devicePath[PATH_MAX];
   char target[PATH_MAX];
@@ -257,7 +257,7 @@ static struct rasDiagnosticsIommuGroup rasDiagnosticsPciReadIommuGroup(const cha
   return group;
 }
 
-static rasDiagnosticsIommuMode rasDiagnosticsIommuReadMode(const struct rasDiagnosticsIommuGroup* group) {
+static rasDiagnosticsIommuMode rasDiagnosticsIommuReadMode(const struct rasDiagnosticsIommuGroup* group) { /* 中文索引·体内调用 snprintf、open。 */
   char path[PATH_MAX];
   char type[32];
   char* end;
@@ -297,7 +297,7 @@ static rasDiagnosticsIommuMode rasDiagnosticsIommuReadMode(const struct rasDiagn
   return RAS_DIAG_IOMMU_MODE_UNAVAILABLE;
 }
 
-static bool rasDiagnosticsPciSpanContainsCaseInsensitive(const char* haystack, size_t haystackLen, const char* needle) {
+static bool rasDiagnosticsPciSpanContainsCaseInsensitive(const char* haystack, size_t haystackLen, const char* needle) { /* 中文索引·体内调用 strlen、strncasecmp。 */
   size_t needleLen;
 
   if (haystack == nullptr || needle == nullptr) return false;
@@ -311,7 +311,7 @@ static bool rasDiagnosticsPciSpanContainsCaseInsensitive(const char* haystack, s
   return false;
 }
 
-static void rasDiagnosticsRdmaTopoSample(const char* output, char* sample, size_t sampleLen) {
+static void rasDiagnosticsRdmaTopoSample(const char* output, char* sample, size_t sampleLen) { /* 中文索引·体内调用 strchr、strlen。 */
   const char* lastLine = nullptr;
   size_t lastLen = 0;
 
@@ -342,7 +342,7 @@ static void rasDiagnosticsRdmaTopoSample(const char* output, char* sample, size_
   if (lastLine != nullptr) snprintf(sample, sampleLen, "%.*s", (int)lastLen, lastLine);
 }
 
-static bool rasDiagnosticsRdmaTopoHasLinePrefix(const char* output, const char* prefix) {
+static bool rasDiagnosticsRdmaTopoHasLinePrefix(const char* output, const char* prefix) { /* 中文索引·体内调用 strlen、strncmp。 */
   size_t prefixLen;
 
   if (output == nullptr || prefix == nullptr || prefix[0] == '\0') return false;
@@ -356,7 +356,7 @@ static bool rasDiagnosticsRdmaTopoHasLinePrefix(const char* output, const char* 
   return false;
 }
 
-static void rasDiagnosticsRdmaTopoRun(struct rasDiagnosticsRdmaTopoCache* cache) {
+static void rasDiagnosticsRdmaTopoRun(struct rasDiagnosticsRdmaTopoCache* cache) { /* 中文索引·体内调用 memset、ncclDiagChildRun。 */
   char output[RAS_DIAG_RDMA_TOPO_OUTPUT_BYTES];
   bool reportedFailure;
   bool reportedSuccess;
@@ -418,7 +418,7 @@ static void rasDiagnosticsRdmaTopoRun(struct rasDiagnosticsRdmaTopoCache* cache)
 static std::once_flag rasDiagnosticsRdmaTopoOnce;
 static struct rasDiagnosticsRdmaTopoCache rasDiagnosticsRdmaTopoCachedResult;
 
-static const struct rasDiagnosticsRdmaTopoCache* rasDiagnosticsRdmaTopoResult() {
+static const struct rasDiagnosticsRdmaTopoCache* rasDiagnosticsRdmaTopoResult() { /* 中文索引·体内调用 std::call_once、rasDiagnosticsRdmaTopoRun。 */
   // The PCI topology is process-wide, so all communicator records share one immutable tool result.
   std::call_once(rasDiagnosticsRdmaTopoOnce, []() { rasDiagnosticsRdmaTopoRun(&rasDiagnosticsRdmaTopoCachedResult); });
   return &rasDiagnosticsRdmaTopoCachedResult;
@@ -455,7 +455,7 @@ static const char* rasDiagnosticsIommuModeName(rasDiagnosticsIommuMode mode) {
 }
 
 static void rasDiagnosticsPciAddPair(int64_t gpuBusId, const char* name, const char* pciPath,
-                                     struct rasDiagnosticsPciCommSnapshot* snapshot) {
+                                     struct rasDiagnosticsPciCommSnapshot* snapshot) { /* 中文索引·体内调用 strchr、snprintf。 */
   char bdf[RAS_DIAG_PCI_BDF_BYTES] = {};
   char devicePath[PATH_MAX];
   char resolvedPath[PATH_MAX];
@@ -488,7 +488,7 @@ static void rasDiagnosticsPciAddPair(int64_t gpuBusId, const char* name, const c
 
 static void rasDiagnosticsPciAddNetDevice(const struct ncclTopoNetPropertiesSnapshot* properties, int nProperties,
                                           int netDev, int64_t gpuBusId,
-                                          struct rasDiagnosticsPciCommSnapshot* snapshot) {
+                                          struct rasDiagnosticsPciCommSnapshot* snapshot) { /* 中文索引·体内调用 rasDiagnosticsPciAddPair。 */
   if (netDev < 0 || netDev >= nProperties || !properties[netDev].propertiesValid) {
     snapshot->netSelectionIncomplete = 1;
     return;
@@ -516,7 +516,7 @@ static void rasDiagnosticsPciAddNetDevice(const struct ncclTopoNetPropertiesSnap
 
 // Must be called while ncclCommsMutex prevents communicator teardown and network plugin unload.
 static void rasDiagnosticsPciSnapshotNet(struct ncclComm* comm, bool requireCommInitialized,
-                                         struct rasDiagnosticsPciCommSnapshot* snapshot) {
+                                         struct rasDiagnosticsPciCommSnapshot* snapshot) { /* 中文索引·体内调用 ncclTopoGetNetPropertiesSnapshot、ncclTopoGetNetDev。 */
   static const int graphAlgorithms[] = {NCCL_ALGO_TREE, NCCL_ALGO_RING, NCCL_ALGO_COLLNET_DIRECT,
                                         NCCL_ALGO_COLLNET_CHAIN, NCCL_ALGO_NVLS};
   struct ncclTopoNetPropertiesSnapshot* rawProperties = nullptr;
@@ -591,7 +591,7 @@ static void rasDiagnosticsPciSnapshotNet(struct ncclComm* comm, bool requireComm
 
 static ncclResult_t rasDiagnosticsPciCollectSnapshots(const struct rasDiagnosticsContext* ctx, bool collectNetDevices,
                                                       ncclUniquePtr<struct rasDiagnosticsPciCommSnapshot>& snapshots,
-                                                      int* nSnapshots) {
+                                                      int* nSnapshots) { /* 中文索引·体内调用 rasDiagnosticsCommMatchesContext、ncclCalloc。 */
   int count = 0;
   int snapshotIdx = 0;
 
@@ -632,7 +632,7 @@ static ncclResult_t rasDiagnosticsPciCollectSnapshots(const struct rasDiagnostic
 }
 
 static ncclResult_t rasDiagnosticsRdmaTopoFillLocalData(const struct rasDiagnosticsCommSnapshot* comm,
-                                                        void* checkData) {
+                                                        void* checkData) { /* 中文索引·体内调用 rasDiagnosticsRdmaTopoResult、memset。 */
   const struct rasDiagnosticsRdmaTopoCache* rdmaTopo = rasDiagnosticsRdmaTopoResult();
   struct rasDiagnosticsRdmaTopoData* topoData = (struct rasDiagnosticsRdmaTopoData*)checkData;
 
@@ -648,7 +648,7 @@ static ncclResult_t rasDiagnosticsRdmaTopoFillLocalData(const struct rasDiagnost
 }
 
 ncclResult_t rasDiagnosticsRdmaTopoCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                                struct rasDiagnosticsLocalData* data) {
+                                                struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords、rasDiagnosticsRdmaTopoResult。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsRdmaTopoData),
                                               rasDiagnosticsRdmaTopoFillLocalData, data));
   if (data->nRecords == 0) return ncclSuccess;
@@ -685,7 +685,7 @@ static void rasDiagnosticsPciRankSetAdd(struct rasDiagnosticsPciRankSet* rankSet
   rankSet->nTotal++;
 }
 
-static void rasDiagnosticsPciRecordNicIssue(struct rasDiagnosticsPciNicIssue* issue, int rank, const char* bdf) {
+static void rasDiagnosticsPciRecordNicIssue(struct rasDiagnosticsPciNicIssue* issue, int rank, const char* bdf) { /* 中文索引·体内调用 snprintf。 */
   if (issue->count == 0) {
     issue->firstRank = rank;
     snprintf(issue->firstBdf, sizeof(issue->firstBdf), "%s", bdf[0] == '\0' ? "unknown" : bdf);
@@ -704,7 +704,7 @@ static bool rasDiagnosticsPciBdfPayloadValid(const char* bdf) {
   return rasDiagnosticsPciValidBdf(bdf);
 }
 
-static bool rasDiagnosticsRdmaTopoPayloadValid(const struct rasDiagnosticsRdmaTopoData* topoData) {
+static bool rasDiagnosticsRdmaTopoPayloadValid(const struct rasDiagnosticsRdmaTopoData* topoData) { /* 中文索引·体内调用 rasDiagnosticsPciStringTerminated。 */
   if (topoData == nullptr) return false;
   if (topoData->source > RAS_DIAG_RDMA_TOPO_SOURCE_FALLBACK) return false;
   if (topoData->rdmaTopoState > RAS_DIAG_RDMA_TOPO_UNAVAILABLE) return false;
@@ -735,7 +735,7 @@ static bool rasDiagnosticsRdmaTopoPayloadValid(const struct rasDiagnosticsRdmaTo
 static ncclResult_t rasDiagnosticsRdmaTopoReportResults(const struct rasDiagnosticsReporter* reporter,
                                                         const char* records, size_t recordStride, int start, int end,
                                                         const struct rasDiagnosticsRankHeader* startRank,
-                                                        const char* tag) {
+                                                        const char* tag) { /* 中文索引·体内调用 rasDiagnosticsRankHeaderFromRecord、rasDiagnosticsRdmaTopoDataFromRecord。 */
   struct rasDiagnosticsPciRankSet issueRanks = {};
   int nRdmaTopo = 0;
   int firstIssueRank = -1;
@@ -776,7 +776,7 @@ static ncclResult_t rasDiagnosticsRdmaTopoReportResults(const struct rasDiagnost
 static ncclResult_t rasDiagnosticsRdmaTopoReportFallbackReasons(const struct rasDiagnosticsReporter* reporter,
                                                                 const char* records, size_t recordStride, int start,
                                                                 int end,
-                                                                const struct rasDiagnosticsRankHeader* startRank) {
+                                                                const struct rasDiagnosticsRankHeader* startRank) { /* 中文索引·体内调用 rasDiagnosticsRdmaTopoDataFromRecord、rasDiagnosticsReport。 */
   const struct rasDiagnosticsRdmaTopoData* first = nullptr;
   int nFallback = 0;
   bool mixedResults = false;
@@ -808,7 +808,7 @@ static ncclResult_t rasDiagnosticsRdmaTopoReportFallbackReasons(const struct ras
 
 // Validate and group gathered records by communicator, then report each communicator's rdma_topo results.
 ncclResult_t rasDiagnosticsRdmaTopoSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsRdmaTopoData));
@@ -929,7 +929,7 @@ static rasDiagnosticsPciFallbackState rasDiagnosticsPciFallbackStateForSnapshot(
 }
 
 static bool rasDiagnosticsPciFallbackNeeded(const struct rasDiagnosticsPciCommSnapshot* snapshots, int nSnapshots,
-                                            const struct rasDiagnosticsRdmaTopoCache* rdmaTopo) {
+                                            const struct rasDiagnosticsRdmaTopoCache* rdmaTopo) { /* 中文索引·体内调用 rasDiagnosticsPciFallbackStateForSnapshot。 */
   for (int i = 0; i < nSnapshots; i++) {
     if (rasDiagnosticsPciFallbackStateForSnapshot(snapshots + i, rdmaTopo) == RAS_DIAG_PCI_FALLBACK_COLLECTED) {
       return true;
@@ -938,7 +938,7 @@ static bool rasDiagnosticsPciFallbackNeeded(const struct rasDiagnosticsPciCommSn
   return false;
 }
 
-static void rasDiagnosticsIommuFillDevice(const char* bdf, struct rasDiagnosticsIommuDeviceData* device) {
+static void rasDiagnosticsIommuFillDevice(const char* bdf, struct rasDiagnosticsIommuDeviceData* device) { /* 中文索引·体内调用 memset、snprintf。 */
   memset(device, 0, sizeof(*device));
   snprintf(device->bdf, sizeof(device->bdf), "%s", bdf);
   device->group = rasDiagnosticsPciReadIommuGroup(bdf);
@@ -947,7 +947,7 @@ static void rasDiagnosticsIommuFillDevice(const char* bdf, struct rasDiagnostics
 
 static ncclResult_t rasDiagnosticsIommuFillRecord(const struct rasDiagnosticsPciCommSnapshot* snapshot,
                                                   const struct rasDiagnosticsRdmaTopoCache* rdmaTopo,
-                                                  struct rasDiagnosticsIommuData* iommuData) {
+                                                  struct rasDiagnosticsIommuData* iommuData) { /* 中文索引·体内调用 memset、rasDiagnosticsPciFallbackStateForSnapshot。 */
   memset(iommuData, 0, sizeof(*iommuData));
   iommuData->fallbackState = rasDiagnosticsPciFallbackStateForSnapshot(snapshot, rdmaTopo);
   if (iommuData->fallbackState != RAS_DIAG_PCI_FALLBACK_COLLECTED) return ncclSuccess;
@@ -968,7 +968,7 @@ static ncclResult_t rasDiagnosticsIommuFillRecord(const struct rasDiagnosticsPci
 }
 
 ncclResult_t rasDiagnosticsIommuCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                             struct rasDiagnosticsLocalData* data) {
+                                             struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、memset。 */
   ncclUniquePtr<struct rasDiagnosticsPciCommSnapshot> snapshots;
   ncclUniquePtr<char> records;
   const struct rasDiagnosticsRdmaTopoCache* rdmaTopo = nullptr;
@@ -1020,7 +1020,7 @@ static bool rasDiagnosticsIommuGroupValid(const struct rasDiagnosticsIommuGroup*
   return group->state == RAS_DIAG_IOMMU_GROUP_AVAILABLE ? group->id >= 0 : group->id == -1;
 }
 
-static bool rasDiagnosticsIommuDeviceValid(const struct rasDiagnosticsIommuDeviceData* device) {
+static bool rasDiagnosticsIommuDeviceValid(const struct rasDiagnosticsIommuDeviceData* device) { /* 中文索引·体内调用 rasDiagnosticsPciBdfPayloadValid、rasDiagnosticsIommuGroupValid。 */
   if (!rasDiagnosticsPciBdfPayloadValid(device->bdf) || device->mode > RAS_DIAG_IOMMU_MODE_UNAVAILABLE ||
       !rasDiagnosticsIommuGroupValid(&device->group)) {
     return false;
@@ -1032,7 +1032,7 @@ static bool rasDiagnosticsIommuDeviceValid(const struct rasDiagnosticsIommuDevic
   return device->mode != RAS_DIAG_IOMMU_MODE_OFF;
 }
 
-static bool rasDiagnosticsIommuPayloadValid(const struct rasDiagnosticsIommuData* iommuData) {
+static bool rasDiagnosticsIommuPayloadValid(const struct rasDiagnosticsIommuData* iommuData) { /* 中文索引·体内调用 rasDiagnosticsIommuDeviceValid、strcmp。 */
   if (iommuData == nullptr || iommuData->fallbackState > RAS_DIAG_PCI_FALLBACK_TOPOLOGY_NOT_READY ||
       iommuData->netSelectionIncomplete > 1 || iommuData->nPairs > RAS_DIAG_PCI_MAX_GPU_NIC_PAIRS ||
       iommuData->nPairsTruncated > 1) {
@@ -1088,7 +1088,7 @@ struct rasDiagnosticsIommuSummary {
 };
 
 static void rasDiagnosticsIommuRecordMode(struct rasDiagnosticsIommuSummary* summary, int rank,
-                                          const struct rasDiagnosticsIommuDeviceData* device) {
+                                          const struct rasDiagnosticsIommuDeviceData* device) { /* 中文索引·体内调用 snprintf。 */
   struct rasDiagnosticsIommuModeOccurrence* occurrence = summary->modes + device->mode;
 
   if (occurrence->count == 0) {
@@ -1100,7 +1100,7 @@ static void rasDiagnosticsIommuRecordMode(struct rasDiagnosticsIommuSummary* sum
 }
 
 static void rasDiagnosticsIommuRecordGroupIssue(struct rasDiagnosticsIommuGroupIssue* issue, int rank,
-                                                const char* nicBdf, int32_t gpuGroup, int32_t nicGroup) {
+                                                const char* nicBdf, int32_t gpuGroup, int32_t nicGroup) { /* 中文索引·体内调用 snprintf。 */
   if (issue->count == 0) {
     issue->firstRank = rank;
     issue->firstGpuGroup = gpuGroup;
@@ -1112,7 +1112,7 @@ static void rasDiagnosticsIommuRecordGroupIssue(struct rasDiagnosticsIommuGroupI
 
 static void rasDiagnosticsIommuInspectRecord(const struct rasDiagnosticsRankHeader* rank,
                                              const struct rasDiagnosticsIommuData* iommuData,
-                                             struct rasDiagnosticsIommuSummary* summary) {
+                                             struct rasDiagnosticsIommuSummary* summary) { /* 中文索引·体内调用 strcmp、rasDiagnosticsIommuRecordMode。 */
   for (int pairIdx = 0; pairIdx < iommuData->nPairs; pairIdx++) {
     const struct rasDiagnosticsIommuPairData* pair = iommuData->pairs + pairIdx;
     const struct rasDiagnosticsIommuGroup* gpuGroup = &pair->gpu.group;
@@ -1150,7 +1150,7 @@ static void rasDiagnosticsIommuInspectRecord(const struct rasDiagnosticsRankHead
 
 static ncclResult_t rasDiagnosticsIommuReportMode(const struct rasDiagnosticsReporter* reporter,
                                                   const struct rasDiagnosticsRankHeader* startRank,
-                                                  const struct rasDiagnosticsIommuSummary* summary) {
+                                                  const struct rasDiagnosticsIommuSummary* summary) { /* 中文索引·体内调用 rasDiagnosticsReport、rasDiagnosticsIommuModeName。 */
   int knownMode = -1;
   int nKnownModes = 0;
   bool complete = summary->nFallback == startRank->commNRanks && summary->truncated.nTotal == 0 &&
@@ -1188,7 +1188,7 @@ static ncclResult_t rasDiagnosticsIommuReportMode(const struct rasDiagnosticsRep
 
 static ncclResult_t rasDiagnosticsIommuReportGroups(const struct rasDiagnosticsReporter* reporter,
                                                     const struct rasDiagnosticsRankHeader* startRank,
-                                                    const struct rasDiagnosticsIommuSummary* summary) {
+                                                    const struct rasDiagnosticsIommuSummary* summary) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   int nCompared = summary->nGroupMatches + summary->groupMismatch.count;
   bool complete = summary->nFallback == startRank->commNRanks && summary->nGroupSkipped == 0 &&
                   summary->groupUnavailable.count == 0 && summary->truncated.nTotal == 0 &&
@@ -1226,7 +1226,7 @@ static ncclResult_t rasDiagnosticsIommuReportGroups(const struct rasDiagnosticsR
 }
 
 ncclResult_t rasDiagnosticsIommuSummarize(const struct rasDiagnosticsContext* ctx,
-                                          const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                          const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsIommuData));
@@ -1326,7 +1326,7 @@ exit:
 // ATS state check.
 // *************************************************************************
 
-static rasDiagnosticsAtsState rasDiagnosticsAtsStateFromLspci(const char* output, const char* bdf) {
+static rasDiagnosticsAtsState rasDiagnosticsAtsStateFromLspci(const char* output, const char* bdf) { /* 中文索引·体内调用 strlen、rasDiagnosticsPciValidBdf。 */
   bool inDevice = false;
   size_t bdfLen = strlen(bdf);
 
@@ -1360,7 +1360,7 @@ static rasDiagnosticsAtsState rasDiagnosticsAtsStateFromLspci(const char* output
 static ncclResult_t rasDiagnosticsAtsFillRecord(const struct rasDiagnosticsPciCommSnapshot* snapshot,
                                                 const struct rasDiagnosticsRdmaTopoCache* rdmaTopo,
                                                 const char* lspciOutput, bool lspciUnavailable,
-                                                bool lspciOutputTruncated, struct rasDiagnosticsAtsData* atsData) {
+                                                bool lspciOutputTruncated, struct rasDiagnosticsAtsData* atsData) { /* 中文索引·体内调用 memset、rasDiagnosticsPciFallbackStateForSnapshot。 */
   memset(atsData, 0, sizeof(*atsData));
   atsData->fallbackState = rasDiagnosticsPciFallbackStateForSnapshot(snapshot, rdmaTopo);
   if (atsData->fallbackState != RAS_DIAG_PCI_FALLBACK_COLLECTED) return ncclSuccess;
@@ -1387,7 +1387,7 @@ static ncclResult_t rasDiagnosticsAtsFillRecord(const struct rasDiagnosticsPciCo
 }
 
 ncclResult_t rasDiagnosticsAtsCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                           struct rasDiagnosticsLocalData* data) {
+                                           struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、memset。 */
   ncclUniquePtr<struct rasDiagnosticsPciCommSnapshot> snapshots;
   ncclUniquePtr<char> records;
   ncclUniquePtr<char> lspciOutput;
@@ -1443,7 +1443,7 @@ static const struct rasDiagnosticsAtsData* rasDiagnosticsAtsDataFromRecord(const
   return (const struct rasDiagnosticsAtsData*)(record + sizeof(struct rasDiagnosticsRankHeader));
 }
 
-static bool rasDiagnosticsAtsPayloadValid(const struct rasDiagnosticsAtsData* atsData) {
+static bool rasDiagnosticsAtsPayloadValid(const struct rasDiagnosticsAtsData* atsData) { /* 中文索引·体内调用 rasDiagnosticsPciBdfPayloadValid、strcmp。 */
   if (atsData == nullptr || atsData->fallbackState > RAS_DIAG_PCI_FALLBACK_TOPOLOGY_NOT_READY ||
       atsData->netSelectionIncomplete > 1 || atsData->nNics > RAS_DIAG_PCI_MAX_NET_DEVS ||
       atsData->netSelectionTruncated > 1 || atsData->lspciUnavailable > 1 || atsData->lspciOutputTruncated > 1) {
@@ -1468,7 +1468,7 @@ static bool rasDiagnosticsAtsPayloadValid(const struct rasDiagnosticsAtsData* at
 }
 
 ncclResult_t rasDiagnosticsAtsSummarize(const struct rasDiagnosticsContext* ctx,
-                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsAtsData));

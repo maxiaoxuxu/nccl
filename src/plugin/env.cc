@@ -35,7 +35,7 @@ enum {
 };
 static int envPluginStatus = envPluginLoadReady;
 
-static ncclResult_t ncclEnvPluginLoad(void) {
+static ncclResult_t ncclEnvPluginLoad(void) { /* 中文索引·体内调用 std::getenv、strcasecmp。 */
   const char* envName = nullptr;
   bool envPluginRequested = false;
   if (envPluginStatus != envPluginLoadReady) goto exit;
@@ -77,7 +77,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclEnvPluginUnload(void) {
+static ncclResult_t ncclEnvPluginUnload(void) { /* 中文索引·体内调用 ncclClosePluginLib。 */
   if (ncclEnvPlugin) {
     INFO(NCCL_DESTROY, "ENV/Plugin: Closing env plugin %s", ncclEnvPlugin->name);
   }
@@ -93,7 +93,7 @@ void ncclEnvPluginFinalize(void);
 
 static bool initialized;
 
-ncclResult_t ncclEnvPluginInit(void) {
+ncclResult_t ncclEnvPluginInit(void) { /* 中文索引·体内调用 initEnv、ncclEnvPluginLoad。 */
   initEnv();
   NCCLCHECK(ncclEnvPluginLoad());
   ncclEnvPlugin =
@@ -104,7 +104,7 @@ ncclResult_t ncclEnvPluginInit(void) {
   return ncclSuccess;
 }
 
-void ncclEnvPluginFinalize(void) {
+void ncclEnvPluginFinalize(void) { /* 中文索引·体内调用 ncclEnvPlugin->finalize、ncclEnvPluginUnload。 */
   if (ncclEnvPlugin->finalize) {
     ncclEnvPlugin->finalize();
     ncclEnvPluginUnload();

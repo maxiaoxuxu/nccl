@@ -118,7 +118,7 @@ struct doca_gpu_gdrcopy_function_table {
 static struct doca_gpu_gdrcopy_function_table *doca_gpu_gdrcopy_ftable = NULL;
 static gdr_t doca_gpu_gdr = NULL;
 
-static int doca_gpu_gdrcopy_ftable_init(struct doca_gpu_gdrcopy_function_table **ftable) {
+static int doca_gpu_gdrcopy_ftable_init(struct doca_gpu_gdrcopy_function_table **ftable) { /* 中文索引·体内调用 dlopen、calloc。 */
     int status = 0;
     void *handle = NULL;
     struct doca_gpu_gdrcopy_function_table *table = NULL;
@@ -173,7 +173,7 @@ out:
     return status;
 }
 
-static int doca_gpu_init_gdrcopy() {
+static int doca_gpu_init_gdrcopy() { /* 中文索引·体内调用 doca_gpu_gdrcopy_ftable_init、doca_gpu_gdrcopy_ftable->open。 */
     int status = 0;
     if (!doca_gpu_gdr) {
         if (!doca_gpu_gdrcopy_ftable) {
@@ -196,7 +196,7 @@ out:
     return status;
 }
 
-static bool doca_gpu_enable_gdrcopy() {
+static bool doca_gpu_enable_gdrcopy() { /* 中文索引·体内调用 getenv、atoi。 */
     const char *env = getenv("DOCA_GPUNETIO_DISABLE_GDRCOPY");
     if (env && atoi(env) != 0) {
         DOCA_LOG(LOG_INFO, "DOCA_GPUNETIO_DISABLE_GDRCOPY is set, disabling GDRCopy");
@@ -205,7 +205,7 @@ static bool doca_gpu_enable_gdrcopy() {
     return true;
 }
 
-bool doca_gpu_gdrcopy_is_supported() {
+bool doca_gpu_gdrcopy_is_supported() { /* 中文索引·体内调用 doca_gpu_enable_gdrcopy、doca_gpu_init_gdrcopy。 */
     static bool is_tried_init = false;
     static bool is_supported = false;
     if (!is_tried_init) {
@@ -217,7 +217,7 @@ bool doca_gpu_gdrcopy_is_supported() {
     return is_supported;
 }
 
-bool doca_gpu_gdrcopy_supports_force_pcie() {
+bool doca_gpu_gdrcopy_supports_force_pcie() { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、doca_gpu_gdrcopy_ftable->get_attribute。 */
     static bool is_tried_init = false;
     static bool is_supported = false;
 
@@ -253,7 +253,7 @@ out:
 }
 
 static int priv_doca_gpu_gdrcopy_create_mapping(void *dev_aligned_ptr, size_t size, bool force_pcie,
-                                                gdr_mh_t *out_mh, void **out_host_ptr) {
+                                                gdr_mh_t *out_mh, void **out_host_ptr) { /* 中文索引·体内调用 doca_gpu_init_gdrcopy、assert。 */
     int status = 0;
     gdr_mh_t mh;
     void *host_ptr;
@@ -301,7 +301,7 @@ out:
 }
 
 int doca_gpu_gdrcopy_create_mapping(void *dev_aligned_ptr, size_t size, bool force_pcie,
-                                    void **out_mh, void **out_host_ptr) {
+                                    void **out_mh, void **out_host_ptr) { /* 中文索引·体内调用 malloc、priv_doca_gpu_gdrcopy_create_mapping。 */
     int status = 0;
     gdr_mh_t *mh = NULL;
     mh = (gdr_mh_t *)malloc(sizeof(gdr_mh_t));
@@ -329,13 +329,13 @@ out:
     return status;
 }
 
-static void _doca_gpu_gdrcopy_destroy_mapping(gdr_mh_t *mh, void *host_ptr, size_t size) {
+static void _doca_gpu_gdrcopy_destroy_mapping(gdr_mh_t *mh, void *host_ptr, size_t size) { /* 中文索引·体内调用 assert、doca_gpu_gdrcopy_ftable->unmap。 */
     assert(doca_gpu_gdr);
     doca_gpu_gdrcopy_ftable->unmap(doca_gpu_gdr, *mh, host_ptr, size);
     doca_gpu_gdrcopy_ftable->unpin_buffer(doca_gpu_gdr, *mh);
 }
 
-void doca_gpu_gdrcopy_destroy_mapping(void *mh, void *host_ptr, size_t size) {
+void doca_gpu_gdrcopy_destroy_mapping(void *mh, void *host_ptr, size_t size) { /* 中文索引·体内调用 _doca_gpu_gdrcopy_destroy_mapping、free。 */
     if (mh) {
         _doca_gpu_gdrcopy_destroy_mapping((gdr_mh_t *)mh, host_ptr, size);
         free(mh);

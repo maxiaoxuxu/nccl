@@ -14,7 +14,7 @@
 
 // Internal helper to create a connected socket pair (like Unix socketpair)
 // This is needed because Windows pipes cannot be used with WSAPoll()
-static ncclResult_t createSocketPair(SOCKET fds[2], int* wsaError) {
+static ncclResult_t createSocketPair(SOCKET fds[2], int* wsaError) { /* 中文索引·体内调用 socket、memset。 */
   SOCKET listener = INVALID_SOCKET;
   SOCKET client = INVALID_SOCKET;
   SOCKET server = INVALID_SOCKET;
@@ -62,7 +62,7 @@ fail:
   return ncclSystemError;
 }
 
-ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) {
+ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) { /* 中文索引·体内调用 createSocketPair。 */
   SOCKET sockets[2];
   int wsaError = 0;
   ncclResult_t ret = createSocketPair(sockets, &wsaError);
@@ -75,7 +75,7 @@ ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) {
+ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) { /* 中文索引·体内调用 closesocket、WSAGetLastError。 */
   ncclResult_t firstError = ncclSuccess;
   for (int i = 0; i < 2; i++) {
     if (pair[i] != NCCL_SOCKET_PAIR_INVALID) {
@@ -89,7 +89,7 @@ ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) {
   return firstError;
 }
 
-ncclResult_t ncclOsSocketPairWrite(ncclSocketPairDescriptor descriptor, const void* buf, size_t len, size_t* written) {
+ncclResult_t ncclOsSocketPairWrite(ncclSocketPairDescriptor descriptor, const void* buf, size_t len, size_t* written) { /* 中文索引·体内调用 send、WSAGetLastError。 */
   // Clamp to INT_MAX since send() takes int length
   // Callers will loop to send remaining data
   int sendLen = (len > INT_MAX) ? INT_MAX : (int)len;
@@ -102,7 +102,7 @@ ncclResult_t ncclOsSocketPairWrite(ncclSocketPairDescriptor descriptor, const vo
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketPairRead(ncclSocketPairDescriptor descriptor, void* buf, size_t len, size_t* nread) {
+ncclResult_t ncclOsSocketPairRead(ncclSocketPairDescriptor descriptor, void* buf, size_t len, size_t* nread) { /* 中文索引·体内调用 recv、WSAGetLastError。 */
   // Clamp to INT_MAX since recv() takes int length
   // Callers will loop to read remaining data
   int recvLen = (len > INT_MAX) ? INT_MAX : (int)len;

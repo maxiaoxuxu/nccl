@@ -83,7 +83,7 @@ ncclResult_t wrap_nd_prepare_overlapped(OVERLAPPED* pOverlapped);
 void wrap_nd_close_overlapped(OVERLAPPED* pOverlapped);
 
 // Release functions (IUnknown::Release wrapper)
-static inline ULONG wrap_nd_release(void* pInterface) {
+static inline ULONG wrap_nd_release(void* pInterface) { /* 中文索引·体内调用 unk->Release。 */
   if (pInterface) {
     IUnknown* unk = reinterpret_cast<IUnknown*>(pInterface);
     return unk->Release();

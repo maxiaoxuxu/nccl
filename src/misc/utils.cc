@@ -15,7 +15,7 @@
 #include <mutex>
 
 // Get current Compute Capability
-int ncclCudaCompCap() {
+int ncclCudaCompCap() { /* 中文索引·体内调用 cudaGetDevice、cudaDeviceGetAttribute。 */
   int cudaDev;
   if (!CUDASUCCESS(cudaGetDevice(&cudaDev))) return 0;
   int ccMajor, ccMinor;
@@ -24,13 +24,13 @@ int ncclCudaCompCap() {
   return ccMajor * 10 + ccMinor;
 }
 
-ncclResult_t int64ToBusId(int64_t id, char* busId) {
+ncclResult_t int64ToBusId(int64_t id, char* busId) { /* 中文索引·体内调用 sprintf。 */
   sprintf(busId, "%04lx:%02lx:%02lx.%01lx", (unsigned long)((id) >> 20), (unsigned long)((id & 0xff000) >> 12),
           (unsigned long)((id & 0xff0) >> 4), (unsigned long)(id & 0xf));
   return ncclSuccess;
 }
 
-ncclResult_t busIdToInt64(const char* busId, int64_t* id) {
+ncclResult_t busIdToInt64(const char* busId, int64_t* id) { /* 中文索引·体内调用 strtol。 */
   char hexStr[17];  // Longest possible int64 hex string + null terminator.
   int hexOffset = 0;
   for (int i = 0; hexOffset < sizeof(hexStr) - 1; i++) {
@@ -48,7 +48,7 @@ ncclResult_t busIdToInt64(const char* busId, int64_t* id) {
 }
 
 // Get an int64 from a PCI path. For example, sys/class/pci0000:00/0000:00:02.0/0000:02:00.0/ will return 0x000002000.
-ncclResult_t pciPathToInt64(char* path, int64_t* id) {
+ncclResult_t pciPathToInt64(char* path, int64_t* id) { /* 中文索引·体内调用 strlen、busIdToInt64。 */
   char* str = path + strlen(path) - 1;
   // Remove trailing "/"
   if (*str == '/') str--;
@@ -60,7 +60,7 @@ ncclResult_t pciPathToInt64(char* path, int64_t* id) {
 }
 
 // Convert a logical cudaDev index to the NVML device minor number
-ncclResult_t getBusId(int cudaDev, int64_t* busId) {
+ncclResult_t getBusId(int cudaDev, int64_t* busId) { /* 中文索引·体内调用 cudaDeviceGetPCIBusId、busIdToInt64。 */
   // On most systems, the PCI bus ID comes back as in the 0000:00:00.0
   // format. Still need to allocate proper space in case PCI domain goes
   // higher.
@@ -70,7 +70,7 @@ ncclResult_t getBusId(int cudaDev, int64_t* busId) {
   return ncclSuccess;
 }
 
-ncclResult_t getHostName(char* hostname, int maxlen, const char delim) {
+ncclResult_t getHostName(char* hostname, int maxlen, const char delim) { /* 中文索引·体内调用 gethostname、strncpy。 */
   if (gethostname(hostname, maxlen) != 0) {
     strncpy(hostname, "unknown", maxlen);
     return ncclSystemError;
@@ -97,7 +97,7 @@ static uint64_t hostHashValue = 0;
 #elif defined(NCCL_OS_WINDOWS)
 
 /* Get Windows MachineGuid - similar to boot_id on Linux */
-static bool getWindowsMachineGuid(char* guid, size_t len) {
+static bool getWindowsMachineGuid(char* guid, size_t len) { /* 中文索引·体内调用 RegOpenKeyExA、RegQueryValueExA。 */
   HKEY hKey;
   LONG result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Cryptography", 0, KEY_READ, &hKey);
   if (result != ERROR_SUCCESS) {
@@ -114,7 +114,7 @@ static bool getWindowsMachineGuid(char* guid, size_t len) {
 }
 #endif
 
-static void getHostHashOnce() {
+static void getHostHashOnce() { /* 中文索引·体内调用 getHostName、strlen。 */
   char hostHash[1024];
   const char* hostId;
 
@@ -152,13 +152,13 @@ static void getHostHashOnce() {
 
   hostHashValue = getHash(hostHash, strlen(hostHash));
 }
-uint64_t getHostHash(void) {
+uint64_t getHostHash(void) { /* 中文索引·体内调用 std::call_once。 */
   static std::once_flag once;
   std::call_once(once, getHostHashOnce);
   return hostHashValue;
 }
 
-uint64_t hashCombine(uint64_t baseHash, uint64_t value) {
+uint64_t hashCombine(uint64_t baseHash, uint64_t value) { /* 中文索引·体内调用 eatHash、digestHash。 */
   uint64_t hacc[2] = {1, 1};
   eatHash(hacc, &baseHash);
   eatHash(hacc, &value);
@@ -170,7 +170,7 @@ uint64_t hashCombine(uint64_t baseHash, uint64_t value) {
  * Linux: hash of $$ $(readlink /proc/self/ns/pid) (pid + PID namespace)
  * Windows: hash of PID only (no namespaces; PID is unique system-wide)
  */
-uint64_t getPidHash(void) {
+uint64_t getPidHash(void) { /* 中文索引·体内调用 sprintf、ncclOsGetPid。 */
   char pname[1024];
   // Start off with our pid ($$)
   sprintf(pname, "%ld", (long)ncclOsGetPid());
@@ -186,7 +186,7 @@ uint64_t getPidHash(void) {
   return getHash(pname, strlen(pname));
 }
 
-int parseStringList(const char* string, struct netIf* ifList, int maxList) {
+int parseStringList(const char* string, struct netIf* ifList, int maxList) { /* 中文索引·体内调用 strdup、strtok_r。 */
   if (!string) return 0;
 
   char* str = strdup(string);
@@ -215,7 +215,7 @@ int parseStringList(const char* string, struct netIf* ifList, int maxList) {
   return ifNum;
 }
 
-static bool matchIf(const char* string, const char* ref, bool matchExact) {
+static bool matchIf(const char* string, const char* ref, bool matchExact) { /* 中文索引·体内调用 strlen、strncmp。 */
   // Make sure to include '\0' in the exact case
   int matchLen = matchExact ? strlen(string) + 1 : strlen(ref);
   return strncmp(string, ref, matchLen) == 0;
@@ -228,7 +228,7 @@ static bool matchPort(const int port1, const int port2) {
   return false;
 }
 
-bool matchIfList(const char* string, int port, struct netIf* ifList, int listSize, bool matchExact, int* ifId) {
+bool matchIfList(const char* string, int port, struct netIf* ifList, int listSize, bool matchExact, int* ifId) { /* 中文索引·体内调用 matchIf、matchPort。 */
   // Make an exception for the case where no user list is defined
   if (ifId) *ifId = -1;
   if (listSize == 0) return true;
@@ -244,7 +244,7 @@ bool matchIfList(const char* string, int port, struct netIf* ifList, int listSiz
 
 thread_local struct ncclThreadSignal ncclThreadSignalLocalInstance;
 
-void* ncclMemoryStack::allocateSpilled(struct ncclMemoryStack* me, size_t size, size_t align) {
+void* ncclMemoryStack::allocateSpilled(struct ncclMemoryStack* me, size_t size, size_t align) { /* 中文索引·体内调用 uintptr_t、malloc。 */
   // `me->hunks` points to the top of the stack non-empty hunks. Hunks above
   // this (reachable via `->above`) are empty.
   struct Hunk* top = me->topFrame.hunk;
@@ -319,7 +319,7 @@ malloc_exhausted:
   abort();
 }
 
-void ncclMemoryStackDestruct(struct ncclMemoryStack* me) {
+void ncclMemoryStackDestruct(struct ncclMemoryStack* me) { /* 中文索引·体内调用 free。 */
   // Free unhunks first because both the frames and unhunk proxies lie within the hunks.
   struct ncclMemoryStack::Frame* f = &me->topFrame;
   while (f != nullptr) {
@@ -341,7 +341,7 @@ void ncclMemoryStackDestruct(struct ncclMemoryStack* me) {
 
 /* return concatenated string representing each set bit */
 ncclResult_t ncclBitsToString(uint32_t bits, uint32_t mask, const char* (*toStr)(int), char* buf, size_t bufLen,
-                              const char* wildcard) {
+                              const char* wildcard) { /* 中文索引·体内调用 snprintf、toStr。 */
   if (!buf || !bufLen) return ncclInvalidArgument;
 
   bits &= mask;
@@ -379,7 +379,7 @@ uint64_t ncclHashPointer(int hbits, void* key) {
 
 // Helper: Read key from object at given offset
 // Key must be convertible to uintptr_t, so we read keySize bytes and zero-extend
-static inline uintptr_t readKey(void* object, int keySize, int keyFieldOffset) {
+static inline uintptr_t readKey(void* object, int keySize, int keyFieldOffset) { /* 中文索引·体内调用 memcpy。 */
   void* keyPtr = (char*)object + keyFieldOffset;
   uintptr_t result = 0;
   memcpy(&result, keyPtr, keySize);
@@ -388,7 +388,7 @@ static inline uintptr_t readKey(void* object, int keySize, int keyFieldOffset) {
 
 // Helper: Read next pointer from object at given offset
 // Uses memcpy to avoid strict aliasing violations when actual type is T*, not void*
-static inline void* readNextPtr(void* object, int nextFieldOffset) {
+static inline void* readNextPtr(void* object, int nextFieldOffset) { /* 中文索引·体内调用 memcpy。 */
   void* nextPtr = (char*)object + nextFieldOffset;
   void* result = nullptr;
   memcpy(&result, nextPtr, sizeof(void*));
@@ -403,7 +403,7 @@ static inline void writeNextPtr(void* object, int nextFieldOffset, void* value) 
 }
 
 ncclResult_t ncclIntruAddressMapInsert_untyped(struct ncclIntruAddressMap_untyped* map, int keySize, int keyFieldOffset,
-                                               int nextFieldOffset, uintptr_t key, void* object) {
+                                               int nextFieldOffset, uintptr_t key, void* object) { /* 中文索引·体内调用 calloc、malloc。 */
   // Runtime validation
   if (map == nullptr) {
     WARN("Intrusive address map pointer is NULL");
@@ -492,7 +492,7 @@ ncclResult_t ncclIntruAddressMapInsert_untyped(struct ncclIntruAddressMap_untype
 }
 
 ncclResult_t ncclIntruAddressMapFind_untyped(struct ncclIntruAddressMap_untyped* map, int keySize, int keyFieldOffset,
-                                             int nextFieldOffset, uintptr_t key, void** object) {
+                                             int nextFieldOffset, uintptr_t key, void** object) { /* 中文索引·体内调用 ncclHashPointer、readKey。 */
   // Runtime validation
   if (map == nullptr) {
     WARN("Intrusive address map pointer is NULL");
@@ -531,7 +531,7 @@ ncclResult_t ncclIntruAddressMapFind_untyped(struct ncclIntruAddressMap_untyped*
 }
 
 ncclResult_t ncclIntruAddressMapRemove_untyped(struct ncclIntruAddressMap_untyped* map, int keySize, int keyFieldOffset,
-                                               int nextFieldOffset, uintptr_t key) {
+                                               int nextFieldOffset, uintptr_t key) { /* 中文索引·体内调用 ncclHashPointer、readKey。 */
   // Runtime validation
   if (map == nullptr) {
     WARN("Intrusive address map pointer is NULL");

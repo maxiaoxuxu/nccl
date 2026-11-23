@@ -20,7 +20,7 @@ using ncclStringSet = std::unordered_set<std::string>;
 DEFINE_NCCL_PARAM(ncclParamNoCacheStr, const char*, NCCL_NO_CACHE, nullptr, NCCL_PARAM_FLAG_CACHED, NCCL_PARAM_DEFAULT,
                   "Comma-separated list of param keys to disable caching (or ALL)");
 
-extern "C" bool ncclParamIsCacheDisabled(const char* key) {
+extern "C" bool ncclParamIsCacheDisabled(const char* key) { /* 中文索引·体内调用 std::strcmp、std::call_once。 */
   // Short-circuit for NCCL_NO_CACHE itself to prevent circular dependency
   if (std::strcmp(key, "NCCL_NO_CACHE") == 0) return false;
 
@@ -44,7 +44,7 @@ extern "C" bool ncclParamIsCacheDisabled(const char* key) {
 // a single symbol instead of requiring ncclInitEnv + ncclEnvPluginGetEnv
 // to be exported.
 #include "env.h"
-extern "C" const char* ncclParamEnvPluginGet(const char* key, bool env_init) {
+extern "C" const char* ncclParamEnvPluginGet(const char* key, bool env_init) { /* 中文索引·体内调用 ncclInitEnv、ncclEnvPluginGetEnv。 */
   if (env_init) {
     // regular parameters will init env plugins before reading env
     ncclInitEnv();

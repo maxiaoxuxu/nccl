@@ -14,12 +14,12 @@ static ncclRma_v16_t* ncclRma_v16;
 static ncclRma_t ncclRma;
 
 static ncclResult_t ncclRma_v16_connect(void* ctx, void* handles[], int nranks, int rank, void* listenComm,
-                                        void** collComm, volatile uint32_t* abortFlag) {
+                                        void** collComm, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclRma_v16->connect。 */
   (void)abortFlag;
   return ncclRma_v16->connect(ctx, handles, nranks, rank, listenComm, collComm);
 }
 
-static ncclResult_t ncclRma_v16_createContext(void* collComm, ncclRmaConfig_v17_t* config, void** rmaCtx) {
+static ncclResult_t ncclRma_v16_createContext(void* collComm, ncclRmaConfig_v17_t* config, void** rmaCtx) { /* 中文索引·体内调用 memset、ncclRma_v16->createContext。 */
   ncclRmaConfig_v16_t config_v16;
   memset(&config_v16, 0, sizeof(config_v16));
   config_v16.nContexts = config->nContexts;
@@ -28,7 +28,7 @@ static ncclResult_t ncclRma_v16_createContext(void* collComm, ncclRmaConfig_v17_
   return ncclRma_v16->createContext(collComm, &config_v16, rmaCtx);
 }
 
-ncclRma_t* getNcclRma_v16(void* lib) {
+ncclRma_t* getNcclRma_v16(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclRma_v16 = (ncclRma_v16_t*)dlsym(lib, "ncclRmaPlugin_v16");
   if (ncclRma_v16) {
     INFO(NCCL_INIT | NCCL_NET, "RMA/Plugin: Loaded rma plugin %s (v16)", ncclRma_v16->name);

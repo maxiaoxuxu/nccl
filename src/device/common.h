@@ -104,7 +104,7 @@ __device__ inline void barrier_sync_aligned(int name, int nThreads) {
   asm volatile("barrier.sync.aligned %0, %1;" ::"r"(name), "r"(nThreads) : "memory");
 }
 
-__device__ inline bool barrier_red_or(bool vote, int name) {
+__device__ inline bool barrier_red_or(bool vote, int name) { /* 中文索引·体内调用 bool。 */
   int ans;
   asm volatile("{ .reg .pred p;"
                "  setp.ne.s32 p, %1, 0;"
@@ -115,7 +115,7 @@ __device__ inline bool barrier_red_or(bool vote, int name) {
                : "memory");
   return bool(ans);
 }
-__device__ inline bool barrier_red_or(bool vote, int name, int nThreads) {
+__device__ inline bool barrier_red_or(bool vote, int name, int nThreads) { /* 中文索引·体内调用 bool。 */
   int ans;
   asm volatile("{ .reg .pred p;"
                "  setp.ne.s32 p, %1, 0;"
@@ -128,7 +128,7 @@ __device__ inline bool barrier_red_or(bool vote, int name, int nThreads) {
 }
 
 // Copy 16-byte aligned data. You must call with at least `(bytes+15)/16` threads.
-inline __device__ void copyToShmem16(int tid, void* dst, void const* src, int bytes) {
+inline __device__ void copyToShmem16(int tid, void* dst, void const* src, int bytes) { /* 中文索引·体内调用 __cvta_generic_to_shared。 */
   int offset = 16 * tid;
   if (offset < bytes) {
     uint64_t a = 0, b = 0;
@@ -140,7 +140,7 @@ inline __device__ void copyToShmem16(int tid, void* dst, void const* src, int by
 
 // Must run with at least 64 threads
 __device__ __forceinline__ void loadWorkBatchToShmem(int tid, int tn, struct ncclDevKernelArgs const* args,
-                                                     int batchIx) {
+                                                     int batchIx) { /* 中文索引·体内调用 ncclScratchForWarp、__syncwarp。 */
   int lane = tid % WARP_SIZE;
   int workCursor = 0; // num works written in previous loop iterations.
   while (true) {
@@ -303,7 +303,7 @@ template <ncclFunc_t Fn, typename T, typename RedOp, int Algo, int Proto>
 struct RunWorkBatch {
   // This __forceinline__ is necessary. The compiler was inserting a function call
   // here from the LL ncclKernel.
-  __device__ __forceinline__ void run() {
+  __device__ __forceinline__ void run() { /* 中文索引·体内调用 __syncthreads。 */
     int tid = threadIdx.x;
     int tn = blockDim.x;
 
@@ -330,7 +330,7 @@ struct RunWorkBatch {
       // Coverity reports a possible thread divergence due to not all threads participating in the collective.
       // However, the code ensures that the participation is on a per-warp basis.
       // coverity[device_thread_diverged:FALSE]
-      if (tid < subtn) RunWorkColl<Fn, T, RedOp, Algo, Proto>().run(tid, subtn, work);
+      /* 中文图解·host｜设备 dispatch 依据集合类型、数据类型、归约、算法和协议调用 RunWorkColl 特化。 */ if (tid < subtn) RunWorkColl<Fn, T, RedOp, Algo, Proto>().run(tid, subtn, work);
     }
   }
 };
@@ -365,7 +365,7 @@ __device__ __forceinline__ uint32_t progressCounterScanBatch() {
   return count;
 }
 
-__device__ __forceinline__ void progressCounterPublishCompletedSlot(int slot, uint32_t count) {
+__device__ __forceinline__ void progressCounterPublishCompletedSlot(int slot, uint32_t count) { /* 中文索引·体内调用 globaltimer。 */
   struct ncclProgressCountersBlock* counters = ncclShmem.comm.progressCounters;
   if (count == 0 || counters == nullptr) return;
   counters->completedTimeNs[slot] = globaltimer();
@@ -374,7 +374,7 @@ __device__ __forceinline__ void progressCounterPublishCompletedSlot(int slot, ui
   asm volatile("red.global.add.u64 [%0], %1;" : : "l"(&counters->completedWorkCount[slot]), "l"((uint64_t)count));
 }
 
-__device__ __forceinline__ void profiler(int action) {
+__device__ __forceinline__ void profiler(int action) { /* 中文索引·体内调用 progressCounterBatchSlot、profilerEnabled。 */
   if (threadIdx.x == 0) {
     int idx = 0;
     uint64_t wc = ncclShmem.channel.workCounter + 1;
@@ -417,7 +417,7 @@ __device__ __forceinline__ void profiler(int action) {
 }
 
 template <int SpecializedFnId, typename SpecializedRunWorkBatch>
-__device__ __forceinline__ void ncclKernelMain(struct ncclDevKernelArgs const* args) {
+__device__ __forceinline__ void ncclKernelMain(struct ncclDevKernelArgs const* args) { /* 中文索引·体内调用 __popcll、__syncthreads。 */
   int tid = threadIdx.x;
   int tn = blockDim.x;
 
@@ -432,7 +432,7 @@ __device__ __forceinline__ void ncclKernelMain(struct ncclDevKernelArgs const* a
   // PTX has the fns instruction which does this but is extremely slow. We can
   // do better when we know all threads are querying the same bitmask.
   if (tid < MAXCHANNELS && (args->channelMask & (1ull << tid))) {
-    int n = __popcll(args->channelMask & ((1ull << tid) - 1));
+    /* 中文图解·host｜计算 channelMask 中当前位之前的置位数，把紧凑 blockIdx.x 映射回实际 channelId。 */ int n = __popcll(args->channelMask & ((1ull << tid) - 1));
     if (blockIdx.x == n) ncclShmem.channelId = tid;
   }
   __syncthreads(); // publish ncclShmem.{args, channelId}

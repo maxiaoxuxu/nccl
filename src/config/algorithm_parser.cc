@@ -11,7 +11,7 @@
 #include <string>
 
 // Return sel with all whitespace removed (case is handled at match time).
-static std::string removeWhitespace(const char* sel) {
+static std::string removeWhitespace(const char* sel) { /* 中文索引·体内调用 out.push_back。 */
   std::string out;
   for (const char* p = sel; *p != '\0'; p++) {
     if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') continue;
@@ -20,7 +20,7 @@ static std::string removeWhitespace(const char* sel) {
   return out;
 }
 
-ncclResult_t ncclAlgParse(const char* sel, uint64_t* outMask) {
+ncclResult_t ncclAlgParse(const char* sel, uint64_t* outMask) { /* 中文索引·体内调用 removeWhitespace、s.empty。 */
   *outMask = 0;
   if (sel == NULL) return ncclSuccess;
   std::string s = removeWhitespace(sel);   // strtok_r mutates this buffer in place

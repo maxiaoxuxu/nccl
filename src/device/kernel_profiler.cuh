@@ -20,7 +20,7 @@ __device__ __forceinline__ unsigned long long int ncclSymkGlobaltimer() {
 }
 
 template <typename Args>
-__device__ __forceinline__ void ncclSymkProfilerStart(Args const* args) {
+__device__ __forceinline__ void ncclSymkProfilerStart(Args const* args) { /* 中文索引·体内调用 ncclSymkGetProfilerCounters、ncclSymkGlobaltimer。 */
   if (threadIdx.x == 0 && args->profilerMode) {
     int ch = blockIdx.x;
     uint64_t wc = ncclSymkGetProfilerCounters(args)[ch];
@@ -42,7 +42,7 @@ __device__ __forceinline__ void ncclSymkProfilerStart(Args const* args) {
 }
 
 template <typename Args>
-__device__ __forceinline__ void ncclSymkProfilerStop(Args const* args) {
+__device__ __forceinline__ void ncclSymkProfilerStop(Args const* args) { /* 中文索引·体内调用 ncclSymkGetProfilerCounters、ncclSymkGlobaltimer。 */
   if (threadIdx.x == 0 && args->profilerMode) {
     int ch = blockIdx.x;
     uint64_t wc = ncclSymkGetProfilerCounters(args)[ch];
@@ -62,7 +62,7 @@ __device__ __forceinline__ void ncclSymkProfilerStop(Args const* args) {
 }
 
 template <typename Args>
-__device__ __forceinline__ void ncclSymkProfilerPhase(Args const* args, int phaseId) {
+__device__ __forceinline__ void ncclSymkProfilerPhase(Args const* args, int phaseId) { /* 中文索引·体内调用 ncclSymkGetProfilerCounters、ncclSymkGlobaltimer。 */
   if (threadIdx.x == 0 && (args->profilerMode & ncclDevProfilerModeKernelPhase)) {
     int ch = blockIdx.x;
     uint64_t wc = ncclSymkGetProfilerCounters(args)[ch];

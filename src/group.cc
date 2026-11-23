@@ -34,7 +34,7 @@ thread_local int ncclGroupBlocking = -1; /* default mode */
 void* ncclAsyncJobMain(void* arg);
 
 ncclResult_t ncclAsyncLaunch(struct ncclAsyncJob* job, ncclResult_t (*func)(struct ncclAsyncJob*),
-                             void (*undo)(struct ncclAsyncJob*), void (*destructor)(void*), ncclComm_t comm) {
+                             void (*undo)(struct ncclAsyncJob*), void (*destructor)(void*), ncclComm_t comm) { /* 中文索引·体内调用 func、undo。 */
   ncclResult_t ret = ncclSuccess;
 
   job->destroyFlag = comm->destroyFlag;
@@ -74,7 +74,7 @@ ncclResult_t ncclAsyncLaunch(struct ncclAsyncJob* job, ncclResult_t (*func)(stru
 }
 
 ncclResult_t ncclGroupJobLaunch(struct ncclIntruQueue<struct ncclAsyncJob, &ncclAsyncJob::next>* asyncJobsMain,
-                                volatile bool* groupAbortFlag) {
+                                volatile bool* groupAbortFlag) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueHead。 */
   ncclResult_t ret = ncclSuccess;
   bool jobsDone = false;
   bool errorJobAbortFlag = false;
@@ -140,7 +140,7 @@ fail:
   goto exit;
 }
 
-void* ncclAsyncJobMain(void* arg) {
+void* ncclAsyncJobMain(void* arg) { /* 中文索引·体内调用 job->func。 */
   struct ncclAsyncJob* job = (struct ncclAsyncJob*)arg;
   job->result = job->func(job);
   if (job->result != ncclSuccess) {
@@ -150,7 +150,7 @@ void* ncclAsyncJobMain(void* arg) {
   return arg;
 }
 
-ncclResult_t ncclAsyncJobComplete(struct ncclAsyncJob* job) {
+ncclResult_t ncclAsyncJobComplete(struct ncclAsyncJob* job) { /* 中文索引·体内调用 ncclThreadJoin、job->destructor。 */
   ncclResult_t ret;
   NCCLCHECK(ncclThreadJoin(job->thread));
   if (job->result != ncclSuccess) {
@@ -162,7 +162,7 @@ ncclResult_t ncclAsyncJobComplete(struct ncclAsyncJob* job) {
 }
 
 NCCL_API(ncclResult_t, ncclGroupStart);
-ncclResult_t ncclGroupStart() {
+ncclResult_t ncclGroupStart() { /* 中文索引·体内调用 ncclGroupStartInternal。 */
   ncclResult_t ret = ncclSuccess;
   NCCL_NVTX3_FUNC_RANGE;
 
@@ -172,7 +172,7 @@ ncclResult_t ncclGroupStart() {
 }
 
 NCCL_API(ncclResult_t, ncclGroupEnd);
-ncclResult_t ncclGroupEnd() {
+ncclResult_t ncclGroupEnd() { /* 中文索引·体内调用 ncclGroupEndInternal。 */
   ncclResult_t ret = ncclSuccess;
   NCCL_NVTX3_FUNC_RANGE;
   NCCLCHECKGOTO(ncclGroupEndInternal(), ret, exit);
@@ -182,7 +182,7 @@ exit:
 }
 
 NCCL_API(ncclResult_t, ncclGroupSimulateEnd, ncclSimInfo_t* simInfo);
-ncclResult_t ncclGroupSimulateEnd(ncclSimInfo_t* simInfo) {
+ncclResult_t ncclGroupSimulateEnd(ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 ncclGroupEndInternal。 */
   ncclResult_t ret = ncclSuccess;
   NCCL_NVTX3_FUNC_RANGE;
   NCCLCHECKGOTO(ncclGroupEndInternal(simInfo), ret, exit);
@@ -214,7 +214,7 @@ struct ncclMgmtTaskJob {
   struct ncclComm* comm;
 };
 
-ncclResult_t ncclP2PPreconnectFunc(struct ncclAsyncJob* job_) {
+ncclResult_t ncclP2PPreconnectFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclOsCpuCount。 */
   struct ncclPreconnectJob* job = (struct ncclPreconnectJob*)job_;
   struct ncclComm* comm = job->comm;
   CUDACHECK(cudaSetDevice(comm->cudaDev));
@@ -223,7 +223,7 @@ ncclResult_t ncclP2PPreconnectFunc(struct ncclAsyncJob* job_) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclCollPreconnect(struct ncclComm* comm, bool* algoNeedConnect) {
+ncclResult_t ncclCollPreconnect(struct ncclComm* comm, bool* algoNeedConnect) { /* 中文索引·体内调用 ncclTransportRingConnect、ncclTransportTreeConnect。 */
   for (int i = 0; i < NCCL_NUM_ALGORITHMS; ++i) {
     if (algoNeedConnect[i]) {
       switch (i) {
@@ -279,7 +279,7 @@ ncclResult_t ncclCollPreconnect(struct ncclComm* comm, bool* algoNeedConnect) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclPrepareTasksAndCollPreconnectFunc(struct ncclAsyncJob* job_) {
+ncclResult_t ncclPrepareTasksAndCollPreconnectFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 memset、cudaSetDevice。 */
   struct ncclPrepareTasksAndCollPreconnectJob* job = (ncclPrepareTasksAndCollPreconnectJob*)job_;
   struct ncclComm* comm = job->comm;
   bool needConnect;
@@ -292,7 +292,7 @@ ncclResult_t ncclPrepareTasksAndCollPreconnectFunc(struct ncclAsyncJob* job_) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTaskPrepareJobFunc(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclTaskPrepareJobFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclOsCpuCount。 */
   struct ncclTaskPrepareJob* job = (struct ncclTaskPrepareJob*)job_;
   struct ncclComm* comm = job->comm;
   CUDACHECK(cudaSetDevice(comm->cudaDev));
@@ -301,7 +301,7 @@ static ncclResult_t ncclTaskPrepareJobFunc(struct ncclAsyncJob* job_) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclMgmtTaskJobFunc(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclMgmtTaskJobFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclOsCpuCount。 */
   struct ncclMgmtTaskJob* job = (struct ncclMgmtTaskJob*)job_;
   struct ncclComm* comm = job->comm;
   struct ncclAsyncJob* task = nullptr;
@@ -327,7 +327,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCollPreconnectFunc(struct ncclAsyncJob* job_) {
+ncclResult_t ncclCollPreconnectFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclOsCpuCount。 */
   struct ncclPreconnectJob* job = (struct ncclPreconnectJob*)job_;
   struct ncclComm* comm = job->comm;
   ncclResult_t ret = ncclSuccess;
@@ -353,7 +353,7 @@ struct ncclGroupDebugJob {
   struct ncclComm* comm;
 };
 
-ncclResult_t ncclCommGroupArgsGlobalCheck(struct ncclAsyncJob* job_) {
+ncclResult_t ncclCommGroupArgsGlobalCheck(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   struct ncclGroupDebugJob* job = (struct ncclGroupDebugJob*)job_;
   struct ncclComm* comm = job->comm;
   ncclResult_t ret = ncclSuccess;
@@ -369,7 +369,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCommGroupRegisterSymmetric(struct ncclAsyncJob* job_) {
+ncclResult_t ncclCommGroupRegisterSymmetric(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclIntruQueueEmpty。 */
   struct ncclGroupSymmetricJob* job = (struct ncclGroupSymmetricJob*)job_;
   struct ncclComm* comm = job->comm;
   ncclResult_t ret = ncclSuccess;
@@ -424,7 +424,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t doLaunches(struct ncclComm* head, int taskType) {
+ncclResult_t doLaunches(struct ncclComm* head, int taskType) { /* 中文索引·体内调用 ncclCudaGraphValid、cudaSetDevice。 */
   ncclResult_t result = ncclSuccess;
   struct ncclComm* cliqueHead = head;
   struct ncclComm* cliqueNextHead;
@@ -438,7 +438,7 @@ ncclResult_t doLaunches(struct ncclComm* head, int taskType) {
     do {
       (ncclCudaGraphValid(comm->planner.capturingGraph) ? capturingYes : capturingNo) = true;
       CUDACHECKGOTO(cudaSetDevice(comm->cudaDev), result, failure);
-      NCCLCHECKGOTO(ncclLaunchPrepare(comm), result, failure);
+      /* 中文图解·host｜同一组可有多个 communicator；为每个参与者准备计划再进入分轮 launch。 */ NCCLCHECKGOTO(ncclLaunchPrepare(comm), result, failure);
       if (useBarrier) ncclCommIntraBarrierIn(comm, 1);
       comm = comm->groupNext[taskType];
     } while (comm != nullptr && comm != reinterpret_cast<struct ncclComm*>(NCCL_COMM_GROUP_INVALID) &&
@@ -479,7 +479,7 @@ ncclResult_t doLaunches(struct ncclComm* head, int taskType) {
             } else if (plan->isRma) {
               NCCLCHECKGOTO(ncclLaunchRma(comm, plan), result, failure);
             } else {
-              NCCLCHECKGOTO(ncclLaunchKernel(comm, plan), result, failure);
+              /* 中文图解·host｜在普通 GPU kernel 路径启动计划；同一处还有 CE、RMA 分支。 */ NCCLCHECKGOTO(ncclLaunchKernel(comm, plan), result, failure);
             }
           }
           // Barrier reduction input indicates if we require further rounds.
@@ -502,7 +502,7 @@ failure:
   return result;
 }
 
-static inline void groupLocalResetJobState() {
+static inline void groupLocalResetJobState() { /* 中文索引·体内调用 ncclIntruQueueConstruct。 */
   ncclGroupError = ncclSuccess;
   for (int type = 0; type < ncclGroupTaskTypeNum; ++type) ncclGroupCommHead[type] = NULL;
   ncclGroupCommPreconnectHead = NULL;
@@ -513,7 +513,7 @@ static inline void groupLocalResetJobState() {
 
 static void groupCleanup(struct ncclComm** groupCommHeadPtr,
                          struct ncclIntruQueue<struct ncclAsyncJob, &ncclAsyncJob::next>* asyncJobsPtr,
-                         ncclResult_t error) {
+                         ncclResult_t error) { /* 中文索引·体内调用 ncclGroupCommLeave、ncclIntruQueueEmpty。 */
   struct ncclComm* comm;
   for (int type = 0; type < ncclGroupTaskTypeNum; ++type) {
     comm = groupCommHeadPtr[type];
@@ -607,7 +607,7 @@ static void groupCleanup(struct ncclComm** groupCommHeadPtr,
 }
 
 static ncclResult_t asyncJobLaunch(struct ncclIntruQueue<struct ncclAsyncJob, &ncclAsyncJob::next>* asyncJobsMain,
-                                   volatile bool* groupAbortFlag) {
+                                   volatile bool* groupAbortFlag) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueHead。 */
   ncclResult_t ret = ncclSuccess;
   bool jobsDone = false;
   bool errorJobAbortFlag = false;
@@ -704,7 +704,7 @@ static void ncclGroupSymmetricJobFree(void* _job) {
 
 static ncclResult_t ncclPrepareTasksAndCollPreconnect(
   struct ncclComm* comm, ncclSimInfo_t* simInfo,
-  struct ncclIntruQueue<struct ncclAsyncJob, &ncclAsyncJob::next>* asyncCollJobs) {
+  struct ncclIntruQueue<struct ncclAsyncJob, &ncclAsyncJob::next>* asyncCollJobs) { /* 中文索引·体内调用 ncclParamSingleProcMemRegEnable、ncclIntruQueueEnqueue。 */
   if (ncclParamSingleProcMemRegEnable()) {
     struct ncclPrepareTasksAndCollPreconnectJob* job;
     NEW_NOTHROW(job, ncclPrepareTasksAndCollPreconnectJob);
@@ -758,7 +758,7 @@ static ncclResult_t ncclPrepareTasksAndCollPreconnect(
   return ncclSuccess;
 }
 
-static ncclResult_t groupLaunchLegacy(struct ncclAsyncJob* job_, ncclSimInfo_t* simInfo = NULL) {
+static ncclResult_t groupLaunchLegacy(struct ncclAsyncJob* job_, ncclSimInfo_t* simInfo = NULL) { /* 中文索引·体内调用 ncclIntruQueueEnqueue、asyncJobLaunch。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGroupJob* gjob = (struct ncclGroupJob*)job_;
   struct ncclComm** groupCommHeadMain = gjob->groupCommHead;
@@ -924,7 +924,7 @@ fail:
 
 // Preparation-job errors abort communicators. Validate launch-completion-event
 // usage first so invalid usage is returned without aborting the communicator.
-static ncclResult_t groupValidateLaunchCompletionEvents(struct ncclComm* comm) {
+static ncclResult_t groupValidateLaunchCompletionEvents(struct ncclComm* comm) { /* 中文索引·体内调用 ncclValidateCollConfigLaunchCompletionEvents。 */
   while (comm != nullptr) {
     NCCLCHECK(ncclValidateCollConfigLaunchCompletionEvents(comm));
     comm = comm->groupNext[ncclGroupTaskTypeRawTask];
@@ -932,7 +932,7 @@ static ncclResult_t groupValidateLaunchCompletionEvents(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-static ncclResult_t groupLaunchEnqueueRearch(struct ncclAsyncJob* job_, ncclSimInfo_t* simInfo = NULL) {
+static ncclResult_t groupLaunchEnqueueRearch(struct ncclAsyncJob* job_, ncclSimInfo_t* simInfo = NULL) { /* 中文索引·体内调用 ncclIntruQueueConstruct、groupValidateLaunchCompletionEvents。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGroupJob* gjob = (struct ncclGroupJob*)job_;
   struct ncclComm** groupCommHeadMain = gjob->groupCommHead;
@@ -1005,7 +1005,7 @@ static ncclResult_t groupLaunchEnqueueRearch(struct ncclAsyncJob* job_, ncclSimI
   // is not yet implemented and falls back to the legacy launcher: a single phased
   // doLaunches over the clique, run here on the user's thread.
   if (!simInfo && groupCommHeadMain[ncclGroupTaskTypeRawTask] != nullptr) {
-    NCCLCHECKGOTO(doLaunches(groupCommHeadMain[ncclGroupTaskTypeRawTask], ncclGroupTaskTypeRawTask), ret, fail);
+    /* 中文图解·host｜重构任务在这里回到现有的 doLaunches，不能把占位 scheduler 当作已执行代码。 */ NCCLCHECKGOTO(doLaunches(groupCommHeadMain[ncclGroupTaskTypeRawTask], ncclGroupTaskTypeRawTask), ret, fail);
   }
 
   if (destroyFlag) {
@@ -1049,7 +1049,7 @@ static ncclResult_t groupLaunchNonBlocking(struct ncclAsyncJob* job_) {
   return groupLaunch(job_ /* estimatedTime = NULL */);
 }
 
-ncclResult_t ncclGroupEndInternal(ncclSimInfo_t* simInfo) {
+ncclResult_t ncclGroupEndInternal(ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 ncclProfilerRecordGroupApiEventState、memcpy。 */
   ncclResult_t ret = ncclSuccess;
   ncclSimInfo_t internalSimInfo = NCCL_SIM_INFO_INITIALIZER;
   ncclSimInfo_t* internalSimInfoPtr = NULL;
@@ -1176,7 +1176,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclGroupJobComplete(struct ncclGroupJob* groupJob) {
+ncclResult_t ncclGroupJobComplete(struct ncclGroupJob* groupJob) { /* 中文索引·体内调用 ncclAsyncJobComplete、ncclAtomicRefCountDecrement。 */
   ncclResult_t ret = ncclSuccess;
   if (groupJob && groupJob->nonBlockingInit) {
     if (!COMPILER_ATOMIC_EXCHANGE(&groupJob->joined, true, std::memory_order_acq_rel)) {
@@ -1189,7 +1189,7 @@ ncclResult_t ncclGroupJobComplete(struct ncclGroupJob* groupJob) {
   return ret;
 }
 
-ncclResult_t ncclGroupJobAbort(struct ncclGroupJob* groupJob) {
+ncclResult_t ncclGroupJobAbort(struct ncclGroupJob* groupJob) { /* 中文索引·体内调用 ncclAsyncJobComplete、ncclAtomicRefCountDecrement。 */
   if (groupJob && groupJob->nonBlockingInit) {
     if (!COMPILER_ATOMIC_EXCHANGE(&groupJob->joined, true, std::memory_order_acq_rel)) {
       COMPILER_ATOMIC_STORE(&groupJob->abortFlag, true, std::memory_order_relaxed);

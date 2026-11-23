@@ -11,7 +11,7 @@
 #include <cstring>
 
 ncclResult_t ncclCftBarrierCreateRequirement(ncclTeam_t team, int nBarriers, ncclCftBarrierHandle_t* outHandle,
-                                             ncclDevResourceRequirements_t* outReq) {
+                                             ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset。 */
   memset(outReq, 0, sizeof(*outReq));
   outHandle->nBarriers = nBarriers;
   outReq->bufferSize = (3 * nBarriers + nBarriers * team.nRanks) * NCCL_CFT_BARRIER_GRAN;

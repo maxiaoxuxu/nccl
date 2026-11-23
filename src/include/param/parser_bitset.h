@@ -25,7 +25,7 @@ struct bitsetCtx {
 };
 
 template <typename OptionT, typename ResultT, size_t N>
-ncclResult_t bitsetResolve(const void* ctx, const char* input, ResultT& out) {
+ncclResult_t bitsetResolve(const void* ctx, const char* input, ResultT& out) { /* 中文索引·体内调用 str.empty、str.erase。 */
   if (input == nullptr) return ncclInvalidArgument;
   auto& bc = *static_cast<const bitsetCtx<OptionT, N>*>(ctx);
   std::string str(input);
@@ -64,7 +64,7 @@ bool bitsetValidate(const void*, const ResultT&) {
 }
 
 template <typename OptionT, typename ResultT, size_t N>
-std::string bitsetToString(const void* ctx, const ResultT& value) {
+std::string bitsetToString(const void* ctx, const ResultT& value) { /* 中文索引·体内调用 isSingleBit、strResult.empty。 */
   auto& bc = *static_cast<const bitsetCtx<OptionT, N>*>(ctx);
   std::string strResult;
   ResultT remaining = value;
@@ -102,7 +102,7 @@ std::string bitsetToString(const void* ctx, const ResultT& value) {
 template <typename OptionT, typename ResultT = std::make_unsigned_t<OptionT>, size_t N>
 // template <typename ResultT, typename OptionT, size_t N>
 ncclParamParser<ResultT> ncclParamBitsetOf(ncclOptionSet<OptionT, N> options, char delimiter = ',',
-                                           bool ignoreUnknown = false) {
+                                           bool ignoreUnknown = false) { /* 中文索引·体内调用 std::move。 */
   using namespace nccl::param::parser;
   auto ctx =
     std::make_shared<bitsetCtx<OptionT, N>>(bitsetCtx<OptionT, N>{std::move(options), delimiter, ignoreUnknown});

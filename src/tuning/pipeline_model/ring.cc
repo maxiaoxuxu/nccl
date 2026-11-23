@@ -12,7 +12,7 @@
 #include "../tuning_int.h"
 #include "pipeline_model.h"
 
-static float ringMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning) {
+static float ringMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning) { /* 中文索引·体内调用 ncclTuningProtoBW。 */
   struct ncclComm* comm = inputs->comm;
   const struct ncclTopoGraph* graph = &comm->graphs[tuning->algo];
   float bwFactor = 1.0f / graph->nCtasPerChannel;
@@ -24,7 +24,7 @@ static float ringMaxBusBw(struct ncclTuningInput_t* const inputs, struct ncclTun
 
 static ncclResult_t ncclTuningPipelineRingGetAlgoStep(struct ncclComm* comm, int proto, int algo, ncclFunc_t func,
                                                       /*output*/ struct ncclTuningPipelineStep* intra,
-                                                      struct ncclTuningPipelineStep* inter) {
+                                                      struct ncclTuningPipelineStep* inter) { /* 中文索引·体内调用 ncclTuningGetNsteps、ncclTuningProtoBWFactor。 */
   const struct ncclTopoGraph* graph = &comm->graphs[algo];
   int nSteps = ncclTuningGetNsteps(func, comm->nRanks);
   int nInterSteps = (comm->nNodes == 1) ? 0 : (func == ncclFuncAllReduce) ? (2 * (comm->nNodes)) : comm->nNodes;
@@ -48,7 +48,7 @@ static int ncclTuningPipelineRingIsValid(struct ncclTuningInput_t* const inputs,
 
 static inline ncclResult_t ncclTuningPipelineRingComputePipeline(struct ncclTuningInput_t* const inputs,
                                                                  struct ncclTuningResult_t* tuning,
-                                                                 struct ncclTuningPipeline* pipeline /*output*/) {
+                                                                 struct ncclTuningPipeline* pipeline /*output*/) { /* 中文索引·体内调用 ncclTuningPipelineComputeChunkSize、ncclTypeSize。 */
   struct ncclComm* comm = inputs->comm;
   NCCLCHECK(ncclTuningPipelineComputeChunkSize(inputs, tuning, pipeline));
 

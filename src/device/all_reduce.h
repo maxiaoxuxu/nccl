@@ -11,16 +11,16 @@
 
 namespace {
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、ncclElementAlignedDivUp。 */
   ncclRing* ring = &ncclShmem.channel.ring;
-  int ringIx = ring->index;
+  /* 中文图解·ring｜ringIx 是环坐标，以全局 rank 0 为参考点。它决定本 GPU 在当前 loop 先发哪块。 */ int ringIx = ring->index;
   const int nranks = ncclShmem.comm.nRanks;
   ssize_t gridOffset;
   ssize_t channelCount;
   ssize_t chunkCount;
   ncclCollCbdPart(work, ncclShmem.channelId, Proto::Id, sizeof(T), (ssize_t*)nullptr, &gridOffset, &channelCount,
                   &chunkCount);
-  const ssize_t loopCount = nranks * chunkCount;
+  /* 中文图解·layout｜一个满 loop 对应 nranks 个名义 chunk；每条 channel 从自己的 gridOffset 单独开始。 */ const ssize_t loopCount = nranks * chunkCount;
   ssize_t offset;
   int nelem;
   int chunk;
@@ -35,16 +35,16 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     ssize_t remCount = channelCount - elemOffset;
     ssize_t chunkOffset;
 
-    if (remCount < loopCount) chunkCount = ncclElementAlignedDivUp(remCount, nranks, (ssize_t)sizeof(T), (ssize_t)16);
+    /* 中文图解·layout｜尾圈重算块步长以满足 16 B 对齐；外层 elemOffset 的步幅仍使用进入循环前的 loopCount。 */ if (remCount < loopCount) chunkCount = ncclElementAlignedDivUp(remCount, nranks, (ssize_t)sizeof(T), (ssize_t)16);
 
     auto modRanks = [&] __device__(int r) -> int { return r - (r >= nranks ? nranks : 0); };
 
     // step 0: push data to next GPU
     chunk = modRanks(ringIx + nranks - 1);
     chunkOffset = chunk * chunkCount;
-    offset = gridOffset + elemOffset + chunkOffset;
+    /* 中文图解·ring｜offset 是相对于该 rank 用户缓冲区的元素下标；实际字节地址还要乘 sizeof(T)。 */ offset = gridOffset + elemOffset + chunkOffset;
     nelem = (int)min(chunkCount, remCount - chunkOffset);
-    prims.directSend(offset, offset, nelem);
+    /* 中文图解·ring｜第一段把前一环位置对应的 chunk 发给 next，之后逐段叠加本地输入。 */ prims.directSend(offset, offset, nelem);
 
     // k-2 steps: reduce and copy to next GPU
     for (int j = 2; j < nranks; ++j) {
@@ -52,7 +52,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
       chunkOffset = chunk * chunkCount;
       offset = gridOffset + elemOffset + chunkOffset;
       nelem = (int)min(chunkCount, remCount - chunkOffset);
-      prims.directRecvReduceDirectSend(offset, offset, nelem);
+      /* 中文图解·ring｜中间归约将上一跳的部分和与本地同一 offset 的输入合并，向下一跳转发。 */ prims.directRecvReduceDirectSend(offset, offset, nelem);
     }
 
     // step k-1: reduce this buffer and data, which will produce the final
@@ -61,7 +61,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     chunkOffset = chunk * chunkCount;
     offset = gridOffset + elemOffset + chunkOffset;
     nelem = (int)min(chunkCount, remCount - chunkOffset);
-    prims.directRecvReduceCopyDirectSend(offset, offset, nelem, /*postOp=*/true);
+    /* 中文图解·ring｜本环位置负责的块在这里得出最终结果，同时写回并开始分发。 */ prims.directRecvReduceCopyDirectSend(offset, offset, nelem, /*postOp=*/true);
 
     // k-2 steps: copy to next GPU
     for (int j = 1; j < nranks - 1; ++j) {
@@ -69,7 +69,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
       chunkOffset = chunk * chunkCount;
       offset = gridOffset + elemOffset + chunkOffset;
       nelem = (int)min(chunkCount, remCount - chunkOffset);
-      prims.directRecvCopyDirectSend(offset, offset, nelem);
+      /* 中文图解·ring｜归约完成的块只需复制和转发；每个 rank 的 recvbuff 最终覆盖全部 chunk。 */ prims.directRecvCopyDirectSend(offset, offset, nelem);
     }
 
     // Make final copy from buffer to dest.
@@ -78,12 +78,12 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     offset = gridOffset + elemOffset + chunkOffset;
     nelem = (int)min(chunkCount, remCount - chunkOffset);
 
-    prims.directRecv(offset, nelem);
+    /* 中文图解·ring｜最后一次只接收。四个 rank 时，本地有七次原语调用，其中六次带发送。 */ prims.directRecv(offset, nelem);
   }
 }
 
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runTreeUpDown(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runTreeUpDown(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.directRecvReduceCopy。 */
   ncclTree* tree = &ncclShmem.channel.tree;
   size_t gridOffset;
   size_t channelCount;
@@ -96,7 +96,7 @@ __device__ __forceinline__ void runTreeUpDown(int tid, int nthreads, struct nccl
   { // Reduce : max number of recv is 3, max number of send is 1 (binary tree + local)
     Primitives<T, RedOp, FanAsymmetric<NCCL_MAX_TREE_ARITY, 1>, /*Direct=*/1, Proto, 0> prims(
       tid, nthreads, tree->down, &tree->up, work->sendbuff, work->recvbuff, work->redOpArg, 0, 0, 0, work);
-    if (tree->up == -1) {
+    /* 中文图解·tree｜树上行的父节点、叶子及内部节点分别完成归约写回、发送或边归约边转发。 */ if (tree->up == -1) {
       for (size_t elemOffset = 0; elemOffset < channelCount; elemOffset += chunkCount) {
         offset = gridOffset + elemOffset;
         nelem = min(chunkCount, channelCount - elemOffset);
@@ -143,7 +143,7 @@ __device__ __forceinline__ void runTreeUpDown(int tid, int nthreads, struct nccl
 }
 
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runTreeSplit(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runTreeSplit(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.directRecvReduceCopyDirectSend。 */
   ncclTree* tree = &ncclShmem.channel.tree;
   size_t gridOffset;
   size_t channelCount;
@@ -154,7 +154,7 @@ __device__ __forceinline__ void runTreeSplit(int tid, int nthreads, struct ncclD
   int nelem;
   int nthreadsSplit;
   if (Proto::Id == NCCL_PROTO_SIMPLE) {
-    nthreadsSplit = nthreads / 2;
+    /* 中文图解·tree｜分线程组时，上行和下行各有自己的线程和原语 group，可流式处理不同块。 */ nthreadsSplit = nthreads / 2;
     if (nthreadsSplit >= 256) nthreadsSplit += 64;
   } else {
     // LL & LL128
@@ -246,7 +246,7 @@ struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_TREE, NCCL_PROTO_SIMPL
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 prims.scatter、prims.recvReduceDirectSend。 */
     static constexpr int COLLNET_COPY_THREADS = 96;
     const int bid = ncclShmem.channelId - work->channelLo;
     const int nChannels = work->channelHi - work->channelLo + 1;
@@ -388,7 +388,7 @@ struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NCCL_P
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、ncclElementAlignedDivUp。 */
     struct ncclNvls* nvls = &ncclShmem.channel.nvls;
     const bool hasOut = nvls->out != -1;
     const int nranks = ncclShmem.comm.nRanks;
@@ -525,7 +525,7 @@ struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_SIMPL
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_NVLS_TREE, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、ncclElementAlignedDivUp。 */
     struct ncclNvls* nvls = &ncclShmem.channel.nvls;
     const int treeUp = nvls->treeUp;
     const int* treeDown = nvls->treeDown;
@@ -636,7 +636,7 @@ struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_NVLS_TREE, NCCL_PROTO_
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_COLLNET_CHAIN, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 __syncwarp、prims.directSend。 */
     const int bid = ncclShmem.channelId - work->channelLo;
     const int nChannels = work->channelHi - work->channelLo + 1;
     ncclTree* tree = &ncclShmem.channel.collnetChain;

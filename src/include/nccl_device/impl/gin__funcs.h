@@ -40,7 +40,7 @@ NCCL_DEVICE_INLINE ncclGinWindow_t getSegmentGinWindow(
   return loadConst(&win->ginMultiSegmentWins[idx].ginWins[connectionId]);
 }
 
-NCCL_DEVICE_INLINE int teamRankToGinRank(ncclDevComm const& comm, ncclTeam team, int teamRank) {
+NCCL_DEVICE_INLINE int teamRankToGinRank(ncclDevComm const& comm, ncclTeam team, int teamRank) { /* 中文索引·体内调用 ncclTeamRankToWorld、nccl::utility::idivFast32。 */
   int worldRank = ncclTeamRankToWorld(comm, team, teamRank);
   if (comm.ginConnectionStride == 1) {
     return worldRank;
@@ -110,7 +110,7 @@ NCCL_DEVICE_INLINE ncclResult_t waitRollingLessEq(ncclGinOffsetPtr ref, uint64_t
 #ifdef __CUDACC__
 // Common initialization helper for GIN backend
 template <typename GinType>
-NCCL_DEVICE_INLINE void ncclGinInitCommon(GinType* gin, ncclDevComm const& comm, int contextIndex) {
+NCCL_DEVICE_INLINE void ncclGinInitCommon(GinType* gin, ncclDevComm const& comm, int contextIndex) { /* 中文索引·体内调用 uint32_t。 */
   gin->nConnections = comm.ginConnectionCount;
 
   static_assert(NCCL_GIN_MAX_CONNECTIONS == 4, "Required for following modulo hack to work.");
@@ -500,7 +500,7 @@ template <typename RemoteAction, // one of ncclGin_{None|SignalInc}
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::put(
   ncclTeam team, int peer, ncclWindow_t dstWin, size_t dstOffset, ncclWindow_t srcWin, size_t srcOffset, size_t bytes,
   RemoteAction remoteAction, LocalAction localAction, Coop coop, DescriptorSmem descriptor,
-  cuda::thread_scope givenRelease, cuda::thread_scope requiredRelease, uint32_t optFlags, SegmentType bufType) const {
+  cuda::thread_scope givenRelease, cuda::thread_scope requiredRelease, uint32_t optFlags, SegmentType bufType) const { /* 中文索引·体内调用 this->_makeCtx、coop.sync。 */
   using nccl::utility::loadConst;
   using nccl::gin::internal::teamRankToGinRank;
   ncclGinCtx_M<beMask> ctx = this->_makeCtx();
@@ -596,7 +596,7 @@ template <typename T,
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::put(
   ncclTeam team, int peer, ncclSymPtr<T> dstElts, ncclSymPtr<T> srcElts, size_t nElts, RemoteAction remoteAction,
   LocalAction localAction, Coop coop, DescriptorSmem descriptor, cuda::thread_scope givenRelease,
-  cuda::thread_scope requiredRelease, uint32_t optFlags, SegmentType bufType) const {
+  cuda::thread_scope requiredRelease, uint32_t optFlags, SegmentType bufType) const { /* 中文索引·体内调用 this->put。 */
   this->put(team, peer, dstElts.window, dstElts.offset, srcElts.window, srcElts.offset, nElts * sizeof(T), remoteAction,
             localAction, coop, descriptor, givenRelease, requiredRelease, optFlags, bufType);
 }
@@ -610,7 +610,7 @@ template <typename T,
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::putValue(
   ncclTeam team, int peer, ncclWindow_t dstWin, size_t dstOffset, T value, RemoteAction remoteAction, Coop coop,
   DescriptorSmem descriptor, cuda::thread_scope givenRelease, cuda::thread_scope requiredRelease,
-  uint32_t optFlags) const {
+  uint32_t optFlags) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   static_assert(sizeof(T) <= 8, "Required: sizeof(T) <= 8");
   using nccl::utility::loadConst;
   using nccl::gin::internal::teamRankToGinRank;
@@ -636,7 +636,7 @@ template <typename T,
           typename Coop, typename DescriptorSmem>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::putValue(
   ncclTeam team, int peer, ncclSymPtr<T> dst, T value, RemoteAction remoteAction, Coop coop, DescriptorSmem descriptor,
-  cuda::thread_scope givenRelease, cuda::thread_scope requiredRelease, uint32_t optFlags) const {
+  cuda::thread_scope givenRelease, cuda::thread_scope requiredRelease, uint32_t optFlags) const { /* 中文索引·体内调用 this->putValue。 */
   static_assert(sizeof(T) <= sizeof(uint64_t), "Required: T must fit into 64 bits");
   this->putValue(team, peer, dst.window, dst.offset, value, remoteAction, coop, descriptor, givenRelease,
                  requiredRelease, optFlags);
@@ -649,7 +649,7 @@ template <typename RemoteAction, typename Coop, typename DescriptorSmem>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::signal(ncclTeam team, int peer, RemoteAction action, Coop coop,
                                                             DescriptorSmem descriptor, cuda::thread_scope givenRelease,
                                                             cuda::thread_scope requiredRelease,
-                                                            uint32_t optFlags) const {
+                                                            uint32_t optFlags) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::gin::internal::teamRankToGinRank;
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -669,7 +669,7 @@ NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::signal(ncclTeam team, int p
 template <unsigned beMask>
 template <typename Coop, typename DescriptorSmem>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::flush(Coop coop, cuda::memory_order ord,
-                                                           DescriptorSmem descriptor) const {
+                                                           DescriptorSmem descriptor) const { /* 中文索引·体内调用 coop.sync、this->_makeCtx。 */
   coop.sync();
   ncclGinCall<ncclGinApi_Flush>(this->_makeCtx(), coop, ncclGin_isDescriptor(descriptor),
                                 ncclGin_getDescriptor(descriptor), ord, this->comm.abortFlag);
@@ -708,7 +708,7 @@ NCCL_DEVICE_INLINE ncclGinBarrierOptions_t ncclGin_BackendMask<beMask>::_barrier
 template <unsigned beMask>
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::waitCounter(Coop coop, ncclGinCounter_t counter, uint64_t least,
-                                                                 int bits, cuda::memory_order ord) const {
+                                                                 int bits, cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     auto ctr = ncclGinCall<ncclGinApi_GetCounterPtr>(this->_makeCtx(), counter);
@@ -738,7 +738,7 @@ NCCL_DEVICE_INLINE ncclResult_t ncclGin_BackendMask<beMask>::waitCounter(
 #ifdef __CUDACC__
 template <unsigned beMask>
 NCCL_DEVICE_INLINE uint64_t ncclGin_BackendMask<beMask>::readCounter(ncclGinCounter_t counter, int bits,
-                                                                     cuda::memory_order ord) const {
+                                                                     cuda::memory_order ord) const { /* 中文索引·体内调用 this->_makeCtx、uint64_t。 */
   auto ctr = ncclGinCall<ncclGinApi_GetCounterPtr>(this->_makeCtx(), counter);
   uint64_t mask = uint64_t(-1) >> (64 - bits);
   uint64_t raw = cuda::atomic_ref<uint64_t>{*ctr.ptr}.load(ord);
@@ -767,7 +767,7 @@ NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::increaseSignalShadow(ncclGi
 #ifdef __CUDACC__
 template <unsigned beMask>
 NCCL_DEVICE_INLINE uint64_t ncclGin_BackendMask<beMask>::readSignal(ncclGinSignal_t signal, int bits,
-                                                                    cuda::memory_order ord) const {
+                                                                    cuda::memory_order ord) const { /* 中文索引·体内调用 this->_makeCtx、uint64_t。 */
   auto sig = ncclGinCall<ncclGinApi_GetSignalPtr>(this->_makeCtx(), signal);
   uint64_t mask = uint64_t(-1) >> (64 - bits);
   uint64_t raw = cuda::atomic_ref<uint64_t>{*sig.ptr}.load(ord);
@@ -776,7 +776,7 @@ NCCL_DEVICE_INLINE uint64_t ncclGin_BackendMask<beMask>::readSignal(ncclGinSigna
 
 template <unsigned beMask>
 NCCL_DEVICE_INLINE uint64_t ncclGin_BackendMask<beMask>::readSignal(ncclWindow_t signalWindow, size_t signalOffset,
-                                                                    int bits, cuda::memory_order ord) const {
+                                                                    int bits, cuda::memory_order ord) const { /* 中文索引·体内调用 ncclGetLocalPointer、uint64_t。 */
   uint64_t* ptr = (uint64_t*)ncclGetLocalPointer(signalWindow, signalOffset);
   uint64_t mask = uint64_t(-1) >> (64 - bits);
   return mask & cuda::atomic_ref<uint64_t>{*ptr}.load(ord);
@@ -789,7 +789,7 @@ NCCL_DEVICE_INLINE uint64_t ncclGin_BackendMask<beMask>::readSignal(ncclWindow_t
 template <unsigned beMask>
 template <typename Coop, typename DescriptorSmem>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::wait(ncclGinRequest_t& request, Coop coop,
-                                                          DescriptorSmem descriptor, cuda::memory_order ord) const {
+                                                          DescriptorSmem descriptor, cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     ncclGinCall<ncclGinApi_Wait>(this->_makeCtx(), request, ncclGin_isDescriptor(descriptor),
@@ -817,7 +817,7 @@ template <unsigned beMask>
 template <typename Coop, typename DescriptorSmem>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::flushAsync(ncclTeam team, uint32_t peer,
                                                                 ncclGinRequest_t* outRequest, Coop coop,
-                                                                uint32_t optFlags, DescriptorSmem descriptor) const {
+                                                                uint32_t optFlags, DescriptorSmem descriptor) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::gin::internal::teamRankToGinRank;
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -832,7 +832,7 @@ template <typename Coop, typename DescriptorSmem, typename SegmentType>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::get(ncclTeam team, int peer, ncclWindow_t remoteWnd,
                                                          size_t remoteOffset, ncclWindow_t localWnd, size_t localOffset,
                                                          size_t bytes, Coop coop, DescriptorSmem descriptor,
-                                                         uint32_t optFlags, SegmentType bufType) const {
+                                                         uint32_t optFlags, SegmentType bufType) const { /* 中文索引·体内调用 this->_makeCtx、coop.sync。 */
   using nccl::utility::loadConst;
   using nccl::gin::internal::teamRankToGinRank;
   ncclGinCtx_M<beMask> ctx = this->_makeCtx();
@@ -891,7 +891,7 @@ NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::get(ncclTeam team, int peer
 template <unsigned beMask>
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::waitSignal(Coop coop, ncclGinSignal_t signal, uint64_t least,
-                                                                int bits, cuda::memory_order ord) const {
+                                                                int bits, cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     auto sig = ncclGinCall<ncclGinApi_GetSignalPtr>(this->_makeCtx(), signal);
@@ -919,7 +919,7 @@ NCCL_DEVICE_INLINE ncclResult_t ncclGin_BackendMask<beMask>::waitSignal(
 template <unsigned beMask>
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::waitSignal(
-  Coop coop, ncclWindow_t signalWindow, size_t signalOffset, uint64_t least, int bits, cuda::memory_order ord) const {
+  Coop coop, ncclWindow_t signalWindow, size_t signalOffset, uint64_t least, int bits, cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     uint64_t* ptr = (uint64_t*)ncclGetLocalPointer(signalWindow, signalOffset);
@@ -952,7 +952,7 @@ NCCL_DEVICE_INLINE ncclResult_t ncclGin_BackendMask<beMask>::waitSignal(Coop coo
 template <unsigned beMask>
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::waitSignalMeetShadow(Coop coop, ncclGinSignal_t signal, int bits,
-                                                                          cuda::memory_order ord) const {
+                                                                          cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     auto sig = ncclGinCall<ncclGinApi_GetSignalPtr>(this->_makeCtx(), signal);
@@ -969,7 +969,7 @@ template <unsigned beMask>
 template <typename Coop, typename Uint>
 NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::waitSignalFollowShadow(Coop coop, ncclGinSignal_t signal,
                                                                             Uint leastDelta, Uint* before, Uint* delta,
-                                                                            int bits, cuda::memory_order ord) const {
+                                                                            int bits, cuda::memory_order ord) const { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::utility::testAbort;
   uint32_t steps = 0;
   coop.sync();
@@ -1012,7 +1012,7 @@ NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetCounter(ncclGinCounter
 
 #ifdef __CUDACC__
 template <unsigned beMask>
-NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetSignal(ncclGinSignal_t signal) const {
+NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetSignal(ncclGinSignal_t signal) const { /* 中文索引·体内调用 this->_makeCtx。 */
   ncclGinSignalDescriptor signalDesc;
   signalDesc.type = NCCL_GIN_SIGNAL_TYPE_INDEXED;
   signalDesc.indexedSignal.signalId = signal;
@@ -1021,7 +1021,7 @@ NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetSignal(ncclGinSignal_t
 }
 
 template <unsigned beMask>
-NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetSignal(ncclWindow_t signalWindow, size_t signalOffset) const {
+NCCL_DEVICE_INLINE void ncclGin_BackendMask<beMask>::resetSignal(ncclWindow_t signalWindow, size_t signalOffset) const { /* 中文索引·体内调用 nccl::gin::internal::getGinWindow、nccl::gin::internal::windowOffsetToGinOffset。 */
   ncclGinSignalDescriptor signal;
   signal.type = NCCL_GIN_SIGNAL_TYPE_VA;
   signal.vaSignal.signalWindow =

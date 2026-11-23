@@ -206,7 +206,7 @@ struct mlx5dv_devx_obj;
 #define __devx_mask(bit_sz) ((uint32_t)((1ull << (bit_sz)) - 1))
 #define __devx_dw_mask(bit_sz, bit_off) (__devx_mask(bit_sz) << __devx_dw_bit_off(bit_sz, bit_off))
 
-static inline void _devx_set(void *p, uint32_t value, size_t bit_off, size_t bit_sz) {
+static inline void _devx_set(void *p, uint32_t value, size_t bit_off, size_t bit_sz) { /* 中文索引·体内调用 __devx_dw_off、__devx_dw_mask。 */
     uint32_t *fld = (uint32_t *)(p) + __devx_dw_off(bit_off);
     uint32_t dw_mask = __devx_dw_mask(bit_sz, bit_off);
     uint32_t mask = __devx_mask(bit_sz);

@@ -94,7 +94,7 @@ struct ncclDiagP2pMapping {
   int peerAccessDev;
 };
 
-static ncclResult_t ncclDiagP2pBuildRankSet(struct ncclComm* comm, int** ranks, int* rank, int* nRanks) {
+static ncclResult_t ncclDiagP2pBuildRankSet(struct ncclComm* comm, int** ranks, int* rank, int* nRanks) { /* 中文索引·体内调用 ncclDevrInitOnce。 */
   NCCLCHECK(ncclDevrInitOnce(comm));
   struct ncclDevrState* devr = &comm->devrState;
   *ranks = devr->lsaDomainRankList;
@@ -116,7 +116,7 @@ static bool ncclDiagP2pSameProcess(struct ncclComm* comm, int srcRank, int dstRa
   return a->hostHash == b->hostHash && a->pidHash == b->pidHash;
 }
 
-static int ncclDiagP2pHandleType(struct ncclComm* comm, int srcRank, int dstRank) {
+static int ncclDiagP2pHandleType(struct ncclComm* comm, int srcRank, int dstRank) { /* 中文索引·体内调用 ncclDiagP2pSameProcess、ncclCuMemEnable。 */
   if (ncclDiagP2pSameProcess(comm, srcRank, dstRank)) return ncclDiagP2pHandleDirect;
   if (!ncclCuMemEnable()) return ncclDiagP2pHandleLegacyIpc;
 #if CUDART_VERSION >= 11030
@@ -177,7 +177,7 @@ static bool ncclDiagP2pIsFabricEdge(const struct ncclDiagP2pEdgeInfo* edge) {
   return edge->handleType == ncclDiagP2pHandleCuMemFabric || edge->pathType == PATH_NET;
 }
 
-static const char* ncclDiagP2pEdgeAdvice(const struct ncclDiagP2pEdgeInfo* edge) {
+static const char* ncclDiagP2pEdgeAdvice(const struct ncclDiagP2pEdgeInfo* edge) { /* 中文索引·体内调用 ncclDiagP2pIsFabricEdge。 */
   if (ncclDiagP2pIsFabricEdge(edge)) {
     return "check the IMEX domain with 'nvidia-imex-ctl -H -N' (nodes READY, connectivity C) and verify access to "
            "/dev/nvidia-caps-imex-channels/channel*";
@@ -199,7 +199,7 @@ static const char* ncclDiagP2pEdgeAdvice(const struct ncclDiagP2pEdgeInfo* edge)
   }
 }
 
-static const char* ncclDiagP2pImportAdvice(const struct ncclDiagP2pEdgeInfo* edge) {
+static const char* ncclDiagP2pImportAdvice(const struct ncclDiagP2pEdgeInfo* edge) { /* 中文索引·体内调用 ncclDiagP2pIsFabricEdge、ncclDiagP2pEdgeAdvice。 */
   if (ncclDiagP2pIsFabricEdge(edge)) return ncclDiagP2pEdgeAdvice(edge);
 
   switch (edge->handleType) {
@@ -214,7 +214,7 @@ static const char* ncclDiagP2pImportAdvice(const struct ncclDiagP2pEdgeInfo* edg
   }
 }
 
-static int ncclDiagP2pPathType(struct ncclComm* comm, int srcRank, int dstRank) {
+static int ncclDiagP2pPathType(struct ncclComm* comm, int srcRank, int dstRank) { /* 中文索引·体内调用 ncclTopoRankToIndex。 */
   int srcGpuIdx = -1;
   int dstGpuIdx = -1;
   if (comm->topo == nullptr) return PATH_DIS;
@@ -230,7 +230,7 @@ static void ncclDiagP2pSetReason(struct ncclDiagP2pEdgeResult* result, int reaso
   if (result->reason == ncclDiagP2pReasonNone) result->reason = reason;
 }
 
-static void ncclDiagP2pSetLocalReason(int rank, int nRanks, struct ncclDiagP2pEdgeResult* allResults, int reason) {
+static void ncclDiagP2pSetLocalReason(int rank, int nRanks, struct ncclDiagP2pEdgeResult* allResults, int reason) { /* 中文索引·体内调用 ncclDiagP2pSetReason。 */
   for (int dst = 0; dst < nRanks; dst++) {
     struct ncclDiagP2pEdgeResult* result = allResults + rank * nRanks + dst;
     if (!result->tested) continue;
@@ -238,7 +238,7 @@ static void ncclDiagP2pSetLocalReason(int rank, int nRanks, struct ncclDiagP2pEd
   }
 }
 
-static bool ncclDiagP2pCudaSuccess(cudaError_t err, const char* phase) {
+static bool ncclDiagP2pCudaSuccess(cudaError_t err, const char* phase) { /* 中文索引·体内调用 cudaGetErrorString、cudaGetLastError。 */
   if (err == cudaSuccess) return true;
   WARN("Diagnostics P2P %s CUDA failure: %s", phase, cudaGetErrorString(err));
   (void)cudaGetLastError();
@@ -252,7 +252,7 @@ static bool ncclDiagP2pNcclSuccess(ncclResult_t result, const char* phase) {
 }
 
 static void ncclDiagP2pLogEdge(struct ncclComm* comm, const char* phase, int srcRank, int dstRank,
-                               const struct ncclDiagP2pEdgeInfo* edge, const char* extra) {
+                               const struct ncclDiagP2pEdgeInfo* edge, const char* extra) { /* 中文索引·体内调用 ncclDiagP2pPathName、ncclDiagP2pHandleName。 */
   const struct ncclPeerInfo* srcInfo = comm->peerInfo + srcRank;
   const struct ncclPeerInfo* dstInfo = comm->peerInfo + dstRank;
   INFO(NCCL_DIAG,
@@ -264,7 +264,7 @@ static void ncclDiagP2pLogEdge(struct ncclComm* comm, const char* phase, int src
 }
 
 static void ncclDiagP2pFormatPeerFields(struct ncclComm* comm, int srcRank, int dstRank,
-                                        const struct ncclDiagP2pEdgeInfo* edge, char* buf, size_t size) {
+                                        const struct ncclDiagP2pEdgeInfo* edge, char* buf, size_t size) { /* 中文索引·体内调用 snprintf、ncclDiagP2pPathName。 */
   const struct ncclPeerInfo* srcInfo = comm->peerInfo + srcRank;
   const struct ncclPeerInfo* dstInfo = comm->peerInfo + dstRank;
   snprintf(buf, size, "srcRank=%d srcCudaDev=%d srcNvmlDev=%d dstRank=%d dstCudaDev=%d dstNvmlDev=%d path=%s handle=%s",
@@ -273,7 +273,7 @@ static void ncclDiagP2pFormatPeerFields(struct ncclComm* comm, int srcRank, int 
 }
 
 static void ncclDiagP2pReport(struct ncclComm* comm, int srcRank, int dstRank, const struct ncclDiagP2pEdgeInfo* edge,
-                              const struct ncclDiagP2pEdgeResult* result) {
+                              const struct ncclDiagP2pEdgeResult* result) { /* 中文索引·体内调用 ncclDiagP2pFormatPeerFields、ncclDiagP2pReasonName。 */
   char edgeFields[256];
   ncclDiagP2pFormatPeerFields(comm, srcRank, dstRank, edge, edgeFields, sizeof(edgeFields));
 
@@ -342,7 +342,7 @@ static void ncclDiagP2pBuildGroupSummary(int nRanks, const struct ncclDiagP2pEdg
   }
 }
 
-static void ncclDiagP2pReportSummary(struct ncclComm* comm, const struct ncclDiagP2pSummary* summaries) {
+static void ncclDiagP2pReportSummary(struct ncclComm* comm, const struct ncclDiagP2pSummary* summaries) { /* 中文索引·体内调用 ncclDebugShouldLog。 */
   if (comm->rank != 0) return;
 
   uint64_t tested = 0;
@@ -372,7 +372,7 @@ static void ncclDiagP2pReportSummary(struct ncclComm* comm, const struct ncclDia
 
 static void ncclDiagP2pReportGroupFailures(struct ncclComm* comm, const int* ranks, int nRanks,
                                            const struct ncclDiagP2pEdgeInfo* edgeMatrix,
-                                           struct ncclDiagP2pEdgeResult* allResults) {
+                                           struct ncclDiagP2pEdgeResult* allResults) { /* 中文索引·体内调用 ncclDiagP2pReport。 */
   for (int src = 0; src < nRanks; src++) {
     for (int dst = 0; dst < nRanks; dst++) {
       struct ncclDiagP2pEdgeResult* result = allResults + src * nRanks + dst;
@@ -385,7 +385,7 @@ static void ncclDiagP2pReportGroupFailures(struct ncclComm* comm, const int* ran
 
 static void ncclDiagP2pDiscoverLocalEdges(struct ncclComm* comm, const int* ranks, int rank, int nRanks,
                                           struct ncclDiagP2pEdgeInfo* edgeMatrix,
-                                          struct ncclDiagP2pEdgeResult* allResults, int* outPeers, int* outPeerCount) {
+                                          struct ncclDiagP2pEdgeResult* allResults, int* outPeers, int* outPeerCount) { /* 中文索引·体内调用 ncclDiagP2pPathType、ncclDiagP2pSameProcess。 */
   *outPeerCount = 0;
   for (int dstSlot = 0; dstSlot < nRanks; dstSlot++) {
     int dst = ranks[dstSlot];
@@ -424,7 +424,7 @@ static void ncclDiagP2pDiscoverLocalEdges(struct ncclComm* comm, const int* rank
 
 static void ncclDiagP2pBuildInboundPeers(struct ncclComm* comm, const int* ranks, int rank, int nRanks,
                                          const struct ncclDiagP2pEdgeInfo* edgeMatrix, int* inPeers, int* inPeerCount,
-                                         bool* needsLocalHandle) {
+                                         bool* needsLocalHandle) { /* 中文索引·体内调用 ncclCuMemEnable。 */
   *inPeerCount = 0;
   *needsLocalHandle = false;
   for (int src = 0; src < nRanks; src++) {
@@ -439,7 +439,7 @@ static void ncclDiagP2pBuildInboundPeers(struct ncclComm* comm, const int* ranks
   }
 }
 
-static ncclResult_t ncclDiagP2pReleaseLocalHandle(const struct ncclDiagP2pMemDesc* desc) {
+static ncclResult_t ncclDiagP2pReleaseLocalHandle(const struct ncclDiagP2pMemDesc* desc) { /* 中文索引·体内调用 cuMemRelease。 */
 #if CUDART_VERSION >= 11030
   CUCHECK(cuMemRelease(desc->ipcDesc.memHandle));
   return ncclSuccess;
@@ -449,7 +449,7 @@ static ncclResult_t ncclDiagP2pReleaseLocalHandle(const struct ncclDiagP2pMemDes
 }
 
 static ncclResult_t ncclDiagP2pMapSameProcess(struct ncclComm* comm, int dstRank, const struct ncclDiagP2pMemDesc* desc,
-                                              struct ncclDiagP2pMapping* mapping) {
+                                              struct ncclDiagP2pMapping* mapping) { /* 中文索引·体内调用 ncclCuMemEnable、ncclCuMemAllocAddr。 */
   const struct ncclPeerInfo* dstInfo = comm->peerInfo + dstRank;
 
   if (dstInfo->cudaDev == comm->cudaDev) {
@@ -490,7 +490,7 @@ static ncclResult_t ncclDiagP2pMapSameProcess(struct ncclComm* comm, int dstRank
   return ncclSuccess;
 }
 
-static ncclResult_t ncclDiagP2pFreeMapping(struct ncclComm* comm, struct ncclDiagP2pMapping* mapping) {
+static ncclResult_t ncclDiagP2pFreeMapping(struct ncclComm* comm, struct ncclDiagP2pMapping* mapping) { /* 中文索引·体内调用 ncclCuMemFreeAddr、ncclCudaFree。 */
   if (mapping == nullptr) return ncclSuccess;
 
   ncclResult_t ret = ncclSuccess;
@@ -527,7 +527,7 @@ static ncclResult_t ncclDiagP2pFreeMapping(struct ncclComm* comm, struct ncclDia
 static void ncclDiagP2pImportMappings(struct ncclComm* comm, const int* ranks, int rank, int nRanks, int outPeerCount,
                                       const int* outPeers, const struct ncclDiagP2pEdgeInfo* edgeMatrix,
                                       struct ncclDiagP2pMemDesc* memDescs, struct ncclDiagP2pMapping* mappings,
-                                      struct ncclDiagP2pEdgeResult* allResults, bool cudaUsable, cudaStream_t stream) {
+                                      struct ncclDiagP2pEdgeResult* allResults, bool cudaUsable, cudaStream_t stream) { /* 中文索引·体内调用 ncclDiagP2pSetReason、ncclDiagP2pLogEdge。 */
   for (int i = 0; i < outPeerCount; i++) {
     int dstSlot = outPeers[i];
     int dst = ranks[dstSlot];
@@ -576,7 +576,7 @@ static bool ncclDiagP2pPrepareRemoteOps(struct ncclComm* comm, const int* ranks,
                                         const struct ncclDiagP2pMapping* mappings,
                                         struct ncclDiagP2pRemoteOp** remoteOpsHost,
                                         struct ncclDiagP2pRemoteOp** remoteOpsDev, int* remoteOpCount,
-                                        cudaStream_t stream) {
+                                        cudaStream_t stream) { /* 中文索引·体内调用 ncclCalloc、ncclDiagP2pNcclSuccess。 */
   int importedCount = 0;
   *remoteOpCount = 0;
   for (int i = 0; i < outPeerCount; i++) {
@@ -610,7 +610,7 @@ static bool ncclDiagP2pPrepareRemoteOps(struct ncclComm* comm, const int* ranks,
   return ncclDiagP2pCudaSuccess(cudaErr, "copy remote op descriptors");
 }
 
-ncclResult_t ncclDiagP2pRun(struct ncclComm* comm) {
+ncclResult_t ncclDiagP2pRun(struct ncclComm* comm) { /* 中文索引·体内调用 cudaGetDevice、ncclDiagP2pCudaSuccess。 */
   ncclResult_t ret = ncclSuccess;
   int* p2pRanks = nullptr;
   int p2pRank = -1;

@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 template <ncclFlowProtocol Protocol, bool EnableProfiler, template <typename> typename Red, typename T>
-__device__ __forceinline__ void ncclGenkRun_AllReduce_Ring_Flow(ncclGenkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclGenkRun_AllReduce_Ring_Flow(ncclGenkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclTeamWorld、ncclFlowGetSignalWarpsPerPart。 */
   using ProtocolTraits = ncclGenkProtocolTraits<Protocol>;
   ncclGenkArgsHandler handler{args};
   ncclDevComm const& comm = handler.comm;
@@ -157,7 +157,7 @@ __device__ __forceinline__ void ncclGenkRun_AllReduce_Ring_LL128(ncclGenkDevWork
 }
 
 template <ncclFlowProtocol Protocol, bool EnableProfiler, template <typename> typename Red, typename T>
-__device__ __forceinline__ void ncclGenkRun_AllReduce_Tree_Flow(ncclGenkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclGenkRun_AllReduce_Tree_Flow(ncclGenkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclFlowGetSignalWarpsPerPart、ProtocolTraits::treeReduceWorkerWarps。 */
   using ProtocolTraits = ncclGenkProtocolTraits<Protocol>;
   ncclGenkArgsHandler handler{args};
   ncclDevComm const& comm = handler.comm;

@@ -11,7 +11,7 @@
 // Network post overhead in ns (1000 = 1 us)
 NCCL_PARAM(NetOverhead, "NET_OVERHEAD", -2);
 
-static float getNetOverhead(struct ncclComm* comm) {
+static float getNetOverhead(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamNetOverhead。 */
   if (ncclParamNetOverhead() != -2) return ncclParamNetOverhead() * .001;
   if (comm->cpuArch == NCCL_TOPO_CPU_ARCH_X86 && comm->cpuVendor == NCCL_TOPO_CPU_VENDOR_INTEL) return 1.0;
   if (comm->cpuArch == NCCL_TOPO_CPU_ARCH_X86 && comm->cpuVendor == NCCL_TOPO_CPU_VENDOR_AMD) return 2.0;
@@ -19,7 +19,7 @@ static float getNetOverhead(struct ncclComm* comm) {
 }
 
 ncclResult_t ncclTuningRingModelInit(struct ncclComm* comm, int id, int* /*enabled[NCCL_NUM_FUNCTIONS]*/,
-                                     struct ncclTuningModelState* /*internal*/) {
+                                     struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclTuningExpandId、ncclTuningGetCompCapIndex。 */
   ncclResult_t ret = ncclSuccess;
   int algo, proto;
   NCCLCHECK(ncclTuningExpandId(id, &algo, &proto, nullptr, nullptr));
@@ -91,7 +91,7 @@ ncclResult_t ncclTuningRingModelInit(struct ncclComm* comm, int id, int* /*enabl
 }
 
 ncclResult_t ncclTuningRingModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                    struct ncclTuningModelState* /*internal*/) {
+                                    struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclTuningGetNsteps、powf。 */
   ncclResult_t ret = ncclSuccess;
   if (inputs->comm->tuningContext.generalBandwidths[inputs->func][tuning->algo][tuning->proto] == -1.0f) {
     tuning->valid = 0;

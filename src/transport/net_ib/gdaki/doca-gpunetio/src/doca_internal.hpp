@@ -72,7 +72,7 @@ static inline cudaError_t doca_verbs_cuda_clear_error(cudaError_t cuda_result) {
  * Drain the store buffer so a store already issued to a write-combining mapping reaches the
  * device.
  */
-static inline void doca_internal_wc_store_fence(void) {
+static inline void doca_internal_wc_store_fence(void) { /* 中文索引·体内调用 __sync_synchronize。 */
 #if defined(__x86_64__) || defined(__i386__)
     asm volatile("sfence" ::: "memory");
 #elif defined(__aarch64__)
@@ -85,7 +85,7 @@ static inline void doca_internal_wc_store_fence(void) {
 }
 
 /* Match GDRCopy's stronger fence when coherent and write-combined mappings coexist. */
-static inline void doca_internal_memory_fence(void) {
+static inline void doca_internal_memory_fence(void) { /* 中文索引·体内调用 __sync_synchronize。 */
 #if defined(__x86_64__) || defined(__i386__)
     asm volatile("mfence" ::: "memory");
 #elif defined(__aarch64__)
@@ -135,7 +135,7 @@ struct doca_internal_mlx5_wqe_mprq_next_seg {
 };
 
 template <typename T>
-T doca_internal_utils_log2(T x) {
+T doca_internal_utils_log2(T x) { /* 中文索引·体内调用 std::log2。 */
     if (x == 0) /* log(0) is undefined */
         return 0;
 

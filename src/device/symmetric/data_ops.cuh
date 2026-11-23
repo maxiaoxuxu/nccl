@@ -21,7 +21,7 @@ static __device__ __forceinline__ T loadMem(GMemTemporalTag, T* p) {
   return *p;
 }
 template <typename T>
-static __device__ __forceinline__ T loadMem(GMemTag, T* p) {
+static __device__ __forceinline__ T loadMem(GMemTag, T* p) { /* 中文索引·体内调用 __ldcs、__builtin_unreachable。 */
   union {
     T x;
     uint8_t u8[sizeof(T)];
@@ -68,7 +68,7 @@ static __device__ __forceinline__ void storeMem(GMemTemporalTag, T* p, T val) {
   *p = val;
 }
 template <typename T>
-static __device__ __forceinline__ void storeMem(GMemTag, T* p, T val) {
+static __device__ __forceinline__ void storeMem(GMemTag, T* p, T val) { /* 中文索引·体内调用 __stcs、__builtin_unreachable。 */
   union {
     T x;
     uint8_t u8[sizeof(T)];
@@ -113,7 +113,7 @@ static __device__ __forceinline__ void loadPacks(
   int packIx, // Index of our first pack (typically coop.thread_rank()).
   int stride, // Index stride of packs (typically coop.size()).
   bool lastEmpty // Is our last pack completely out of bounds.
-) {
+) { /* 中文索引·体内调用 __builtin_expect、loadMem。 */
   constexpr int nEltPerPack = sizeof(Pack) / sizeof(Elt);
   bool eltsAligned = sizeof(Pack) - 1 <= eltsAlignMin - 1 || reinterpret_cast<uintptr_t>(elts) % sizeof(Pack) == 0;
   if (__builtin_expect(padElts == 0 && eltsAligned, true)) {

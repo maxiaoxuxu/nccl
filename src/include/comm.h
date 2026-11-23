@@ -434,7 +434,7 @@ struct ncclTaskCollSorter {
   struct ncclTaskColl** bins[BinCount];
 };
 
-inline void ncclTaskCollSorterInsert(struct ncclTaskCollSorter* me, struct ncclTaskColl* x, size_t size) {
+inline void ncclTaskCollSorterInsert(struct ncclTaskCollSorter* me, struct ncclTaskColl* x, size_t size) { /* 中文索引·体内调用 u32fpEncode。 */
   constexpr int UnitLog2 = ncclTaskCollSorter::UnitLog2;
   constexpr size_t MaxSize = ncclTaskCollSorter::MaxSize;
   constexpr int BitsPerPow2 = ncclTaskCollSorter::BitsPerPow2;
@@ -469,7 +469,7 @@ inline bool ncclTaskCollSorterEmpty(struct ncclTaskCollSorter* me) {
 }
 
 // Reset sorter and return sorted linked list of its coll tasks.
-inline struct ncclTaskColl* ncclTaskCollSorterDequeueAll(struct ncclTaskCollSorter* me) {
+inline struct ncclTaskColl* ncclTaskCollSorterDequeueAll(struct ncclTaskCollSorter* me) { /* 中文索引·体内调用 memset。 */
   struct ncclTaskColl* head = me->head;
   if (head != nullptr) memset(me, 0, sizeof(*me));
   return head;
@@ -914,7 +914,7 @@ void ncclCommPushCudaFree(struct ncclComm* comm, void* buf);
 void ncclCommPushCudaHostFree(struct ncclComm* comm, void* buf);
 void ncclCommPushCudaGdrFree(struct ncclComm* comm, void* handle);
 
-inline ncclResult_t ncclCommPollCallbacks(struct ncclComm* comm, bool waitSome) {
+inline ncclResult_t ncclCommPollCallbacks(struct ncclComm* comm, bool waitSome) { /* 中文索引·体内调用 ncclIntruQueueMpscDequeueAll、cb->fn。 */
   ncclResult_t result = ncclSuccess;
   struct ncclCommCallback* cb = ncclIntruQueueMpscDequeueAll(&comm->callbackQueue, waitSome);
   while (cb != nullptr) {
@@ -934,7 +934,7 @@ inline int ncclCommNMaxChannels(struct ncclComm* comm, int isCollNet, int isNvls
   /*if ( !isCollNet&& !isNvls)*/ return comm->nChannels;
 }
 
-inline ncclResult_t ncclCommPollEventCallbacks(struct ncclComm* comm, bool waitSome) {
+inline ncclResult_t ncclCommPollEventCallbacks(struct ncclComm* comm, bool waitSome) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclIntruQueueHead。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   CUDACHECK(cudaThreadExchangeStreamCaptureMode(&mode));
@@ -961,7 +961,7 @@ finish:
   return ncclSuccess;
 }
 
-inline void ncclCommIntraBarrierIn(struct ncclComm* comm, uint32_t x) {
+inline void ncclCommIntraBarrierIn(struct ncclComm* comm, uint32_t x) { /* 中文索引·体内调用 uint64_t、uint32_t。 */
   int phase = comm->intraBarrierPhase;
   if (comm->intraRanks == 1) {
     // Release everyone (just me).
@@ -980,7 +980,7 @@ inline void ncclCommIntraBarrierIn(struct ncclComm* comm, uint32_t x) {
 }
 
 // returns sum of x values contributed to ncclCommIntraBarrierIn(comm, x)
-inline uint32_t ncclCommIntraBarrierOut(struct ncclComm* comm) {
+inline uint32_t ncclCommIntraBarrierOut(struct ncclComm* comm) { /* 中文索引·体内调用 clockNano、std::this_thread::yield。 */
   struct ncclComm* comm0 = comm->intraComm0;
   comm->intraBarrierPhase ^= 1;
   uint32_t phase = comm->intraBarrierPhase;
@@ -1001,7 +1001,7 @@ inline uint32_t ncclCommIntraBarrierOut(struct ncclComm* comm) {
 // communicator memory address. Used to catch bugs so that integer handles
 // associated with this communicator won't collide with handles of other
 // communicatrs. This function is its own inverse.
-static inline ncclRedOp_t ncclUserRedOpMangle(ncclComm* comm, ncclRedOp_t op) {
+static inline ncclRedOp_t ncclUserRedOpMangle(ncclComm* comm, ncclRedOp_t op) { /* 中文索引·体内调用 ncclRedOp_t。 */
   // Preserve the built-in values.
   if (int(op) < int(ncclNumOps)) return op;
   uint64_t h = reinterpret_cast<uint64_t>(comm);

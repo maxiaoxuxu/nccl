@@ -22,7 +22,7 @@ namespace utility {
 // Load helper that selects multimem vs LSA and validates support at compile time.
 template <typename Pack, bool UseMultimem, typename RedOp, int Count = Pack::Count>
 struct LoadImpl {
-  NCCL_DEVICE_INLINE static Pack run(const Pack* addr) {
+  NCCL_DEVICE_INLINE static Pack run(const Pack* addr) { /* 中文索引·体内调用 assert。 */
     using PackEltType = typename Pack::EltType;
     static_assert(!UseMultimem || std::is_same<RedOp, OpSum<PackEltType>>::value,
                   "Multimem sources only support OpSum - use LSA sources for custom RedOp");
@@ -671,7 +671,7 @@ NCCL_DEVICE_INLINE void multimem_st_global<0>(uintptr_t addr, const BytePack<0>&
 }
 
 template <>
-NCCL_DEVICE_INLINE void multimem_st_global<1>(uintptr_t addr, const BytePack<1>& val) {
+NCCL_DEVICE_INLINE void multimem_st_global<1>(uintptr_t addr, const BytePack<1>& val) { /* 中文索引·体内调用 assert。 */
 #ifndef NCCL_DEVICE_PERMIT_EXPERIMENTAL_CODE
   assert(false && "Experimental NCCL device code detected; you may accept the risk "
                   "of this not being available in the future. If you accept that risk, "
@@ -685,7 +685,7 @@ NCCL_DEVICE_INLINE void multimem_st_global<1>(uintptr_t addr, const BytePack<1>&
 }
 
 template <>
-NCCL_DEVICE_INLINE void multimem_st_global<2>(uintptr_t addr, const BytePack<2>& val) {
+NCCL_DEVICE_INLINE void multimem_st_global<2>(uintptr_t addr, const BytePack<2>& val) { /* 中文索引·体内调用 assert。 */
 #ifndef NCCL_DEVICE_PERMIT_EXPERIMENTAL_CODE
   assert(false && "Experimental NCCL device code detected; you may accept the risk "
                   "of this not being available in the future. If you accept that risk, "
@@ -720,7 +720,7 @@ NCCL_DEVICE_INLINE void multimem_st_global<16>(uintptr_t addr, const BytePack<16
 
 // Multimem store - converts EltPack to typeless BytePack
 template <typename Pack>
-NCCL_DEVICE_INLINE void multimemStore(void* addr, const Pack& pack) {
+NCCL_DEVICE_INLINE void multimemStore(void* addr, const Pack& pack) { /* 中文索引·体内调用 assert、__cvta_generic_to_global。 */
   // Check architecture requirement
 #if __CUDA_ARCH__ < 900
   assert(false && "multimemStore requires CUDA architecture >= 900 (sm_90 or higher)");
@@ -741,7 +741,7 @@ NCCL_DEVICE_INLINE void multimemStore(void* addr, const Pack& pack) {
 // Use fully qualified name so we always use this namespace's multimemStore even when
 // the TU defines a global multimemStore (e.g. test/perf/multimem_ops.h).
 template <typename Pack, bool UseMultimem>
-NCCL_DEVICE_INLINE void store(Pack* addr, const Pack& val) {
+NCCL_DEVICE_INLINE void store(Pack* addr, const Pack& val) { /* 中文索引·体内调用 nccl::utility::multimemStore。 */
   if NCCL_IF_CONSTEXPR (UseMultimem) {
     nccl::utility::multimemStore(addr, val);
   } else {

@@ -19,7 +19,7 @@ static_assert(NCCL_IB_FLUSH_REQ_WR_ID_OFFSET <= UINT64_MAX - NET_IB_MAX_REQUESTS
 ncclResult_t ncclIbPostFifo(struct ncclIbRecvComm* comm, struct ncclIbRequest* req, int slot);
 ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot);
 
-static inline ncclResult_t ncclIbRecvCommGetQpForCts(struct ncclIbRecvComm* recvComm, uint32_t id, ncclIbQp** qp) {
+static inline ncclResult_t ncclIbRecvCommGetQpForCts(struct ncclIbRecvComm* recvComm, uint32_t id, ncclIbQp** qp) { /* 中文索引·体内调用 ncclIbCommBaseGetQpByIndex。 */
   int devIndex = id % recvComm->base.vProps.ndevs;
   // CTS message is always posted the first QP on the device
   int qpIndex = 0;

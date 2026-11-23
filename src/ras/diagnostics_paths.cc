@@ -53,7 +53,7 @@ struct rasDiagnosticsPathsData {
 // own GPU is absent, no path type can be determined, so `state` records that and `pathMask` is left empty. Pure
 // in-memory read of `topo`; the caller must hold ncclCommsMutex so that `topo` stays alive for the call.
 static void rasDiagnosticsPathsUsage(struct ncclTopoSystem* topo, int rank, int nRanks,
-                                     struct rasDiagnosticsPathsData* paths) {
+                                     struct rasDiagnosticsPathsData* paths) { /* 中文索引·体内调用 memset、ncclTopoRankToIndex。 */
   int myGpuIdx = -1;
 
   memset(paths, 0, sizeof(*paths));
@@ -83,7 +83,7 @@ static void rasDiagnosticsPathsUsage(struct ncclTopoSystem* topo, int rank, int 
 }
 
 ncclResult_t rasDiagnosticsPathsCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                             struct rasDiagnosticsLocalData* data) {
+                                             struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、memset。 */
   ncclUniquePtr<char> records;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsPathsData));
   int nRecords = 0;
@@ -170,7 +170,7 @@ static const struct rasDiagnosticsPathsData* rasDiagnosticsPathsDataFromRecord(c
 // Appends one path type to the summary buffer as "NAME" (all ranks) or "NAME(present/total)" (partial). Returns
 // the running offset; on overflow it stops advancing so the caller-visible string stays NUL-terminated and bounded.
 static int rasDiagnosticsPathsAppendType(char* buf, size_t bufLen, int pos, bool first, int type, int nPresent,
-                                         int commNRanks) {
+                                         int commNRanks) { /* 中文索引·体内调用 snprintf。 */
   const char* name = (type == PATH_LOC) ? "self" : topoPathTypeStr[type];
 
   if (pos < 0 || (size_t)pos >= bufLen) return pos;
@@ -183,7 +183,7 @@ static int rasDiagnosticsPathsAppendType(char* buf, size_t bufLen, int pos, bool
 }
 
 ncclResult_t rasDiagnosticsPathsSummarize(const struct rasDiagnosticsContext* ctx,
-                                          const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                          const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsPathsData));

@@ -25,7 +25,7 @@ static __device__ __forceinline__ ncclSymkAlltoAllLLLineRange ncclSymkAlltoAllLL
 }
 
 static __device__ __forceinline__ ncclSymkAlltoAllLLScratchState* ncclSymkAlltoAllLLGetScratchState(
-  ncclDevComm const& comm, ncclSymkAlltoAllLLScratchHandle handle) {
+  ncclDevComm const& comm, ncclSymkAlltoAllLLScratchHandle handle) { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer。 */
   auto* state = (ncclSymkAlltoAllLLScratchState*)ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
 #if CUDART_VERSION < 13030
   // Work around some compilers passing the wrong pointer type to cuda::atomic_ref.
@@ -48,7 +48,7 @@ struct ncclSymkAlltoAllLLScratchEpoch {
 // epoch once; one lane per warp then acquires that published value. This works
 // unchanged under CUDA graph replay because the epoch lives in device memory.
 static __device__ __forceinline__ ncclSymkAlltoAllLLScratchEpoch ncclSymkAlltoAllLLOpenScratchEpoch(
-  ncclDevComm const& comm, ncclSymkAlltoAllLLScratchHandle handle) {
+  ncclDevComm const& comm, ncclSymkAlltoAllLLScratchHandle handle) { /* 中文索引·体内调用 ncclSymkAlltoAllLLGetScratchState、atomicCAS。 */
   using nccl::utility::atomicLoad;
   using nccl::utility::atomicStore;
   using nccl::utility::testAbort;
@@ -85,7 +85,7 @@ static __device__ __forceinline__ ncclSymkAlltoAllLLScratchEpoch ncclSymkAlltoAl
           scratchLocal + sendOffset};
 }
 
-static __device__ __forceinline__ int ncclSymkAlltoAllLLPeerForOffset(ncclTeam team, int peerOffset, bool sendNotRecv) {
+static __device__ __forceinline__ int ncclSymkAlltoAllLLPeerForOffset(ncclTeam team, int peerOffset, bool sendNotRecv) { /* 中文索引·体内调用 unsigned。 */
   int sign = sendNotRecv ? 1 : -1;
   int peer = team.rank + sign * (1 + peerOffset);
   if (unsigned(team.nRanks) <= unsigned(peer)) peer += -sign * team.nRanks;
@@ -117,7 +117,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLStoreRemoteLine(ncclLLF
 // Poll one LL fifo line until both flags match, then return the interleaved
 // payload words. No separate GIN signal is needed for data readiness.
 static __device__ __forceinline__ uint64_t ncclSymkAlltoAllLLWaitLine(ncclDevComm const& comm, ncclLLFifoLine* src,
-                                                                      uint32_t flag) {
+                                                                      uint32_t flag) { /* 中文索引·体内调用 testAbort。 */
   using nccl::utility::testAbort;
   uint32_t data1, flag1, data2, flag2;
   uint32_t steps = 0;
@@ -140,7 +140,7 @@ static __device__ __forceinline__ uint64_t ncclSymkAlltoAllLLWaitLine(ncclDevCom
 }
 
 static __device__ __forceinline__ void ncclSymkAlltoAllLLResetReceivePlane(char* receivePlane, size_t planeBytes,
-                                                                           int workBlock, int totalBlocks) {
+                                                                           int workBlock, int totalBlocks) { /* 中文索引·体内调用 ncclSymkAlltoAllLLPartition。 */
   ncclSymkAlltoAllLLLineRange range = ncclSymkAlltoAllLLPartition(planeBytes / sizeof(uint4), totalBlocks, workBlock);
   uint4* lines = (uint4*)receivePlane;
   for (size_t line = range.begin + threadIdx.x; line < range.end; line += blockDim.x) {
@@ -149,7 +149,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLResetReceivePlane(char*
 }
 
 static __device__ __forceinline__ void ncclSymkAlltoAllLLWaitForValue(ncclDevComm const& comm, uint32_t* value,
-                                                                      uint32_t expected) {
+                                                                      uint32_t expected) { /* 中文索引·体内调用 atomicLoad、testAbort。 */
   using nccl::utility::atomicLoad;
   using nccl::utility::testAbort;
 
@@ -165,7 +165,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLWaitForValue(ncclDevCom
 // path; payload puts have already been consumed, so the barrier needs no GIN
 // visibility fence.
 static __device__ __forceinline__ void ncclSymkAlltoAllLLRolloverBarrier(ncclSymkArgsHandler const& handler,
-                                                                         ncclCoopCta cta) {
+                                                                         ncclCoopCta cta) { /* 中文索引·体内调用 ncclTeamLsa、ncclTeamTagLsa。 */
   if (handler.comm.nRanks == ncclTeamLsa(handler.comm).nRanks) {
     ncclLsaBarrierSession<ncclCoopCta> barrier(cta, handler.comm, ncclTeamTagLsa(), /*index=*/0);
     barrier.sync(cta, cuda::memory_order_acq_rel);
@@ -178,7 +178,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLRolloverBarrier(ncclSym
 
 static __device__ __forceinline__ void ncclSymkAlltoAllLLEndScratchEpoch(
   ncclSymkArgsHandler const& handler, ncclCoopCta cta, ncclSymkAlltoAllLLScratchEpoch const& scratch, size_t planeBytes,
-  int workBlock, int totalBlocks) {
+  int workBlock, int totalBlocks) { /* 中文索引·体内调用 cta.sync、__builtin_expect。 */
   using nccl::utility::atomicStore;
 
   cta.sync();
@@ -268,7 +268,7 @@ static __device__ __forceinline__ ncclSymkAlltoAllLLChunk ncclSymkAlltoAllLLGetC
 static __device__ __forceinline__ void ncclSymkAlltoAllLLSendGinChunk(
   ncclSymkArgsHandler const& handler, ncclTeam world, ncclTeam lsa, ncclSymkAlltoAllLLScratchEpoch const& scratch,
   size_t chunkIndex, int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer, size_t globalWarp,
-  ncclSymPtr<char> input) {
+  ncclSymPtr<char> input) { /* 中文索引·体内调用 ncclSymkAlltoAllLLGetChunk、ncclSymkAlltoAllLLRemotePeer。 */
   int lane = (int)threadIdx.x % WARP_SIZE;
   int lsaPeerCount = lsa.nRanks > 1 ? lsa.nRanks - 1 : 0;
   ncclSymkAlltoAllLLChunk chunk =
@@ -310,7 +310,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLSendGinChunk(
 // directly to the destination GPU over NVLink.
 static __device__ __forceinline__ void ncclSymkAlltoAllLLSendLsaChunk(
   ncclSymkArgsHandler const& handler, ncclTeam lsa, ncclSymkAlltoAllLLScratchEpoch const& scratch, size_t chunkIndex,
-  int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer, ncclSymPtr<char> input) {
+  int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer, ncclSymPtr<char> input) { /* 中文索引·体内调用 ncclSymkAlltoAllLLGetChunk、ncclSymkAlltoAllLLPeerForOffset。 */
   int lane = (int)threadIdx.x % WARP_SIZE;
   ncclSymkAlltoAllLLChunk chunk =
     ncclSymkAlltoAllLLGetChunk(chunkIndex, /*canonicalPeerBase=*/0, linesPerPeer, chunksPerPeer, linesPerWarp);
@@ -335,7 +335,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLSendLsaChunk(
 
 static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveChunk(
   ncclSymkArgsHandler const& handler, ncclSymkAlltoAllLLScratchEpoch const& scratch,
-  ncclSymkAlltoAllLLChunk const& chunk, int receiveWorldRank, size_t bytesPerPeer, ncclSymPtr<char> output) {
+  ncclSymkAlltoAllLLChunk const& chunk, int receiveWorldRank, size_t bytesPerPeer, ncclSymPtr<char> output) { /* 中文索引·体内调用 output.localPtr、ncclSymkAlltoAllLLWaitLine。 */
   int lane = (int)threadIdx.x % WARP_SIZE;
   size_t firstPayloadOffset = (size_t)chunk.firstPeerLine * ncclSymkAlltoAllLLPayloadBytesPerLine;
   ncclLLFifoLine* receiveScratchBase = (ncclLLFifoLine*)scratch.receivePlaneLocal + chunk.firstGlobalLine;
@@ -356,7 +356,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveChunk(
 static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveGinChunk(
   ncclSymkArgsHandler const& handler, ncclTeam world, ncclTeam lsa, ncclSymkAlltoAllLLScratchEpoch const& scratch,
   size_t chunkIndex, int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer,
-  ncclSymPtr<char> output) {
+  ncclSymPtr<char> output) { /* 中文索引·体内调用 ncclSymkAlltoAllLLGetChunk、ncclSymkAlltoAllLLRemotePeer。 */
   int lsaPeerCount = lsa.nRanks > 1 ? lsa.nRanks - 1 : 0;
   ncclSymkAlltoAllLLChunk chunk =
     ncclSymkAlltoAllLLGetChunk(chunkIndex, lsaPeerCount, linesPerPeer, chunksPerPeer, linesPerWarp);
@@ -367,7 +367,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveGinChunk(
 
 static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveLsaChunk(
   ncclSymkArgsHandler const& handler, ncclTeam lsa, ncclSymkAlltoAllLLScratchEpoch const& scratch, size_t chunkIndex,
-  int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer, ncclSymPtr<char> output) {
+  int linesPerPeer, int chunksPerPeer, int linesPerWarp, size_t bytesPerPeer, ncclSymPtr<char> output) { /* 中文索引·体内调用 ncclSymkAlltoAllLLGetChunk、ncclSymkAlltoAllLLPeerForOffset。 */
   ncclSymkAlltoAllLLChunk chunk =
     ncclSymkAlltoAllLLGetChunk(chunkIndex, /*canonicalPeerBase=*/0, linesPerPeer, chunksPerPeer, linesPerWarp);
   int receiveLsaRank = ncclSymkAlltoAllLLPeerForOffset(lsa, chunk.peerOffset, /*sendNotRecv=*/false);
@@ -379,7 +379,7 @@ static __device__ __forceinline__ void ncclSymkAlltoAllLLReceiveLsaChunk(
 // or acknowledgements: the full expanded image must fit scratch. Grid and world
 // rendezvous are confined to the rare LL-flag rollover cleanup.
 template <bool EnableProfiler>
-__device__ __forceinline__ void ncclSymkRun_AlltoAll_LL(struct ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AlltoAll_LL(struct ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclTeamWorld、ncclTeamLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclTeam world = ncclTeamWorld(handler.comm);
   ncclTeam lsa = ncclTeamLsa(handler.comm);

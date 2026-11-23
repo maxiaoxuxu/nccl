@@ -31,23 +31,23 @@ static ncclResult_t collNetListen(struct ncclComm* comm, int dev, void* handle, 
   return ncclSuccess;
 }
 static ncclResult_t collNetConnect(struct ncclComm* comm, void* handles[], int nranks, int rank, void* listenComm,
-                                   void** collComm) {
+                                   void** collComm) { /* 中文索引·体内调用 comm->ncclCollNet->connect。 */
   NCCLCHECK(comm->ncclCollNet->connect(handles, nranks, rank, listenComm, collComm));
   return ncclSuccess;
 }
 static ncclResult_t collNetReduceSupport(struct ncclComm* comm, ncclDataType_t dataType, ncclRedOp_t redOp,
-                                         int* supported) {
+                                         int* supported) { /* 中文索引·体内调用 comm->ncclCollNet->reduceSupport。 */
   NCCLCHECK(comm->ncclCollNet->reduceSupport(dataType, redOp, supported));
   return ncclSuccess;
 }
 static ncclResult_t collNetRegMr(struct ncclComm* comm, void* collComm, void* data, size_t size, int type,
-                                 void** mhandle) {
+                                 void** mhandle) { /* 中文索引·体内调用 comm->ncclCollNet->regMr。 */
   NCCLCHECK(comm->ncclCollNet->regMr(collComm, data, size, type, mhandle));
   return ncclSuccess;
 }
 /* DMA-BUF support */
 static ncclResult_t collNetRegMrDmaBuf(struct ncclComm* comm, void* collComm, void* data, size_t size, int type,
-                                       uint64_t offset, int fd, void** mhandle) {
+                                       uint64_t offset, int fd, void** mhandle) { /* 中文索引·体内调用 comm->ncclCollNet->regMrDmaBuf。 */
   NCCLCHECK(comm->ncclCollNet->regMrDmaBuf(collComm, data, size, type, offset, fd, mhandle));
   return ncclSuccess;
 }
@@ -57,13 +57,13 @@ static ncclResult_t collNetDeregMr(struct ncclComm* comm, void* collComm, void* 
 }
 static ncclResult_t collNetIallreduce(struct ncclComm* comm, void* collComm, void* sendData, void* recvData, int count,
                                       ncclDataType_t dataType, ncclRedOp_t redOp, void* sendMhandle, void* recvMhandle,
-                                      void** request) {
+                                      void** request) { /* 中文索引·体内调用 comm->ncclCollNet->iallreduce。 */
   NCCLCHECK(comm->ncclCollNet->iallreduce(collComm, sendData, recvData, count, dataType, redOp, sendMhandle,
                                           recvMhandle, request));
   return ncclSuccess;
 }
 static ncclResult_t collNetIflush(struct ncclComm* comm, void* collComm, void* data, int size, void* mhandle,
-                                  void** request) {
+                                  void** request) { /* 中文索引·体内调用 comm->ncclCollNet->iflush。 */
   NCCLCHECK(comm->ncclCollNet->iflush(collComm, data, size, mhandle, request));
   return ncclSuccess;
 }

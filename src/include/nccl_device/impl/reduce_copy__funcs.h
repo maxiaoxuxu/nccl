@@ -112,7 +112,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSumMultimemCopy(Coop coop, SrcLambda s
 
 // [ID 3.1] LSA ReduceSum: N sources -> 1 local destination (lambda-based)
 template <typename T, typename Coop, typename SrcLambda, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, SrcLambda srcLambda, int nSrc, T* dstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, SrcLambda srcLambda, int nSrc, T* dstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dstPtr; };
   constexpr int nDst = 1;  // Reduce has single destination
   ncclLsaReduceSumLsaCopy<T, Coop, SrcLambda, decltype(dstLambda), IntCount, UNROLL>(coop, srcLambda, nSrc, dstLambda,
@@ -121,7 +121,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, SrcLambda srcLambda, int nSr
 
 // [ID 3.2a] LSA ReduceSum: N sources from team -> 1 local destination (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, ncclSymPtr<T> src, T* dstPtr, IntCount count, ncclTeam team) {
+NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, ncclSymPtr<T> src, T* dstPtr, IntCount count, ncclTeam team) { /* 中文索引·体内调用 __device__、srcLambda。 */
   // Create lambda: N sources from team
   auto srcLambda = [=] __device__(int i) -> T* { return src.peerPtr(team, i); };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dstPtr; };
@@ -144,7 +144,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, ncclSymPtr<T> src, T* dstPtr
 // [ID 3.2b] LSA ReduceSum: N sources from devComm -> 1 local destination (with ncclDevComm_t)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, ncclSymPtr<T> src, T* dstPtr, IntCount count,
-                                         ncclDevComm_t devComm) {
+                                         ncclDevComm_t devComm) { /* 中文索引·体内调用 ncclTeamLsa。 */
   // Extract team from devComm
   ncclTeam team = ncclTeamLsa(devComm);
 
@@ -174,7 +174,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSum(Coop coop, ncclWindow_t window, size_t 
 // [ID 3.3a] Multimem ReduceSum: 1 multimem source -> 1 local destination (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclMultimemReduceSum(Coop coop, ncclSymPtr<T> src, T* dstPtr, IntCount count,
-                                              ncclMultimemHandle multimemHandle) {
+                                              ncclMultimemHandle multimemHandle) { /* 中文索引·体内调用 __device__。 */
   // Create lambdas for 1 source and 1 destination
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return src.multimemPtr(multimemHandle); };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dstPtr; };
@@ -188,7 +188,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSum(Coop coop, ncclSymPtr<T> src, T* d
 
 // [ID 3.3b] Multimem ReduceSum: 1 multimem source -> 1 local destination (with raw pointer)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclMultimemReduceSum(Coop coop, T* mcSrcPtr, T* dstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclMultimemReduceSum(Coop coop, T* mcSrcPtr, T* dstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   // Create lambdas for 1 source and 1 destination
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return mcSrcPtr; };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dstPtr; };
@@ -212,7 +212,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSum(Coop coop, ncclWindow_t window, si
 
 // [ID 3.4] Local ReduceSum: N local chunks -> 1 local destination (lambda-based)
 template <typename T, typename Coop, typename SrcLambda, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, SrcLambda srcLambda, int nSrc, T* dstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, SrcLambda srcLambda, int nSrc, T* dstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dstPtr; };
   constexpr int nDst = 1;  // Reduce has single destination
   ncclLsaReduceSumLsaCopy<T, Coop, SrcLambda, decltype(dstLambda), IntCount, UNROLL>(coop, srcLambda, nSrc, dstLambda,
@@ -221,7 +221,7 @@ NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, SrcLambda srcLambda, int n
 
 // [ID 3.5] Local ReduceSum: reduce n chunks separated by displacement
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, int nSrc, T* basePtr, size_t displ, T* dstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, int nSrc, T* basePtr, size_t displ, T* dstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   // Fast alignment computation for strided addressing with fallback
   IntCount alignOffset;
   int maxPackBytes;
@@ -243,7 +243,7 @@ NCCL_DEVICE_INLINE void ncclLocalReduceSum(Coop coop, int nSrc, T* basePtr, size
 
 // [ID 4.1] Lambda-based version
 template <typename T, typename Coop, typename DstLambda, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   constexpr int nSrc = 1;  // Copy has single source
   ncclLsaReduceSumLsaCopy<T, Coop, decltype(srcLambda), DstLambda, IntCount, UNROLL>(coop, srcLambda, nSrc, dstLambda,
@@ -252,7 +252,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, DstLambda dstLambda, i
 
 // [ID 4.2a] LSA Copy: 1 local source -> N destinations (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclTeam team) {
+NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclTeam team) { /* 中文索引·体内调用 __device__、srcLambda。 */
   // Create lambda: N destinations to team
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   auto dstLambda = [=] __device__(int i) -> T* { return dst.peerPtr(team, i); };
@@ -274,7 +274,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, Int
 
 // [ID 4.2b] LSA Copy: 1 local source -> N destinations (with ncclDevComm_t)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclDevComm_t devComm) {
+NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclDevComm_t devComm) { /* 中文索引·体内调用 ncclTeamLsa。 */
   // Extract team from devComm
   ncclTeam team = ncclTeamLsa(devComm);
 
@@ -304,7 +304,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopy(Coop coop, T* srcPtr, ncclWindow_t window, s
 // [ID 4.1T] LSA TMA Copy: 1 local source -> N destinations (with custom dstLambda calculation)
 template <typename T, typename Coop, typename DstLambda, typename IntCount>
 NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count,
-                                       char* smemPtr, int smemBytesTotal) {
+                                       char* smemPtr, int smemBytesTotal) { /* 中文索引·体内调用 coop.thread_rank、assert。 */
   static_assert(std::is_same<Coop, ncclCoopThread>::value || std::is_same<Coop, ncclCoopWarp>::value ||
                   std::is_same<Coop, ncclCoopCta>::value,
                 "ncclLsaCopyTma requires Thread, Warp, or CTA");
@@ -340,7 +340,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, DstLambda dstLambda
 // [ID 4.2Ta] LSA TMA Copy: 1 local source -> N destinations (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount>
 NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclTeam team,
-                                       char* smemPtr, int smemBytesTotal) {
+                                       char* smemPtr, int smemBytesTotal) { /* 中文索引·体内调用 coop.thread_rank、assert。 */
   static_assert(std::is_same<Coop, ncclCoopThread>::value || std::is_same<Coop, ncclCoopWarp>::value ||
                   std::is_same<Coop, ncclCoopCta>::value,
                 "ncclLsaCopyTma requires Thread, Warp, or CTA");
@@ -379,7 +379,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, ncclSymPtr<T> dst, 
 // [ID 4.2Tb] LSA TMA Copy: 1 local source -> N destinations (with ncclDevComm_t)
 template <typename T, typename Coop, typename IntCount>
 NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count, ncclDevComm_t devComm,
-                                       char* smemPtr, int smemBytesTotal) {
+                                       char* smemPtr, int smemBytesTotal) { /* 中文索引·体内调用 ncclTeamLsa。 */
   ncclTeam team = ncclTeamLsa(devComm);
 
   ncclLsaCopyTma<T, Coop, IntCount>(coop, srcPtr, dst, count, team, smemPtr, smemBytesTotal);
@@ -406,7 +406,7 @@ NCCL_DEVICE_INLINE void ncclLsaCopyTma(Coop coop, T* srcPtr, ncclWindow_t window
 // [ID 4.3a] Multimem Copy: 1 local source -> 1 multimem destination (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclMultimemCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst, IntCount count,
-                                         ncclMultimemHandle multimemHandle) {
+                                         ncclMultimemHandle multimemHandle) { /* 中文索引·体内调用 __device__。 */
   // Create lambdas for 1 source and 1 destination
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dst.multimemPtr(multimemHandle); };
@@ -420,7 +420,7 @@ NCCL_DEVICE_INLINE void ncclMultimemCopy(Coop coop, T* srcPtr, ncclSymPtr<T> dst
 
 // [ID 4.3b] Multimem Copy: 1 local source -> 1 multimem destination (with raw pointer)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclMultimemCopy(Coop coop, T* srcPtr, T* mcDstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclMultimemCopy(Coop coop, T* srcPtr, T* mcDstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   // Create lambdas for 1 source and 1 destination
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return mcDstPtr; };
@@ -444,7 +444,7 @@ NCCL_DEVICE_INLINE void ncclMultimemCopy(Coop coop, T* srcPtr, ncclWindow_t wind
 
 // [ID 4.4] Local Copy: 1 source -> N local destinations (lambda-based)
 template <typename T, typename Coop, typename DstLambda, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   constexpr int nSrc = 1;  // Copy has single source
   ncclLsaReduceSumLsaCopy<T, Coop, decltype(srcLambda), DstLambda, IntCount, UNROLL>(coop, srcLambda, nSrc, dstLambda,
@@ -453,7 +453,7 @@ NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, DstLambda dstLambda,
 
 // [ID 4.5] Local Copy: copy to n chunks separated by displacement
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, int nDst, T* basePtr, size_t displ, IntCount count) {
+NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, int nDst, T* basePtr, size_t displ, IntCount count) { /* 中文索引·体内调用 __device__。 */
   // Create lambda: n local destinations separated by displ
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return srcPtr; };
   auto dstLambda = [=] __device__(int i) -> T* { return basePtr + i * displ; };
@@ -474,7 +474,7 @@ NCCL_DEVICE_INLINE void ncclLocalCopy(Coop coop, T* srcPtr, int nDst, T* basePtr
 // [ID 5.1a] LSA ReduceSumCopy: same team for src and dst (most common case)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclSymPtr<T> dst, IntCount count,
-                                             ncclTeam team) {
+                                             ncclTeam team) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int i) -> T* { return src.peerPtr(team, i); };
   auto dstLambda = [=] __device__(int i) -> T* { return dst.peerPtr(team, i); };
 
@@ -495,7 +495,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclS
 // [ID 5.1b] LSA ReduceSumCopy: with ncclDevComm_t (extract team)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclSymPtr<T> dst, IntCount count,
-                                             ncclDevComm_t devComm) {
+                                             ncclDevComm_t devComm) { /* 中文索引·体内调用 ncclTeamLsa。 */
   ncclTeam team = ncclTeamLsa(devComm);
   ncclLsaReduceSumCopy<T, Coop, IntCount, UNROLL>(coop, src, dst, count, team);
 }
@@ -524,7 +524,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclWindow_t srcWindow, 
 // [ID 5.1e] LSA ReduceSumCopy: different teams for src and dst (advanced use case)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclTeam srcTeam, ncclSymPtr<T> dst,
-                                             ncclTeam dstTeam, IntCount count) {
+                                             ncclTeam dstTeam, IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int i) -> T* { return src.peerPtr(srcTeam, i); };
   auto dstLambda = [=] __device__(int i) -> T* { return dst.peerPtr(dstTeam, i); };
 
@@ -546,7 +546,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclT
 // [ID 5.2a] Multimem ReduceSumCopy (with ncclSymPtr)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclMultimemReduceSumCopy(Coop coop, ncclSymPtr<T> src, ncclMultimemHandle srcHandle,
-                                                  ncclSymPtr<T> dst, ncclMultimemHandle dstHandle, IntCount count) {
+                                                  ncclSymPtr<T> dst, ncclMultimemHandle dstHandle, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return src.multimemPtr(srcHandle); };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dst.multimemPtr(dstHandle); };
 
@@ -559,7 +559,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSumCopy(Coop coop, ncclSymPtr<T> src, 
 
 // [ID 5.2b] Multimem ReduceSumCopy (with raw pointers)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
-NCCL_DEVICE_INLINE void ncclMultimemReduceSumCopy(Coop coop, T* mcSrcPtr, T* mcDstPtr, IntCount count) {
+NCCL_DEVICE_INLINE void ncclMultimemReduceSumCopy(Coop coop, T* mcSrcPtr, T* mcDstPtr, IntCount count) { /* 中文索引·体内调用 __device__。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return mcSrcPtr; };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return mcDstPtr; };
 
@@ -585,7 +585,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSumCopy(Coop coop, ncclWindow_t srcWin
 // [ID 5.3a] LSA source -> Multimem destination
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSumMultimemCopy(Coop coop, ncclSymPtr<T> src, ncclTeam srcTeam, ncclSymPtr<T> dst,
-                                                     ncclMultimemHandle dstHandle, IntCount count) {
+                                                     ncclMultimemHandle dstHandle, IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int i) -> T* { return src.peerPtr(srcTeam, i); };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return dst.multimemPtr(dstHandle); };
 
@@ -608,7 +608,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSumMultimemCopy(Coop coop, ncclSymPtr<T> sr
 // [ID 5.3b] LSA source -> Multimem destination (with raw dst pointer)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLsaReduceSumMultimemCopy(Coop coop, ncclSymPtr<T> src, ncclTeam srcTeam, T* mcDstPtr,
-                                                     IntCount count) {
+                                                     IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int i) -> T* { return src.peerPtr(srcTeam, i); };
   auto dstLambda = [=] __device__(int /*ignored*/) -> T* { return mcDstPtr; };
 
@@ -631,7 +631,7 @@ NCCL_DEVICE_INLINE void ncclLsaReduceSumMultimemCopy(Coop coop, ncclSymPtr<T> sr
 // [ID 5.3c] Multimem source -> LSA destination
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclMultimemReduceSumLsaCopy(Coop coop, ncclSymPtr<T> src, ncclMultimemHandle srcHandle,
-                                                     ncclSymPtr<T> dst, ncclTeam dstTeam, IntCount count) {
+                                                     ncclSymPtr<T> dst, ncclTeam dstTeam, IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return src.multimemPtr(srcHandle); };
   auto dstLambda = [=] __device__(int i) -> T* { return dst.peerPtr(dstTeam, i); };
 
@@ -654,7 +654,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSumLsaCopy(Coop coop, ncclSymPtr<T> sr
 // [ID 5.3d] Multimem source -> LSA destination (with raw src pointer)
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclMultimemReduceSumLsaCopy(Coop coop, T* mcSrcPtr, ncclSymPtr<T> dst, ncclTeam dstTeam,
-                                                     IntCount count) {
+                                                     IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   auto srcLambda = [=] __device__(int /*ignored*/) -> T* { return mcSrcPtr; };
   auto dstLambda = [=] __device__(int i) -> T* { return dst.peerPtr(dstTeam, i); };
 
@@ -677,7 +677,7 @@ NCCL_DEVICE_INLINE void ncclMultimemReduceSumLsaCopy(Coop coop, T* mcSrcPtr, ncc
 // [ID 5.4] Local ReduceSumCopy: N local sources -> M local destinations
 template <typename T, typename Coop, typename IntCount, int UNROLL>
 NCCL_DEVICE_INLINE void ncclLocalReduceSumCopy(Coop coop, int nSrc, T* srcBasePtr, size_t srcDispl, int nDst,
-                                               T* dstBasePtr, size_t dstDispl, IntCount count) {
+                                               T* dstBasePtr, size_t dstDispl, IntCount count) { /* 中文索引·体内调用 __device__。 */
   // Fast alignment computation for strided addressing with fallback
   IntCount alignOffset = count;
   int maxPackBytes = static_cast<int>(sizeof(T));  // Default to scalar if nothing works

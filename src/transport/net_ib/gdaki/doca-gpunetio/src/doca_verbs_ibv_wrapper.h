@@ -359,7 +359,7 @@ extern "C" {
 /* *********** Direct Implementation (when wrapper not used) *********** */
 
 static inline doca_error_t doca_verbs_wrapper_ibv_get_device_list(
-    int *num_devices, struct ibv_device ***device_list) {
+    int *num_devices, struct ibv_device ***device_list) { /* 中文索引·体内调用 ibv_get_device_list。 */
     *device_list = ibv_get_device_list(num_devices);
     return (*device_list != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -370,13 +370,13 @@ static inline doca_error_t doca_verbs_wrapper_ibv_free_device_list(struct ibv_de
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_get_device_name(struct ibv_device *device,
-                                                                  const char **device_name) {
+                                                                  const char **device_name) { /* 中文索引·体内调用 ibv_get_device_name。 */
     *device_name = ibv_get_device_name(device);
     return (*device_name != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_open_device(struct ibv_device *device,
-                                                              struct ibv_context **context) {
+                                                              struct ibv_context **context) { /* 中文索引·体内调用 ibv_open_device。 */
     *context = ibv_open_device(device);
     return (*context != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -387,7 +387,7 @@ static inline doca_error_t doca_verbs_wrapper_ibv_close_device(struct ibv_contex
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_alloc_pd(struct ibv_context *context,
-                                                           struct ibv_pd **pd) {
+                                                           struct ibv_pd **pd) { /* 中文索引·体内调用 ibv_alloc_pd。 */
     *pd = ibv_alloc_pd(context);
     return (*pd != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -399,7 +399,7 @@ static inline doca_error_t doca_verbs_wrapper_ibv_dealloc_pd(struct ibv_pd *pd) 
 
 static inline doca_error_t doca_verbs_wrapper_ibv_reg_mr(struct ibv_pd *pd, void *addr,
                                                          size_t length, int access,
-                                                         struct ibv_mr **mr) {
+                                                         struct ibv_mr **mr) { /* 中文索引·体内调用 ibv_reg_mr。 */
     *mr = ibv_reg_mr(pd, addr, length, access);
     return (*mr != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -410,28 +410,28 @@ static inline doca_error_t doca_verbs_wrapper_ibv_dereg_mr(struct ibv_mr *mr) {
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_query_device(
-    struct ibv_context *context, struct ibv_device_attr *device_attr) {
+    struct ibv_context *context, struct ibv_device_attr *device_attr) { /* 中文索引·体内调用 ibv_query_device。 */
     int ret = ibv_query_device(context, device_attr);
     return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_query_port(struct ibv_context *context,
                                                              uint8_t port_num,
-                                                             struct ibv_port_attr *port_attr) {
+                                                             struct ibv_port_attr *port_attr) { /* 中文索引·体内调用 ibv_query_port。 */
     int ret = ibv_query_port(context, port_num, port_attr);
     return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_query_gid(struct ibv_context *context,
                                                             uint8_t port_num, int index,
-                                                            union ibv_gid *gid) {
+                                                            union ibv_gid *gid) { /* 中文索引·体内调用 ibv_query_gid。 */
     int ret = ibv_query_gid(context, port_num, index, gid);
     return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_create_ah(struct ibv_pd *pd,
                                                             struct ibv_ah_attr *attr,
-                                                            struct ibv_ah **ah) {
+                                                            struct ibv_ah **ah) { /* 中文索引·体内调用 ibv_create_ah。 */
     *ah = ibv_create_ah(pd, attr);
     return (*ah != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -444,7 +444,7 @@ static inline doca_error_t doca_verbs_wrapper_ibv_destroy_ah(struct ibv_ah *ah) 
 static inline doca_error_t doca_verbs_wrapper_ibv_create_cq(struct ibv_context *context, int cqe,
                                                             void *cq_context,
                                                             struct ibv_comp_channel *channel,
-                                                            int comp_vector, struct ibv_cq **cq) {
+                                                            int comp_vector, struct ibv_cq **cq) { /* 中文索引·体内调用 ibv_create_cq。 */
     *cq = ibv_create_cq(context, cqe, cq_context, channel, comp_vector);
     return (*cq != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -455,7 +455,7 @@ static inline doca_error_t doca_verbs_wrapper_ibv_destroy_cq(struct ibv_cq *cq) 
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_create_srq(
-    struct ibv_pd *pd, struct ibv_srq_init_attr *srq_init_attr, struct ibv_srq **srq) {
+    struct ibv_pd *pd, struct ibv_srq_init_attr *srq_init_attr, struct ibv_srq **srq) { /* 中文索引·体内调用 ibv_create_srq。 */
     *srq = ibv_create_srq(pd, srq_init_attr);
     return (*srq != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -467,7 +467,7 @@ static inline doca_error_t doca_verbs_wrapper_ibv_destroy_srq(struct ibv_srq *sr
 
 static inline doca_error_t doca_verbs_wrapper_ibv_create_qp(struct ibv_pd *pd,
                                                             struct ibv_qp_init_attr *qp_init_attr,
-                                                            struct ibv_qp **qp) {
+                                                            struct ibv_qp **qp) { /* 中文索引·体内调用 ibv_create_qp。 */
     *qp = ibv_create_qp(pd, qp_init_attr);
     return (*qp != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
@@ -479,14 +479,14 @@ static inline doca_error_t doca_verbs_wrapper_ibv_destroy_qp(struct ibv_qp *qp) 
 
 static inline doca_error_t doca_verbs_wrapper_ibv_modify_qp(struct ibv_qp *qp,
                                                             struct ibv_qp_attr *attr,
-                                                            int attr_mask) {
+                                                            int attr_mask) { /* 中文索引·体内调用 ibv_modify_qp。 */
     int ret = ibv_modify_qp(qp, attr, attr_mask);
     return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
 static inline doca_error_t doca_verbs_wrapper_ibv_query_qp(struct ibv_qp *qp,
                                                            struct ibv_qp_attr *attr, int attr_mask,
-                                                           struct ibv_qp_init_attr *init_attr) {
+                                                           struct ibv_qp_init_attr *init_attr) { /* 中文索引·体内调用 ibv_query_qp。 */
     int ret = ibv_query_qp(qp, attr, attr_mask, init_attr);
     return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }

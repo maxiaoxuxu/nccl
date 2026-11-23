@@ -105,7 +105,7 @@ NCCL_PARAM(LegacyCudaRegister, "LEGACY_CUDA_REGISTER", 0);
 #define NCCL_P2P_MAX_PHYSICAL_SEGMENTS 8192
 
 /* Convert a PCI busId string into a local cudaDev device index (cf. CUDA_VISIBLE_DEVICES) */
-static int busIdToCudaDev(int64_t busId) {
+static int busIdToCudaDev(int64_t busId) { /* 中文索引·体内调用 cudaGetDeviceCount、cudaDeviceGetPCIBusId。 */
   int ndev;
   if (!CUDASUCCESS(cudaGetDeviceCount(&ndev))) return -1;
   for (int i = 0; i < ndev; i++) {
@@ -128,7 +128,7 @@ extern int64_t ncclParamMNNVLEnable();
 
 /* Determine if two peers can communicate through p2p */
 ncclResult_t p2pCanConnect(int* ret, struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* info1,
-                           struct ncclPeerInfo* info2) {
+                           struct ncclPeerInfo* info2) { /* 中文索引·体内调用 initCeOperation、ncclTopoCheckP2p。 */
   initCeOperation();
 
   // Check topology / p2p level.
@@ -223,7 +223,7 @@ ncclResult_t p2pCanConnect(int* ret, struct ncclComm* comm, struct ncclTopoGraph
 // cuMem API support
 ncclResult_t ncclP2pAllocateShareableBuffer(size_t size, int refcount, ncclIpcDesc* ipcDesc, void** ptr, int peerRank,
                                             struct ncclMemManager* manager, ncclMemType_t memtype,
-                                            bool skipLegacyIpcExport) {
+                                            bool skipLegacyIpcExport) { /* 中文索引·体内调用 ncclCuMemEnable、ncclCuMemAlloc。 */
   if (ncclCuMemEnable()) {
 #if CUDART_VERSION >= 11030
     CUmemAllocationHandleType type = ncclCuMemHandleType;
@@ -271,7 +271,7 @@ ncclResult_t ncclP2pFreeShareableBuffer(ncclIpcDesc* ipcDesc) {
 }
 
 ncclResult_t ncclP2pImportShareableBuffer(struct ncclComm* comm, int peer, size_t size, ncclIpcDesc* ipcDesc,
-                                          void** devMemPtr, void* ownerPtr, ncclMemType_t memType) {
+                                          void** devMemPtr, void* ownerPtr, ncclMemType_t memType) { /* 中文索引·体内调用 ncclCuMemEnable、cuMemGetAllocationGranularity。 */
   if (ncclCuMemEnable()) {
 #if CUDART_VERSION >= 11030
     // cuMem API support
@@ -344,7 +344,7 @@ NCCL_PARAM(P2pDirectDisable, "P2P_DIRECT_DISABLE", 0);
   ((MYINFO->hostHash == PEERINFO->hostHash) && (MYINFO->pidHash == PEERINFO->pidHash))
 
 static ncclResult_t p2pGetInfo(struct ncclComm* comm, struct ncclPeerInfo* info1, struct ncclPeerInfo* info2, int* read,
-                               int* intermediateRank) {
+                               int* intermediateRank) { /* 中文索引·体内调用 ncclTopoCheckP2p、ncclParamP2pReadEnable。 */
   int p2p;
   // Queries the topology to see if the GPUs are Ampere and
   // connected via NVLink, if so we enable P2P Read by default
@@ -356,7 +356,7 @@ static ncclResult_t p2pGetInfo(struct ncclComm* comm, struct ncclPeerInfo* info1
 }
 
 static ncclResult_t p2pMap(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, struct ncclPeerInfo* myInfo,
-                           struct ncclPeerInfo* peerInfo, struct ncclP2pBuff* p2pBuff, void** devMem, void** ipcPtr) {
+                           struct ncclPeerInfo* peerInfo, struct ncclP2pBuff* p2pBuff, void** devMem, void** ipcPtr) { /* 中文索引·体内调用 ncclCuMemEnable、cudaDeviceEnablePeerAccess。 */
   if (P2P_SAME_PID(myInfo, peerInfo)) {
     if (peerInfo->cudaDev != myInfo->cudaDev) {
       // Same PID different GPUs, enable P2P access
@@ -402,7 +402,7 @@ static ncclResult_t p2pMap(struct ncclComm* comm, struct ncclProxyConnector* pro
 /* Send: Create and return connect structures for this peer to connect to me */
 ncclResult_t p2pSendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                           struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo, struct ncclConnector* send,
-                          int channelId, int connIndex) {
+                          int channelId, int connIndex) { /* 中文索引·体内调用 ncclCalloc、p2pGetInfo。 */
   struct p2pResources* resources;
   struct ncclP2pRequest req;
   NCCLCHECK(ncclCalloc(&resources, 1));
@@ -484,7 +484,7 @@ ncclResult_t p2pSendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, st
 /* Create and return connect structures for this peer to connect to me */
 ncclResult_t p2pRecvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                           struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo, struct ncclConnector* recv,
-                          int channelId, int connIndex) {
+                          int channelId, int connIndex) { /* 中文索引·体内调用 ncclCalloc、p2pGetInfo。 */
   struct p2pResources* resources;
   struct ncclP2pRequest req;
   NCCLCHECK(ncclCalloc(&resources, 1));
@@ -550,7 +550,7 @@ ncclResult_t p2pRecvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, st
 
 /* Connect/Send to this peer */
 static ncclResult_t p2pSendConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                                   struct ncclConnector* send) {
+                                   struct ncclConnector* send) { /* 中文索引·体内调用 p2pMap、ncclProxyCallBlocking。 */
   struct p2pResources* resources = (struct p2pResources*)send->transportResources;
   struct ncclRecvMem* remDevMem = NULL;
   struct p2pConnectInfo* info = (struct p2pConnectInfo*)connectInfo;
@@ -593,7 +593,7 @@ static ncclResult_t p2pSendConnect(struct ncclComm* comm, struct ncclConnect* co
 
 /* Connect/Recv from this peer */
 ncclResult_t p2pRecvConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                            struct ncclConnector* recv) {
+                            struct ncclConnector* recv) { /* 中文索引·体内调用 ncclShmImportShareableBuffer、p2pMap。 */
   struct p2pResources* resources = (struct p2pResources*)recv->transportResources;
   struct p2pConnectInfo* info = (struct p2pConnectInfo*)connectInfo;
 
@@ -633,7 +633,7 @@ ncclResult_t p2pRecvConnect(struct ncclComm* comm, struct ncclConnect* connectIn
   return ncclSuccess;
 }
 
-ncclResult_t p2pSendFree(struct ncclComm* comm, struct ncclConnector* send) {
+ncclResult_t p2pSendFree(struct ncclComm* comm, struct ncclConnector* send) { /* 中文索引·体内调用 ncclCuMemEnable、ncclCuMemFreeAddr。 */
   struct p2pResources* resources = (struct p2pResources*)send->transportResources;
   if (resources) {
     if (ncclCuMemEnable()) {
@@ -662,7 +662,7 @@ ncclResult_t p2pSendFree(struct ncclComm* comm, struct ncclConnector* send) {
   return ncclSuccess;
 }
 
-ncclResult_t p2pRecvFree(struct ncclComm* comm, struct ncclConnector* recv) {
+ncclResult_t p2pRecvFree(struct ncclComm* comm, struct ncclConnector* recv) { /* 中文索引·体内调用 ncclCuMemEnable、ncclCuMemFreeAddr。 */
   struct p2pResources* resources = (struct p2pResources*)recv->transportResources;
   if (resources) {
     if (ncclCuMemEnable()) {
@@ -695,7 +695,7 @@ ncclResult_t p2pRecvFree(struct ncclComm* comm, struct ncclConnector* recv) {
 }
 
 static ncclResult_t p2pSendProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、ncclCudaCalloc。 */
   if (useMemcpy) {
     // CE memcpy support
     struct p2pShmProxyInfo* proxyInfo;
@@ -738,7 +738,7 @@ static ncclResult_t p2pSendProxySetup(struct ncclProxyConnection* connection, st
 }
 
 static ncclResult_t p2pRecvProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclP2pAllocateShareableBuffer、ncclCuMemEnable。 */
   struct ncclP2pRequest* req = (struct ncclP2pRequest*)reqBuff;
   if (reqSize != sizeof(struct ncclP2pRequest)) return ncclInternalError;
   int size = req->size;
@@ -761,7 +761,7 @@ static ncclResult_t p2pRecvProxySetup(struct ncclProxyConnection* connection, st
 }
 
 static ncclResult_t p2pSendProxyConnect(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                        void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                        void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 cudaStreamCreateWithFlags、cudaEventCreate。 */
   struct p2pShmProxyInfo* proxyInfo = (struct p2pShmProxyInfo*)connection->transportResources;
 
   if (reqSize != sizeof(void*)) return ncclInternalError;
@@ -776,7 +776,7 @@ static ncclResult_t p2pSendProxyConnect(struct ncclProxyConnection* connection, 
 }
 
 static ncclResult_t p2pDeregisterMemHandle(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                           struct ncclIpcImpInfo* ipcInfo) {
+                                           struct ncclIpcImpInfo* ipcInfo) { /* 中文索引·体内调用 cudaIpcCloseMemHandle、ncclCuMemFreeAddr。 */
   if (ipcInfo->legacyIpcCap) {
     CUDACHECK(cudaIpcCloseMemHandle((void*)((uintptr_t)ipcInfo->rmtRegAddr - ipcInfo->offset)));
   } else {
@@ -790,7 +790,7 @@ static ncclResult_t p2pDeregisterMemHandle(struct ncclProxyConnection* connectio
   return ncclSuccess;
 }
 
-static ncclResult_t p2pSendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t p2pSendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   while (!ncclIntruQueueEmpty(&connection->proxyMemHandleQueue)) {
     struct proxyMemHandle* memHandle = ncclIntruQueueDequeue(&connection->proxyMemHandleQueue);
     p2pDeregisterMemHandle(connection, proxyState, (struct ncclIpcImpInfo*)memHandle->handle);
@@ -829,7 +829,7 @@ static ncclResult_t p2pSendProxyFree(struct ncclProxyConnection* connection, str
   return ncclSuccess;
 }
 
-static ncclResult_t p2pRecvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t p2pRecvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   while (!ncclIntruQueueEmpty(&connection->proxyMemHandleQueue)) {
     struct proxyMemHandle* memHandle = ncclIntruQueueDequeue(&connection->proxyMemHandleQueue);
     p2pDeregisterMemHandle(connection, proxyState, (struct ncclIpcImpInfo*)memHandle->handle);
@@ -853,7 +853,7 @@ static ncclResult_t p2pRecvProxyFree(struct ncclProxyConnection* connection, str
 }
 
 // CE memcpy support
-static ncclResult_t p2pSendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) {
+static ncclResult_t p2pSendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) { /* 中文索引·体内调用 cudaMemcpyAsync、cudaEventRecord。 */
   if (args->state == ncclProxyOpReady) {
     for (int s = 0; s < args->nsubs; s++) {
       struct ncclProxySubArgs* sub = args->subs + s;
@@ -915,7 +915,7 @@ static ncclResult_t p2pSendProxyProgress(struct ncclProxyState* proxyState, stru
 
 ncclResult_t ipcHandleMultiSegmentRegistration(CUdeviceptr userBuff, size_t userBuffSize, ncclComm* comm,
                                                struct ncclProxyConnector* proxyConn, size_t* totalMappedBufferSize,
-                                               int* numSegments, struct p2pIpcExpInfo** ipcInfos) {
+                                               int* numSegments, struct p2pIpcExpInfo** ipcInfos) { /* 中文索引·体内调用 ncclCalloc、ncclRealloc。 */
   ncclResult_t ret = ncclSuccess;
   *totalMappedBufferSize = 0;
   *numSegments = 0;
@@ -1026,7 +1026,7 @@ fail:
 
 static ncclResult_t ipcRegisterBuffer(ncclComm* comm, const void* userbuff, size_t buffSize, int* peerRanks, int nPeers,
                                       ncclIpcRegType type, struct ncclReg* regRecord, int* regBufFlag,
-                                      uintptr_t* offsetOut, uintptr_t** peerRmtAddrsOut, bool* isLegacyIpc) {
+                                      uintptr_t* offsetOut, uintptr_t** peerRmtAddrsOut, bool* isLegacyIpc) { /* 中文索引·体内调用 ncclRealloc、cuMemGetAddressRange。 */
   ncclResult_t ret = ncclSuccess;
   struct p2pIpcExpInfo* ipcInfo = nullptr;
   struct ncclIpcRegInfo* newInfo = NULL;
@@ -1261,7 +1261,7 @@ fail:
 
 ncclResult_t ncclIpcLocalRegisterBuffer(ncclComm* comm, const void* userbuff, size_t buffSize, int* peerRanks,
                                         int nPeers, ncclIpcRegType type, int* regBufFlag, uintptr_t* offsetOut,
-                                        uintptr_t** peerRmtAddrsOut) {
+                                        uintptr_t** peerRmtAddrsOut) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclReg* regRecord = NULL;
   bool isValid = false;
@@ -1293,7 +1293,7 @@ struct ncclIpcCleanupCallback {
   struct ncclReg* reg;
 };
 
-static ncclResult_t cleanupIpc(struct ncclComm* comm, struct ncclCommCallback* cb) {
+static ncclResult_t cleanupIpc(struct ncclComm* comm, struct ncclCommCallback* cb) { /* 中文索引·体内调用 ncclCommGraphDeregister、free。 */
   struct ncclIpcCleanupCallback* obj = (struct ncclIpcCleanupCallback*)cb;
   NCCLCHECK(ncclCommGraphDeregister(obj->comm, obj->reg));
   free(obj);
@@ -1302,7 +1302,7 @@ static ncclResult_t cleanupIpc(struct ncclComm* comm, struct ncclCommCallback* c
 
 ncclResult_t ncclIpcGraphRegisterBuffer(ncclComm* comm, const void* userbuff, size_t buffSize, int* peerRanks,
                                         int nPeers, ncclIpcRegType type, int* regBufFlag, uintptr_t* offsetOut,
-                                        uintptr_t** peerRmtAddrsOut, void* cleanupQueuePtr, int* nCleanupQueueElts) {
+                                        uintptr_t** peerRmtAddrsOut, void* cleanupQueuePtr, int* nCleanupQueueElts) { /* 中文索引·体内调用 ncclCuMemGetAddressRange、ncclCommGraphRegister。 */
   ncclResult_t ret = ncclSuccess;
   void* baseAddr;
   size_t baseSize;
@@ -1348,7 +1348,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclIpcDeregBuffer(struct ncclComm* comm, struct ncclIpcRegInfo* regInfo) {
+ncclResult_t ncclIpcDeregBuffer(struct ncclComm* comm, struct ncclIpcRegInfo* regInfo) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   NCCLCHECK(ncclProxyCallBlocking(comm, regInfo->ipcProxyconn, ncclProxyMsgDeregister, &regInfo->impInfo,
                                   sizeof(struct ncclIpcImpInfo), NULL, 0));
   INFO(NCCL_REG, "rank %d - IPC deregistered buffer %p peer %d ipc remote buffer %p", comm->rank, regInfo->baseAddr,
@@ -1357,7 +1357,7 @@ ncclResult_t ncclIpcDeregBuffer(struct ncclComm* comm, struct ncclIpcRegInfo* re
 }
 
 static ncclResult_t p2pProxyRegister(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、cudaIpcOpenMemHandle。 */
   struct p2pIpcExpInfo* ipcExpInfo = (struct p2pIpcExpInfo*)reqBuff;
   void* regAddr = NULL;
   ncclResult_t ret = ncclSuccess;
@@ -1478,7 +1478,7 @@ static bool p2pHandleCmp(struct proxyMemHandle* a, struct proxyMemHandle* b) {
 }
 
 static ncclResult_t p2pProxyDeregister(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                       void* reqBuff, int reqSize, int* done) {
+                                       void* reqBuff, int reqSize, int* done) { /* 中文索引·体内调用 ncclIntruQueueDelete、free。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclIpcImpInfo* ipcInfo = (struct ncclIpcImpInfo*)reqBuff;
   if (reqSize != sizeof(struct ncclIpcImpInfo)) {
@@ -1509,7 +1509,7 @@ struct ncclTransport p2pTransport = {"P2P",
                                      {p2pRecvSetup, p2pRecvConnect, p2pRecvFree, NULL, p2pRecvProxySetup, NULL,
                                       p2pRecvProxyFree, NULL, p2pProxyRegister, p2pProxyDeregister}};
 
-static void initCeOperation() {
+static void initCeOperation() { /* 中文索引·体内调用 ncclParamP2pUseCudaMemcpy。 */
   static int init = 0;
   if (!init) {
     useMemcpy = ncclParamP2pUseCudaMemcpy();

@@ -45,7 +45,7 @@ NCCL_DEVICE_INLINE constexpr Int safeDiv(Int numerator, Int denominator) {
 // This is more efficient than checking each pointer sequentially when nPtrs is large
 // Returns the common alignment offset in bytes (0 means aligned)
 template <typename Pack, typename Coop, typename Lambda>
-NCCL_DEVICE_INLINE unsigned computeCommonAlignment(Coop coop, Lambda ptrLambda, int nPtrs) {
+NCCL_DEVICE_INLINE unsigned computeCommonAlignment(Coop coop, Lambda ptrLambda, int nPtrs) { /* 中文索引·体内调用 ncclCoopCoalesced、lanes.thread_rank。 */
 #if __CUDA_ARCH__ >= 800
   // Use efficient warp reduce
   auto lanes = ncclCoopCoalesced(coop);
@@ -94,7 +94,7 @@ NCCL_DEVICE_INLINE unsigned computeAlignmentForPackSize(Coop coop, SrcLambda src
 template <typename T, int PackBytes, typename Coop, typename SrcLambda, typename DstLambda, typename IntCount>
 NCCL_DEVICE_INLINE bool tryLambdaAlignmentForPackSize(Coop coop, SrcLambda srcLambda, int nSrc, DstLambda dstLambda,
                                                       int nDst, IntCount count, IntCount& alignOffset,
-                                                      int& maxPackBytes) {
+                                                      int& maxPackBytes) { /* 中文索引·体内调用 srcLambda、dstLambda。 */
   constexpr IntCount eltPerPack = PackBytes / sizeof(T);
 
   if (eltPerPack == 0 || count < eltPerPack) {
@@ -187,7 +187,7 @@ NCCL_DEVICE_INLINE AlignmentResult<IntCount> computeLambdaAlignmentOffsetWithFal
 // Matches all_reduce.cuh: checks both individual alignment and relative alignment
 template <typename T, int PackBytes, typename IntCount>
 NCCL_DEVICE_INLINE bool tryPointerPairAlignmentForPackSize(void* srcPtr, void* dstPtr, IntCount& alignOffset,
-                                                           int& maxPackBytes) {
+                                                           int& maxPackBytes) { /* 中文索引·体内调用 getAlignment。 */
   using Pack = EltPackForBytes<T, PackBytes>;
 
   // Check individual alignments
@@ -247,7 +247,7 @@ NCCL_DEVICE_INLINE void computePointerPairAlignmentWithFallback(void* srcPtr, vo
 // Helper to compute strided alignment for a specific pack size (template parameter)
 template <typename T, int PackBytes, typename IntCount>
 NCCL_DEVICE_INLINE bool tryStridedAlignmentForPackSize(void* basePtr, size_t displ, IntCount& alignOffset,
-                                                       int& maxPackBytes) {
+                                                       int& maxPackBytes) { /* 中文索引·体内调用 getAlignment。 */
   using Pack = EltPackForBytes<T, PackBytes>;
 
   // Strided offsets must preserve alignment for all chunks.
@@ -269,7 +269,7 @@ NCCL_DEVICE_INLINE bool tryStridedAlignmentForPackSize(void* basePtr, size_t dis
 // Helper to try complex strided alignment (src and dst) for a specific pack size
 template <typename T, int PackBytes, typename IntCount>
 NCCL_DEVICE_INLINE bool tryComplexStridedAlignmentForPackSize(
-  void* srcBasePtr, size_t srcDispl, void* dstBasePtr, size_t dstDispl, IntCount& alignOffset, int& maxPackBytes) {
+  void* srcBasePtr, size_t srcDispl, void* dstBasePtr, size_t dstDispl, IntCount& alignOffset, int& maxPackBytes) { /* 中文索引·体内调用 getAlignment。 */
   using Pack = EltPackForBytes<T, PackBytes>;
 
   // Compute alignment for source and destination strides
@@ -389,7 +389,7 @@ NCCL_DEVICE_INLINE EltPack<Y, n> castPack(EltPack<X, n> x);
 
 template <typename Y, typename X, int n, bool SameType = std::is_same<X, Y>::value>
 struct CastPackImpl {
-  NCCL_DEVICE_INLINE static EltPack<Y, n> run(EltPack<X, n> x) {
+  NCCL_DEVICE_INLINE static EltPack<Y, n> run(EltPack<X, n> x) { /* 中文索引·体内调用 out.pack.elts、in.pack.elts。 */
     PackAccess<X, n> in;
     PackAccess<Y, n> out;
     in.pack = x;

@@ -509,7 +509,7 @@ static inline ncclResult_t ncclNdGetFatalError(struct ncclNdNetCommBase* base) {
   return (ncclResult_t)InterlockedCompareExchange(&base->fatalError, ncclSuccess, ncclSuccess);
 }
 
-static inline ncclResult_t ncclNdSetFatalError(struct ncclNdNetCommBase* base, ncclResult_t error, bool* first = NULL) {
+static inline ncclResult_t ncclNdSetFatalError(struct ncclNdNetCommBase* base, ncclResult_t error, bool* first = NULL) { /* 中文索引·体内调用 InterlockedCompareExchange、base->stats->fatalErrorCount.fetch_add。 */
   if (error == ncclSuccess) return ncclSuccess;
   LONG previous = InterlockedCompareExchange(&base->fatalError, (LONG)error, ncclSuccess);
   bool wasFirst = previous == ncclSuccess;
@@ -521,7 +521,7 @@ static inline ncclResult_t ncclNdSetFatalError(struct ncclNdNetCommBase* base, n
 }
 
 // Stats management and checking
-static inline ncclResult_t ncclNdStatsInit(struct ncclNdStats* stat) {
+static inline ncclResult_t ncclNdStatsInit(struct ncclNdStats* stat) { /* 中文索引·体内调用 stat->fatalErrorCount.store、stat->activeComms.store。 */
   stat->fatalErrorCount.store(0, std::memory_order_relaxed);
   stat->activeComms.store(0, std::memory_order_relaxed);
   stat->peakComms.store(0, std::memory_order_relaxed);

@@ -26,7 +26,7 @@ struct ncclNdSyncMemopsState {
 static std::mutex ncclNdSyncMemopsMutex;
 static std::unordered_map<uint64_t, ncclNdSyncMemopsState> ncclNdSyncMemopsStates;
 
-static ncclResult_t ncclNdCudaCallResult(CUresult cudaResult, const char* operation) {
+static ncclResult_t ncclNdCudaCallResult(CUresult cudaResult, const char* operation) { /* 中文索引·体内调用 cuGetErrorString。 */
   if (cudaResult == CUDA_SUCCESS) return ncclSuccess;
   const char* error = "unknown";
   if (CUPFN(cuGetErrorString) != NULL) (void)CUPFN(cuGetErrorString(cudaResult, &error));
@@ -37,7 +37,7 @@ static ncclResult_t ncclNdCudaCallResult(CUresult cudaResult, const char* operat
 // Hold allocation-wide synchronous CUDA semantics while any cached ND MR can
 // expose a legacy CUDA allocation to GPUDirect RDMA. Windows CUDA VMM
 // allocations return CUDA_ERROR_NOT_SUPPORTED and need no attribute tracking.
-static ncclResult_t ncclNdAcquireSyncMemops(void* data, uint64_t* bufferId, bool* tracked) {
+static ncclResult_t ncclNdAcquireSyncMemops(void* data, uint64_t* bufferId, bool* tracked) { /* 中文索引·体内调用 cuPointerGetAttribute、ncclNdCudaCallResult。 */
   *bufferId = 0;
   *tracked = false;
   if (CUPFN(cuPointerGetAttribute) == NULL || CUPFN(cuPointerSetAttribute) == NULL) {
@@ -77,7 +77,7 @@ static ncclResult_t ncclNdAcquireSyncMemops(void* data, uint64_t* bufferId, bool
   return ncclSuccess;
 }
 
-static ncclResult_t ncclNdReleaseSyncMemops(uint64_t bufferId) {
+static ncclResult_t ncclNdReleaseSyncMemops(uint64_t bufferId) { /* 中文索引·体内调用 ncclNdSyncMemopsStates.find、ncclNdSyncMemopsStates.end。 */
   std::lock_guard<std::mutex> lock(ncclNdSyncMemopsMutex);
   auto existing = ncclNdSyncMemopsStates.find(bufferId);
   if (existing == ncclNdSyncMemopsStates.end() || existing->second.refs <= 0) {
@@ -108,7 +108,7 @@ static ncclResult_t ncclNdReleaseSyncMemops(uint64_t bufferId) {
 }
 
 // Cache and return the Windows system page size.
-static size_t ncclNdGetPageSize(void) {
+static size_t ncclNdGetPageSize(void) { /* 中文索引·体内调用 std::call_once、GetSystemInfo。 */
   std::call_once(ncclNdPageSizeFlag, []() {
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
@@ -120,7 +120,7 @@ static size_t ncclNdGetPageSize(void) {
 // CUDA capability bits alone do not prove that a particular ND provider can
 // pin a particular GPU. Probe the complete path once per GPU/adapter pair and
 // cache only a successful CUDA allocation + ND registration + deregistration.
-ncclResult_t ncclNdGetGpuDirectSupport(struct ncclNdDev* dev, int* supported, int* forceFlush) {
+ncclResult_t ncclNdGetGpuDirectSupport(struct ncclNdDev* dev, int* supported, int* forceFlush) { /* 中文索引·体内调用 cudaGetDevice、cudaGetLastError。 */
   *supported = 0;
   *forceFlush = 0;
 
@@ -247,7 +247,7 @@ static struct ncclNdMr* ncclNdMrCacheLookup(struct ncclNdMrCache* cache, uintptr
 // Grow the cache if needed and add a newly registered range.
 static ncclResult_t ncclNdMrCacheInsert(struct ncclNdMrCache* cache, uintptr_t start, uintptr_t end,
                                         enum ncclNdMemType memType, uint64_t bufferId, bool syncMemopsTracked,
-                                        struct IND2MemoryRegion* mr, HANDLE ovFile, struct ncclNdMr** retMr) {
+                                        struct IND2MemoryRegion* mr, HANDLE ovFile, struct ncclNdMr** retMr) { /* 中文索引·体内调用 ncclRealloc。 */
   if (cache->population >= cache->capacity) {
     // Grow geometrically to keep inserts amortized constant time.
     int newCapacity = cache->capacity ? cache->capacity * 2 : 16;
@@ -291,7 +291,7 @@ static ncclResult_t ncclNdMrCacheRemove(struct ncclNdMrCache* cache, struct nccl
 // every cached MR its own overlapped file instead of borrowing a communicator
 // handle that another cache user could close underneath it.
 static ncclResult_t ncclNdRegMrDevice(struct ncclNdDev* dev, void* data, size_t size, enum ncclNdMemType memType,
-                                      struct IND2MemoryRegion** retMr) {
+                                      struct IND2MemoryRegion** retMr) { /* 中文索引·体内调用 ncclNdGetPageSize、ncclNdMrCacheLookup。 */
   *retMr = NULL;
   std::lock_guard<std::mutex> lock(dev->mutex);
 
@@ -369,7 +369,7 @@ fail:
 }
 
 // Release one reference and destroy the adapter MR when it reaches zero.
-static ncclResult_t ncclNdDeregMrDevice(struct ncclNdDev* dev, struct IND2MemoryRegion* mr) {
+static ncclResult_t ncclNdDeregMrDevice(struct ncclNdDev* dev, struct IND2MemoryRegion* mr) { /* 中文索引·体内调用 wrap_nd_deregister_memory、wrap_nd_release。 */
   std::lock_guard<std::mutex> lock(dev->mutex);
 
   // Locate the provider object and its shared reference count.
@@ -415,7 +415,7 @@ static ncclResult_t ncclNdDeregMrDevice(struct ncclNdDev* dev, struct IND2Memory
 }
 
 // Register a range on every physical rail and return one aggregate handle.
-ncclResult_t ncclNdRegMr(void* comm, void* data, size_t size, int type, void** mhandle) {
+ncclResult_t ncclNdRegMr(void* comm, void* data, size_t size, int type, void** mhandle) { /* 中文索引·体内调用 ncclCalloc、free。 */
   struct ncclNdNetCommBase* base = (struct ncclNdNetCommBase*)comm;
   if (mhandle == NULL) return ncclInvalidArgument;
   *mhandle = NULL;
@@ -492,7 +492,7 @@ ncclResult_t ncclNdRegMrDmaBuf(void*, void*, size_t, int, uint64_t, int, void**)
 }
 
 // Deregister an aggregate handle from every physical rail.
-ncclResult_t ncclNdDeregMr(void*, void* mhandle) {
+ncclResult_t ncclNdDeregMr(void*, void* mhandle) { /* 中文索引·体内调用 ncclNdDeregMrDevice、free。 */
   struct ncclNdMrHandle* handle = (struct ncclNdMrHandle*)mhandle;
 
   if (!handle) return ncclSuccess;
@@ -528,7 +528,7 @@ ncclResult_t ncclNdDeregMr(void*, void* mhandle) {
 // Finalization is the last ownership boundary for adapter-global registrations.
 // Drain every provider object even if a caller leaked a registration handle so
 // the provider DLL is never unloaded while MRs still reference it.
-ncclResult_t ncclNdFinalizeMrCache(struct ncclNdDev* dev) {
+ncclResult_t ncclNdFinalizeMrCache(struct ncclNdDev* dev) { /* 中文索引·体内调用 wrap_nd_deregister_memory、wrap_nd_release。 */
   std::lock_guard<std::mutex> lock(dev->mutex);
   ncclResult_t result = ncclSuccess;
   for (int i = 0; i < dev->mrCache.population; i++) {

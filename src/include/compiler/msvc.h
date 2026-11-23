@@ -47,7 +47,7 @@ static inline T COMPILER_ATOMIC_EXCHANGE_impl(volatile T* ptr, T val, std::memor
 
 template <typename T>
 static inline bool COMPILER_ATOMIC_COMPARE_EXCHANGE_impl(
-  volatile T* ptr, T* expected, T desired, std::memory_order success_order, std::memory_order failure_order) {
+  volatile T* ptr, T* expected, T desired, std::memory_order success_order, std::memory_order failure_order) { /* 中文索引·体内调用 std::atomic_compare_exchange_strong_explicit。 */
   return std::atomic_compare_exchange_strong_explicit(reinterpret_cast<volatile std::atomic<T>*>(ptr), expected,
                                                       desired, success_order, failure_order);
 }
@@ -96,7 +96,7 @@ inline int NCCL_FFSl_impl(long x) {
   unsigned long index;
   return _BitScanForward(&index, (unsigned long)x) ? (int)(index + 1) : 0;
 }
-inline int NCCL_FFSll_impl(long long x) {
+inline int NCCL_FFSll_impl(long long x) { /* 中文索引·体内调用 _BitScanForward64、_BitScanForward。 */
   unsigned long index;
 #ifdef _WIN64
   return _BitScanForward64(&index, (unsigned __int64)x) ? (int)(index + 1) : 0;
@@ -113,17 +113,17 @@ inline int NCCL_FFSll_impl(long long x) {
 
 // Count Leading Zeros (CLZ) - undefined behavior if x == 0 (to match GCC behavior)
 // MSVC uses _BitScanReverse which gives position of highest bit
-inline int nccl_clz_impl(unsigned int x) {
+inline int nccl_clz_impl(unsigned int x) { /* 中文索引·体内调用 _BitScanReverse。 */
   unsigned long index;
   _BitScanReverse(&index, x);
   return 31 - (int)index;
 }
-inline int nccl_clzl_impl(unsigned long x) {
+inline int nccl_clzl_impl(unsigned long x) { /* 中文索引·体内调用 _BitScanReverse。 */
   unsigned long index;
   _BitScanReverse(&index, x);
   return (8 * sizeof(unsigned long) - 1) - (int)index;
 }
-inline int nccl_clzll_impl(unsigned long long x) {
+inline int nccl_clzll_impl(unsigned long long x) { /* 中文索引·体内调用 _BitScanReverse64、_BitScanReverse。 */
   unsigned long index;
 #ifdef _WIN64
   _BitScanReverse64(&index, (unsigned __int64)x);

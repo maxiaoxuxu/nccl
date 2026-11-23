@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "NCCL：查看当前源码图解",
+      "type": "process",
+      "command": "python3",
+      "windows": { "command": "python" },
+      "args": [
+        "${workspaceFolder}/tools/zh_walkthrough/open_diagram.py",
+        "--file", "${file}", "--line", "${lineNumber}"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

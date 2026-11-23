@@ -106,7 +106,7 @@ static mlx5dv_devx_get_event_func_t mlx5dv_devx_get_event_func = NULL;
 
 /* *********** dlopen Initialization *********** */
 
-static void doca_verbs_wrapper_init_once(int *ret) {
+static void doca_verbs_wrapper_init_once(int *ret) { /* 中文索引·体内调用 dlopen、dlerror。 */
     mlx5dv_handle = dlopen("libmlx5.so.1", RTLD_NOW);
     if (!mlx5dv_handle) {
         mlx5dv_handle = dlopen("libmlx5.so", RTLD_NOW);
@@ -171,7 +171,7 @@ static void doca_verbs_wrapper_init_once(int *ret) {
     *ret = 0;
 }
 
-static int doca_verbs_wrapper_init_dlopen(void) {
+static int doca_verbs_wrapper_init_dlopen(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_wrapper_init_once, &ret);
@@ -181,7 +181,7 @@ static int doca_verbs_wrapper_init_dlopen(void) {
 /* *********** Wrapper Implementation with dlopen *********** */
 
 doca_error_t doca_verbs_wrapper_mlx5dv_init_obj(struct mlx5dv_obj *obj,
-                                                enum mlx5dv_obj_type obj_type) {
+                                                enum mlx5dv_obj_type obj_type) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_init_obj_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -191,7 +191,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_init_obj(struct mlx5dv_obj *obj,
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_create(struct ibv_context *context, const void *in,
                                                        size_t inlen, void *out, size_t outlen,
-                                                       struct mlx5dv_devx_obj **obj_out) {
+                                                       struct mlx5dv_devx_obj **obj_out) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_obj_create_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -203,7 +203,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_create(struct ibv_context *conte
     return DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_destroy(struct mlx5dv_devx_obj *obj) {
+doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_destroy(struct mlx5dv_devx_obj *obj) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_obj_destroy_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -212,7 +212,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_destroy(struct mlx5dv_devx_obj *
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_query(struct mlx5dv_devx_obj *obj, const void *in,
-                                                      size_t inlen, void *out, size_t outlen) {
+                                                      size_t inlen, void *out, size_t outlen) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_obj_query_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -221,7 +221,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_query(struct mlx5dv_devx_obj *ob
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_modify(struct mlx5dv_devx_obj *obj, const void *in,
-                                                       size_t inlen, void *out, size_t outlen) {
+                                                       size_t inlen, void *out, size_t outlen) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_obj_modify_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -230,7 +230,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_obj_modify(struct mlx5dv_devx_obj *o
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_general_cmd(struct ibv_context *context, const void *in,
-                                                        size_t inlen, void *out, size_t outlen) {
+                                                        size_t inlen, void *out, size_t outlen) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_general_cmd_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -239,7 +239,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_general_cmd(struct ibv_context *cont
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_query_eqn(struct ibv_context *context, uint32_t cpus,
-                                                      uint32_t *eqn) {
+                                                      uint32_t *eqn) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_query_eqn_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -249,7 +249,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_query_eqn(struct ibv_context *contex
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_reg(struct ibv_context *context, void *addr,
                                                      size_t size, uint32_t access,
-                                                     struct mlx5dv_devx_umem **umem_out) {
+                                                     struct mlx5dv_devx_umem **umem_out) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_umem_reg_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -263,7 +263,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_reg(struct ibv_context *context
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_reg_ex(struct ibv_context *context,
                                                         struct mlx5dv_devx_umem_in *umem_in,
-                                                        struct mlx5dv_devx_umem **umem_out) {
+                                                        struct mlx5dv_devx_umem **umem_out) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_umem_reg_ex_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -275,7 +275,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_reg_ex(struct ibv_context *cont
     return DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_dereg(struct mlx5dv_devx_umem *umem) {
+doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_dereg(struct mlx5dv_devx_umem *umem) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_umem_dereg_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -285,7 +285,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_umem_dereg(struct mlx5dv_devx_umem *
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_alloc_uar(struct ibv_context *context,
                                                       uint32_t uar_type,
-                                                      struct mlx5dv_devx_uar **uar_out) {
+                                                      struct mlx5dv_devx_uar **uar_out) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_alloc_uar_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -297,7 +297,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_alloc_uar(struct ibv_context *contex
     return DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_mlx5dv_devx_free_uar(struct mlx5dv_devx_uar *uar) {
+doca_error_t doca_verbs_wrapper_mlx5dv_devx_free_uar(struct mlx5dv_devx_uar *uar) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_free_uar_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -306,7 +306,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_free_uar(struct mlx5dv_devx_uar *uar
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_query_device(struct ibv_context *context,
-                                                    struct mlx5dv_context *attrs_out) {
+                                                    struct mlx5dv_context *attrs_out) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_query_device_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -316,7 +316,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_query_device(struct ibv_context *context,
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_create_event_channel(
     struct ibv_context *ctx, enum mlx5dv_devx_create_event_channel_flags flags,
-    struct mlx5dv_devx_event_channel **out_channel) {
+    struct mlx5dv_devx_event_channel **out_channel) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_create_event_channel_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -328,7 +328,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_create_event_channel(
 }
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_destroy_event_channel(
-    struct mlx5dv_devx_event_channel *channel) {
+    struct mlx5dv_devx_event_channel *channel) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_destroy_event_channel_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -338,7 +338,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_destroy_event_channel(
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_subscribe_devx_event(
     struct mlx5dv_devx_event_channel *channel, struct mlx5dv_devx_obj *obj, uint16_t events_sz,
-    uint16_t *events_num, uint64_t cookie) {
+    uint16_t *events_num, uint64_t cookie) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_subscribe_devx_event_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -348,7 +348,7 @@ doca_error_t doca_verbs_wrapper_mlx5dv_devx_subscribe_devx_event(
 
 doca_error_t doca_verbs_wrapper_mlx5dv_devx_get_event(
     struct mlx5dv_devx_event_channel *channel, struct mlx5dv_devx_async_event_hdr *event_data,
-    size_t event_resp_len, ssize_t *bytes_read) {
+    size_t event_resp_len, ssize_t *bytes_read) { /* 中文索引·体内调用 doca_verbs_wrapper_init_dlopen、mlx5dv_devx_get_event_func。 */
     if (doca_verbs_wrapper_init_dlopen() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }

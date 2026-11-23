@@ -66,7 +66,7 @@ static_assert(offsetof(struct ncclDevComm_v22907, ginIsRailed) == 208);
 static_assert(offsetof(struct ncclDevComm_v22907, abortFlag) == 216);
 static_assert(sizeof(struct ncclDevComm_v22907) == 224);
 
-static ncclResult_t ncclCommPropertiesFilter_v22907(ncclComm_t comm, struct ncclCommProperties* props) {
+static ncclResult_t ncclCommPropertiesFilter_v22907(ncclComm_t comm, struct ncclCommProperties* props) { /* 中文索引·体内调用 ncclTeamLsa。 */
   // We don't provide backwards compatibility for GIN with 2.29.7.  If a communicator needs it, we indicate that
   // the Device API is not available.
   props->deviceApiSupport = (props->deviceApiSupport && ncclTeamLsa(comm).nRanks == comm->nRanks);
@@ -76,7 +76,7 @@ static ncclResult_t ncclCommPropertiesFilter_v22907(ncclComm_t comm, struct nccl
   return ncclSuccess;
 }
 
-static ncclResult_t ncclDevCommRequirementsFilter_v22907(ncclComm_t comm, ncclDevCommRequirements_t* reqs) {
+static ncclResult_t ncclDevCommRequirementsFilter_v22907(ncclComm_t comm, ncclDevCommRequirements_t* reqs) { /* 中文索引·体内调用 ncclVersionToString。 */
   bool requestedGinResources =
     reqs->ginSignalCount > 0 || reqs->ginCounterCount > 0 || reqs->barrierCount > 0 || reqs->railGinBarrierCount > 0;
   struct ncclDevResourceRequirements* node = reqs->resourceRequirementsList;
@@ -98,7 +98,7 @@ static ncclResult_t ncclDevCommRequirementsFilter_v22907(ncclComm_t comm, ncclDe
 }
 
 static ncclResult_t ncclDevCommCopyNewToOld_v22907(ncclComm_t comm, void* oldDevComm,
-                                                   struct ncclDevComm const* newDevComm) {
+                                                   struct ncclDevComm const* newDevComm) { /* 中文索引·体内调用 memset、ncclDevCommCopyResourceWindow_v22902。 */
   struct ncclDevComm_v22907* old = (struct ncclDevComm_v22907*)oldDevComm;
 
   memset(old, '\0', sizeof(*old));

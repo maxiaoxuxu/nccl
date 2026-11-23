@@ -108,7 +108,7 @@ uint64_t ncclAlgAllBits() {
   return kAllAlgBits;
 }
 
-uint64_t ncclAlgTagMask(const char* tag) {
+uint64_t ncclAlgTagMask(const char* tag) { /* 中文索引·体内调用 strlen、strncasecmp。 */
   if (tag == NULL || tag[0] == '\0') return 0;
   // A tag matches a registry name only from its start (case-insensitive), so "RING" selects
   // RING_LL/LL128/SIMPLE but not SYMK_RailRing_LsaSTMC, while "NVLS" still spans NVLS_SIMPLE and

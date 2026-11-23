@@ -15,12 +15,12 @@ static ncclEnv_t ncclEnv;
 static ncclEnv_v1_t* ncclEnv_v1;
 
 static ncclResult_t ncclEnv_init(uint8_t ncclMajor, uint8_t ncclMinor, uint8_t ncclPatch, const char* suffix,
-                                 ncclDebugLogger_t logFunction) {
+                                 ncclDebugLogger_t logFunction) { /* 中文索引·体内调用 ncclEnv_v1->init。 */
   NCCLCHECK(ncclEnv_v1->init(ncclMajor, ncclMinor, ncclPatch, suffix));
   return ncclSuccess;
 }
 
-ncclEnv_t* getNcclEnv_v1(void* lib) {
+ncclEnv_t* getNcclEnv_v1(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclEnv_v1 = (ncclEnv_v1_t*)ncclOsDlsym(lib, "ncclEnvPlugin_v1");
   if (ncclEnv_v1) {
     ncclEnv.init = ncclEnv_init;

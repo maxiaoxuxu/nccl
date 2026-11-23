@@ -1,3 +1,7 @@
+# NCCL 2.32.6 中文源码分析
+
+[从数据切分图开始](docs/zh_CN/01-data-layout.md) · [中文源码阅读入口](START_HERE_ZH.md) · [离线源码索引](docs/zh_CN/reader.html)
+
 # NCCL
 
 Optimized primitives for inter-GPU communication.

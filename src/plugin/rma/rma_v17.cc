@@ -11,7 +11,7 @@
 
 static ncclRma_v17_t* ncclRma_v17;
 
-ncclRma_t* getNcclRma_v17(void* lib) {
+ncclRma_t* getNcclRma_v17(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclRma_v17 = (ncclRma_v17_t*)dlsym(lib, "ncclRmaPlugin_v17");
   if (ncclRma_v17) {
     INFO(NCCL_INIT | NCCL_NET, "RMA/Plugin: Loaded rma plugin %s (v17)", ncclRma_v17->name);

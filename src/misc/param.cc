@@ -24,7 +24,7 @@ const char* userHomeDir() {
   return getenv("HOME");
 }
 
-void setEnvFile(const char* fileName) {
+void setEnvFile(const char* fileName) { /* 中文索引·体内调用 fopen、fgets。 */
   FILE* file = fopen(fileName, "r");
   if (file == NULL) return;
 
@@ -49,7 +49,7 @@ void setEnvFile(const char* fileName) {
   fclose(file);
 }
 
-static void initEnvFunc() {
+static void initEnvFunc() { /* 中文索引·体内调用 std::getenv、strlen。 */
   char confFilePath[1024];
   const char* userFile = std::getenv("NCCL_CONF_FILE");
   if (userFile && strlen(userFile) > 0) {
@@ -75,7 +75,7 @@ static void ncclGetCachePolicy(char const* env, int8_t* noCache) {
   *noCache = ncclParamIsCacheDisabled(env) ? /*noCache*/ 1 : /*cache*/ 0;
 }
 
-int64_t ncclLoadParam(char const* env, int64_t deftVal, int64_t uninitialized, int64_t* cache, int8_t* noCache) {
+int64_t ncclLoadParam(char const* env, int64_t deftVal, int64_t uninitialized, int64_t* cache, int8_t* noCache) { /* 中文索引·体内调用 ncclGetCachePolicy、ncclGetEnv。 */
   static std::mutex mutex;
   std::lock_guard<std::mutex> lock(mutex);
 

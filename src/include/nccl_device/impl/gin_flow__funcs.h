@@ -49,7 +49,7 @@ NCCL_DEVICE_INLINE ncclGinFlowConn<GinBackendMask, Protocol>::ncclGinFlowConn(
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::close() {
+NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::close() { /* 中文索引·体内调用 gin.flush。 */
   if (flushOnClose) gin.flush(ncclCoopThread{});
   state->step[type] = step;
   state->llStep[type] = llStep;
@@ -57,14 +57,14 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::close() {
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::waitSend() {
+NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::waitSend() { /* 中文索引·体内调用 advanceSlice、gin.waitSignal。 */
   void* const ptr = advanceSlice();
   gin.waitSignal(ncclCoopThread{}, localSignal, step, /*bits=*/64);
   return ptr;
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSend(size_t bytes) {
+NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSend(size_t bytes) { /* 中文索引·体内调用 assert、postSendSimple。 */
   size_t const offset = Protocol == ncclFlowProtocolLL ? ((llStep - 1) % nSlices) * sliceSteps * stepSize :
                                                          ((step - sliceSteps) % ncclFlowFifoSlots) * stepSize;
   assert(bytes <= stepSize * sliceSteps);
@@ -76,7 +76,7 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSend(size
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendFrom(size_t bytes, ncclSymPtr<char> source) {
+NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendFrom(size_t bytes, ncclSymPtr<char> source) { /* 中文索引·体内调用 postSendSimple。 */
   size_t const offset = ((step - sliceSteps) % ncclFlowFifoSlots) * stepSize;
   if (bytes != 0) flushOnClose = true;
   postSendSimple(bytes, source, peerFifo + offset);
@@ -84,7 +84,7 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendFrom(
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
 NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendDirect(
-  size_t bytes, ncclSymPtr<char> peerOutput, ncclSymPtr<char> source) {
+  size_t bytes, ncclSymPtr<char> peerOutput, ncclSymPtr<char> source) { /* 中文索引·体内调用 postSendSimple。 */
   bool const externalSource = source.window != nullptr;
   if (!externalSource) {
     size_t const offset = ((step - sliceSteps) % ncclFlowFifoSlots) * stepSize;
@@ -96,7 +96,7 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendDirec
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
 NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postSendSimple(size_t bytes, ncclSymPtr<char> source,
-                                                                                  ncclSymPtr<char> destination) {
+                                                                                  ncclSymPtr<char> destination) { /* 中文索引·体内调用 assert、gin.put。 */
   assert(Protocol == ncclFlowProtocolSimple);
   assert(bytes <= stepSize * sliceSteps);
   uint64_t const delta = step - signalValue;
@@ -115,7 +115,7 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::advanceStep()
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::signal(uint64_t value) {
+NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::signal(uint64_t value) { /* 中文索引·体内调用 gin.signal。 */
   if (value == signalValue) return;
   uint64_t const delta = value - signalValue;
   gin.signal(team, peer, ncclGin_StrongSignalAdd{peerSignal, delta});
@@ -123,14 +123,14 @@ NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::signal(uint64
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::waitRecv() {
+NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::waitRecv() { /* 中文索引·体内调用 advanceSlice、gin.waitSignal。 */
   void* const ptr = advanceSlice();
   gin.waitSignal(ncclCoopThread{}, localSignal, step, /*bits=*/64);
   return ptr;
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::advanceSlice() {
+NCCL_DEVICE_INLINE void* ncclGinFlowConn<GinBackendMask, Protocol>::advanceSlice() { /* 中文索引·体内调用 advanceStep、fifo.localPtr。 */
   size_t const offset =
     Protocol == ncclFlowProtocolLL ? (llStep % nSlices) * sliceSteps * stepSize : (step % ncclFlowFifoSlots) * stepSize;
   advanceStep();
@@ -143,7 +143,7 @@ NCCL_DEVICE_INLINE uint64_t ncclGinFlowConn<GinBackendMask, Protocol>::stepFlag(
 }
 
 template <unsigned GinBackendMask, ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postRecv(bool force) {
+NCCL_DEVICE_INLINE void ncclGinFlowConn<GinBackendMask, Protocol>::postRecv(bool force) { /* 中文索引·体内调用 signal。 */
   uint64_t const value = step + ncclFlowFifoSlots;
   uint64_t const batch = sliceSteps * ((nSlices + 1) / 2);
   if (signalValue == 0 || (value > signalValue && (force || value - signalValue >= batch))) signal(value);

@@ -26,7 +26,7 @@
 #define U32_LEN 32 // using uint32_t
 #define CPU_SET_N_U32 (CPU_SETSIZE / U32_LEN)
 
-static ncclResult_t ncclStrToCpuset(const char* maskStr, ncclAffinity* set, int cpuOffset = 0) {
+static ncclResult_t ncclStrToCpuset(const char* maskStr, ncclAffinity* set, int cpuOffset = 0) { /* 中文索引·体内调用 strdup、strtok_r。 */
   if (cpuOffset < 0 || cpuOffset >= CPU_SETSIZE) return ncclInvalidArgument;
   uint32_t cpumasks[CPU_SET_N_U32] = {0};
 
@@ -53,7 +53,7 @@ static ncclResult_t ncclStrToCpuset(const char* maskStr, ncclAffinity* set, int 
   return ncclSuccess;
 }
 
-static char* ncclCpusetToRangeStr(ncclAffinity* mask, char* str, size_t len) {
+static char* ncclCpusetToRangeStr(ncclAffinity* mask, char* str, size_t len) { /* 中文索引·体内调用 ncclOsCpuIsSet、snprintf。 */
   int c = 0;
   int start = -1;
   // Iterate through all possible CPU bits plus one extra position
@@ -78,7 +78,7 @@ static char* ncclCpusetToRangeStr(ncclAffinity* mask, char* str, size_t len) {
   return str;
 }
 
-static ncclResult_t ncclStrListToCpuset(const char* userStr, ncclAffinity* mask) {
+static ncclResult_t ncclStrListToCpuset(const char* userStr, ncclAffinity* mask) { /* 中文索引·体内调用 ncclOsCpuZero、strdup。 */
   // reset the CPU set
   ncclOsCpuZero(*mask);
   char* str = strdup(userStr);
@@ -93,7 +93,7 @@ static ncclResult_t ncclStrListToCpuset(const char* userStr, ncclAffinity* mask)
   return ncclSuccess;
 }
 
-static ncclResult_t ncclCpusetToStrList(ncclAffinity* mask, char* str, size_t len) {
+static ncclResult_t ncclCpusetToStrList(ncclAffinity* mask, char* str, size_t len) { /* 中文索引·体内调用 ncclOsCpuIsSet、snprintf。 */
   if (len == 0) return ncclSuccess;
   str[0] = '\0';
   int count = 0;

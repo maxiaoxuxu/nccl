@@ -13,7 +13,7 @@
 NCCL_API(ncclResult_t, ncclGinBarrierCreateRequirement, ncclComm_t comm, ncclTeam_t team, int nBarriers,
          ncclGinBarrierHandle_t* outHandle, ncclDevResourceRequirements_t* outReq);
 ncclResult_t ncclGinBarrierCreateRequirement(ncclComm_t comm, ncclTeam_t team, int nBarriers,
-                                             ncclGinBarrierHandle_t* outHandle, ncclDevResourceRequirements_t* outReq) {
+                                             ncclGinBarrierHandle_t* outHandle, ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset、ncclGinBarrierSlots。 */
   memset(outReq, 0, sizeof(*outReq));
   // Per-peer slots, clamped to 2 so that device code running the two-signal barrier always fits.
   outReq->ginSignalCount = nBarriers * ncclGinBarrierSlots(NCCL_GIN_BARRIER_DEFAULT, team.nRanks);
@@ -24,7 +24,7 @@ ncclResult_t ncclGinBarrierCreateRequirement(ncclComm_t comm, ncclTeam_t team, i
 // Internal: sizes one of NCCL's own barrier requirements for a specific GIN backend.
 ncclResult_t ncclGinBarrierSizeRequirement(struct ncclComm* comm, struct ncclGinBackendState const* backend,
                                            struct ncclDevCommCompat const* devCompat,
-                                           struct ncclGinBarrierReq const* barrierReq) {
+                                           struct ncclGinBarrierReq const* barrierReq) { /* 中文索引·体内调用 devCompat->ginSignalsPerBarrier。 */
   int slots = 0;
   NCCLCHECK(devCompat->ginSignalsPerBarrier(comm, backend, barrierReq->team.nRanks, &slots));
   barrierReq->req->ginSignalCount = barrierReq->nBarriers * slots;

@@ -110,7 +110,7 @@ DEFINE_NCCL_PARAM(ncclParamIbQpsPerConn, int32_t, NCCL_IB_QPS_PER_CONNECTION, 1,
 NCCL_PARAM(IbSubnetAwareRouting, "IB_SUBNET_AWARE_ROUTING", 0);
 NCCL_PARAM(IbSubnetPrefixLen, "IB_SUBNET_PREFIX_LEN", 24);
 
-ncclResult_t ncclIbInitCommDevBase(int ibDevN, struct ncclIbNetCommDevBase* base, void* cq_context, int cqSize) {
+ncclResult_t ncclIbInitCommDevBase(int ibDevN, struct ncclIbNetCommDevBase* base, void* cq_context, int cqSize) { /* 中文索引·体内调用 wrap_ibv_alloc_pd、ncclIbGidInfoSnapshot。 */
   base->ibDevN = ibDevN;
   ncclIbDev* ibDev = ncclIbDevs + ibDevN;
   {
@@ -130,7 +130,7 @@ ncclResult_t ncclIbInitCommDevBase(int ibDevN, struct ncclIbNetCommDevBase* base
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbDestroyBase(struct ncclIbNetCommDevBase* base) {
+ncclResult_t ncclIbDestroyBase(struct ncclIbNetCommDevBase* base) { /* 中文索引·体内调用 wrap_ibv_destroy_cq、wrap_ibv_dealloc_pd。 */
   NCCLCHECK(wrap_ibv_destroy_cq(base->cq));
 
   std::lock_guard<std::mutex> lock(ncclIbDevs[base->ibDevN].mutex);
@@ -140,7 +140,7 @@ ncclResult_t ncclIbDestroyBase(struct ncclIbNetCommDevBase* base) {
   return ncclSuccess;
 }
 
-static sa_family_t envIbAddrFamily(void) {
+static sa_family_t envIbAddrFamily(void) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   sa_family_t family = AF_INET;
   const char* env = ncclGetEnv("NCCL_IB_ADDR_FAMILY");
   if (env == NULL || strlen(env) == 0) {
@@ -158,7 +158,7 @@ static sa_family_t envIbAddrFamily(void) {
   return family;
 }
 
-static void* envIbAddrRange(sa_family_t af, int* mask) {
+static void* envIbAddrRange(sa_family_t af, int* mask) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   *mask = 0;
   static struct in_addr addr;
   static struct in6_addr addr6;
@@ -202,7 +202,7 @@ static void* envIbAddrRange(sa_family_t af, int* mask) {
   return ret;
 }
 
-static sa_family_t getGidAddrFamily(union ibv_gid* gid) {
+static sa_family_t getGidAddrFamily(union ibv_gid* gid) { /* 中文索引·体内调用 htonl。 */
   const struct in6_addr* a = (struct in6_addr*)gid->raw;
   bool isIpV4Mapped = ((a->s6_addr32[0] | a->s6_addr32[1]) | (a->s6_addr32[2] ^ htonl(0x0000ffff))) == 0UL;
   bool isIpV4MappedMulticast =
@@ -252,7 +252,7 @@ static bool matchGidAddrPrefix(sa_family_t af, void* prefix, int prefixlen, unio
   return (prefixlen == 0) ? true : false;
 }
 
-static bool configuredGid(union ibv_gid* gid) {
+static bool configuredGid(union ibv_gid* gid) { /* 中文索引·体内调用 htonl。 */
   const struct in6_addr* a = (struct in6_addr*)gid->raw;
   int trailer = (a->s6_addr32[1] | a->s6_addr32[2] | a->s6_addr32[3]);
   if (((a->s6_addr32[0] | trailer) == 0UL) || ((a->s6_addr32[0] == htonl(0xfe800000)) && (trailer == 0UL))) {
@@ -261,7 +261,7 @@ static bool configuredGid(union ibv_gid* gid) {
   return true;
 }
 
-static bool linkLocalGid(union ibv_gid* gid) {
+static bool linkLocalGid(union ibv_gid* gid) { /* 中文索引·体内调用 htonl。 */
   const struct in6_addr* a = (struct in6_addr*)gid->raw;
   if (a->s6_addr32[0] == htonl(0xfe800000) && a->s6_addr32[1] == 0UL) {
     return true;
@@ -273,7 +273,7 @@ static bool validGid(union ibv_gid* gid) {
   return (configuredGid(gid) && !linkLocalGid(gid));
 }
 
-static ncclResult_t ncclIbRoceGetVersionNum(const char* deviceName, int portNum, int gidIndex, int* version) {
+static ncclResult_t ncclIbRoceGetVersionNum(const char* deviceName, int portNum, int gidIndex, int* version) { /* 中文索引·体内调用 snprintf、open。 */
   char gidRoceVerStr[16] = {0};
   char roceTypePath[PATH_MAX] = {0};
   snprintf(roceTypePath, sizeof(roceTypePath), "/sys/class/infiniband/%s/ports/%d/gid_attrs/types/%d", deviceName,
@@ -308,7 +308,7 @@ static ncclResult_t ncclIbRoceGetVersionNum(const char* deviceName, int portNum,
 }
 
 static ncclResult_t ncclUpdateGidIndex(struct ibv_context* context, uint8_t portNum, sa_family_t af, void* prefix,
-                                       int prefixlen, int roceVer, int gidIndexCandidate, int* gidIndex) {
+                                       int prefixlen, int roceVer, int gidIndexCandidate, int* gidIndex) { /* 中文索引·体内调用 wrap_ibv_query_gid、getGidAddrFamily。 */
   union ibv_gid gid, gidCandidate;
   NCCLCHECK(wrap_ibv_query_gid(context, portNum, *gidIndex, &gid));
   NCCLCHECK(wrap_ibv_query_gid(context, portNum, gidIndexCandidate, &gidCandidate));
@@ -338,7 +338,7 @@ static ncclResult_t ncclUpdateGidIndex(struct ibv_context* context, uint8_t port
 }
 
 ncclResult_t ncclIbGetGidIndex(struct ibv_context* context, uint8_t portNum, struct ibv_port_attr* portAttr,
-                               int* gidIndex) {
+                               int* gidIndex) { /* 中文索引·体内调用 ncclParamIbRoutableFlidIbGidIndex、wrap_ibv_query_gid。 */
   int gidTblLen = portAttr->gid_tbl_len;
 
   // for IB, choose GID Index that will have routable FLID if present
@@ -377,7 +377,7 @@ ncclResult_t ncclIbGetGidIndex(struct ibv_context* context, uint8_t portNum, str
 }
 
 ncclResult_t ncclIbGidInfoQuery(struct ibv_context* context, uint8_t portNum, struct ibv_port_attr* portAttr,
-                                struct ncclIbGidInfo* gidInfo) {
+                                struct ncclIbGidInfo* gidInfo) { /* 中文索引·体内调用 ncclIbGetGidIndex、wrap_ibv_query_gid。 */
   if (context == NULL || portAttr == NULL || gidInfo == NULL) return ncclInternalError;
   gidInfo->link_layer = portAttr->link_layer;
   NCCLCHECK(ncclIbGetGidIndex(context, portNum, portAttr, &gidInfo->localGidIndex));
@@ -389,7 +389,7 @@ ncclResult_t ncclIbGidInfoQuery(struct ibv_context* context, uint8_t portNum, st
 // Resolve NCCL_IB_PKEY_VALUE to a PKey-table index, else fall back to the NCCL_IB_PKEY index.
 // ibv_query_pkey() returns network byte order with the MSB as the membership bit, so compare low 15 bits.
 ncclResult_t ncclIbGetPkeyIndex(struct ibv_context* context, uint8_t portNum, struct ibv_port_attr* portAttr,
-                                int* pkeyIndex) {
+                                int* pkeyIndex) { /* 中文索引·体内调用 ncclParamIbPkeyValue、ncclParamIbPkey。 */
   int64_t pkeyValue = ncclParamIbPkeyValue();
   if (pkeyValue < 0) {
     *pkeyIndex = ncclParamIbPkey();
@@ -413,7 +413,7 @@ ncclResult_t ncclIbGetPkeyIndex(struct ibv_context* context, uint8_t portNum, st
   return ncclInvalidUsage;
 }
 
-ncclResult_t ncclIbQpInit(struct ncclIbQp* qp) {
+ncclResult_t ncclIbQpInit(struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、wrap_ibv_modify_qp。 */
   struct ncclIbQpInitAttr* initAttr = &qp->initAttr;
   struct ibv_qp_attr qpAttr;
   memset(&qpAttr, 0, sizeof(struct ibv_qp_attr));
@@ -425,7 +425,7 @@ ncclResult_t ncclIbQpInit(struct ncclIbQp* qp) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclIbCreateQpMlx5(struct ncclIbQpCreateAttr* createQpAttrs, struct ncclIbQp* qp) {
+static ncclResult_t ncclIbCreateQpMlx5(struct ncclIbQpCreateAttr* createQpAttrs, struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、ncclParamIbUseInline。 */
   struct ibv_qp_init_attr_ex qpInitAttr;
   struct mlx5dv_qp_init_attr dvAttr;
   memset(&qpInitAttr, 0, sizeof(struct ibv_qp_init_attr_ex));
@@ -455,7 +455,7 @@ static ncclResult_t ncclIbCreateQpMlx5(struct ncclIbQpCreateAttr* createQpAttrs,
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbQpCreate(struct ncclIbQp* qp, struct ncclIbQpCreateAttr* createQpAttrs) {
+ncclResult_t ncclIbQpCreate(struct ncclIbQp* qp, struct ncclIbQpCreateAttr* createQpAttrs) { /* 中文索引·体内调用 ncclIbWqeLatMonInit、ncclIbCreateQpMlx5。 */
   ncclIbWqeLatMonInit(&qp->latMon);
   if (createQpAttrs->oooRq) {
     NCCLCHECK(ncclIbCreateQpMlx5(createQpAttrs, qp));
@@ -476,7 +476,7 @@ ncclResult_t ncclIbQpCreate(struct ncclIbQp* qp, struct ncclIbQpCreateAttr* crea
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbQpRtr(struct ncclIbQp* qp) {
+ncclResult_t ncclIbQpRtr(struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、ncclIbExtractLocalSubnetPrefix。 */
   struct ncclIbQpRtrAttr* rtrAttr = &qp->rtrAttr;
   struct ibv_qp_attr qpAttr;
   int attrMask = IBV_QP_STATE | IBV_QP_AV | IBV_QP_PATH_MTU | IBV_QP_DEST_QPN | IBV_QP_RQ_PSN;
@@ -533,7 +533,7 @@ ncclResult_t ncclIbQpRtr(struct ncclIbQp* qp) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbQpRts(struct ncclIbQp* qp) {
+ncclResult_t ncclIbQpRts(struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、wrap_ibv_modify_qp。 */
   struct ncclIbQpRtsAttr* rtsAttr = &qp->rtsAttr;
   struct ibv_qp_attr qpAttr;
   int attrMask = IBV_QP_STATE | IBV_QP_SQ_PSN;
@@ -551,7 +551,7 @@ ncclResult_t ncclIbQpRts(struct ncclIbQp* qp) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbQpReset(struct ncclIbQp* qp) {
+ncclResult_t ncclIbQpReset(struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、wrap_ibv_modify_qp。 */
   struct ibv_qp_attr attr;
   memset(&attr, 0, sizeof(attr));
   attr.qp_state = IBV_QPS_RESET;
@@ -559,7 +559,7 @@ ncclResult_t ncclIbQpReset(struct ncclIbQp* qp) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbQpError(struct ncclIbQp* qp) {
+ncclResult_t ncclIbQpError(struct ncclIbQp* qp) { /* 中文索引·体内调用 memset、wrap_ibv_modify_qp。 */
   struct ibv_qp_attr attr;
   memset(&attr, 0, sizeof(attr));
   attr.qp_state = IBV_QPS_ERR;
@@ -570,7 +570,7 @@ ncclResult_t ncclIbQpError(struct ncclIbQp* qp) {
 // Check if two RoCE GIDs are on the same subnet.
 // For IPv4-mapped GIDs (::ffff:a.b.c.d), uses the given prefix length (1..32).
 // For native IPv6 GIDs, compares the 64-bit subnet prefix.
-static bool gidSameSubnet(union ibv_gid* local, union ibv_gid* remote, int prefixLen) {
+static bool gidSameSubnet(union ibv_gid* local, union ibv_gid* remote, int prefixLen) { /* 中文索引·体内调用 getGidAddrFamily、memcpy。 */
   sa_family_t localFam = getGidAddrFamily(local);
   sa_family_t remoteFam = getGidAddrFamily(remote);
   if (localFam != remoteFam) return false;
@@ -589,7 +589,7 @@ static bool gidSameSubnet(union ibv_gid* local, union ibv_gid* remote, int prefi
 }
 
 // check if a local GID matches ANY of the remote GIDs.
-static bool subnetMatchesAny(union ibv_gid* localGid, union ibv_gid* remoteGids, int nRemoteGids, int prefixLen) {
+static bool subnetMatchesAny(union ibv_gid* localGid, union ibv_gid* remoteGids, int nRemoteGids, int prefixLen) { /* 中文索引·体内调用 validGid、gidSameSubnet。 */
   for (int r = 0; r < nRemoteGids; r++) {
     if (validGid(&remoteGids[r]) && gidSameSubnet(localGid, &remoteGids[r], prefixLen)) return true;
   }
@@ -602,7 +602,7 @@ static bool subnetMatchesAny(union ibv_gid* localGid, union ibv_gid* remoteGids,
 // and IB deployments.
 // Checks the default device first to preserve NIC Fusion when all PFs in
 // the fused device can reach the peer (e.g., 2-node or switch setup).
-static ncclResult_t ncclIbFindDevBySubnet(union ibv_gid* remoteGids, int nRemoteGids, int defaultDev, int* foundDev) {
+static ncclResult_t ncclIbFindDevBySubnet(union ibv_gid* remoteGids, int nRemoteGids, int defaultDev, int* foundDev) { /* 中文索引·体内调用 ncclParamIbSubnetPrefixLen、validGid。 */
   *foundDev = defaultDev;
 
   int prefixLen = ncclParamIbSubnetPrefixLen();
@@ -673,7 +673,7 @@ static ncclResult_t ncclIbFindDevBySubnet(union ibv_gid* remoteGids, int nRemote
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) {
+ncclResult_t ncclIbListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) { /* 中文索引·体内调用 ncclCalloc、memset。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclIbListenComm* comm;
   NCCLCHECK(ncclCalloc(&comm, 1));
@@ -722,7 +722,7 @@ fail:
 // is updated accordingly. The meta data structure is then expected to be
 // delivered to the remote side (receiver) as part of the connection
 // establishment process.
-static ncclResult_t ncclIbSenderQpsCreate(ncclIbSendComm* comm, struct ncclIbConnectionMetadata* meta) {
+static ncclResult_t ncclIbSenderQpsCreate(ncclIbSendComm* comm, struct ncclIbConnectionMetadata* meta) { /* 中文索引·体内调用 memset、ncclParamIbOooRq。 */
   uint nqps = comm->base.nqps;
   struct ncclIbQpCreateAttr qpCreateAttrs;
   memset(&qpCreateAttrs, 0, sizeof(struct ncclIbQpCreateAttr));
@@ -730,7 +730,7 @@ static ncclResult_t ncclIbSenderQpsCreate(ncclIbSendComm* comm, struct ncclIbCon
   qpCreateAttrs.maxRecvWorkRequest = 0;
   // Send requests are sent using at most 2 messages (RDMA Write and RDMA Write with Immediate)
   qpCreateAttrs.maxSendWorkRequest = 2 * NET_IB_MAX_REQUESTS;
-  for (int qpIndex = 0; qpIndex < nqps; qpIndex++) {
+  /* 中文图解·qp｜发送通信对象遍历协商出的 nqps 建立数据 QP，同一条连接随后服务多次请求。 */ for (int qpIndex = 0; qpIndex < nqps; qpIndex++) {
     // The QPs are created in a "striped" manner across the available devices.
     // For example, if there are 2 devices and 4 QPs, the QPs will be created
     // on the devices as follows:
@@ -810,7 +810,7 @@ static ncclResult_t ncclIbSenderQpsCreate(ncclIbSendComm* comm, struct ncclIbCon
 // Note that if ECE is supported, the function sets up the reduced ECE (which
 // was delivered from the receiver side) on the QPs before modifying the QPs
 // to RTR.
-static ncclResult_t ncclIbSenderQpsToRts(ncclIbSendComm* comm, struct ncclIbConnectionMetadata* remMeta) {
+static ncclResult_t ncclIbSenderQpsToRts(ncclIbSendComm* comm, struct ncclIbConnectionMetadata* remMeta) { /* 中文索引·体内调用 wrap_ibv_set_ece、ncclIbQpRtr。 */
   uint nqps = comm->base.nqps;
   for (int qpIndex = 0; qpIndex < nqps; qpIndex++) {
     ncclIbQp* localQp = &comm->base.qps[qpIndex];
@@ -874,7 +874,7 @@ void ncclIbSetTrafficClass(void* ctx, int trafficClass) {
 }
 
 ncclResult_t ncclIbConnectImpl(void* ctx, int dev, void* opaqueHandle, void** sendComm,
-                               ncclNetDeviceHandle_t** /*sendDevComm*/, int nQpsPerDev, int envTrafficClass) {
+                               ncclNetDeviceHandle_t** /*sendDevComm*/, int nQpsPerDev, int envTrafficClass) { /* 中文索引·体内调用 ncclParamIbSubnetAwareRouting、ncclIbFindDevBySubnet。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclIbHandle* handle = (struct ncclIbHandle*)opaqueHandle;
 
@@ -1185,7 +1185,7 @@ ncclResult_t ncclIbConnect(void* ctx, int dev, void* opaqueHandle, void** sendCo
 DEFINE_NCCL_PARAM(ncclParamIbWarnRailLocal, bool, NCCL_IB_WARN_RAIL_LOCAL, false, NCCL_PARAM_FLAG_CACHED,
                   NCCL_PARAM_DEFAULT, "Warn when using local rail for IB");
 
-ncclResult_t ncclIbCheckVProps(ncclNetVDeviceProps_t* vProps1, ncclNetVDeviceProps_t* vProps2) {
+ncclResult_t ncclIbCheckVProps(ncclNetVDeviceProps_t* vProps1, ncclNetVDeviceProps_t* vProps2) { /* 中文索引·体内调用 ncclParamIbWarnRailLocal、snprintf。 */
   ncclNetVDeviceProps_t outVProps = {0};
   ncclNetVDeviceProps_t* minVProps = vProps2;
   ncclNetVDeviceProps_t* maxVProps = vProps1;
@@ -1237,7 +1237,7 @@ ncclResult_t ncclIbCheckVProps(ncclNetVDeviceProps_t* vProps1, ncclNetVDevicePro
 // QPs' information so that data structure could be delivered to the remote
 // side (sender) as part of the connection establishment process.
 static ncclResult_t ncclIbReceiverQpsCreateToRts(ncclIbRecvComm* rComm, struct ncclIbConnectionMetadata* remMeta,
-                                                 struct ncclIbConnectionMetadata* meta) {
+                                                 struct ncclIbConnectionMetadata* meta) { /* 中文索引·体内调用 memset、ncclParamIbEventBasedLb。 */
   uint nqps = rComm->base.nqps;
   struct ncclIbQpCreateAttr qpCreateAttrs;
   memset(&qpCreateAttrs, 0, sizeof(struct ncclIbQpCreateAttr));
@@ -1379,7 +1379,7 @@ static ncclResult_t ncclIbReceiverQpsCreateToRts(ncclIbRecvComm* rComm, struct n
 // Build the flush QP and its host buffer on the first flush. NCCL only issues a
 // network-read flush when the topology needs one, so connections that never flush
 // never allocate these resources.
-ncclResult_t ncclIbCreateFlushQp(struct ncclIbRecvComm* comm) {
+/* 中文图解·qp｜flush QP 按需创建，统计接收侧资源时要单列这个条件分支。 */ ncclResult_t ncclIbCreateFlushQp(struct ncclIbRecvComm* comm) {
   if (comm->flushEnabled == 0 || comm->flushQpsCreated) return ncclSuccess;
 
   for (int i = 0; i < comm->base.vProps.ndevs; i++) {
@@ -1439,7 +1439,7 @@ ncclResult_t ncclIbCreateFlushQp(struct ncclIbRecvComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPostReceiveWorkRequestsOnQp(struct ncclIbRecvComm* recvComm, ncclIbQp* dataQp) {
+ncclResult_t ncclIbPostReceiveWorkRequestsOnQp(struct ncclIbRecvComm* recvComm, ncclIbQp* dataQp) { /* 中文索引·体内调用 ncclIbResiliencyDataRqSizeGet、ncclIbPostRecvWorkRequest。 */
   uint32_t nRecvWorkRequestsPerQp = NET_IB_MAX_REQUESTS;
   if (recvComm->base.resiliency) {
     NCCLCHECK(ncclIbResiliencyDataRqSizeGet(recvComm->base.resiliency, dataQp->devIndex, &nRecvWorkRequestsPerQp));
@@ -1452,7 +1452,7 @@ ncclResult_t ncclIbPostReceiveWorkRequestsOnQp(struct ncclIbRecvComm* recvComm, 
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbReceiverPrePostReceiveWorkRequests(struct ncclIbRecvComm* recvComm) {
+ncclResult_t ncclIbReceiverPrePostReceiveWorkRequests(struct ncclIbRecvComm* recvComm) { /* 中文索引·体内调用 ncclIbPostReceiveWorkRequestsOnQp。 */
   int nqps = recvComm->base.nqps;
   for (int i = 0; i < nqps; i++) {
     NCCLCHECK(ncclIbPostReceiveWorkRequestsOnQp(recvComm, &recvComm->base.qps[i]));
@@ -1464,7 +1464,7 @@ DEFINE_NCCL_PARAM(ncclParamIbGdrFlushDisable, bool, NCCL_GDR_FLUSH_DISABLE, fals
                   NCCL_PARAM_DEFAULT, "If set, disables GPU Direct RDMA flush");
 
 ncclResult_t ncclIbAcceptImpl(void* listenComm, void** recvComm, ncclNetDeviceHandle_t** /*recvDevComm*/,
-                              int nQpsPerDev) {
+                              int nQpsPerDev) { /* 中文索引·体内调用 ncclCalloc、ncclIbMalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclIbListenComm* lComm = (struct ncclIbListenComm*)listenComm;
   struct ncclIbCommStage* stage = lComm->stage;
@@ -1764,7 +1764,7 @@ ncclResult_t ncclIbAccept(void* listenComm, void** recvComm, ncclNetDeviceHandle
   return ncclIbAcceptImpl(listenComm, recvComm, recvDevComm, ncclParamIbQpsPerConn());
 }
 
-ncclResult_t ncclIbCloseSend(void* sendComm) {
+ncclResult_t ncclIbCloseSend(void* sendComm) { /* 中文索引·体内调用 ncclIbWqeLatReportQpSummary、ncclSocketClose。 */
   struct ncclIbSendComm* comm = (struct ncclIbSendComm*)sendComm;
   if (comm) {
     for (int q = 0; q < comm->base.nqps; q++)
@@ -1803,7 +1803,7 @@ ncclResult_t ncclIbCloseSend(void* sendComm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbCloseRecv(void* recvComm) {
+ncclResult_t ncclIbCloseRecv(void* recvComm) { /* 中文索引·体内调用 ncclSocketClose、wrap_ibv_destroy_qp。 */
   struct ncclIbRecvComm* comm = (struct ncclIbRecvComm*)recvComm;
   if (comm) {
     NCCLCHECK(ncclSocketClose(&comm->base.sock));
@@ -1838,7 +1838,7 @@ ncclResult_t ncclIbCloseRecv(void* recvComm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbCloseListen(void* listenComm) {
+ncclResult_t ncclIbCloseListen(void* listenComm) { /* 中文索引·体内调用 ncclSocketClose、free。 */
   struct ncclIbListenComm* comm = (struct ncclIbListenComm*)listenComm;
   if (comm) {
     NCCLCHECK(ncclSocketClose(&comm->sock));

@@ -53,7 +53,7 @@ static ginPluginLib_t pluginLibs[NCCL_GIN_MAX_PLUGINS] = {0};
 static std::mutex pluginMutex;
 static std::once_flag initPluginLibsOnceFlag;
 
-static ncclResult_t ncclGinPluginUnload(ginPluginLib_t* pluginLib) {
+static ncclResult_t ncclGinPluginUnload(ginPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclClosePluginLib。 */
   if (pluginLib->dlHandle && pluginLib->refCount == 0) {
     INFO(NCCL_DESTROY | NCCL_NET, "GIN/Plugin: Unloading plugin %s", pluginLib->name);
     NCCLCHECK(ncclClosePluginLib(pluginLib->dlHandle, ncclPluginTypeGin));
@@ -68,7 +68,7 @@ static ncclResult_t ncclGinPluginUnload(ginPluginLib_t* pluginLib) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinPluginLoad(ginPluginLib_t* pluginLib) {
+static ncclResult_t ncclGinPluginLoad(ginPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclOpenGinPluginLib、ncclClosePluginLib。 */
   // Entries borrowed from RMA/NET may already have a handle;
   // after unload, reopen the same library by its saved name/path.
   if (pluginLib->dlHandle == NULL) {
@@ -101,7 +101,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclGinPluginInit(struct ncclComm* comm, ginPluginLib_t* pluginLib, void** outContext) {
+static ncclResult_t ncclGinPluginInit(struct ncclComm* comm, ginPluginLib_t* pluginLib, void** outContext) { /* 中文索引·体内调用 pluginLib->ncclGin->init、pluginLib->ncclGin->devices。 */
   int ndev;
   bool ginInitCompleted = false;
   // Init must be called for each new comm to set the right context
@@ -130,7 +130,7 @@ static ncclResult_t ncclGinPluginInit(struct ncclComm* comm, ginPluginLib_t* plu
 }
 
 static ncclResult_t ncclGinPluginAssignToComm(struct ncclComm* comm, int pluginIndex, void* ginContext,
-                                              bool* isAssigned) {
+                                              bool* isAssigned) { /* 中文索引·体内调用 gin->getProperties、ncclParamGinType。 */
   *isAssigned = false;
   pluginLibs[pluginIndex].refCount++;
 
@@ -197,7 +197,7 @@ static ncclResult_t ncclGinPluginAssignToComm(struct ncclComm* comm, int pluginI
   return ncclSuccess;
 }
 
-static void initPluginLibsOnceFunc() {
+static void initPluginLibsOnceFunc() { /* 中文索引·体内调用 memset、ncclGetEnv。 */
   char* ginPluginName = nullptr;
   const char* defaultGinPlugin = "libnccl-gin.so";
   const char* envGinPlugin = nullptr;
@@ -261,7 +261,7 @@ static void initPluginLibsOnceFunc() {
   pluginCount = pluginCounter;
 }
 
-static ncclResult_t ncclGinPluginFinalize(struct ncclComm* comm, int pluginIndex, void* ginContext) {
+static ncclResult_t ncclGinPluginFinalize(struct ncclComm* comm, int pluginIndex, void* ginContext) { /* 中文索引·体内调用 ncclGinPluginUnload。 */
   if (pluginLibs[pluginIndex].ncclGin && pluginLibs[pluginIndex].state == ncclGinPluginStateEnabled) {
     NCCLCHECK(pluginLibs[pluginIndex].ncclGin->finalize(ginContext));
   }
@@ -272,7 +272,7 @@ static ncclResult_t ncclGinPluginFinalize(struct ncclComm* comm, int pluginIndex
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinInit(struct ncclComm* comm) {
+ncclResult_t ncclGinInit(struct ncclComm* comm) { /* 中文索引·体内调用 std::call_once、ncclGinPluginLoad。 */
   if (comm->compCap < 70) {
     /* GIN only supported for Volta and later */
     INFO(NCCL_INIT, "Compute Capability (%d) is not sufficient to enable GIN.  Require Volta (70) or newer.",
@@ -308,7 +308,7 @@ ncclResult_t ncclGinInit(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinInitFromParent(struct ncclComm* comm, struct ncclComm* parent) {
+ncclResult_t ncclGinInitFromParent(struct ncclComm* comm, struct ncclComm* parent) { /* 中文索引·体内调用 memset。 */
   struct ncclGinState* ginState = &comm->ginState;
   struct ncclGinState* parentState = &parent->ginState;
   ginState->supported = parentState->supported;
@@ -321,7 +321,7 @@ ncclResult_t ncclGinInitFromParent(struct ncclComm* comm, struct ncclComm* paren
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinFinalize(struct ncclComm* comm) {
+ncclResult_t ncclGinFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclGinPluginFinalize。 */
   std::lock_guard<std::mutex> lock(pluginMutex);
   struct ncclGinState* ginState = &comm->ginState;
   for (int t = 0; t < ginState->numActiveBackends; t++) {
@@ -356,7 +356,7 @@ static int ncclGetBackendPriority(struct ncclGinBackendState* backend) {
   }
 }
 
-static int ncclCompareBackendPriority(const void* a, const void* b) {
+static int ncclCompareBackendPriority(const void* a, const void* b) { /* 中文索引·体内调用 ncclGetBackendPriority。 */
   struct ncclGinBackendState* backend_a = (struct ncclGinBackendState*)a;
   struct ncclGinBackendState* backend_b = (struct ncclGinBackendState*)b;
 
@@ -372,7 +372,7 @@ static int ncclCompareBackendPriority(const void* a, const void* b) {
   return 0;
 }
 
-ncclResult_t ncclGinSetDefaultBackend(struct ncclComm* comm, uint64_t globalBitMask) {
+ncclResult_t ncclGinSetDefaultBackend(struct ncclComm* comm, uint64_t globalBitMask) { /* 中文索引·体内调用 ncclGinPluginFinalize、qsort。 */
   struct ncclGinState* ginState = &comm->ginState;
   int initialNumActiveBackends = ginState->numActiveBackends;
   int currentNumActiveBackends = 0;

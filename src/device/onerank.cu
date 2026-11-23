@@ -15,7 +15,7 @@
 namespace {
 template <typename RedOp>
 __global__ __launch_bounds__(512, 1) void oneRankReduce(void* dst, void* src, size_t nElts, uint64_t redOpArg,
-                                                        bool redOpArgIsPtr) {
+                                                        bool redOpArgIsPtr) { /* 中文索引·体内调用 alignUp、divUp。 */
   using T = typename RedOp::EltType;
   int tid = threadIdx.x;
   int tn = blockDim.x;
@@ -48,7 +48,7 @@ __global__ __launch_bounds__(512, 1) void oneRankReduce(void* dst, void* src, si
 } // namespace
 
 ncclResult_t ncclLaunchOneRank(void* dst, void const* src, size_t nElts, struct ncclDevRedOpFull redOp,
-                               ncclDataType_t eltType, cudaStream_t stream, cudaEvent_t launchCompletionEvent) {
+                               ncclDataType_t eltType, cudaStream_t stream, cudaEvent_t launchCompletionEvent) { /* 中文索引·体内调用 ncclTypeSize、ncclCudaMemcpyAsync。 */
   size_t eltSize = ncclTypeSize(eltType);
   if (redOp.op != ncclDevPreMulSum) {
     if (dst != src) {
@@ -152,7 +152,7 @@ __global__ void ncclProfClockProbeKernel(unsigned long long* out) {
 }
 } // namespace
 
-ncclResult_t ncclProfilerProbeGpuClock(unsigned long long* devOut, cudaStream_t stream) {
+ncclResult_t ncclProfilerProbeGpuClock(unsigned long long* devOut, cudaStream_t stream) { /* 中文索引·体内调用 cudaLaunchKernel、dim3。 */
   void* args[1] = {(void*)&devOut};
   // Deliberately not CUDACHECK: this probe runs continuously on the
   // profiler thread and is often the first CUDA call to observe a

@@ -120,7 +120,7 @@ static const char* ncclGdrMappingTypeName(gdr_mapping_type_t type) {
   }
 }
 
-static int ncclGdrCudaError(CUresult status, const char* call) {
+static int ncclGdrCudaError(CUresult status, const char* call) { /* 中文索引·体内调用 cuGetErrorString。 */
   if (status == CUDA_SUCCESS) return 0;
   const char* errStr = nullptr;
   if (CUPFN(cuGetErrorString) != nullptr) (void)CUPFN(cuGetErrorString(status, &errStr));
@@ -128,7 +128,7 @@ static int ncclGdrCudaError(CUresult status, const char* call) {
   return (int)status;
 }
 
-static int ncclGdrDmaBufSupported() {
+static int ncclGdrDmaBufSupported() { /* 中文索引·体内调用 ncclCudaLibraryInit、ncclCudaDriverVersion。 */
 #if defined(NCCL_OS_LINUX) && CUDA_VERSION >= 13030
   int driverVersion = 0;
   if (ncclCudaLibraryInit() != ncclSuccess) return 0;
@@ -172,7 +172,7 @@ static int ncclGdrDmaBufSupported() {
 #endif
 }
 
-static gdr_t ncclGdrDmaBufOpen() {
+static gdr_t ncclGdrDmaBufOpen() { /* 中文索引·体内调用 ncclCalloc、ncclOsGetPageSize。 */
   gdr_t g = nullptr;
   if (ncclCalloc(&g, 1) != ncclSuccess) return nullptr;
   g->pageSize = ncclOsGetPageSize();
@@ -185,7 +185,7 @@ static int ncclGdrDmaBufClose(gdr_t g) {
   return 0;
 }
 
-static int ncclGdrDmaBufPin(gdr_t g, unsigned long addr, size_t size, uint32_t flags, gdr_mh_t* handle) {
+static int ncclGdrDmaBufPin(gdr_t g, unsigned long addr, size_t size, uint32_t flags, gdr_mh_t* handle) { /* 中文索引·体内调用 ncclGdrDmaBufHandleFromMapping、cuPointerGetAttribute。 */
 #if defined(NCCL_OS_LINUX) && CUDA_VERSION >= 13030
   if (handle == nullptr) return EINVAL;
   if (g == nullptr) return EINVAL;
@@ -299,7 +299,7 @@ cleanup:
 #endif
 }
 
-static int ncclGdrDmaBufUnpin(gdr_t, gdr_mh_t handle) {
+static int ncclGdrDmaBufUnpin(gdr_t, gdr_mh_t handle) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle、munmap。 */
 #if defined(NCCL_OS_LINUX)
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
   if (mapping == nullptr) return EINVAL;
@@ -314,7 +314,7 @@ static int ncclGdrDmaBufUnpin(gdr_t, gdr_mh_t handle) {
 #endif
 }
 
-static int ncclGdrDmaBufGetInfo(gdr_t, gdr_mh_t handle, gdr_info_t* info) {
+static int ncclGdrDmaBufGetInfo(gdr_t, gdr_mh_t handle, gdr_info_t* info) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle。 */
 #if defined(NCCL_OS_LINUX)
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
   if (mapping == nullptr || info == nullptr) return EINVAL;
@@ -332,7 +332,7 @@ static int ncclGdrDmaBufGetInfo(gdr_t, gdr_mh_t handle, gdr_info_t* info) {
 #endif
 }
 
-static int ncclGdrDmaBufMap(gdr_t g, gdr_mh_t handle, void** va, size_t size) {
+static int ncclGdrDmaBufMap(gdr_t g, gdr_mh_t handle, void** va, size_t size) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle、mmap。 */
 #if defined(NCCL_OS_LINUX)
   if (g == nullptr || va == nullptr) return EINVAL;
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
@@ -359,7 +359,7 @@ static int ncclGdrDmaBufMap(gdr_t g, gdr_mh_t handle, void** va, size_t size) {
 #endif
 }
 
-static int ncclGdrDmaBufUnmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) {
+static int ncclGdrDmaBufUnmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle、munmap。 */
 #if defined(NCCL_OS_LINUX)
   if (g == nullptr || va == nullptr) return EINVAL;
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
@@ -385,7 +385,7 @@ static int ncclGdrDmaBufUnmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) {
 #endif
 }
 
-static int ncclGdrDmaBufCopyToMapping(gdr_mh_t handle, void* map_d_ptr, const void* h_ptr, size_t size) {
+static int ncclGdrDmaBufCopyToMapping(gdr_mh_t handle, void* map_d_ptr, const void* h_ptr, size_t size) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle、memcpy。 */
 #if defined(NCCL_OS_LINUX)
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
   if (mapping == nullptr || !mapping->mapped) return EINVAL;
@@ -398,7 +398,7 @@ static int ncclGdrDmaBufCopyToMapping(gdr_mh_t handle, void* map_d_ptr, const vo
 #endif
 }
 
-static int ncclGdrDmaBufCopyFromMapping(gdr_mh_t handle, void* h_ptr, const void* map_d_ptr, size_t size) {
+static int ncclGdrDmaBufCopyFromMapping(gdr_mh_t handle, void* h_ptr, const void* map_d_ptr, size_t size) { /* 中文索引·体内调用 ncclGdrDmaBufMappingFromHandle、memcpy。 */
 #if defined(NCCL_OS_LINUX)
   ncclGdrDmaBufMapping* mapping = ncclGdrDmaBufMappingFromHandle(handle);
   if (mapping == nullptr || !mapping->mapped) return EINVAL;
@@ -469,7 +469,7 @@ static void ncclGdrClearLibraryBackend() {
   if (gdrOps != &ncclGdrDmaBufOps) gdrOps = NULL;
 }
 
-static void ncclGdrCloseLibraryBackend() {
+static void ncclGdrCloseLibraryBackend() { /* 中文索引·体内调用 ncclOsDlclose、ncclGdrClearLibraryBackend。 */
   if (gdrhandle != NULL) {
     ncclOsDlclose(gdrhandle);
     gdrhandle = NULL;
@@ -477,7 +477,7 @@ static void ncclGdrCloseLibraryBackend() {
   ncclGdrClearLibraryBackend();
 }
 
-static ncclResult_t ncclGdrUseInternalDmaBufBackend() {
+static ncclResult_t ncclGdrUseInternalDmaBufBackend() { /* 中文索引·体内调用 ncclGdrDmaBufSupported、ncclGdrClearLibraryBackend。 */
   if (!ncclGdrDmaBufSupported()) {
     INFO(NCCL_INIT, "NCCL internal DMA-BUF mmap backend unavailable");
     return ncclInternalError;
@@ -543,7 +543,7 @@ std::mutex& getGdrMutex() {
 static std::once_flag initOnceFlag;
 static ncclResult_t initResult;
 
-static void initOnceFunc(void) {
+static void initOnceFunc(void) { /* 中文索引·体内调用 ncclParamGdrCopyUseInternalDmaBuf、ncclGdrUseInternalDmaBufBackend。 */
   void* tmp;
   void** cast;
   int64_t useInternalDmaBuf = ncclParamGdrCopyUseInternalDmaBuf();
@@ -612,7 +612,7 @@ static const char* ncclGdrBackendName() {
   return gdrOps != NULL && gdrOps->name != NULL ? gdrOps->name : "GDRCOPY";
 }
 
-static ncclResult_t ncclGdrUnavailable(const char* op) {
+static ncclResult_t ncclGdrUnavailable(const char* op) { /* 中文索引·体内调用 ncclGdrBackendName。 */
   if (gdrOps == NULL) {
     WARN("GDRCOPY lib wrapper not initialized.");
   } else {
@@ -621,7 +621,7 @@ static ncclResult_t ncclGdrUnavailable(const char* op) {
   return ncclInternalError;
 }
 
-gdr_t wrap_gdr_open(void) {
+gdr_t wrap_gdr_open(void) { /* 中文索引·体内调用 gdrOps->open、ncclGdrCloseLibraryBackend。 */
   if (gdrOps == NULL || gdrOps->open == NULL) {
     WARN("GDRCOPY lib wrapper not initialized.");
     return NULL;
@@ -635,7 +635,7 @@ gdr_t wrap_gdr_open(void) {
   return gdrOps->open();
 }
 
-ncclResult_t wrap_gdr_close(gdr_t g) {
+ncclResult_t wrap_gdr_close(gdr_t g) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->close。 */
   if (gdrOps == NULL || gdrOps->close == NULL) return ncclGdrUnavailable("close");
   int ret = gdrOps->close(g);
   if (ret != 0) {
@@ -646,7 +646,7 @@ ncclResult_t wrap_gdr_close(gdr_t g) {
 }
 
 ncclResult_t wrap_gdr_pin_buffer(gdr_t g, unsigned long addr, size_t size, uint64_t p2p_token, uint32_t va_space,
-                                 gdr_mh_t* handle) {
+                                 gdr_mh_t* handle) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->pinBuffer。 */
   if (gdrOps == NULL || gdrOps->pinBuffer == NULL) return ncclGdrUnavailable("pin_buffer");
   int ret;
   GDRLOCKCALL(gdrOps->pinBuffer(g, addr, size, p2p_token, va_space, handle), ret);
@@ -657,7 +657,7 @@ ncclResult_t wrap_gdr_pin_buffer(gdr_t g, unsigned long addr, size_t size, uint6
   return ncclSuccess;
 }
 
-bool ncclGdrPinV2Available(void) {
+bool ncclGdrPinV2Available(void) { /* 中文索引·体内调用 std::call_once、wrap_gdr_symbols。 */
   static std::once_flag onceFlag;
   static bool available = false;
   std::call_once(onceFlag, []() {
@@ -675,7 +675,7 @@ bool ncclGdrPinV2Available(void) {
   return available;
 }
 
-ncclResult_t wrap_gdr_pin_buffer_v2(gdr_t g, unsigned long addr, size_t size, uint32_t flags, gdr_mh_t* handle) {
+ncclResult_t wrap_gdr_pin_buffer_v2(gdr_t g, unsigned long addr, size_t size, uint32_t flags, gdr_mh_t* handle) { /* 中文索引·体内调用 ncclGdrPinV2Available、ncclGdrUnavailable。 */
   if (!ncclGdrPinV2Available()) {
     WARN("gdr_pin_buffer_v2 not available; GDRCopy >= 2.5 required");
     return ncclInternalError;
@@ -690,7 +690,7 @@ ncclResult_t wrap_gdr_pin_buffer_v2(gdr_t g, unsigned long addr, size_t size, ui
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_unpin_buffer(gdr_t g, gdr_mh_t handle) {
+ncclResult_t wrap_gdr_unpin_buffer(gdr_t g, gdr_mh_t handle) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->unpinBuffer。 */
   if (gdrOps == NULL || gdrOps->unpinBuffer == NULL) return ncclGdrUnavailable("unpin_buffer");
   int ret;
   GDRLOCKCALL(gdrOps->unpinBuffer(g, handle), ret);
@@ -701,7 +701,7 @@ ncclResult_t wrap_gdr_unpin_buffer(gdr_t g, gdr_mh_t handle) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_get_info(gdr_t g, gdr_mh_t handle, gdr_info_t* info) {
+ncclResult_t wrap_gdr_get_info(gdr_t g, gdr_mh_t handle, gdr_info_t* info) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->getInfo。 */
   if (gdrOps == NULL || gdrOps->getInfo == NULL) return ncclGdrUnavailable("get_info");
   int ret;
   GDRLOCKCALL(gdrOps->getInfo(g, handle, info), ret);
@@ -712,7 +712,7 @@ ncclResult_t wrap_gdr_get_info(gdr_t g, gdr_mh_t handle, gdr_info_t* info) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_map(gdr_t g, gdr_mh_t handle, void** va, size_t size) {
+ncclResult_t wrap_gdr_map(gdr_t g, gdr_mh_t handle, void** va, size_t size) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->map。 */
   if (gdrOps == NULL || gdrOps->map == NULL) return ncclGdrUnavailable("map");
   int ret;
   GDRLOCKCALL(gdrOps->map(g, handle, va, size), ret);
@@ -723,7 +723,7 @@ ncclResult_t wrap_gdr_map(gdr_t g, gdr_mh_t handle, void** va, size_t size) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_unmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) {
+ncclResult_t wrap_gdr_unmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->unmap。 */
   if (gdrOps == NULL || gdrOps->unmap == NULL) return ncclGdrUnavailable("unmap");
   int ret;
   GDRLOCKCALL(gdrOps->unmap(g, handle, va, size), ret);
@@ -734,7 +734,7 @@ ncclResult_t wrap_gdr_unmap(gdr_t g, gdr_mh_t handle, void* va, size_t size) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_runtime_get_version(int* major, int* minor) {
+ncclResult_t wrap_gdr_runtime_get_version(int* major, int* minor) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->runtimeGetVersion。 */
   if (gdrOps == NULL || gdrOps->runtimeGetVersion == NULL) return ncclGdrUnavailable("runtime_get_version");
   gdrOps->runtimeGetVersion(major, minor);
   if (gdrOps == &gdrLibraryOps) {
@@ -744,7 +744,7 @@ ncclResult_t wrap_gdr_runtime_get_version(int* major, int* minor) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_driver_get_version(gdr_t g, int* major, int* minor) {
+ncclResult_t wrap_gdr_driver_get_version(gdr_t g, int* major, int* minor) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->runtimeGetVersion。 */
   if (gdrOps == NULL) return ncclGdrUnavailable("driver_get_version");
   if (gdrRuntimeMajor == 0 && gdrOps == &gdrLibraryOps && gdrOps->runtimeGetVersion != NULL) {
     gdrOps->runtimeGetVersion(&gdrRuntimeMajor, &gdrRuntimeMinor);
@@ -765,7 +765,7 @@ ncclResult_t wrap_gdr_driver_get_version(gdr_t g, int* major, int* minor) {
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_get_attribute(gdr_t g, gdr_attr_t attr, int* v) {
+ncclResult_t wrap_gdr_get_attribute(gdr_t g, gdr_attr_t attr, int* v) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->getAttribute。 */
   if (gdrOps == NULL) return ncclGdrUnavailable("get_attribute");
   if (gdrOps->getAttribute == NULL) {
     INFO(NCCL_INIT, "gdr_get_attribute() not available");
@@ -784,7 +784,7 @@ ncclResult_t wrap_gdr_is_dma_buf_mmap(gdr_t g, int* v) {
   return wrap_gdr_get_attribute(g, GDR_ATTR_USING_DMA_BUF_MMAP, v);
 }
 
-ncclResult_t wrap_gdr_copy_to_mapping(gdr_mh_t handle, void* map_d_ptr, const void* h_ptr, size_t size) {
+ncclResult_t wrap_gdr_copy_to_mapping(gdr_mh_t handle, void* map_d_ptr, const void* h_ptr, size_t size) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->copyToMapping。 */
   if (gdrOps == NULL || gdrOps->copyToMapping == NULL) return ncclGdrUnavailable("copy_to_mapping");
   int ret;
   GDRLOCKCALL(gdrOps->copyToMapping(handle, map_d_ptr, h_ptr, size), ret);
@@ -796,7 +796,7 @@ ncclResult_t wrap_gdr_copy_to_mapping(gdr_mh_t handle, void* map_d_ptr, const vo
   return ncclSuccess;
 }
 
-ncclResult_t wrap_gdr_copy_from_mapping(gdr_mh_t handle, void* h_ptr, const void* map_d_ptr, size_t size) {
+ncclResult_t wrap_gdr_copy_from_mapping(gdr_mh_t handle, void* h_ptr, const void* map_d_ptr, size_t size) { /* 中文索引·体内调用 ncclGdrUnavailable、gdrOps->copyFromMapping。 */
   if (gdrOps == NULL || gdrOps->copyFromMapping == NULL) return ncclGdrUnavailable("copy_from_mapping");
   int ret;
   GDRLOCKCALL(gdrOps->copyFromMapping(handle, h_ptr, map_d_ptr, size), ret);

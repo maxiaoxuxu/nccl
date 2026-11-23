@@ -8,7 +8,7 @@
 #include "comm.h"
 #include "enqueue.h"
 
-ncclResult_t ncclTaskPrepare(struct ncclComm* comm, ncclSimInfo_t* simInfo) {
+ncclResult_t ncclTaskPrepare(struct ncclComm* comm, ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 ncclIntruQueueConstruct、ncclTaskPreTuning。 */
   struct ncclTaskTuningInfo* tInfo;
   struct ncclTaskTuningInfoQueue taskTuningInfoQueue;
 

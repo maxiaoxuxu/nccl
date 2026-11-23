@@ -33,7 +33,7 @@ static ncclProfilerCallback_t ncclProfilerFunction;
 static int netRefCount;
 
 ncclResult_t ncclNetSocketInit(void** ctx, uint64_t commId, ncclNetCommConfig_t* config, ncclDebugLogger_t logFunction,
-                               ncclProfilerCallback_t profFunction) {
+                               ncclProfilerCallback_t profFunction) { /* 中文索引·体内调用 ncclNetSocketInitDevices。 */
   std::lock_guard<std::mutex> lock(ncclNetSocketMutex);
   if (netRefCount) {
     netRefCount++;
@@ -50,7 +50,7 @@ ncclResult_t ncclNetSocketDevices(int* ndev) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetSocketGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclNetSocketGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNetSocketGetSpeed。 */
   props->name = ncclNetSocketDevs[dev].devName;
   props->pciPath = ncclNetSocketDevs[dev].pciPath;
   props->guid = dev;
@@ -182,7 +182,7 @@ struct ncclNetSocketComm {
   struct ncclNetSocketThreadResources threadResources[MAX_THREADS];
 };
 
-void* persistentSocketThread(void* args_) {
+void* persistentSocketThread(void* args_) { /* 中文索引·体内调用 ncclProfilerFunction、ncclSocketProgress。 */
   struct ncclNetSocketThreadResources* resource = (struct ncclNetSocketThreadResources*)args_;
   struct ncclNetSocketComm* comm = resource->comm;
   struct ncclNetSocketTaskQueue* myQueue = &resource->threadTaskQueue;
@@ -256,7 +256,7 @@ void* persistentSocketThread(void* args_) {
   }
 }
 
-ncclResult_t ncclNetSocketGetNsockNthread(int dev, int* ns, int* nt) {
+ncclResult_t ncclNetSocketGetNsockNthread(int dev, int* ns, int* nt) { /* 中文索引·体内调用 ncclParamSocketNsocksPerThread、ncclParamSocketNthreads。 */
   ncclResult_t ret = ncclSuccess;
   int nSocksPerThread = ncclParamSocketNsocksPerThread();
   int nThreads = ncclParamSocketNthreads();
@@ -316,7 +316,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclNetSocketListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) {
+ncclResult_t ncclNetSocketListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) { /* 中文索引·体内调用 memset、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclNetSocketHandle* handle = (struct ncclNetSocketHandle*)opaqueHandle;
   memset(handle, 0, sizeof(struct ncclNetSocketHandle));
@@ -340,7 +340,7 @@ fail:
 
 #define SOCKET_CTRL_SIZE (sizeof(int))
 ncclResult_t ncclNetSocketConnect(void* ctx, int dev, void* opaqueHandle, void** sendComm,
-                                  ncclNetDeviceHandle_t** /*sendDevComm*/) {
+                                  ncclNetDeviceHandle_t** /*sendDevComm*/) { /* 中文索引·体内调用 cudaGetDevice、ncclSocketInit。 */
   if (dev < 0 || dev >= ncclNetIfs) {
     // data transfer socket is based on specified dev
     return ncclInternalError;
@@ -387,7 +387,7 @@ ncclResult_t ncclNetSocketConnect(void* ctx, int dev, void* opaqueHandle, void**
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetSocketAccept(void* listenComm, void** recvComm, ncclNetDeviceHandle_t** /*recvDevComm*/) {
+ncclResult_t ncclNetSocketAccept(void* listenComm, void** recvComm, ncclNetDeviceHandle_t** /*recvDevComm*/) { /* 中文索引·体内调用 cudaGetDevice、ncclCalloc。 */
   struct ncclNetSocketListenComm* lComm = (struct ncclNetSocketListenComm*)listenComm;
   struct ncclNetSocketCommStage* stage = &lComm->stage;
   struct ncclNetSocketComm* rComm = stage->comm;
@@ -449,7 +449,7 @@ ncclResult_t ncclNetSocketAccept(void* listenComm, void** recvComm, ncclNetDevic
 }
 
 ncclResult_t ncclNetSocketGetRequest(struct ncclNetSocketComm* comm, int op, void* data, int size,
-                                     struct ncclNetSocketRequest** req) {
+                                     struct ncclNetSocketRequest** req) { /* 中文索引·体内调用 ncclParamSocketInlineSize。 */
   for (int i = 0; i < MAX_REQUESTS; i++) {
     struct ncclNetSocketRequest* r = comm->requests + i;
     if (r->used == 0) {
@@ -470,7 +470,7 @@ ncclResult_t ncclNetSocketGetRequest(struct ncclNetSocketComm* comm, int op, voi
 }
 
 ncclResult_t ncclNetSocketGetTask(struct ncclNetSocketComm* comm, struct ncclProfilerInfo* pInfo, int op, void* data,
-                                  int size, struct ncclNetSocketTask** req) {
+                                  int size, struct ncclNetSocketTask** req) { /* 中文索引·体内调用 ncclCalloc、std::thread。 */
   int tid = comm->nextSock % comm->nThreads;
   struct ncclNetSocketThreadResources* res = comm->threadResources + tid;
   struct ncclNetSocketTaskQueue* queue = &res->threadTaskQueue;
@@ -517,7 +517,7 @@ static int ncclNetSocketInlineSize(int dataSize) {
   return (dataSize <= ncclParamSocketInlineSize()) ? dataSize : 0;
 }
 
-ncclResult_t ncclNetSocketTest(void* request, int* done, int* size) {
+ncclResult_t ncclNetSocketTest(void* request, int* done, int* size) { /* 中文索引·体内调用 ncclNetSocketInlineSize、memcpy。 */
   *done = 0;
   struct ncclNetSocketRequest* r = (struct ncclNetSocketRequest*)request;
   if (r == NULL) {
@@ -639,7 +639,7 @@ ncclResult_t ncclNetSocketDeregMr(void* comm, void* mhandle) {
 }
 
 ncclResult_t ncclNetSocketIsend(void* sendComm, void* data, size_t size, int tag, void* mhandle, void* phandle,
-                                void** request) {
+                                void** request) { /* 中文索引·体内调用 ncclNetSocketGetRequest。 */
   struct ncclNetSocketComm* comm = (struct ncclNetSocketComm*)sendComm;
   NCCLCHECK(ncclNetSocketGetRequest(comm, NCCL_SOCKET_SEND, data, (int)size, (struct ncclNetSocketRequest**)request));
 #ifdef NCCL_ENABLE_NET_PROFILING
@@ -651,7 +651,7 @@ ncclResult_t ncclNetSocketIsend(void* sendComm, void* data, size_t size, int tag
 }
 
 ncclResult_t ncclNetSocketIrecv(void* recvComm, int n, void** data, size_t* sizes, int* tags, void** mhandles,
-                                void** phandles, void** request) {
+                                void** phandles, void** request) { /* 中文索引·体内调用 ncclNetSocketGetRequest。 */
   struct ncclNetSocketComm* comm = (struct ncclNetSocketComm*)recvComm;
   if (n != 1) return ncclInternalError;
   NCCLCHECK(ncclNetSocketGetRequest(comm, NCCL_SOCKET_RECV, data[0], (int)sizes[0],
@@ -669,7 +669,7 @@ ncclResult_t ncclNetSocketIflush(void* recvComm, int n, void** data, int* sizes,
   return ncclInternalError;
 }
 
-ncclResult_t ncclNetSocketCloseListen(void* opaqueComm) {
+ncclResult_t ncclNetSocketCloseListen(void* opaqueComm) { /* 中文索引·体内调用 ncclSocketReady、ncclSocketClose。 */
   struct ncclNetSocketListenComm* comm = (struct ncclNetSocketListenComm*)opaqueComm;
   if (comm) {
     int ready;
@@ -680,7 +680,7 @@ ncclResult_t ncclNetSocketCloseListen(void* opaqueComm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetSocketClose(void* opaqueComm) {
+ncclResult_t ncclNetSocketClose(void* opaqueComm) { /* 中文索引·体内调用 res->threadCond.notify_one、free。 */
   struct ncclNetSocketComm* comm = (struct ncclNetSocketComm*)opaqueComm;
   if (comm) {
     for (int i = 0; i < comm->nThreads; i++) {

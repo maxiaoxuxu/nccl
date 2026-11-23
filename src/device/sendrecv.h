@@ -14,10 +14,10 @@ struct RunWorkBatch<ncclFuncSendRecv, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_SIMPL
   static_assert(sizeof(T) == 1, "SendRecv only works on single byte types T.");
 
   template <typename Proto>
-  __device__ void runSend(int tid, int tn, int group, struct ncclDevWorkP2p* work) {
+  __device__ void runSend(int tid, int tn, int group, struct ncclDevWorkP2p* work) { /* 中文索引·体内调用 u32fp8Decode、size_t。 */
     size_t bytes = work->sendBytes;
     bool useLargeChunk = (work->sendIpcReg && ncclShmem.comm.isAllNvlink) || work->sendNetReg;
-    int chunkSize = useLargeChunk ? NCCL_MAX_NET_SIZE : u32fp8Decode(work->sendChunkSize_u32fp8);
+    /* 中文图解·p2p｜IPC/NET 注册条件可能启用大块收发，否则从 work 中解码压缩保存的 chunk 字节数。 */ int chunkSize = useLargeChunk ? NCCL_MAX_NET_SIZE : u32fp8Decode(work->sendChunkSize_u32fp8);
     int stepSize = useLargeChunk ? NCCL_MAX_NET_SIZE : ncclShmem.comm.p2pChunkSize;
     Primitives<T, RedOp, FanAsymmetric<0, 1>, 1, Proto, 1> prims(tid, tn, nullptr, &work->sendRank, work->sendAddr,
                                                                  nullptr,
@@ -32,7 +32,7 @@ struct RunWorkBatch<ncclFuncSendRecv, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_SIMPL
   }
 
   template <typename Proto>
-  __device__ void runRecv(int tid, int tn, int group, struct ncclDevWorkP2p* work) {
+  __device__ void runRecv(int tid, int tn, int group, struct ncclDevWorkP2p* work) { /* 中文索引·体内调用 u32fp8Decode、size_t。 */
     size_t bytes = work->recvBytes;
     bool useLargeChunk = (work->recvIpcReg && ncclShmem.comm.isAllNvlink) || work->recvNetReg;
     int chunkSize = useLargeChunk ? NCCL_MAX_NET_SIZE : u32fp8Decode(work->recvChunkSize_u32fp8);
@@ -49,7 +49,7 @@ struct RunWorkBatch<ncclFuncSendRecv, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_SIMPL
     } while (cursor < bytes);
   }
 
-  __device__ __forceinline__ void run() {
+  __device__ __forceinline__ void run() { /* 中文索引·体内调用 ncclScratchForWarp、ncclP2pChannelToPart。 */
     const int tid = threadIdx.x;
     const int tn = blockDim.x;
     const int wid = tid / WARP_SIZE;
@@ -76,7 +76,7 @@ struct RunWorkBatch<ncclFuncSendRecv, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_SIMPL
         struct ncclDevWorkP2p* work = &works[workIx];
         size_t bytes = isSend ? work->sendBytes : work->recvBytes;
         int nParts = isSend ? work->nSendChannels : work->nRecvChannels;
-        int part = ncclP2pChannelToPart(work->nP2pChannels, work->channelBase, ncclShmem.channelId);
+        /* 中文图解·p2p｜由 channelId 反求 part，把该方向的地址移到 partBeg，并将长度改为 partEnd 减 partBeg。 */ int part = ncclP2pChannelToPart(work->nP2pChannels, work->channelBase, ncclShmem.channelId);
         hasWork = (part < nParts);
         if (nParts != 0) {
           size_t partBeg, partEnd;

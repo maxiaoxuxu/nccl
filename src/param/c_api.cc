@@ -25,7 +25,7 @@ static inline ncclParamRegistry::mapEntry* unwrap(ncclParamHandle_t h) {
   return reinterpret_cast<ncclParamRegistry::mapEntry*>(h);
 }
 
-static inline void ncclParamCheckFlag(uint64_t flags, const char* key) {
+static inline void ncclParamCheckFlag(uint64_t flags, const char* key) { /* 中文索引·体内调用 warningSet.count、warningSet.emplace。 */
   static std::unordered_set<std::string> warningSet;
 
   // skip if this key was checked before, avoid repetitive warning messages
@@ -53,7 +53,7 @@ static inline void ncclParamCheckFlag(uint64_t flags, const char* key) {
 // ============================================================================
 
 NCCL_API(ncclResult_t, ncclParamBind, ncclParamHandle_t* out, const char* key);
-ncclResult_t ncclParamBind(ncclParamHandle_t* out, const char* key) {
+ncclResult_t ncclParamBind(ncclParamHandle_t* out, const char* key) { /* 中文索引·体内调用 ncclParamRegistry::find、ncclParamCheckFlag。 */
   if (!out || !key) return ncclInvalidArgument;
   auto* entry = ncclParamRegistry::find(key);
   if (!entry) {
@@ -98,7 +98,7 @@ NCCL_PARAM_DEFINE_TYPED_GETTER(U64, uint64_t, NCCL_PARAM_TYPE_U64)
 // ============================================================================
 
 NCCL_API(ncclResult_t, ncclParamGetStr, ncclParamHandle_t h, const char** out);
-ncclResult_t ncclParamGetStr(ncclParamHandle_t h, const char** out) {
+ncclResult_t ncclParamGetStr(ncclParamHandle_t h, const char** out) { /* 中文索引·体内调用 unwrap、buffer.c_str。 */
   if (!h || !out) return ncclInvalidArgument;
   auto* e = unwrap(h);
   if (e->info.typeId != NCCL_PARAM_TYPE_CSTR) {
@@ -122,7 +122,7 @@ ncclResult_t ncclParamGet(ncclParamHandle_t h, void* out, int maxLen, int* len) 
 // Typeless Access Interface
 // ============================================================================
 NCCL_API(ncclResult_t, ncclParamGetAllParameterKeys, const char*** table, int* tableLen);
-ncclResult_t ncclParamGetAllParameterKeys(const char*** table, int* tableLen) {
+ncclResult_t ncclParamGetAllParameterKeys(const char*** table, int* tableLen) { /* 中文索引·体内调用 ncclParamDumpAllFlag、ncclParamRegistry::mutex。 */
   if (!table || !tableLen) return ncclInvalidArgument;
 
   // Thread-local storage: keyTable owns string copies so ptrTable pointers remain
@@ -154,7 +154,7 @@ ncclResult_t ncclParamGetAllParameterKeys(const char*** table, int* tableLen) {
 }
 
 NCCL_API(ncclResult_t, ncclParamGetParameter, const char* key, const char** value, int* valueLen);
-ncclResult_t ncclParamGetParameter(const char* key, const char** value, int* valueLen) {
+ncclResult_t ncclParamGetParameter(const char* key, const char** value, int* valueLen) { /* 中文索引·体内调用 ncclParamRegistry::find、ncclParamCheckFlag。 */
   if (!key || !value || !valueLen) return ncclInvalidArgument;
 
   // Thread-local buffer to keep the returned pointer valid for the caller
@@ -177,7 +177,7 @@ ncclResult_t ncclParamGetParameter(const char* key, const char** value, int* val
 }
 
 NCCL_API(void, ncclParamDumpAll);
-void ncclParamDumpAll() {
+void ncclParamDumpAll() { /* 中文索引·体内调用 ncclParamDumpAllFlag、printf。 */
   bool showAll = ncclParamDumpAllFlag();
   printf("=== ncclParam Registry Dump ===\n");
   std::lock_guard<std::mutex> regLock(ncclParamRegistry::mutex());

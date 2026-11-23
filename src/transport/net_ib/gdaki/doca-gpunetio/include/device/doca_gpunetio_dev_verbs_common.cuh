@@ -284,7 +284,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_memcpy_aligned_data(vo
  * @param bytes - Number of bytes to copy
  */
 __device__ static __forceinline__ void doca_gpu_dev_verbs_memcpy_data(void *dst, void *src,
-                                                                      size_t bytes) {
+                                                                      size_t bytes) { /* 中文索引·体内调用 doca_gpu_dev_verbs_isaligned。 */
     size_t remaining_bytes = bytes;
     size_t copied_size;
     while (remaining_bytes > 0) {
@@ -327,7 +327,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_memcpy_inl_aligned_dat
 
 template <typename T, enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode,
           bool need_fence_acquire = false>
-__device__ static __forceinline__ T doca_gpu_dev_verbs_atomic_max(T *ptr, T val) {
+__device__ static __forceinline__ T doca_gpu_dev_verbs_atomic_max(T *ptr, T val) { /* 中文索引·体内调用 ptr_aref.fetch_max。 */
     if (resource_sharing_mode == DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_EXCLUSIVE) {
         T old_val = *ptr;
         *ptr = max(old_val, val);
@@ -368,7 +368,7 @@ __device__ static __forceinline__ T doca_priv_gpu_dev_verbs_atomic_add(T *ptr, T
  */
 template <typename T, enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode>
 __device__ static __forceinline__ T doca_priv_gpu_dev_verbs_atomic_add(T *ptr, T val, std::false_type)
-{
+{ /* 中文索引·体内调用 ptr_aref.fetch_add、atomicAdd_block。 */
 #if DOCA_GPUNETIO_VERBS_USE_CCC_ATOMIC_ADD == 1
 	if (resource_sharing_mode == DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_CTA) {
 		cuda::atomic_ref<T, cuda::thread_scope_block> ptr_aref(*ptr);
@@ -522,7 +522,7 @@ doca_gpu_dev_verbs_div_ceil_aligned_pow2_32bits(uint64_t x, int denominator_shif
  * @return Loaded value via __ldg or dereferenced value.
  */
 template <typename T>
-__device__ __forceinline__ T doca_gpu_dev_verbs_load_const(const T *ptr) {
+__device__ __forceinline__ T doca_gpu_dev_verbs_load_const(const T *ptr) { /* 中文索引·体内调用 __ldg。 */
 #if DOCA_GPUNETIO_VERBS_USE_LDG
     return __ldg(ptr);
 #else

@@ -56,7 +56,7 @@ static rmaPluginLib_t pluginLibs[NCCL_RMA_MAX_PLUGINS] = {0};
 static std::mutex pluginMutex;
 static std::once_flag initPluginLibsOnceFlag;
 
-static ncclResult_t ncclRmaPluginUnload(rmaPluginLib_t* pluginLib) {
+static ncclResult_t ncclRmaPluginUnload(rmaPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclClosePluginLib。 */
   if (pluginLib->dlHandle && pluginLib->refCount == 0) {
     INFO(NCCL_DESTROY | NCCL_NET, "RMA/Plugin: Unloading plugin %s", pluginLib->name);
     NCCLCHECK(ncclClosePluginLib(pluginLib->dlHandle, ncclPluginTypeRma));
@@ -71,7 +71,7 @@ static ncclResult_t ncclRmaPluginUnload(rmaPluginLib_t* pluginLib) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaPluginLoad(rmaPluginLib_t* pluginLib) {
+static ncclResult_t ncclRmaPluginLoad(rmaPluginLib_t* pluginLib) { /* 中文索引·体内调用 ncclOpenRmaPluginLib、ncclClosePluginLib。 */
   // Entries borrowed from GIN/NET may already have a handle;
   // after unload, reopen the same library by its saved name/path.
   if (pluginLib->dlHandle == NULL) {
@@ -104,7 +104,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclRmaPluginInit(struct ncclComm* comm, rmaPluginLib_t* pluginLib) {
+static ncclResult_t ncclRmaPluginInit(struct ncclComm* comm, rmaPluginLib_t* pluginLib) { /* 中文索引·体内调用 pluginLib->ncclRma->init、pluginLib->ncclRma->devices。 */
   int ndev;
   bool initCompleted = false;
   // Init must be called for each new comm to set the right context
@@ -149,7 +149,7 @@ static ncclResult_t ncclRmaPluginAssignToComm(struct ncclComm* comm, int pluginI
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaPluginDisableOtherExternal(int pluginIndex) {
+static ncclResult_t ncclRmaPluginDisableOtherExternal(int pluginIndex) { /* 中文索引·体内调用 snprintf、strlen。 */
   // Only if an external plugin is enabled, disable other external plugins
   if (pluginIndex >= (pluginCount - NCCL_RMA_NUM_INTERNAL_PLUGINS)) return ncclSuccess;
   char names[MAX_STR_LEN * (NCCL_RMA_MAX_PLUGINS - NCCL_RMA_NUM_INTERNAL_PLUGINS)] = {0};
@@ -167,7 +167,7 @@ static ncclResult_t ncclRmaPluginDisableOtherExternal(int pluginIndex) {
   return ncclSuccess;
 }
 
-static void initPluginLibsOnceFunc() {
+static void initPluginLibsOnceFunc() { /* 中文索引·体内调用 memset、ncclGetEnv。 */
   char* rmaPluginName = nullptr;
   const char* defaultRmaPlugin = "libnccl-rma.so";
   const char* envRmaPlugin = nullptr;
@@ -237,7 +237,7 @@ static void initPluginLibsOnceFunc() {
   pluginCount = pluginCounter;
 }
 
-static ncclResult_t ncclRmaPluginFinalize(struct ncclComm* comm, int pluginIndex) {
+static ncclResult_t ncclRmaPluginFinalize(struct ncclComm* comm, int pluginIndex) { /* 中文索引·体内调用 ncclRmaPluginUnload。 */
   if (pluginLibs[pluginIndex].ncclRma && pluginLibs[pluginIndex].state == ncclRmaPluginStateEnabled) {
     NCCLCHECK(pluginLibs[pluginIndex].ncclRma->finalize(comm->rmaContext));
   }
@@ -248,7 +248,7 @@ static ncclResult_t ncclRmaPluginFinalize(struct ncclComm* comm, int pluginIndex
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaInit(struct ncclComm* comm) {
+ncclResult_t ncclRmaInit(struct ncclComm* comm) { /* 中文索引·体内调用 std::call_once、ncclRmaPluginLoad。 */
   bool initialized = false;
   comm->rmaPluginIndex = -1;
   std::call_once(initPluginLibsOnceFlag, initPluginLibsOnceFunc);
@@ -288,7 +288,7 @@ ncclResult_t ncclRmaInitFromParent(struct ncclComm* comm, struct ncclComm* paren
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaFinalize(struct ncclComm* comm) {
+ncclResult_t ncclRmaFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclRmaPluginFinalize。 */
   int pluginIndex = comm->rmaPluginIndex;
   if (pluginIndex < 0) return ncclSuccess;
   std::lock_guard<std::mutex> lock(pluginMutex);

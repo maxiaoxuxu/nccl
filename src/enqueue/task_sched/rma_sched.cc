@@ -10,7 +10,7 @@
 
 ncclResult_t ncclScheduleRmaTasks(struct ncclComm* comm,
                                   struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* queue,
-                                  struct ncclStrongStream* depStream, struct ncclStrongStream* launchOrderStream) {
+                                  struct ncclStrongStream* depStream, struct ncclStrongStream* launchOrderStream) { /* 中文索引·体内调用 doLaunches。 */
   (void)queue;
   (void)depStream;
   (void)launchOrderStream;

@@ -21,7 +21,7 @@ inline double ncclSoftMin(double x, double ceiling, double softness) {
   return ceiling - softness * std::log1p((std::exp(ceiling / softness) - 1) * std::exp(-x / softness));
 }
 
-inline double ncclSoftPlus(double x, double softness) {
+inline double ncclSoftPlus(double x, double softness) { /* 中文索引·体内调用 std::log1p、std::exp。 */
   // looks like a smooth version of: max(0, x)
   double z = x / softness;
   return 100.0 <= z ? x : softness * std::log1p(std::exp(z));
@@ -42,7 +42,7 @@ inline float ncclTuningProtoBWFactor(int proto) {
 
 // bwPerCTA is the expected per CTA bandwidth of the algo/proto for the model.
 // This value is clamped to the tuning constant if one if defined and is positive and non-zero.
-inline float ncclTuningProtoBW(struct ncclComm* comm, int algo, int proto, float bwPerCTA) {
+inline float ncclTuningProtoBW(struct ncclComm* comm, int algo, int proto, float bwPerCTA) { /* 中文索引·体内调用 ncclTuningGetConstantsIndexes、ncclTuningGetCompCapIndex。 */
   int index, compCapIndex;
   ncclTuningGetConstantsIndexes(comm, nullptr, &index);
   compCapIndex = ncclTuningGetCompCapIndex(comm);

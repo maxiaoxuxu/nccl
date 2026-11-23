@@ -27,7 +27,7 @@ ncclDevRedOp_t symkRedOp(ncclRedOp_t redOp, ncclDevRedOp_t devRedOp) {
   return devRedOp;
 }
 
-void convertSymTaskDevOp(struct ncclComm* comm, struct ncclTaskColl* task) {
+void convertSymTaskDevOp(struct ncclComm* comm, struct ncclTaskColl* task) { /* 中文索引·体内调用 symkRedOp、float。 */
   task->opDev.op = symkRedOp(task->opHost, task->opDev.op);
   if (task->opDev.op == ncclDevSumPostDiv) {
     // LDMC uses the same accumulator type as data type. Do not re-pack the scalar.
@@ -69,7 +69,7 @@ static bool symTaskHasForcedTuning(struct ncclComm* comm, ncclFunc_t func) {
 }
 
 // Match device deep-tier gate: uint32_t(input.offset - output.offset) % 16 == 0.
-static ncclResult_t symBatchAlignment(struct ncclTaskColl* headTask, bool* relativeAligned16B) {
+static ncclResult_t symBatchAlignment(struct ncclTaskColl* headTask, bool* relativeAligned16B) { /* 中文索引·体内调用 uint32_t。 */
   *relativeAligned16B = true;
   for (struct ncclTaskColl* t = headTask; t != nullptr; t = t->isSymLast ? nullptr : t->next) {
     size_t inputOff = t->sendWin ? (uintptr_t)t->sendbuff - (uintptr_t)t->sendWin->userPtr : (uintptr_t)t->sendbuff;
@@ -93,7 +93,7 @@ static void setMinChunkPayloadBytes(struct ncclGenkDevWorkArgs* args, int minChu
 
 ncclResult_t ncclMakeSymmetricTaskList(struct ncclComm* comm, struct ncclTaskColl* task,
                                        struct ncclIntruQueue<struct ncclTaskColl, &ncclTaskColl::next>* symTaskQueue,
-                                       struct ncclTaskColl** remainTasksHead, bool* needGenkDevComm) {
+                                       struct ncclTaskColl** remainTasksHead, bool* needGenkDevComm) { /* 中文索引·体内调用 memset、ncclDevrInitOnce。 */
   ncclResult_t ret = ncclSuccess;
   int fnOpTySymCount = 0;
   struct ncclTaskColl* tasksSymByFnOpTy[ncclNumFuncs * ncclNumDevRedOps * ncclNumTypes * ncclNumSymRegTypes];
@@ -292,7 +292,7 @@ ncclResult_t ncclMakeSymmetricTaskList(struct ncclComm* comm, struct ncclTaskCol
 template <bool Genk, typename Args, typename KernelComm>
 static ncclResult_t ncclSymmetricTaskSchedulerImpl(
   struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskColl, &ncclTaskColl::next>* symTaskQueue,
-  struct ncclKernelPlan* plan, KernelComm const& kcomm) {
+  struct ncclKernelPlan* plan, KernelComm const& kcomm) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclTypeSize。 */
   struct ncclTaskColl* headTask = ncclIntruQueueHead(symTaskQueue);
   int devFuncId = headTask->devFuncId;
   struct ncclTaskColl* task = NULL;
@@ -502,7 +502,7 @@ fail:
 
 ncclResult_t ncclSymmetricTaskScheduler(struct ncclComm* comm,
                                         struct ncclIntruQueue<struct ncclTaskColl, &ncclTaskColl::next>* symTaskQueue,
-                                        struct ncclKernelPlan* plan) {
+                                        struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclGenkKernelMask。 */
   struct ncclTaskColl* headTask = ncclIntruQueueHead(symTaskQueue);
   ncclSymkKernelId const kernelId = (ncclSymkKernelId)headTask->devFuncId;
   if ((1ull << kernelId) & ncclGenkKernelMask()) {

@@ -46,7 +46,7 @@ static bool ncclNdIsV2Provider(const WSAPROTOCOL_INFOW& info) {
 }
 
 // Find and load the first usable NDv2 provider in the Winsock catalog.
-static ncclResult_t ncclNdEnumerateProviders(struct IND2Provider** ppProvider) {
+static ncclResult_t ncclNdEnumerateProviders(struct IND2Provider** ppProvider) { /* 中文索引·体内调用 WSCEnumProtocols、malloc。 */
   WSAPROTOCOL_INFOW* protocolInfo = NULL;
   DWORD bufferSize = 0;
   int numProtocols;
@@ -180,7 +180,7 @@ static ncclResult_t ncclNdEnumerateProviders(struct IND2Provider** ppProvider) {
 }
 
 // Initialize Winsock and load the process-wide NDv2 provider once.
-ncclResult_t wrap_nd_symbols(void) {
+ncclResult_t wrap_nd_symbols(void) { /* 中文索引·体内调用 g_ndGetClassObject、WSAStartup。 */
   std::lock_guard<std::mutex> lock(g_ndMutex);
   if (g_ndProvider != NULL) return ncclSuccess;
 
@@ -221,7 +221,7 @@ ncclResult_t wrap_nd_symbols(void) {
 }
 
 // Release the provider, its module, and Winsock in reverse order.
-void wrap_nd_unload(void) {
+void wrap_nd_unload(void) { /* 中文索引·体内调用 wrap_nd_release、g_ndCanUnloadNow。 */
   std::lock_guard<std::mutex> lock(g_ndMutex);
   if (g_ndProvider) {
     wrap_nd_release(g_ndProvider);
@@ -250,7 +250,7 @@ void wrap_nd_unload(void) {
 
 // Resolve a local network address to its ND adapter identifier.
 ncclResult_t wrap_nd_resolve_address(struct IND2Provider* provider, const struct sockaddr* pAddress, ULONG cbAddress,
-                                     UINT64* pAdapterId) {
+                                     UINT64* pAdapterId) { /* 中文索引·体内调用 provider->ResolveAddress。 */
   HRESULT hr = provider->ResolveAddress(pAddress, cbAddress, pAdapterId);
   if (FAILED(hr)) {
     WARN("NET/ND : ResolveAddress failed: 0x%08x", hr);
@@ -261,7 +261,7 @@ ncclResult_t wrap_nd_resolve_address(struct IND2Provider* provider, const struct
 
 // Enumerate addresses published by the selected ND provider.
 ncclResult_t wrap_nd_query_address_list(struct IND2Provider* provider, SOCKET_ADDRESS_LIST* pAddressList,
-                                        ULONG* pBufferSize) {
+                                        ULONG* pBufferSize) { /* 中文索引·体内调用 provider->QueryAddressList。 */
   HRESULT hr = provider->QueryAddressList(pAddressList, pBufferSize);
   if (FAILED(hr) && hr != ND_BUFFER_OVERFLOW && hr != HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) {
     WARN("NET/ND : QueryAddressList failed: 0x%08x", hr);
@@ -271,7 +271,7 @@ ncclResult_t wrap_nd_query_address_list(struct IND2Provider* provider, SOCKET_AD
 }
 
 // Open one ND adapter by provider identifier.
-ncclResult_t wrap_nd_open_adapter(struct IND2Provider* provider, UINT64 adapterId, struct IND2Adapter** ppAdapter) {
+ncclResult_t wrap_nd_open_adapter(struct IND2Provider* provider, UINT64 adapterId, struct IND2Adapter** ppAdapter) { /* 中文索引·体内调用 provider->OpenAdapter。 */
   HRESULT hr = provider->OpenAdapter(IID_IND2Adapter, adapterId, (void**)ppAdapter);
   if (FAILED(hr)) {
     WARN("NET/ND : OpenAdapter failed for adapter ID 0x%llx: 0x%08x", adapterId, hr);
@@ -281,7 +281,7 @@ ncclResult_t wrap_nd_open_adapter(struct IND2Provider* provider, UINT64 adapterI
 }
 
 // Query the standard NDv2 capability prefix for an open adapter.
-ncclResult_t wrap_nd_query_adapter(struct IND2Adapter* adapter, ND2_ADAPTER_INFO* pInfo) {
+ncclResult_t wrap_nd_query_adapter(struct IND2Adapter* adapter, ND2_ADAPTER_INFO* pInfo) { /* 中文索引·体内调用 memset、adapter->Query。 */
   if (adapter == NULL || pInfo == NULL) return ncclInvalidArgument;
 
   memset(pInfo, 0, sizeof(*pInfo));
@@ -300,7 +300,7 @@ ncclResult_t wrap_nd_query_adapter(struct IND2Adapter* adapter, ND2_ADAPTER_INFO
 }
 
 // Create the file handle used for asynchronous adapter operations.
-ncclResult_t wrap_nd_create_overlapped_file(struct IND2Adapter* adapter, HANDLE* phOverlappedFile) {
+ncclResult_t wrap_nd_create_overlapped_file(struct IND2Adapter* adapter, HANDLE* phOverlappedFile) { /* 中文索引·体内调用 adapter->CreateOverlappedFile。 */
   HRESULT hr = adapter->CreateOverlappedFile(phOverlappedFile);
   if (FAILED(hr)) {
     WARN("NET/ND : CreateOverlappedFile failed: 0x%08x", hr);
@@ -311,7 +311,7 @@ ncclResult_t wrap_nd_create_overlapped_file(struct IND2Adapter* adapter, HANDLE*
 
 // Create a completion queue with the requested depth.
 ncclResult_t wrap_nd_create_completion_queue(struct IND2Adapter* adapter, HANDLE hOverlappedFile, ULONG queueDepth,
-                                             struct IND2CompletionQueue** ppCq) {
+                                             struct IND2CompletionQueue** ppCq) { /* 中文索引·体内调用 adapter->CreateCompletionQueue。 */
   HRESULT hr = adapter->CreateCompletionQueue(IID_IND2CompletionQueue, hOverlappedFile, queueDepth, 0, 0, (void**)ppCq);
   if (FAILED(hr)) {
     WARN("NET/ND : CreateCompletionQueue failed: 0x%08x", hr);
@@ -322,7 +322,7 @@ ncclResult_t wrap_nd_create_completion_queue(struct IND2Adapter* adapter, HANDLE
 
 // Create an unregistered memory-region object.
 ncclResult_t wrap_nd_create_memory_region(struct IND2Adapter* adapter, HANDLE hOverlappedFile,
-                                          struct IND2MemoryRegion** ppMr) {
+                                          struct IND2MemoryRegion** ppMr) { /* 中文索引·体内调用 adapter->CreateMemoryRegion。 */
   HRESULT hr = adapter->CreateMemoryRegion(IID_IND2MemoryRegion, hOverlappedFile, (void**)ppMr);
   if (FAILED(hr)) {
     WARN("NET/ND : CreateMemoryRegion failed: 0x%08x", hr);
@@ -336,7 +336,7 @@ ncclResult_t wrap_nd_create_queue_pair(struct IND2Adapter* adapter, struct IND2C
                                        struct IND2CompletionQueue* pInitiatorCq, void* pContext,
                                        ULONG receiveQueueDepth, ULONG initiatorQueueDepth, ULONG maxReceiveRequestSge,
                                        ULONG maxInitiatorRequestSge, ULONG inlineDataSize,
-                                       struct IND2QueuePair** ppQp) {
+                                       struct IND2QueuePair** ppQp) { /* 中文索引·体内调用 adapter->CreateQueuePair。 */
   HRESULT hr = adapter->CreateQueuePair(IID_IND2QueuePair, pReceiveCq, pInitiatorCq, pContext, receiveQueueDepth,
                                         initiatorQueueDepth, maxReceiveRequestSge, maxInitiatorRequestSge,
                                         inlineDataSize, (void**)ppQp);
@@ -349,7 +349,7 @@ ncclResult_t wrap_nd_create_queue_pair(struct IND2Adapter* adapter, struct IND2C
 
 // Create a connector for one asynchronous connection.
 ncclResult_t wrap_nd_create_connector(struct IND2Adapter* adapter, HANDLE hOverlappedFile,
-                                      struct IND2Connector** ppConnector) {
+                                      struct IND2Connector** ppConnector) { /* 中文索引·体内调用 adapter->CreateConnector。 */
   HRESULT hr = adapter->CreateConnector(IID_IND2Connector, hOverlappedFile, (void**)ppConnector);
   if (FAILED(hr)) {
     WARN("NET/ND : CreateConnector failed: 0x%08x", hr);
@@ -360,7 +360,7 @@ ncclResult_t wrap_nd_create_connector(struct IND2Adapter* adapter, HANDLE hOverl
 
 // Create a listener for one physical adapter.
 ncclResult_t wrap_nd_create_listener(struct IND2Adapter* adapter, HANDLE hOverlappedFile,
-                                     struct IND2Listener** ppListener) {
+                                     struct IND2Listener** ppListener) { /* 中文索引·体内调用 adapter->CreateListener。 */
   HRESULT hr = adapter->CreateListener(IID_IND2Listener, hOverlappedFile, (void**)ppListener);
   if (FAILED(hr)) {
     WARN("NET/ND : CreateListener failed: 0x%08x", hr);
@@ -371,7 +371,7 @@ ncclResult_t wrap_nd_create_listener(struct IND2Adapter* adapter, HANDLE hOverla
 
 // Register memory and wait if the provider completes asynchronously.
 ncclResult_t wrap_nd_register_memory(struct IND2MemoryRegion* mr, const void* pBuffer, SIZE_T bufferSize, ULONG flags,
-                                     OVERLAPPED* pOverlapped) {
+                                     OVERLAPPED* pOverlapped) { /* 中文索引·体内调用 mr->Register。 */
   HRESULT hr = mr->Register(pBuffer, bufferSize, flags, pOverlapped);
   if (hr == ND_PENDING) {
     hr = static_cast<IND2Overlapped*>(mr)->GetOverlappedResult(pOverlapped, TRUE);
@@ -384,7 +384,7 @@ ncclResult_t wrap_nd_register_memory(struct IND2MemoryRegion* mr, const void* pB
 }
 
 // Deregister memory and wait if the provider completes asynchronously.
-ncclResult_t wrap_nd_deregister_memory(struct IND2MemoryRegion* mr, OVERLAPPED* pOverlapped) {
+ncclResult_t wrap_nd_deregister_memory(struct IND2MemoryRegion* mr, OVERLAPPED* pOverlapped) { /* 中文索引·体内调用 mr->Deregister。 */
   HRESULT hr = mr->Deregister(pOverlapped);
   if (hr == ND_PENDING) {
     hr = static_cast<IND2Overlapped*>(mr)->GetOverlappedResult(pOverlapped, TRUE);
@@ -397,7 +397,7 @@ ncclResult_t wrap_nd_deregister_memory(struct IND2MemoryRegion* mr, OVERLAPPED* 
 }
 
 // Arm a completion-queue notification.
-ncclResult_t wrap_nd_notify(struct IND2CompletionQueue* cq, ULONG type, OVERLAPPED* pOverlapped) {
+ncclResult_t wrap_nd_notify(struct IND2CompletionQueue* cq, ULONG type, OVERLAPPED* pOverlapped) { /* 中文索引·体内调用 cq->Notify。 */
   HRESULT hr = cq->Notify(type, pOverlapped);
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
     WARN("NET/ND : CQ Notify failed: 0x%08x", hr);
@@ -408,7 +408,7 @@ ncclResult_t wrap_nd_notify(struct IND2CompletionQueue* cq, ULONG type, OVERLAPP
 
 // Post one RDMA write and return the provider status to the caller.
 ncclResult_t wrap_nd_write(struct IND2QueuePair* qp, void* requestContext, const ND2_SGE sge[], ULONG nSge,
-                           UINT64 remoteAddress, UINT32 remoteToken, ULONG flags, HRESULT* status) {
+                           UINT64 remoteAddress, UINT32 remoteToken, ULONG flags, HRESULT* status) { /* 中文索引·体内调用 qp->Write。 */
   HRESULT hr = qp->Write(requestContext, sge, nSge, remoteAddress, remoteToken, flags);
   if (status != NULL) *status = hr;
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
@@ -419,7 +419,7 @@ ncclResult_t wrap_nd_write(struct IND2QueuePair* qp, void* requestContext, const
 }
 
 // Bind a connector to its local adapter address.
-ncclResult_t wrap_nd_connector_bind(struct IND2Connector* connector, const struct sockaddr* pAddress, ULONG cbAddress) {
+ncclResult_t wrap_nd_connector_bind(struct IND2Connector* connector, const struct sockaddr* pAddress, ULONG cbAddress) { /* 中文索引·体内调用 connector->Bind。 */
   HRESULT hr = connector->Bind(pAddress, cbAddress);
   if (hr != ND_SUCCESS) {
     WARN("NET/ND : Connector Bind failed: 0x%08x", hr);
@@ -431,7 +431,7 @@ ncclResult_t wrap_nd_connector_bind(struct IND2Connector* connector, const struc
 // Start an asynchronous connector operation and report immediate completion.
 ncclResult_t wrap_nd_connect(struct IND2Connector* connector, struct IND2QueuePair* qp, const struct sockaddr* pAddress,
                              ULONG cbAddress, ULONG inboundReadLimit, ULONG outboundReadLimit, OVERLAPPED* pOverlapped,
-                             int* done) {
+                             int* done) { /* 中文索引·体内调用 connector->Connect。 */
   HRESULT hr = connector->Connect(qp, pAddress, cbAddress, inboundReadLimit, outboundReadLimit, NULL, 0, pOverlapped);
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
     WARN("NET/ND : Connect failed: 0x%08x", hr);
@@ -463,7 +463,7 @@ ncclResult_t wrap_nd_cq_cancel_notifications(struct IND2CompletionQueue* cq) {
 }
 
 // Complete connector negotiation and report immediate completion.
-ncclResult_t wrap_nd_complete_connect(struct IND2Connector* connector, OVERLAPPED* pOverlapped, int* done) {
+ncclResult_t wrap_nd_complete_connect(struct IND2Connector* connector, OVERLAPPED* pOverlapped, int* done) { /* 中文索引·体内调用 connector->CompleteConnect。 */
   HRESULT hr = connector->CompleteConnect(pOverlapped);
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
     WARN("NET/ND : CompleteConnect failed: 0x%08x", hr);
@@ -475,7 +475,7 @@ ncclResult_t wrap_nd_complete_connect(struct IND2Connector* connector, OVERLAPPE
 
 // Start an asynchronous accept and report immediate completion.
 ncclResult_t wrap_nd_accept(struct IND2Connector* connector, struct IND2QueuePair* qp, ULONG inboundReadLimit,
-                            ULONG outboundReadLimit, OVERLAPPED* pOverlapped, int* done) {
+                            ULONG outboundReadLimit, OVERLAPPED* pOverlapped, int* done) { /* 中文索引·体内调用 connector->Accept。 */
   HRESULT hr = connector->Accept(qp, inboundReadLimit, outboundReadLimit, NULL, 0, pOverlapped);
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
     WARN("NET/ND : Accept failed: 0x%08x", hr);
@@ -486,7 +486,7 @@ ncclResult_t wrap_nd_accept(struct IND2Connector* connector, struct IND2QueuePai
 }
 
 // Bind a listener to its local adapter address.
-ncclResult_t wrap_nd_bind(struct IND2Listener* listener, const struct sockaddr* pAddress, ULONG cbAddress) {
+ncclResult_t wrap_nd_bind(struct IND2Listener* listener, const struct sockaddr* pAddress, ULONG cbAddress) { /* 中文索引·体内调用 listener->Bind。 */
   HRESULT hr = listener->Bind(pAddress, cbAddress);
   if (FAILED(hr)) {
     WARN("NET/ND : Listener Bind failed: 0x%08x", hr);
@@ -496,7 +496,7 @@ ncclResult_t wrap_nd_bind(struct IND2Listener* listener, const struct sockaddr* 
 }
 
 // Start listening with the requested connection backlog.
-ncclResult_t wrap_nd_listen(struct IND2Listener* listener, ULONG backlog) {
+ncclResult_t wrap_nd_listen(struct IND2Listener* listener, ULONG backlog) { /* 中文索引·体内调用 listener->Listen。 */
   HRESULT hr = listener->Listen(backlog);
   if (FAILED(hr)) {
     WARN("NET/ND : Listen failed: 0x%08x", hr);
@@ -507,7 +507,7 @@ ncclResult_t wrap_nd_listen(struct IND2Listener* listener, ULONG backlog) {
 
 // Read the provider-assigned listener address.
 ncclResult_t wrap_nd_get_listener_address(struct IND2Listener* listener, struct sockaddr* pAddress,
-                                          ULONG* pAddressLength) {
+                                          ULONG* pAddressLength) { /* 中文索引·体内调用 listener->GetLocalAddress。 */
   HRESULT hr = listener->GetLocalAddress(pAddress, pAddressLength);
   if (FAILED(hr)) {
     WARN("NET/ND : Listener GetLocalAddress failed: 0x%08x", hr);
@@ -518,7 +518,7 @@ ncclResult_t wrap_nd_get_listener_address(struct IND2Listener* listener, struct 
 
 // Start receiving one connection request on a listener.
 ncclResult_t wrap_nd_get_connection_request(struct IND2Listener* listener, struct IND2Connector* pConnector,
-                                            OVERLAPPED* pOverlapped, int* done) {
+                                            OVERLAPPED* pOverlapped, int* done) { /* 中文索引·体内调用 listener->GetConnectionRequest。 */
   HRESULT hr = listener->GetConnectionRequest(pConnector, pOverlapped);
   if (hr != ND_SUCCESS && hr != ND_PENDING) {
     WARN("NET/ND : GetConnectionRequest failed: 0x%08x", hr);
@@ -529,7 +529,7 @@ ncclResult_t wrap_nd_get_connection_request(struct IND2Listener* listener, struc
 }
 
 // Poll a listener request without blocking.
-ncclResult_t wrap_nd_listener_get_request_status(struct IND2Listener* listener, OVERLAPPED* pOverlapped, int* done) {
+ncclResult_t wrap_nd_listener_get_request_status(struct IND2Listener* listener, OVERLAPPED* pOverlapped, int* done) { /* 中文索引·体内调用 ov->GetOverlappedResult。 */
   if (done) *done = 0;
   // IND2Listener exposes the request status through IND2Overlapped.
   IND2Overlapped* ov = static_cast<IND2Overlapped*>(listener);
@@ -547,7 +547,7 @@ ncclResult_t wrap_nd_listener_get_request_status(struct IND2Listener* listener, 
 }
 
 // Poll a connector operation without blocking.
-ncclResult_t wrap_nd_connector_get_status(struct IND2Connector* connector, OVERLAPPED* pOverlapped, int* done) {
+ncclResult_t wrap_nd_connector_get_status(struct IND2Connector* connector, OVERLAPPED* pOverlapped, int* done) { /* 中文索引·体内调用 ov->GetOverlappedResult、Sleep。 */
   if (done) *done = 0;
   // IND2Connector exposes operation status through IND2Overlapped.
   IND2Overlapped* ov = static_cast<IND2Overlapped*>(connector);
@@ -568,7 +568,7 @@ ncclResult_t wrap_nd_connector_get_status(struct IND2Connector* connector, OVERL
 }
 
 // Create or reset an event and clear its overlapped operation state.
-ncclResult_t wrap_nd_prepare_overlapped(OVERLAPPED* pOverlapped) {
+ncclResult_t wrap_nd_prepare_overlapped(OVERLAPPED* pOverlapped) { /* 中文索引·体内调用 CreateEvent、GetLastError。 */
   HANDLE event = pOverlapped->hEvent;
   if (event == NULL) {
     event = CreateEvent(NULL, FALSE, FALSE, NULL);

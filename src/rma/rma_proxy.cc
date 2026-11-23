@@ -27,7 +27,7 @@ NCCL_PARAM(RmaProxyDumpSignal, "RMA_PROXY_DUMP_SIGNAL", -1);
 NCCL_PARAM(RmaProxyQueueSize, "RMA_PROXY_QUEUE_SIZE", -1);
 
 // world / rail-peer indexing conversion
-ncclResult_t ncclRmaProxyWorldToPeer(const struct ncclRmaProxyCtx* ctx, int worldRank, int* peer) {
+ncclResult_t ncclRmaProxyWorldToPeer(const struct ncclRmaProxyCtx* ctx, int worldRank, int* peer) { /* 中文索引·体内调用 idivFast32。 */
   struct ncclComm* comm = ctx->comm;
   if (worldRank < 0 || worldRank >= comm->nRanks) {
     WARN("Rank %d cannot map world rank %d to RMA rail peer (nRanks=%d)", comm->rank, worldRank, comm->nRanks);
@@ -76,7 +76,7 @@ void ncclDumpRmaProxyState(int signal);
 
 // ---- Internal helpers ----
 
-static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNonDataDirect = false) {
+static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNonDataDirect = false) { /* 中文索引·体内调用 ncclParamDmaBufEnable、ncclOsGetPageSize。 */
   if (ncclParamDmaBufEnable() == 0) return ncclInvalidUsage;
 
 #if CUDA_VERSION >= 11070
@@ -103,7 +103,7 @@ static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNo
 // Check if the RMA plugin supports DMA-BUF, if so we can try to get the DMA-BUF handle from CUDA,
 // if that fails we fallback to non-DMA-BUF
 static ncclResult_t ncclRmaProxyRegMrSym(ncclRma_t* rmaComm, void* rmaCollComm, ncclNetProperties_t props, void* addr,
-                                         size_t size, int type, int mr_flags, void** mhandle) {
+                                         size_t size, int type, int mr_flags, void** mhandle) { /* 中文索引·体内调用 rmaComm->regMrSym、ncclParamDmaBufEnable。 */
   if (type == NCCL_PTR_HOST) {
     NCCLCHECK(rmaComm->regMrSym(rmaCollComm, addr, size, type, mr_flags, mhandle));
   } else if (type == NCCL_PTR_CUDA) {
@@ -142,7 +142,7 @@ static uint64_t isPowerOfTwo(uint64_t n) {
 // ---- Context lifecycle ----
 
 static ncclResult_t ncclRmaProxyCtxAlloc(struct ncclComm* comm, ncclRma_t* rmaComm,
-                                         struct ncclRmaProxyCtx* rmaProxyCtx) {
+                                         struct ncclRmaProxyCtx* rmaProxyCtx) { /* 中文索引·体内调用 ncclCuMemAlloc、cudaMemset。 */
   // The clean up in case of failure will be done by the ncclRmaProxyDestroyContext function invoked by the caller.
   // Allocate the signals on the GPU and then register the memory region with the RMA plugin.
   // Enforcing strong ordering on the signals mr is vital to ensure ordering between puts and signals.
@@ -206,7 +206,7 @@ static ncclResult_t ncclRmaProxyCtxAlloc(struct ncclComm* comm, ncclRma_t* rmaCo
 }
 
 static ncclResult_t ncclRmaProxyCtxAllocGraph(struct ncclComm* comm, ncclRma_t* rmaComm,
-                                              struct ncclRmaProxyCtx* rmaProxyCtx) {
+                                              struct ncclRmaProxyCtx* rmaProxyCtx) { /* 中文索引·体内调用 allocMemCPUAccessible、ncclRmaProxyRegMrSym。 */
   // The clean up in case of failure will be done by the ncclRmaProxyDestroyContext function invoked by the caller.
   size_t signalSlots = (size_t)comm->nRanks * comm->config.numRmaSig;
   size_t signalsBufSize = signalSlots * sizeof(uint64_t);
@@ -239,7 +239,7 @@ static ncclResult_t ncclRmaProxyCtxAllocGraph(struct ncclComm* comm, ncclRma_t* 
 }
 
 ncclResult_t ncclRmaProxyCreateContext(struct ncclComm* comm, void* collComm, int rankStride, ncclNetProperties_t props,
-                                       int collCommIdx, void** outRmaProxyCtx) {
+                                       int collCommIdx, void** outRmaProxyCtx) { /* 中文索引·体内调用 idivFast32、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   // Get the RMA plugin interface
   ncclRma_t* rmaComm = (ncclRma_t*)comm->rmaState.rmaProxyState.ncclRma;
@@ -280,7 +280,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclRmaProxyDestroyContext(ncclRma_t* rmaComm, void* rmaProxyCtx) {
+ncclResult_t ncclRmaProxyDestroyContext(ncclRma_t* rmaComm, void* rmaProxyCtx) { /* 中文索引·体内调用 rmaComm->destroyContext、ncclRmaProxyDestroyDesc。 */
   if (!rmaProxyCtx) return ncclSuccess;
   struct ncclRmaProxyCtx* ctx = (struct ncclRmaProxyCtx*)rmaProxyCtx;
 
@@ -369,7 +369,7 @@ ncclResult_t ncclRmaProxyDestroyContext(ncclRma_t* rmaComm, void* rmaProxyCtx) {
 // ---- Memory registration ----
 
 ncclResult_t ncclRmaProxyRegister(struct ncclComm* comm, void* address, size_t size,
-                                  void* rmaHostWins[NCCL_RMA_MAX_CONNECTIONS]) {
+                                  void* rmaHostWins[NCCL_RMA_MAX_CONNECTIONS]) { /* 中文索引·体内调用 ncclRmaProxyRegMrSym。 */
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
   for (int n = 0; n < rmaProxyState->rmaCommCount; n++) {
     NCCLCHECK(ncclRmaProxyRegMrSym(rmaProxyState->ncclRma, rmaProxyState->rmaComms[n], rmaProxyState->props[n], address,
@@ -382,7 +382,7 @@ ncclResult_t ncclRmaProxyRegister(struct ncclComm* comm, void* address, size_t s
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaProxyDeregister(struct ncclComm* comm, void* rmaHostWins[NCCL_RMA_MAX_CONNECTIONS]) {
+ncclResult_t ncclRmaProxyDeregister(struct ncclComm* comm, void* rmaHostWins[NCCL_RMA_MAX_CONNECTIONS]) { /* 中文索引·体内调用 rmaProxyState->ncclRma->deregMrSym。 */
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
   for (int n = 0; n < rmaProxyState->rmaCommCount; n++) {
     NCCLCHECK(rmaProxyState->ncclRma->deregMrSym(rmaProxyState->rmaComms[n], rmaHostWins[n]));
@@ -392,7 +392,7 @@ ncclResult_t ncclRmaProxyDeregister(struct ncclComm* comm, void* rmaHostWins[NCC
 
 // ---- Progress thread and global lifecycle ----
 
-void* ncclRmaProxyProgressThread(struct ncclRmaProxyState* rmaProxyState_) {
+void* ncclRmaProxyProgressThread(struct ncclRmaProxyState* rmaProxyState_) { /* 中文索引·体内调用 ncclParamRmaProxyDumpSignal、signal。 */
   struct ncclRmaProxyState* rmaProxyState = (struct ncclRmaProxyState*)rmaProxyState_;
   const int sig = ncclParamRmaProxyDumpSignal();
   if (sig != -1) signal(sig, ncclDumpRmaProxyState);
@@ -437,7 +437,7 @@ bool ncclRmaWantInternalCtx(struct ncclComm* comm) {
   return (comm->config.CTAPolicy & NCCL_CTA_POLICY_ZERO) && !ncclDevrIsOneLsaTeam(comm) && comm->nNodes > 1;
 }
 
-ncclResult_t ncclRmaProxyConnectOnce(struct ncclComm* comm) {
+ncclResult_t ncclRmaProxyConnectOnce(struct ncclComm* comm) { /* 中文索引·体内调用 rmaProxyState->ncclRma->devices、ncclTopoGetLocalRmaDevs。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
   rmaProxyState->comm = comm;
@@ -565,7 +565,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaProxyFinalize(struct ncclComm* comm) {
+ncclResult_t ncclRmaProxyFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 rmaProxyState->cond.notify_one、rmaProxyState->thread.join。 */
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
   if (!rmaProxyState->connected) return ncclSuccess;
 
@@ -603,7 +603,7 @@ ncclResult_t ncclRmaProxyFinalize(struct ncclComm* comm) {
 
 // ---- Debug ----
 
-ncclResult_t dumpRmaProxyState(struct ncclRmaProxyState* rmaProxyState) {
+ncclResult_t dumpRmaProxyState(struct ncclRmaProxyState* rmaProxyState) { /* 中文索引·体内调用 printf、idivFast32。 */
   ncclLastRmaProxyState = rmaProxyState;
   if (rmaProxyState->comm) {
     printf("Rank %d RMA Proxy State:\n", rmaProxyState->comm->rank);

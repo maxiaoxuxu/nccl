@@ -14,7 +14,7 @@ int ncclClampChannels(int nChannels, int minChannels, int maxChannels) {
   return std::min(std::max(nChannels, minChannels), maxChannels);
 }
 
-int ncclFuncTrafficPerByte(ncclFunc_t func, int nRanks) {
+/* 中文图解·host｜AllReduce 的流量权重取 2，AllGather、ReduceScatter 等取 nRanks，调度器用它做通道间负载均衡。 */ int ncclFuncTrafficPerByte(ncclFunc_t func, int nRanks) {
   switch (func) {
   case ncclFuncAllReduce:
     return 2;
@@ -37,11 +37,11 @@ struct ncclCollChannelLayout ncclComputeCollChannelLayout(size_t count, size_t e
   struct ncclCollChannelLayout layout = {};
   if (count == 0 || maxChannels <= channelId) return layout;
 
-  size_t cellSize = DIVUP(DIVUP(ncclMinTrafficPerChannel, (size_t)trafficPerByte), 16) * 16;
+  /* 中文图解·layout｜分配单位 cell 以负载预算换算为数据字节，再向上对齐 16 B；一个 cell 内可以容纳多个应用元素。 */ size_t cellSize = DIVUP(DIVUP(ncclMinTrafficPerChannel, (size_t)trafficPerByte), 16) * 16;
   layout.elementsPerCell = cellSize / elementSize;
   size_t cells = DIVUP(count * elementSize, cellSize);
   size_t trafficPerCell = cellSize * trafficPerByte;
-  size_t cellsPerChannel = std::min(cells, DIVUP(trafficPerChannel, trafficPerCell));
+  /* 中文图解·layout｜每条普通中间通道能容纳 cellsPerChannel 个 cell；首通道还要扣去先前任务占用的 currentTraffic。 */ size_t cellsPerChannel = std::min(cells, DIVUP(trafficPerChannel, trafficPerCell));
 
   if (channelId + 1 == maxChannels) {
     layout.cellsLo = cells;
@@ -53,7 +53,7 @@ struct ncclCollChannelLayout ncclComputeCollChannelLayout(size_t count, size_t e
   int nChannels = (layout.cellsLo != 0 ? 1 : 0) + layout.nMidChannels + (layout.cellsHi != 0 ? 1 : 0);
   if (maxChannels < channelId + nChannels) {
     layout.nMidChannels = maxChannels - channelId - 2;
-    cellsPerChannel = (cells - layout.cellsLo) / (layout.nMidChannels + 1);
+    /* 中文图解·layout｜通道预算不足时重新分配中间段，余数归到最后一条通道。 */ cellsPerChannel = (cells - layout.cellsLo) / (layout.nMidChannels + 1);
     layout.cellsHi = cellsPerChannel + (cells - layout.cellsLo) % (layout.nMidChannels + 1);
   }
   if (layout.cellsHi == 0 && layout.nMidChannels != 0) {
@@ -74,12 +74,12 @@ struct ncclCollChannelLayout ncclComputeCollChannelLayout(size_t count, size_t e
   layout.countMid = layout.nMidChannels != 0 ? cellsPerChannel * layout.elementsPerCell : 0;
   layout.countLo = layout.cellsLo * layout.elementsPerCell;
   layout.countHi = layout.cellsHi * layout.elementsPerCell;
-  (layout.countHi != 0 ? layout.countHi : layout.countLo) -= cells * layout.elementsPerCell - count;
+  /* 中文图解·layout｜换回元素数后再扣掉最后一个 cell 的填充；终点应恰好等于 task->count。 */ (layout.countHi != 0 ? layout.countHi : layout.countLo) -= cells * layout.elementsPerCell - count;
   layout.nChannels = (layout.countLo != 0 ? 1 : 0) + layout.nMidChannels + (layout.cellsHi != 0 ? 1 : 0);
   return layout;
 }
 
-ncclResult_t initChannel(struct ncclComm* comm, int channelId) {
+ncclResult_t initChannel(struct ncclComm* comm, int channelId) { /* 中文索引·体内调用 ncclStrongStreamAcquire、ncclCudaGraphNone。 */
   struct ncclChannel* channel = &comm->channels[channelId];
   if (channel->id != -1) return ncclSuccess;
 
@@ -139,7 +139,7 @@ ncclResult_t initChannel(struct ncclComm* comm, int channelId) {
 // Set up the channel's NVLS peers, slots nRanks+1 .. nRanks+localRanks. With parentSlots NULL the channel
 // allocates its own peers; otherwise it reuses the parent's, with slot r backed by the parent's slot
 // parentSlots[r]. Slot h < nHeads is NVLS head h, so a child maps each head to the parent slot of the same GPU.
-ncclResult_t initNvlsChannel(struct ncclComm* comm, int channelId, struct ncclComm* parent, const int* parentSlots) {
+ncclResult_t initNvlsChannel(struct ncclComm* comm, int channelId, struct ncclComm* parent, const int* parentSlots) { /* 中文索引·体内调用 initChannel、ncclStrongStreamAcquire。 */
   struct ncclChannel* channel = &comm->channels[channelId];
   struct ncclSharedResources* sharedRes = comm->sharedRes;
   cudaStream_t deviceStream;
@@ -188,7 +188,7 @@ ncclResult_t initNvlsChannel(struct ncclComm* comm, int channelId, struct ncclCo
   return ncclSuccess;
 }
 
-ncclResult_t initCollnetChannel(struct ncclComm* comm, int channelId, struct ncclComm* parent, bool share) {
+ncclResult_t initCollnetChannel(struct ncclComm* comm, int channelId, struct ncclComm* parent, bool share) { /* 中文索引·体内调用 initChannel、ncclStrongStreamAcquire。 */
   struct ncclChannel* channel = &comm->channels[channelId];
   struct ncclSharedResources* sharedRes = comm->sharedRes;
   uintptr_t addr;
@@ -227,7 +227,7 @@ ncclResult_t initCollnetChannel(struct ncclComm* comm, int channelId, struct ncc
 }
 
 ncclResult_t freeChannel(struct ncclChannel* channel, int nRanks, int collnetNRanks, int nvlsNRanks,
-                         struct ncclComm* comm) {
+                         struct ncclComm* comm) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement、free。 */
   int nPeers = nRanks + collnetNRanks + nvlsNRanks;
   /* channel peers are only valid when async init thread completes commAlloc() and
    * the channel is initialized with initChannel(); if either is not done, this channel

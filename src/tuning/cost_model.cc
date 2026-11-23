@@ -32,7 +32,7 @@
 //     NCCL_PROTO="^LL128;allreduce:LL128"
 // Enable everything but LL128, but only LL128 for allreduce.
 static ncclResult_t parseList(const char* str, const char* const prefixElems[], int nprefixes,
-                              const char* const elems[], int nelems, int* list, int* forced) {
+                              const char* const elems[], int nelems, int* list, int* forced) { /* 中文索引·体内调用 strdup、strtok_r。 */
   ncclResult_t ret = ncclSuccess;
   char* fullStr = strdup(str);
   char* tmpFullStr;
@@ -123,7 +123,7 @@ fail:
 NCCL_PARAM(Ll128C2c, "LL128_C2C", 1);
 
 static int isLL128Enabled(int minCompCap, int maxCompCap, int interType, int intraType, int nRanks, int func, int algo,
-                          int minDriverVersion) {
+                          int minDriverVersion) { /* 中文索引·体内调用 ncclParamLl128C2c。 */
   int ret = 1;
   if (ncclParamLl128C2c() && minCompCap >= 90 && (!RUBIN_AND_LATER(minCompCap) || minDriverVersion >= 13030)) {
     // Rubin, Blackwell, and Hopper: Enable LL128 for all P2C and PXN if CUDA supports it.
@@ -314,7 +314,7 @@ Enable order: Broadcast, Reduce, AllGather, ReduceScatter, AllReduce, AlltoAll
   This will return the model entry for the given id.
   If the id is out of bounds, it will return an invalid argument error.
 */
-static ncclResult_t getModelEntry(int compCap, int id, struct ncclTuningModelEntry_t** entry) {
+static ncclResult_t getModelEntry(int compCap, int id, struct ncclTuningModelEntry_t** entry) { /* 中文索引·体内调用 ncclTuningGetModelPlatformEntry。 */
   if (id < 0 || id >= NCCL_TUNING_COUNT) {
     return ncclInvalidArgument;
   }
@@ -328,7 +328,7 @@ static ncclResult_t getModelEntry(int compCap, int id, struct ncclTuningModelEnt
   Pre-initialize the cost model for a communicator.
   Operations to run before the tuner plugin is initialized.
 */
-ncclResult_t ncclTuningCostModelPreInit(struct ncclComm* comm) {
+ncclResult_t ncclTuningCostModelPreInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningPlatformPreInit。 */
   comm->tuningContext.tuningConstants = ncclTunerConstantsDefaults;
   NCCLCHECK(ncclTuningPlatformPreInit(comm));
   return ncclSuccess;
@@ -339,7 +339,7 @@ ncclResult_t ncclTuningCostModelPreInit(struct ncclComm* comm) {
   This will initialize the cost model for all models that are enabled.
   If a model fails to initialize, it will be disabled and the error will be logged.
 */
-ncclResult_t ncclTuningCostModelInit(struct ncclComm* comm) {
+ncclResult_t ncclTuningCostModelInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   ncclResult_t ret = ncclSuccess;
   const char* tuningFuncStr[NCCL_NUM_TUNING_FUNCTIONS] = {"Broadcast",     "Reduce",    "AllGather",
                                                           "ReduceScatter", "AllReduce", "AlltoAll"};
@@ -486,7 +486,7 @@ fail:
   reallocate any memory allocations even if something disabled them later.
   If a model fails to finalize, the error will be logged.
 */
-ncclResult_t ncclTuningCostModelFinalize(struct ncclComm* comm) {
+ncclResult_t ncclTuningCostModelFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 getModelEntry、model->finalize。 */
   ncclResult_t ret = ncclSuccess;
   for (int i = 0; i < NCCL_TUNING_COUNT; i++) {
     struct ncclTuningModelEntry_t* model = nullptr;
@@ -512,7 +512,7 @@ fail:
   If the model is not enabled, it will return a success with a time of 0.
 */
 ncclResult_t ncclTuningCostModelSimModel(int id, struct ncclTuningInput_t* const input,
-                                         struct ncclTuningResult_t* const result) {
+                                         struct ncclTuningResult_t* const result) { /* 中文索引·体内调用 ncclTuningFuncIndex、getModelEntry。 */
   struct ncclTuningModelEntry_t* model = nullptr;
   ncclResult_t ret = ncclSuccess;
   int tuningFunc = ncclTuningFuncIndex(input->func);

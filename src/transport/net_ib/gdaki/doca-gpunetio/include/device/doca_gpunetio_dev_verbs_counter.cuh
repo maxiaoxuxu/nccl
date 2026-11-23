@@ -54,7 +54,7 @@ template <unsigned int num_qps,
           enum doca_gpu_dev_verbs_sync_scope sync_scope = DOCA_GPUNETIO_VERBS_SYNC_SCOPE_GPU>
 __device__ static __forceinline__ void doca_gpu_dev_verbs_submit_db_multi_qps_no_dbr(
     struct doca_gpu_dev_verbs_qp **qps, uint64_t *prod_indices,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_prepare_db。 */
     if (!(code_opt & DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_SKIP_DB_RINGING)) {
         DOCA_GPUNETIO_VERBS_ASSERT(num_qps >= 2);
         uint64_t old_prod_indices[num_qps];
@@ -110,7 +110,7 @@ template <unsigned int num_qps,
           enum doca_gpu_dev_verbs_sync_scope sync_scope = DOCA_GPUNETIO_VERBS_SYNC_SCOPE_GPU>
 __device__ static __forceinline__ void doca_gpu_dev_verbs_submit_db_multi_qps(
     struct doca_gpu_dev_verbs_qp **qps, uint64_t *prod_indices,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_prepare_db。 */
     if (!(code_opt & DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_SKIP_DB_RINGING)) {
         DOCA_GPUNETIO_VERBS_ASSERT(num_qps >= 2);
         uint64_t old_prod_indices[num_qps];
@@ -215,7 +215,7 @@ template <unsigned int num_qps,
           enum doca_gpu_dev_verbs_cq_type cq_type = DOCA_GPUNETIO_VERBS_CQ_UNKNOWN>
 __device__ static __forceinline__ void doca_gpu_dev_verbs_submit_multi_qps(
     struct doca_gpu_dev_verbs_qp **qps, uint64_t *prod_indices,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const。 */
     DOCA_GPUNETIO_VERBS_ASSERT(num_qps >= 2);
     if (nic_handler == DOCA_GPUNETIO_VERBS_NIC_HANDLER_AUTO) {
         const enum doca_gpu_dev_verbs_nic_handler qp_nic_handler =
@@ -254,7 +254,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_put_counter(
     struct doca_gpu_dev_verbs_qp *qp, struct doca_gpu_dev_verbs_addr raddr,
     struct doca_gpu_dev_verbs_addr laddr, size_t size, struct doca_gpu_dev_verbs_qp *companion_qp,
     struct doca_gpu_dev_verbs_addr counter_raddr, struct doca_gpu_dev_verbs_addr counter_laddr,
-    uint64_t counter_val, uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint64_t counter_val, uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_div_ceil_aligned_pow2、doca_gpu_dev_verbs_get_wqe_ptr。 */
     constexpr unsigned int num_qps = 2;
     struct doca_gpu_dev_verbs_wqe *wqe_ptr;
     uint64_t base_wqe_idx;
@@ -342,7 +342,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_p_counter(
     struct doca_gpu_dev_verbs_qp *qp, struct doca_gpu_dev_verbs_addr raddr, T value,
     struct doca_gpu_dev_verbs_qp *companion_qp, struct doca_gpu_dev_verbs_addr counter_raddr,
     struct doca_gpu_dev_verbs_addr counter_laddr, uint64_t counter_val,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_get_wqe_ptr、doca_gpu_dev_verbs_prepare_inl_rdma_write_wqe_header。 */
     constexpr unsigned int num_qps = 2;
     uint64_t wqe_idx;
     struct doca_gpu_dev_verbs_wqe *wqe_ptr;
@@ -409,7 +409,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_put_signal_counter(
     struct doca_gpu_dev_verbs_addr sig_laddr, uint64_t sig_val,
     struct doca_gpu_dev_verbs_qp *companion_qp, struct doca_gpu_dev_verbs_addr counter_raddr,
     struct doca_gpu_dev_verbs_addr counter_laddr, uint64_t counter_val,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_div_ceil_aligned_pow2、doca_gpu_dev_verbs_get_wqe_ptr。 */
     constexpr unsigned int num_qps = 2;
     struct doca_gpu_dev_verbs_wqe *wqe_ptr;
     uint64_t base_wqe_idx;
@@ -508,7 +508,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_signal_counter(
     struct doca_gpu_dev_verbs_addr sig_laddr, uint64_t sig_val,
     struct doca_gpu_dev_verbs_qp *companion_qp, struct doca_gpu_dev_verbs_addr counter_raddr,
     struct doca_gpu_dev_verbs_addr counter_laddr, uint64_t counter_val,
-    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_get_wqe_ptr、doca_gpu_dev_verbs_wqe_prepare_atomic。 */
     constexpr unsigned int num_qps = 2;
     uint64_t wqe_idx;
     struct doca_gpu_dev_verbs_wqe *wqe_ptr;
@@ -573,7 +573,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_get_counter(
     struct doca_gpu_dev_verbs_qp *qp, struct doca_gpu_dev_verbs_addr raddr,
     struct doca_gpu_dev_verbs_addr laddr, size_t size, struct doca_gpu_dev_verbs_qp *companion_qp,
     struct doca_gpu_dev_verbs_addr counter_raddr, struct doca_gpu_dev_verbs_addr counter_laddr,
-    uint64_t counter_val, uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) {
+    uint64_t counter_val, uint32_t code_opt = DOCA_GPUNETIO_VERBS_GPU_CODE_OPT_DEFAULT) { /* 中文索引·体内调用 doca_gpu_dev_verbs_div_ceil_aligned_pow2、doca_gpu_dev_verbs_get_wqe_ptr。 */
     constexpr unsigned int num_qps = 2;
     struct doca_gpu_dev_verbs_wqe *wqe_ptr;
     uint64_t base_wqe_idx;

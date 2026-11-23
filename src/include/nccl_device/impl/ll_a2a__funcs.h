@@ -27,7 +27,7 @@ NCCL_DEVICE_INLINE ncclLLA2ASession<Coop>::ncclLLA2ASession(Coop coop, ncclDevCo
 
 #ifdef __CUDACC__
 template <typename Coop>
-NCCL_DEVICE_INLINE ncclLLA2ASession<Coop>::~ncclLLA2ASession() {
+NCCL_DEVICE_INLINE ncclLLA2ASession<Coop>::~ncclLLA2ASession() { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、this->coop.thread_rank。 */
   uint4* line = (uint4*)ncclGetResourceBufferLocalPointer(this->comm, this->handle.bufHandle);
   line += this->block * (1 + 2 * this->handle.nSlots);
   if (this->coop.thread_rank() == 0) line->x = this->epoch - 2;
@@ -38,7 +38,7 @@ NCCL_DEVICE_INLINE ncclLLA2ASession<Coop>::~ncclLLA2ASession() {
 #ifdef __CUDACC__
 template <typename Coop>
 template <typename T>
-NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::send(int peer, int elt, T data) {
+NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::send(int peer, int elt, T data) { /* 中文索引·体内调用 divUp、ncclGetResourceBufferPeerPointer。 */
   using nccl::utility::divUp;
   union {
     T tmp;
@@ -65,7 +65,7 @@ NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::send(int peer, int elt, T data) 
 #ifdef __CUDACC__
 template <typename Coop>
 template <typename T>
-NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::bcast(int elt, T data) {
+NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::bcast(int elt, T data) { /* 中文索引·体内调用 divUp、ncclGetResourceBufferMultimemPointer。 */
   using nccl::utility::divUp;
   if (this->multimem) {
     union {
@@ -155,7 +155,7 @@ NCCL_DEVICE_INLINE T ncclLLA2ASession<Coop>::recv(int elt) {
 template <typename Coop>
 template <int MinEltCount, int MaxEltCount, typename T>
 NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::recvUnrolled(int eltStart, int eltCount, int eltStride,
-                                                             T (&elts)[MaxEltCount]) {
+                                                             T (&elts)[MaxEltCount]) { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、divUp。 */
   using nccl::utility::divUp;
   using nccl::utility::testAbort;
   uint4* buf = (uint4*)ncclGetResourceBufferLocalPointer(this->comm, this->handle.bufHandle);
@@ -222,7 +222,7 @@ template <typename Coop>
 template <int Unroll, typename Elt, typename EltToAcc, typename Reduce>
 NCCL_DEVICE_INLINE auto ncclLLA2ASession<Coop>::recvReduce(int eltStart, int eltCount, int eltStride, EltToAcc eltToAcc,
                                                            Reduce reduce)
-  -> decltype(eltToAcc(nccl::utility::declval<Elt>())) {
+  -> decltype(eltToAcc(nccl::utility::declval<Elt>())) { /* 中文索引·体内调用 eltToAcc、reduce。 */
   using Acc = decltype(eltToAcc(nccl::utility::declval<Elt>()));
   Acc acc;
   int i = 0;
@@ -251,7 +251,7 @@ NCCL_DEVICE_INLINE auto ncclLLA2ASession<Coop>::recvReduce(int eltStart, int elt
 
 #ifdef __CUDACC__
 template <typename Coop>
-NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::endEpoch(Coop) {
+NCCL_DEVICE_INLINE void ncclLLA2ASession<Coop>::endEpoch(Coop) { /* 中文索引·体内调用 __builtin_expect、this->coop.sync。 */
   if (__builtin_expect(this->epoch >= -2u, false)) {
     this->coop.sync();
     uint4* buf = (uint4*)ncclGetResourceBufferLocalPointer(this->comm, this->handle.bufHandle);

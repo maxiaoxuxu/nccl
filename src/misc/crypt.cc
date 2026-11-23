@@ -135,7 +135,7 @@ static int ncclCryptApiMode = NCCL_ENCRYPTION_MODE_NONE;
 static unsigned char* ncclCryptApiPsk;
 static size_t ncclCryptApiPskLen;
 
-static void cryptEraseAndFree(unsigned char* key, size_t keyLen) {
+static void cryptEraseAndFree(unsigned char* key, size_t keyLen) { /* 中文索引·体内调用 free。 */
   volatile unsigned char* p = key;
   for (size_t i = 0; i < keyLen; i++) p[i] = 0;
   free(key);
@@ -157,7 +157,7 @@ static int cryptPollOp(struct ncclSocket* sock, int fallbackOp) {
   return fallbackOp;
 }
 
-static ncclResult_t cryptSocketProgressRaw(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) {
+static ncclResult_t cryptSocketProgressRaw(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) { /* 中文索引·体内调用 ncclOsSocketProgressOpt、ncclSocketToString。 */
   int closed = 0;
   NCCLCHECK(ncclOsSocketProgressOpt(op, sock, ptr, size, offset, /*block=*/0, &closed));
   if (closed) {
@@ -177,7 +177,7 @@ static SSL_CTX* ncclCryptServerCtx;
 static unsigned char ncclCryptPsk[NCCL_CRYPT_KEY_BYTES];
 
 // Called with ncclCryptLock held.
-static ncclResult_t cryptLoadOpenSslSymbols() {
+static ncclResult_t cryptLoadOpenSslSymbols() { /* 中文索引·体内调用 ncclOsDlopen、ncclOsDlerror。 */
   if (ncclCryptSymbolsReady) return ncclSuccess;
   void* tmp;
   void** cast;
@@ -226,7 +226,7 @@ teardown:
   return ncclSystemError;
 }
 
-static void cryptWarnOpenSsl(const char* what, const struct ncclSocket* sock, int sslError) {
+static void cryptWarnOpenSsl(const char* what, const struct ncclSocket* sock, int sslError) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_ERR_get_error、ncclCryptOpenSsl.pfn_ERR_error_string_n。 */
   char err[256];
   char line[SOCKET_NAME_MAXLEN + 1];
   unsigned long rc = ncclCryptOpenSsl.pfn_ERR_get_error();
@@ -235,7 +235,7 @@ static void cryptWarnOpenSsl(const char* what, const struct ncclSocket* sock, in
   WARN("%s with %s failed: %s", what, ncclSocketToString(&sock->addr, line), err);
 }
 
-static SSL_SESSION* cryptPskSession(SSL* ssl) {
+static SSL_SESSION* cryptPskSession(SSL* ssl) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_SSL_CIPHER_find、ncclCryptOpenSsl.pfn_SSL_SESSION_new。 */
   static const unsigned char cipherId[] = {0x13, 0x01};  // TLS_AES_128_GCM_SHA256
   const SSL_CIPHER* cipher = ncclCryptOpenSsl.pfn_SSL_CIPHER_find(ssl, cipherId);
   SSL_SESSION* session = ncclCryptOpenSsl.pfn_SSL_SESSION_new();
@@ -249,14 +249,14 @@ static SSL_SESSION* cryptPskSession(SSL* ssl) {
   return session;
 }
 
-static int cryptPskUseSession(SSL* ssl, const EVP_MD*, const unsigned char** id, size_t* idLen, SSL_SESSION** session) {
+static int cryptPskUseSession(SSL* ssl, const EVP_MD*, const unsigned char** id, size_t* idLen, SSL_SESSION** session) { /* 中文索引·体内调用 cryptPskSession。 */
   *id = ncclCryptPskIdentity;
   *idLen = sizeof(ncclCryptPskIdentity) - 1;
   *session = cryptPskSession(ssl);
   return *session != nullptr;
 }
 
-static int cryptPskFindSession(SSL* ssl, const unsigned char* id, size_t idLen, SSL_SESSION** session) {
+static int cryptPskFindSession(SSL* ssl, const unsigned char* id, size_t idLen, SSL_SESSION** session) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_CRYPTO_memcmp、cryptPskSession。 */
   *session = nullptr;
   if (idLen != sizeof(ncclCryptPskIdentity) - 1 ||
       ncclCryptOpenSsl.pfn_CRYPTO_memcmp(id, ncclCryptPskIdentity, idLen) != 0)
@@ -265,13 +265,13 @@ static int cryptPskFindSession(SSL* ssl, const unsigned char* id, size_t idLen, 
   return *session != nullptr;
 }
 
-static int cryptBioCreate(BIO* bio) {
+static int cryptBioCreate(BIO* bio) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_BIO_set_init、ncclCryptOpenSsl.pfn_BIO_set_data。 */
   ncclCryptOpenSsl.pfn_BIO_set_init(bio, /*init=*/1);
   ncclCryptOpenSsl.pfn_BIO_set_data(bio, nullptr);
   return 1;
 }
 
-static int cryptBioDestroy(BIO* bio) {
+static int cryptBioDestroy(BIO* bio) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_BIO_set_init、ncclCryptOpenSsl.pfn_BIO_set_data。 */
   if (bio == nullptr) return 0;
   ncclCryptOpenSsl.pfn_BIO_set_init(bio, /*init=*/0);
   ncclCryptOpenSsl.pfn_BIO_set_data(bio, nullptr);
@@ -282,7 +282,7 @@ static long cryptBioCtrl(BIO*, int cmd, long, void*) {
   return cmd == BIO_CTRL_FLUSH ? 1 : 0;
 }
 
-static int cryptBioWrite(BIO* bio, const char* buf, int len) {
+static int cryptBioWrite(BIO* bio, const char* buf, int len) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_BIO_get_data、ncclCryptOpenSsl.pfn_BIO_clear_flags。 */
   struct ncclSocket* sock = (struct ncclSocket*)ncclCryptOpenSsl.pfn_BIO_get_data(bio);
   int offset = 0;
   int closed = 0;
@@ -298,7 +298,7 @@ static int cryptBioWrite(BIO* bio, const char* buf, int len) {
   return offset;
 }
 
-static int cryptBioRead(BIO* bio, char* buf, int len) {
+static int cryptBioRead(BIO* bio, char* buf, int len) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_BIO_get_data、ncclCryptOpenSsl.pfn_BIO_clear_flags。 */
   struct ncclSocket* sock = (struct ncclSocket*)ncclCryptOpenSsl.pfn_BIO_get_data(bio);
   int offset = 0;
   int closed = 0;
@@ -314,7 +314,7 @@ static int cryptBioRead(BIO* bio, char* buf, int len) {
   return offset;
 }
 
-static void cryptFreeLibObjects() {
+static void cryptFreeLibObjects() { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_SSL_CTX_free、ncclCryptOpenSsl.pfn_BIO_meth_free。 */
   if (ncclCryptServerCtx != nullptr) ncclCryptOpenSsl.pfn_SSL_CTX_free(ncclCryptServerCtx);
   if (ncclCryptClientCtx != nullptr) ncclCryptOpenSsl.pfn_SSL_CTX_free(ncclCryptClientCtx);
   if (ncclCryptBioMethod != nullptr) ncclCryptOpenSsl.pfn_BIO_meth_free(ncclCryptBioMethod);
@@ -325,7 +325,7 @@ static void cryptFreeLibObjects() {
 }
 
 // Called with ncclCryptLock held.
-static ncclResult_t cryptInitLib() {
+static ncclResult_t cryptInitLib() { /* 中文索引·体内调用 cryptLoadOpenSslSymbols、ncclCryptOpenSsl.pfn_OPENSSL_init_ssl。 */
   if (ncclCryptLibReady) return ncclSuccess;
   ncclResult_t ret = ncclSuccess;
   SSL_CTX* contexts[2] = {nullptr, nullptr};
@@ -381,7 +381,7 @@ fail:
 }
 
 // Called with ncclCryptLock held.
-static ncclResult_t cryptSetMasterKey(const unsigned char* key, size_t keyLen) {
+static ncclResult_t cryptSetMasterKey(const unsigned char* key, size_t keyLen) { /* 中文索引·体内调用 cryptInitLib、ncclCalloc。 */
   NCCLCHECK(cryptInitLib());
   ncclResult_t ret = ncclSuccess;
   unsigned char* keyCopy = nullptr;
@@ -425,7 +425,7 @@ static ncclResult_t cryptSetMasterKey(const unsigned char*, size_t) {
 #endif
 
 // Called with ncclCryptLock held.
-static void cryptClearMasterKey() {
+static void cryptClearMasterKey() { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_OPENSSL_cleanse、cryptEraseAndFree。 */
 #if defined(NCCL_TLS_BACKEND_OPENSSL3)
   ncclCryptOpenSsl.pfn_OPENSSL_cleanse(ncclCryptPsk, sizeof(ncclCryptPsk));
 #endif
@@ -435,7 +435,7 @@ static void cryptClearMasterKey() {
   ncclCryptHaveKey = false;
 }
 
-ncclResult_t ncclGetCryptConnectionMode(bool* encrypted) {
+ncclResult_t ncclGetCryptConnectionMode(bool* encrypted) { /* 中文索引·体内调用 cryptClearMasterKey、cryptConfigKeyMatches。 */
   *encrypted = false;
 
   std::lock_guard<std::mutex> lock(ncclCryptLock);
@@ -466,7 +466,7 @@ ncclResult_t ncclGetCryptConnectionMode(bool* encrypted) {
 }
 
 NCCL_API(ncclResult_t, ncclSetEncryption, const ncclEncryptionConfig_t* config);
-ncclResult_t ncclSetEncryption(const ncclEncryptionConfig_t* config) {
+ncclResult_t ncclSetEncryption(const ncclEncryptionConfig_t* config) { /* 中文索引·体内调用 memcpy、strlen。 */
   ncclEncryptionConfig_t internal = NCCL_ENCRYPTION_CONFIG_INITIALIZER;
   internal.magic = 0;      // like ncclConfig_t we use magic to enforce the init pattern
   if (config != nullptr) {
@@ -520,7 +520,7 @@ ncclResult_t ncclSetEncryption(const ncclEncryptionConfig_t* config) {
 }
 
 #if defined(NCCL_TLS_BACKEND_OPENSSL3)
-static ncclResult_t cryptEnsure(struct ncclSocket* sock, bool isServer) {
+static ncclResult_t cryptEnsure(struct ncclSocket* sock, bool isServer) { /* 中文索引·体内调用 ncclCalloc、ncclCryptOpenSsl.pfn_SSL_new。 */
   if (sock->crypto != nullptr) return ncclSuccess;
   ncclResult_t ret = ncclSuccess;
   struct ncclSocketCrypto* crypto = nullptr;
@@ -564,7 +564,7 @@ static bool cryptClosedRc(struct ncclSocketCrypto* crypto, int rc, int sslError)
 
 // One non-blocking TLS handshake step. *done is true once the handshake has completed.
 // A failed handshake returns ncclRemoteError.
-static ncclResult_t cryptHandshakeStep(struct ncclSocket* sock, bool* done) {
+static ncclResult_t cryptHandshakeStep(struct ncclSocket* sock, bool* done) { /* 中文索引·体内调用 cryptPrepareIo、ncclCryptOpenSsl.pfn_ERR_clear_error。 */
   *done = false;
   if (sock->crypto->handshakeDone) {
     *done = true;
@@ -610,7 +610,7 @@ static ncclResult_t cryptHandshakeStep(struct ncclSocket*, bool*) {
 }
 #endif
 
-ncclResult_t ncclCryptStartConnect(struct ncclSocket* sock) {
+ncclResult_t ncclCryptStartConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclGetCryptConnectionMode、cryptEnsure。 */
   bool encrypted;
   NCCLCHECK(ncclGetCryptConnectionMode(&encrypted));
   if (encrypted) NCCLCHECK(cryptEnsure(sock, /*isServer=*/false));
@@ -619,7 +619,7 @@ ncclResult_t ncclCryptStartConnect(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclCryptConnectHello(struct ncclSocket* sock) {
+ncclResult_t ncclCryptConnectHello(struct ncclSocket* sock) { /* 中文索引·体内调用 cryptHandshakeStep、ncclCryptSocketSend。 */
   if (sock->finalizeCounter < NCCL_SOCKET_PLAIN_HELLO_BYTES) {
     if (sock->crypto != nullptr) {
       bool handshakeDone;
@@ -639,7 +639,7 @@ ncclResult_t ncclCryptConnectHello(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclCryptAcceptHello(struct ncclSocket* sock, enum ncclCryptHelloVerdict* verdict) {
+ncclResult_t ncclCryptAcceptHello(struct ncclSocket* sock, enum ncclCryptHelloVerdict* verdict) { /* 中文索引·体内调用 ncclGetCryptConnectionMode、cryptEnsure。 */
   uint64_t magic;
   enum ncclSocketType type;
   char line[SOCKET_NAME_MAXLEN + 1];
@@ -731,7 +731,7 @@ ncclResult_t ncclCryptAcceptHello(struct ncclSocket* sock, enum ncclCryptHelloVe
   return ncclSuccess;
 }
 
-ncclResult_t ncclCryptSocketSend(struct ncclSocket* sock, void* ptr, int size, int* offset, bool* pclosed) {
+ncclResult_t ncclCryptSocketSend(struct ncclSocket* sock, void* ptr, int size, int* offset, bool* pclosed) { /* 中文索引·体内调用 cryptPrepareIo、ncclCryptOpenSsl.pfn_ERR_clear_error。 */
 #if defined(NCCL_TLS_BACKEND_OPENSSL3)
   char line[SOCKET_NAME_MAXLEN + 1];
   cryptPrepareIo(sock);
@@ -767,7 +767,7 @@ ncclResult_t ncclCryptSocketSend(struct ncclSocket* sock, void* ptr, int size, i
 #endif
 }
 
-ncclResult_t ncclCryptSocketRecv(struct ncclSocket* sock, void* ptr, int size, int* offset, bool* pclosed) {
+ncclResult_t ncclCryptSocketRecv(struct ncclSocket* sock, void* ptr, int size, int* offset, bool* pclosed) { /* 中文索引·体内调用 cryptPrepareIo、ncclCryptOpenSsl.pfn_ERR_clear_error。 */
 #if defined(NCCL_TLS_BACKEND_OPENSSL3)
   char line[SOCKET_NAME_MAXLEN + 1];
   cryptPrepareIo(sock);
@@ -803,7 +803,7 @@ ncclResult_t ncclCryptSocketRecv(struct ncclSocket* sock, void* ptr, int size, i
 #endif
 }
 
-void ncclCryptFree(struct ncclSocketCrypto* crypto) {
+void ncclCryptFree(struct ncclSocketCrypto* crypto) { /* 中文索引·体内调用 ncclCryptOpenSsl.pfn_SSL_free、free。 */
   if (crypto == nullptr) return;
 #if defined(NCCL_TLS_BACKEND_OPENSSL3)
   ncclCryptOpenSsl.pfn_SSL_free(crypto->ssl);

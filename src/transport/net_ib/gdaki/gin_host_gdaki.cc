@@ -82,13 +82,13 @@ static bool gdakiQpNeedsProxyProgress(const struct doca_gpu_verbs_qp* qp) {
   return qp->cpu_proxy || qp->cq_type == DOCA_GPUNETIO_VERBS_CQ_64B_COLLAPSED_HOST;
 }
 
-static enum doca_verbs_qp_ordering_semantic gdakiOrderingSematic() {
+static enum doca_verbs_qp_ordering_semantic gdakiOrderingSematic() { /* 中文索引·体内调用 ncclParamGinIbOooAll。 */
   if (ncclParamGinIbOooAll() == 1) return DOCA_VERBS_QP_ORDERING_SEMANTIC_OOO_ALL;
 
   return DOCA_VERBS_QP_ORDERING_SEMANTIC_IBTA;
 }
 
-static inline bool gdakiRelaxedOrderingEnabled() {
+static inline bool gdakiRelaxedOrderingEnabled() { /* 中文索引·体内调用 ncclParamIbPciRelaxedOrdering、wrap_ibv_reg_mr_iova2。 */
   static bool hasCheckedRelaxedOrdering = false;
   static bool relaxedOrderingEnabled = false;
 
@@ -165,7 +165,7 @@ out:
 }
 
 static ncclResult_t gdakiRegMr(struct ibv_mr** mr, struct ibv_pd* pd, void* addr, size_t length, int access,
-                               bool force_strict_ordering = false) {
+                               bool force_strict_ordering = false) { /* 中文索引·体内调用 gdakiRelaxedOrderingEnabled、gdakiRegMrDmaBuf。 */
   int status = 0;
 
   if (!force_strict_ordering && gdakiRelaxedOrderingEnabled()) access |= IBV_ACCESS_RELAXED_ORDERING;
@@ -187,7 +187,7 @@ public:
   T* host_buf;
   T* gpu_buf;
 
-  ncclResult_t allocate(unsigned int num_elements) {
+  ncclResult_t allocate(unsigned int num_elements) { /* 中文索引·体内调用 calloc、ncclCuMemAlloc。 */
     this->host_buf = (T*)calloc(num_elements, sizeof(T));
     EQCHECK(this->host_buf, nullptr);
 
@@ -199,7 +199,7 @@ public:
     return ncclSuccess;
   }
 
-  ncclResult_t deallocate() {
+  ncclResult_t deallocate() { /* 中文索引·体内调用 free、ncclCuMemFree。 */
     if (this->host_buf != nullptr) {
       free(this->host_buf);
       this->host_buf = nullptr;
@@ -242,7 +242,7 @@ public:
   T* gpu_ptr;
   struct ibv_mr* mr;
 
-  ncclResult_t allocate(unsigned int num_elements, unsigned int num_ranks) {
+  ncclResult_t allocate(unsigned int num_elements, unsigned int num_ranks) { /* 中文索引·体内调用 ncclCuMemAlloc、cudaMemset。 */
     this->num_elements = num_elements;
     this->num_ranks = num_ranks;
     this->next_unused_idx = 0;
@@ -255,7 +255,7 @@ public:
     return ncclSuccess;
   }
 
-  ncclResult_t deallocate() {
+  ncclResult_t deallocate() { /* 中文索引·体内调用 ncclCuMemFree。 */
     if (this->gpu_ptr != nullptr) {
       NCCLCHECK(ncclCuMemFree(this->gpu_ptr, nullptr));
       this->gpu_ptr = nullptr;
@@ -263,7 +263,7 @@ public:
     return ncclSuccess;
   }
 
-  ncclResult_t register_mr(struct ibv_pd* ib_pd, bool force_strict_ordering = false) {
+  ncclResult_t register_mr(struct ibv_pd* ib_pd, bool force_strict_ordering = false) { /* 中文索引·体内调用 gdakiRegMr。 */
     if (this->num_elements == 0) return ncclSuccess;
     NCCLCHECK(gdakiRegMr(&this->mr, ib_pd, this->gpu_ptr, this->num_elements * sizeof(T),
                          IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ |
@@ -272,7 +272,7 @@ public:
     return ncclSuccess;
   }
 
-  ncclResult_t deregister_mr() {
+  ncclResult_t deregister_mr() { /* 中文索引·体内调用 wrap_ibv_dereg_mr。 */
     if (this->mr != nullptr) {
       NCCLCHECK(wrap_ibv_dereg_mr(this->mr));
       this->mr = nullptr;
@@ -280,7 +280,7 @@ public:
     return ncclSuccess;
   }
 
-  ncclResult_t exchange_info(struct ncclGinIbCollComm* cComm) {
+  ncclResult_t exchange_info(struct ncclGinIbCollComm* cComm) { /* 中文索引·体内调用 htobe32、cComm->allGather。 */
     if (this->num_elements == 0) return ncclSuccess;
     __be32 rkey = htobe32(this->mr->rkey);
     NCCLCHECK(cComm->allGather(cComm, &rkey, this->rkeys_hd_mhandle.host_buf, sizeof(__be32)));
@@ -309,7 +309,7 @@ public:
   }
 
   GdakiGlobalGPUBufferTable() : cumemhandle(0), num_elements(0), next_unused_idx(0), gpu_ptr(nullptr), mr(nullptr) {};
-  ~GdakiGlobalGPUBufferTable() {
+  ~GdakiGlobalGPUBufferTable() { /* 中文索引·体内调用 this->deregister_mr、this->deallocate。 */
      // Should only be used in error cleanup path as it ignores return codes
     this->deregister_mr();
     this->deallocate();
@@ -419,7 +419,7 @@ static const struct {
 #undef GDAKI_Q_COUNTER_FIELD
 
 // Best-effort: on failure GIN QPs stay on the device default counter set.
-static void gdakiQCounterCreate(struct gdaki_context* ctx, struct ibv_context* context) {
+static void gdakiQCounterCreate(struct gdaki_context* ctx, struct ibv_context* context) { /* 中文索引·体内调用 wrap_mlx5dv_devx_obj_create。 */
   uint32_t in[MLX5_ST_SZ_DW(alloc_q_counter_in)] = {};
   uint32_t out[MLX5_ST_SZ_DW(alloc_q_counter_out)] = {};
   DEVX_SET(alloc_q_counter_in, in, opcode, MLX5_CMD_OP_ALLOC_Q_COUNTER);
@@ -436,7 +436,7 @@ static void gdakiQCounterCreate(struct gdaki_context* ctx, struct ibv_context* c
 
 // Returns the totals of the GIN Q counter set as " counterSetTotals: name=value ...", or an empty string when GIN QPs
 // are not attached to it or it cannot be queried.
-static const char* gdakiQCounterString(struct gdaki_context* ctx, char* buf, size_t size) {
+static const char* gdakiQCounterString(struct gdaki_context* ctx, char* buf, size_t size) { /* 中文索引·体内调用 wrap_mlx5dv_devx_obj_query、snprintf。 */
   buf[0] = '\0';
   if (ctx->ginCounterSetId == 0) return buf;
 
@@ -459,7 +459,7 @@ static const char* gdakiQCounterString(struct gdaki_context* ctx, char* buf, siz
 }
 
 static void gdakiFillExchInfo(struct gdaki_exch_info* exch_info, struct gdaki_context* gdaki_ctx,
-                              struct doca_gpu_verbs_qp_hl* gqp) {
+                              struct doca_gpu_verbs_qp_hl* gqp) { /* 中文索引·体内调用 doca_verbs_qp_get_qpn、memcpy。 */
   exch_info->lid = gdaki_ctx->port_attr.lid;
   doca_verbs_qp_get_qpn(gqp->qp, (uint32_t*)&exch_info->qpn);
   memcpy(exch_info->gid.raw, gdaki_ctx->rgid.raw, sizeof(union ibv_gid));
@@ -473,7 +473,7 @@ static void gdakiFillExchInfo(struct gdaki_exch_info* exch_info, struct gdaki_co
   exch_info->ordering_semantic = gdakiOrderingSematic();
 }
 
-static ncclResult_t gdakiCreateVerbsAh(struct gdaki_context* ctx, int ib_sl, int ib_tc, int ib_gid_index) {
+static ncclResult_t gdakiCreateVerbsAh(struct gdaki_context* ctx, int ib_sl, int ib_tc, int ib_gid_index) { /* 中文索引·体内调用 doca_verbs_ah_attr_create、doca_verbs_ah_attr_set_sl。 */
   ncclResult_t status = ncclSuccess;
 
   DOCACHECK(doca_verbs_ah_attr_create(ctx->ndev, &ctx->ah));
@@ -509,7 +509,7 @@ static bool gdakiIsValidActiveMtu(enum ibv_mtu active_mtu) {
 }
 
 static ncclResult_t gdakiGetPathMtu(enum ibv_mtu local_active_mtu, enum ibv_mtu remote_active_mtu,
-                                    enum doca_verbs_mtu_size* path_mtu) {
+                                    enum doca_verbs_mtu_size* path_mtu) { /* 中文索引·体内调用 gdakiIsValidActiveMtu。 */
   if (!gdakiIsValidActiveMtu(local_active_mtu) || !gdakiIsValidActiveMtu(remote_active_mtu)) {
     WARN("Unexpected active_mtu value (local %d, remote %d)", local_active_mtu, remote_active_mtu);
     return ncclInternalError;
@@ -541,7 +541,7 @@ static ncclResult_t gdakiGetPathMtu(enum ibv_mtu local_active_mtu, enum ibv_mtu 
 }
 
 static ncclResult_t gdakiConnectQp(struct gdaki_context* ctx, struct doca_gpu_verbs_qp_hl* gqp,
-                                   struct gdaki_exch_info* exch_info, uint8_t lagTxPortAffinity = 0) {
+                                   struct gdaki_exch_info* exch_info, uint8_t lagTxPortAffinity = 0) { /* 中文索引·体内调用 ncclParamGinGdakiMaxDestRdAtomic、ncclParamGinGdakiMaxQpRdAtomic。 */
   ncclResult_t status = ncclSuccess;
   doca_verbs_qp_attr_t* verbs_qp_attr = nullptr;
   int max_dest_rd_atomic =
@@ -674,7 +674,7 @@ NCCL_PARAM(GinGdakiUseReliableDB, "GDAKI_USE_RELIABLE_DB", 0);
 NCCL_PARAM(GinGdakiForceMcst, "GDAKI_FORCE_MCST", 0);
 
 static ncclResult_t gdakiCheckDeviceSupport(doca_gpu_t* gpuDev, doca_dev_t* netDev,
-                                            enum doca_gpu_dev_verbs_nic_handler nicHandler, int rank) {
+                                            enum doca_gpu_dev_verbs_nic_handler nicHandler, int rank) { /* 中文索引·体内调用 doca_gpu_nic_cap_is_gpu_mem_umem_supported、doca_gpu_nic_cap_is_nic_handler_gpu_sm_db_supported。 */
   doca_error_t docaStatus = doca_gpu_nic_cap_is_gpu_mem_umem_supported(gpuDev, netDev);
   if (docaStatus != DOCA_SUCCESS &&
       !(gpuDev->type == DOCA_GPU_LIB_TYPE_SDK && netDev->type == DOCA_VERBS_SDK_LIB_TYPE_SDK &&
@@ -699,7 +699,7 @@ static ncclResult_t gdakiCheckDeviceSupport(doca_gpu_t* gpuDev, doca_dev_t* netD
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinGdakiCheckDeviceSupport(void* collComm) {
+ncclResult_t ncclGinGdakiCheckDeviceSupport(void* collComm) { /* 中文索引·体内调用 cudaGetDevice、cudaDeviceGetPCIBusId。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   ncclResult_t status = ncclSuccess;
   doca_gpu_t* gpuDev = nullptr;
@@ -736,7 +736,7 @@ out:
 }
 
 ncclResult_t ncclGinGdakiCreateContext(void* collComm, ncclGinConfig_t* config, void** outGinCtx,
-                                       ncclNetDeviceHandle_t** outDevHandle) {
+                                       ncclNetDeviceHandle_t** outDevHandle) { /* 中文索引·体内调用 ncclParamIbSl、cComm->getProperties。 */
   ncclResult_t status = ncclSuccess;
 
   const int nSignals = config->nSignals;
@@ -1352,7 +1352,7 @@ out:
   return status;
 }
 
-ncclResult_t ncclGinGdakiDestroyContext(void* ginCtx) {
+ncclResult_t ncclGinGdakiDestroyContext(void* ginCtx) { /* 中文索引·体内调用 doca_verbs_comp_channel_destroy、calloc。 */
   if (!ginCtx) return ncclInvalidArgument;
 
   struct gdaki_context* gdaki_ctx = (struct gdaki_context*)ginCtx;
@@ -1454,7 +1454,7 @@ ncclResult_t ncclGinGdakiDestroyContext(void* ginCtx) {
 }
 
 ncclResult_t ncclGinGdakiRegMrSym(void* collComm, void* data, size_t size, int type, uint64_t mr_flags, void** mhandle,
-                                  void** ginHandle) {
+                                  void** ginHandle) { /* 中文索引·体内调用 calloc、gdakiRegMr。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   ncclResult_t status = ncclSuccess;
 
@@ -1507,7 +1507,7 @@ out:
   return status;
 }
 
-ncclResult_t ncclGinGdakiDeregMrSym(void* collComm, void* mhandle) {
+ncclResult_t ncclGinGdakiDeregMrSym(void* collComm, void* mhandle) { /* 中文索引·体内调用 htobe32、wrap_ibv_dereg_mr。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   struct gdaki_mem_handle* gdaki_mhandle = (struct gdaki_mem_handle*)mhandle;
   struct ibv_mr* mr = gdaki_mhandle->mr;
@@ -1529,7 +1529,7 @@ ncclResult_t ncclGinGdakiDeregMrSym(void* collComm, void* mhandle) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinGdakiProgress(void* ctx) {
+ncclResult_t ncclGinGdakiProgress(void* ctx) { /* 中文索引·体内调用 gdakiQpNeedsProxyProgress、doca_gpu_verbs_cpu_proxy_progress。 */
   struct gdaki_context* gdakiCtx = (struct gdaki_context*)ctx;
   const int ncontexts = gdakiCtx->nContexts;
   const int nranks = gdakiCtx->collComm->nranks;
@@ -1564,7 +1564,7 @@ ncclResult_t ncclGinGdakiProgress(void* ctx) {
 // Logs a GIN QP error. When GIN QPs are attached to the GIN Q counter set, the same line carries their cumulative
 // hardware counters, so triage can tell whether GIN traffic as a whole saw retries, drops, sequence errors, etc.
 static void gdakiReportQpError(struct gdaki_context* ctx, struct doca_gpu_verbs_qp* qp,
-                               const struct doca_gpu_verbs_qp_error_info* errorInfo) {
+                               const struct doca_gpu_verbs_qp_error_info* errorInfo) { /* 中文索引·体内调用 doca_verbs_qp_get_qpn、gdakiQCounterString。 */
   const int nranks = ctx->collComm->nranks;
   const int nqpsForComm = ctx->nContexts * nranks;
   const char* type = "self-loop peer";
@@ -1594,7 +1594,7 @@ static void gdakiReportQpError(struct gdaki_context* ctx, struct doca_gpu_verbs_
        gdakiQCounterString(ctx, counters, sizeof(counters)));
 }
 
-static ncclResult_t ncclGinGdakiQueryLastErrorPolling(struct gdaki_context* gdakiCtx, bool* hasError) {
+static ncclResult_t ncclGinGdakiQueryLastErrorPolling(struct gdaki_context* gdakiCtx, bool* hasError) { /* 中文索引·体内调用 doca_gpu_verbs_query_last_error、gdakiReportQpError。 */
   bool hasError_ = false;
   const int ncontexts = gdakiCtx->nContexts;
   const int nranks = gdakiCtx->collComm->nranks;
@@ -1628,7 +1628,7 @@ static ncclResult_t ncclGinGdakiQueryLastErrorPolling(struct gdaki_context* gdak
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinGdakiQueryLastErrorEvent(struct gdaki_context* gdakiCtx, bool* hasError) {
+static ncclResult_t ncclGinGdakiQueryLastErrorEvent(struct gdaki_context* gdakiCtx, bool* hasError) { /* 中文索引·体内调用 doca_verbs_get_cq_comp_channel_event、doca_gpu_verbs_query_last_error。 */
   bool hasError_ = false;
   struct doca_gpu_verbs_qp* eventQp = nullptr;
   void* cq_context;
@@ -1655,7 +1655,7 @@ static ncclResult_t ncclGinGdakiQueryLastErrorEvent(struct gdaki_context* gdakiC
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinGdakiQueryLastError(void* ginCtx, bool* hasError) {
+ncclResult_t ncclGinGdakiQueryLastError(void* ginCtx, bool* hasError) { /* 中文索引·体内调用 clockNano、ncclParamGinErrorQuerySec。 */
   ncclResult_t status = ncclSuccess;
   struct gdaki_context* gdakiCtx = (struct gdaki_context*)ginCtx;
   bool hasError_ = false;

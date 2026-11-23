@@ -21,10 +21,10 @@ struct ncclTransport* ncclTransports[NTRANSPORTS] = {
 
 template <int type>
 static ncclResult_t selectTransport(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclConnect* connect,
-                                    int channelId, int peer, int connIndex, int* transportType) {
+                                    int channelId, int peer, int connIndex, int* transportType) { /* 中文索引·体内调用 transport->canConnect、transportComm->setup。 */
   struct ncclPeerInfo* myInfo = comm->peerInfo + comm->rank;
   struct ncclPeerInfo* peerInfo = comm->peerInfo + peer;
-  struct ncclConnector* connector = (type == 1) ? comm->channels[channelId].peers[peer]->send + connIndex :
+  /* 中文图解·transport｜以 channel、peer、方向与 connIndex 定位 connector，再通过 canConnect 选择运输实现。 */ struct ncclConnector* connector = (type == 1) ? comm->channels[channelId].peers[peer]->send + connIndex :
                                                   comm->channels[channelId].peers[peer]->recv + connIndex;
   for (int t = 0; t < NTRANSPORTS; t++) {
     struct ncclTransport* transport = ncclTransports[t];
@@ -65,7 +65,7 @@ ncclResult_t ncclTransportP2pConnect(struct ncclComm* comm, int channelId, int n
   return ncclSuccess;
 }
 
-void dumpData(struct ncclConnect* data, int ndata) {
+void dumpData(struct ncclConnect* data, int ndata) { /* 中文索引·体内调用 printf。 */
   for (int n = 0; n < ndata; n++) {
     printf("[%d] ", n);
     uint8_t* d = (uint8_t*)data;
@@ -85,7 +85,7 @@ NCCL_PARAM(ReportConnectProgress, "REPORT_CONNECT_PROGRESS", 0);
 // *directMode returns 1 if *any* two local ranks are managed by the same process.
 // *isAllCudaP2p returns 1 if all local ranks have CUDA P2P connectivity with each other, irrespective of the distance.
 ncclResult_t ncclTransportCheckP2pType(struct ncclComm* comm, bool* isAllDirectP2p, bool* directMode,
-                                       bool* isAllCudaP2p) {
+                                       bool* isAllCudaP2p) { /* 中文索引·体内调用 ncclTopoCheckP2p。 */
   bool ncclP2pFlag = true;
   bool directFlag = false;
   bool cudaP2pFlag = true;
@@ -122,7 +122,7 @@ ncclResult_t ncclTransportCheckP2pType(struct ncclComm* comm, bool* isAllDirectP
   return ncclSuccess;
 }
 
-ncclResult_t ncclTransportP2pSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, int connIndex) {
+ncclResult_t ncclTransportP2pSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, int connIndex) { /* 中文索引·体内调用 ncclParamConnectRoundMaxPeers、gettimeofday。 */
   // Stream used during transport setup; need for P2P pre-connect + CUDA Graph
   ncclResult_t ret = ncclSuccess;
   struct ncclConnect** data; // Store intermediate send/recvData structs for connect
@@ -374,7 +374,7 @@ extern struct ncclTransport collNetTransport;
 // We do not NCCLCHECK this call because we would fall back to P2P network in case CollNet setup fails
 bool ncclTransportCollNetSetup(struct ncclComm* comm, struct ncclTopoGraph* collNetGraph, struct ncclChannel* channel,
                                int masterRank, int masterPeer, int collNetGraphChannelId, int type,
-                               ncclConnect* connect) {
+                               ncclConnect* connect) { /* 中文索引·体内调用 transportComm->setup、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   int rank = comm->rank;
   int nranks = comm->nRanks;
@@ -450,7 +450,7 @@ cleanup:
   return ret != ncclSuccess;
 }
 
-ncclResult_t ncclTransportCollNetCheck(struct ncclComm* comm, int collNetSetupFail) {
+ncclResult_t ncclTransportCollNetCheck(struct ncclComm* comm, int collNetSetupFail) { /* 中文索引·体内调用 bootstrapIntraNodeAllGather。 */
   // AllGather collNet setup results
   int allGatherFailures[NCCL_MAX_LOCAL_RANKS] = {0};
   allGatherFailures[comm->localRank] = collNetSetupFail;
@@ -469,7 +469,7 @@ ncclResult_t ncclTransportCollNetCheck(struct ncclComm* comm, int collNetSetupFa
   return ncclSuccess;
 }
 
-ncclResult_t ncclTransportCollNetFree(struct ncclComm* comm) {
+ncclResult_t ncclTransportCollNetFree(struct ncclComm* comm) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement、send->transportComm->free。 */
   // Free collNet resources
   for (int r = 0; r < comm->nChannels; r++) {
     struct ncclChannel* channel = comm->channels + r;

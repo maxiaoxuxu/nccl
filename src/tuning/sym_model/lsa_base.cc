@@ -13,7 +13,7 @@
 #include <cmath>
 
 ncclResult_t ncclSymkLsaBaseModel(struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId, size_t nBytes,
-                                  int nBlocks, struct ncclSymkLsaEstimate* estimate, bool* modeled) {
+                                  int nBlocks, struct ncclSymkLsaEstimate* estimate, bool* modeled) { /* 中文索引·体内调用 size_t、ncclSymkTmaKernelMask。 */
   *modeled = false;
   *estimate = {};
   constexpr double LL_BusFactor = 9; // 2X the bytes, plus some processing, plus no unrolling

@@ -11,7 +11,7 @@
 
 namespace {
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.directSend。 */
   ncclRing* ring = &ncclShmem.channel.ring;
   const int rank = ring->userRanks[0];
   const int nextRank = ring->userRanks[1];
@@ -41,7 +41,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
       offset = gridOffset + elemOffset;
       nelem = min(chunkCount, channelCount - elemOffset);
 
-      if (rank == root) {
+      /* 中文图解·five｜root 发送源缓冲；末跳由 nextRank 是否等于 root 判定；中间节点复制并转发。 */ if (rank == root) {
         if (inputBuf == outputBuf || isNetOffload) {
           prims.directSend(offset, offset, nelem);
         } else {

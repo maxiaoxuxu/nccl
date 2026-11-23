@@ -33,7 +33,7 @@ NCCL_PARAM(IbSortMergeNics, "IB_SORT_MERGE_NICS", 1);
 extern int64_t ncclParamIbArThreshold();
 
 // Returns 0 if this is the path of two VFs of the same physical device
-static int ncclIbMatchVfPath(const char* path1, const char* path2) {
+static int ncclIbMatchVfPath(const char* path1, const char* path2) { /* 中文索引·体内调用 ncclParamIbMergeVfs、strncmp。 */
   // Merge multi-port NICs into the same PCI device
   if (ncclParamIbMergeVfs()) {
     return strncmp(path1, path2, strlen(path1) - 4) == 0;
@@ -42,7 +42,7 @@ static int ncclIbMatchVfPath(const char* path1, const char* path2) {
   }
 }
 
-static int ncclIbCompareDevs(const void* dev1, const void* dev2) {
+static int ncclIbCompareDevs(const void* dev1, const void* dev2) { /* 中文索引·体内调用 strlen、pciPathToInt64。 */
   // Compare devices using the last component of the PCI path.
   // Note: fullPciPath is never NULL but empty if not found by realpath.
   char* path1 = ((struct ncclIbDev*)dev1)->fullPciPath;
@@ -58,7 +58,7 @@ static int ncclIbCompareDevs(const void* dev1, const void* dev2) {
   return (id1 < id2) ? -1 : ((id1 == id2) ? 0 : 1);
 }
 
-static int ncclIbCompareVDevsByPlane(const void* a, const void* b) {
+static int ncclIbCompareVDevsByPlane(const void* a, const void* b) { /* 中文索引·体内调用 ncclIbCompareDevs。 */
   int idxA = *(const int*)a;
   int idxB = *(const int*)b;
   int16_t planeA = ncclIbDevs[idxA].planeId;
@@ -68,7 +68,7 @@ static int ncclIbCompareVDevsByPlane(const void* a, const void* b) {
   return ncclIbCompareDevs(&ncclIbDevs[idxA], &ncclIbDevs[idxB]);
 }
 
-static ncclResult_t ncclIbGetPciPath(char* devName, char** path, char* fullPath) {
+static ncclResult_t ncclIbGetPciPath(char* devName, char** path, char* fullPath) { /* 中文索引·体内调用 snprintf、realpath。 */
   char devicePath[PATH_MAX];
   snprintf(devicePath, PATH_MAX, "/sys/class/infiniband/%s/device", devName);
   char* p = realpath(devicePath, NULL);
@@ -90,7 +90,7 @@ static ncclResult_t ncclIbGetPciPath(char* devName, char** path, char* fullPath)
   return ncclSuccess;
 }
 
-static ncclResult_t ncclIbGetRealPort(char* pciPath, int* realPort, int devIdx) {
+static ncclResult_t ncclIbGetRealPort(char* pciPath, int* realPort, int devIdx) { /* 中文索引·体内调用 ncclIbMatchVfPath。 */
   *realPort = 0;
   if (pciPath == NULL) return ncclSuccess;
   // Keep the real port aside (the ibv port is always 1 on recent cards)
@@ -150,7 +150,7 @@ static int ncclIbSpeed(int speed) {
 }
 
 // Determine whether RELAXED_ORDERING is enabled and possible
-static int ncclIbRelaxedOrderingCapable(void) {
+static int ncclIbRelaxedOrderingCapable(void) { /* 中文索引·体内调用 ncclParamIbPciRelaxedOrdering、wrap_ibv_reg_mr_iova2。 */
   int roMode = ncclParamIbPciRelaxedOrdering();
   ncclResult_t r = ncclInternalError;
   if (roMode == 1 || roMode == 2) {
@@ -160,7 +160,7 @@ static int ncclIbRelaxedOrderingCapable(void) {
   return r == ncclInternalError ? 0 : 1;
 }
 
-static bool ncclMlx5dvDmaBufCapable(ibv_context* context) {
+static bool ncclMlx5dvDmaBufCapable(ibv_context* context) { /* 中文索引·体内调用 wrap_ibv_alloc_pd、wrap_direct_ibv_reg_dmabuf_mr。 */
   ncclResult_t res;
   int dev_fail = 0;
 
@@ -184,7 +184,7 @@ failure:
 extern int64_t ncclParamIbPrepostReceiveWorkRequests();
 extern int64_t ncclParamIbReceiverSideMatchingScheme();
 
-static ncclResult_t ncclIbQueryOooRqSize(struct ibv_context* ibvCtx, const char* devName, uint32_t* oooRqSize) {
+static ncclResult_t ncclIbQueryOooRqSize(struct ibv_context* ibvCtx, const char* devName, uint32_t* oooRqSize) { /* 中文索引·体内调用 ncclParamIbOooRq、wrap_mlx5dv_query_device。 */
   ncclResult_t ret;
   if (!oooRqSize) return ncclInvalidArgument;
   *oooRqSize = 0;
@@ -205,7 +205,7 @@ fail:
   return ncclInternalError;
 }
 
-ncclResult_t ncclIbMakeVDeviceInternal(int* d, ncclNetVDeviceProps_t* props) {
+ncclResult_t ncclIbMakeVDeviceInternal(int* d, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 ncclParamIbMergeNics、ncclParamIbSortMergeNics。 */
   if (ncclParamIbMergeNics() == 0 && props->ndevs > 1) {
     INFO(NCCL_NET, "NET/IB : Skipping makeVDevice, NCCL_IB_MERGE_NICS=0");
     return ncclInvalidUsage;
@@ -279,7 +279,7 @@ ncclResult_t ncclIbMakeVDeviceInternal(int* d, ncclNetVDeviceProps_t* props) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbMakeVDevice(int* d, ncclNetVDeviceProps_t* props) {
+ncclResult_t ncclIbMakeVDevice(int* d, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 ncclIbMakeVDeviceInternal。 */
   std::lock_guard<std::mutex> lock(ncclIbMutex);
   ncclResult_t res = ncclIbMakeVDeviceInternal(d, props);
   return res;
@@ -310,7 +310,7 @@ static const bool ncclIbCpuArchAarch64 = false;
 static const uint32_t NCCL_IB_MLX_VENDOR_ID = 0x02c9;
 static const uint32_t NCCL_IB_CX9_PART_ID = 0x1025;
 static const uint32_t NCCL_IB_VF_PART_ID = 0x101e;
-static bool ncclIbIsCx9(const struct ncclIbDev* dev) {
+static bool ncclIbIsCx9(const struct ncclIbDev* dev) { /* 中文索引·体内调用 strncmp。 */
   return dev->vendorId == NCCL_IB_MLX_VENDOR_ID &&
          (dev->vendorPartId == NCCL_IB_CX9_PART_ID || dev->vendorPartId == NCCL_IB_VF_PART_ID) &&
          strncmp(dev->fwVer, "82.", 3) == 0;
@@ -318,7 +318,7 @@ static bool ncclIbIsCx9(const struct ncclIbDev* dev) {
 static const int NCCL_IB_VR_SOCKET_COUNT = 2;
 static const int NCCL_IB_VR_RAILS_PER_SOCKET = 2;
 
-int ncclIbCx9RailId(enum ncclIbRailPolicy policy, int devId, int nDevs) {
+int ncclIbCx9RailId(enum ncclIbRailPolicy policy, int devId, int nDevs) { /* 中文索引·体内调用 divUp。 */
   if (nDevs <= 0 || nDevs % 8) {
     INFO(NCCL_NET | NCCL_ENV,
          "NET/IB: rail policy was set to CX9 but the number of CX9 found (=%d) is not a modulo of 8, ignoring.", nDevs);
@@ -342,7 +342,7 @@ int ncclIbCx9RailId(enum ncclIbRailPolicy policy, int devId, int nDevs) {
   return socketRail + (groupLocalId / nCx9PerRailPerGroup);
 }
 
-static void ncclIbGetRailPolicy(enum ncclIbRailPolicy* policy) {
+static void ncclIbGetRailPolicy(enum ncclIbRailPolicy* policy) { /* 中文索引·体内调用 std::call_once、ncclGetEnv。 */
   static std::once_flag onceFlag;
   static enum ncclIbRailPolicy railPolicy = NCCL_IB_RAIL_POLICY_CX9_FLIP;
   std::call_once(onceFlag, [&]() {
@@ -366,7 +366,7 @@ static void ncclIbGetRailPolicy(enum ncclIbRailPolicy* policy) {
 }
 
 // Returns the index of dev in the array of pci paths
-static int ncclIbGetPciIndex(int nPaths, const char** pciPaths, struct ncclIbDev* dev) {
+static int ncclIbGetPciIndex(int nPaths, const char** pciPaths, struct ncclIbDev* dev) { /* 中文索引·体内调用 ncclIbMatchVfPath。 */
   int devId = 0;
   while (devId < nPaths) {
     if (dev->pciPath && pciPaths[devId] && ncclIbMatchVfPath(dev->pciPath, pciPaths[devId])) break;
@@ -376,7 +376,7 @@ static int ncclIbGetPciIndex(int nPaths, const char** pciPaths, struct ncclIbDev
 }
 
 // returns the policy and the total number of devices subject to the policy.
-static ncclResult_t ncclIbAutoPolicy(enum ncclIbRailPolicy* policy, int* nDevs) {
+static ncclResult_t ncclIbAutoPolicy(enum ncclIbRailPolicy* policy, int* nDevs) { /* 中文索引·体内调用 std::call_once、ncclIbGetRailPolicy。 */
   static int count = 0;
   static std::once_flag onceFlag;
   static ncclIbRailPolicy cache = NCCL_IB_RAIL_POLICY_NONE;
@@ -402,7 +402,7 @@ static ncclResult_t ncclIbAutoPolicy(enum ncclIbRailPolicy* policy, int* nDevs) 
 }
 
 // Attempt to assign a rail and plane ID for devices (after they have been sorted by PCIe path)
-static ncclResult_t ncclIbAutoAssignRailPlane(int d, const char** uniquePaths, int* uniqueCount) {
+static ncclResult_t ncclIbAutoAssignRailPlane(int d, const char** uniquePaths, int* uniqueCount) { /* 中文索引·体内调用 ncclIbAutoPolicy、ncclIbIsCx9。 */
   int nDevs;
   enum ncclIbRailPolicy policy;
   NCCLCHECK(ncclIbAutoPolicy(&policy, &nDevs));
@@ -431,7 +431,7 @@ static ncclResult_t ncclIbAutoAssignRailPlane(int d, const char** uniquePaths, i
 }
 
 extern int64_t ncclIbArThreshold;
-ncclResult_t ncclIbInitDevices(ncclDebugLogger_t logFunction, ncclProfilerCallback_t profFunction) {
+ncclResult_t ncclIbInitDevices(ncclDebugLogger_t logFunction, ncclProfilerCallback_t profFunction) { /* 中文索引·体内调用 ncclParamIbDisable、wrap_ibv_symbols。 */
   ncclResult_t ret = ncclSuccess;
   struct ibv_device** devices = NULL;
   if (netRefCount++) return ret;
@@ -685,7 +685,7 @@ fail:
 }
 
 ncclResult_t ncclIbInit(void** ctx, uint64_t commId, ncclNetCommConfig_t* config, ncclDebugLogger_t logFunction,
-                        ncclProfilerCallback_t profFunction) {
+                        ncclProfilerCallback_t profFunction) { /* 中文索引·体内调用 ncclIbInitDevices、ncclIbPortRecoveryThreadStart。 */
   ncclResult_t ret = ncclSuccess;
   ncclNetCommConfig_t* netCommConfig = nullptr;
   NCCLCHECK(ncclIbInitDevices(logFunction, profFunction));
@@ -701,7 +701,7 @@ ncclResult_t ncclIbDevices(int* ndev) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbGetPhysProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclIbGetPhysProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclIbGdrSupport、ncclIbDmaBufSupport。 */
   struct ncclIbDev* ibDev = ncclIbDevs + dev;
   std::lock_guard<std::mutex> lock(ibDev->mutex);
   props->name = ibDev->devName;
@@ -731,7 +731,7 @@ ncclResult_t ncclIbGetPhysProperties(int dev, ncclNetProperties_t* props) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclIbGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclIbGetPhysProperties、memcpy。 */
   if (dev >= ncclNMergedIbDevs) {
     WARN("NET/IB : Requested properties for vNic %d, only %d vNics have been created", dev, ncclNMergedIbDevs);
     return ncclInvalidUsage;
@@ -747,7 +747,7 @@ ncclResult_t ncclIbGetProperties(int dev, ncclNetProperties_t* props) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbFinalize(void* ctx) {
+ncclResult_t ncclIbFinalize(void* ctx) { /* 中文索引·体内调用 free、ncclIbPortRecoveryThreadStop。 */
   free(ctx);
   NCCLCHECK(ncclIbPortRecoveryThreadStop());
   return ncclIbFinalizeDevices();

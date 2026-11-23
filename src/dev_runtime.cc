@@ -56,7 +56,7 @@ ncclResult_t ncclDevCommGinSignalsPerBarrier_v22902(ncclComm_t comm, struct nccl
 // Device code from 2.32.4 strides by the same function it uses here, keyed on the barrier preference the
 // selected backend's plugin reported.
 ncclResult_t ncclDevCommGinSignalsPerBarrier_v23204(ncclComm_t comm, struct ncclGinBackendState const* backend,
-                                                    int nRanks, int* outSlots) {
+                                                    int nRanks, int* outSlots) { /* 中文索引·体内调用 ncclGinBarrierSlots。 */
   (void)comm;
   *outSlots = ncclGinBarrierSlots(backend->barrierOptions, nRanks);
   return ncclSuccess;
@@ -81,7 +81,7 @@ bool ncclDevrWinRegEnabled(int winFlags, enum ncclDevrRegisterCapability capabil
 
 // Returns ncclInvalidUsage if the compiled version is greater than the runtime version
 // and NCCL_ENABLE_VERSION_CHECK=0 is not set
-static ncclResult_t getNcclVersionCompat(int version, struct ncclDevCommCompat** devCompatPtr) {
+static ncclResult_t getNcclVersionCompat(int version, struct ncclDevCommCompat** devCompatPtr) { /* 中文索引·体内调用 ncclParamEnableVersionCheck、ncclVersionToString。 */
   *devCompatPtr = nullptr;
 
   if (version > NCCL_VERSION_CODE && ncclParamEnableVersionCheck()) {
@@ -141,7 +141,7 @@ static void listRemove(Obj* list, int* count, int index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static ncclResult_t initLsaDomainData(struct ncclComm* comm) {
+static ncclResult_t initLsaDomainData(struct ncclComm* comm) { /* 中文索引·体内调用 ncclCalloc、memcpy。 */
   struct ncclDevrState* devr = &comm->devrState;
 
   if (!comm->p2pCrossClique) {
@@ -177,7 +177,7 @@ static ncclResult_t initLsaDomainData(struct ncclComm* comm) {
 NCCL_PARAM(LsaTeamSize, "LSA_TEAM_SIZE", 0)
 
 // Compute the LSA team size from the comm topology without any side effects.
-int computeLsaTeamSize(struct ncclComm* comm) {
+int computeLsaTeamSize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamLsaTeamSize、gcd。 */
   if (comm->devrState.bigSize != 0) return comm->devrState.lsaTeamSize;
 
   // LSA needs to be the same size for all ranks, and it needs to represent
@@ -205,7 +205,7 @@ int computeLsaTeamSize(struct ncclComm* comm) {
   return lsaTeamSize;
 }
 
-size_t computeBigSize(struct ncclComm* comm) {
+size_t computeBigSize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamWinStride、alignUp。 */
   int64_t bigSize = ncclParamWinStride();
   if (bigSize <= 0) {
     bigSize = 1;
@@ -221,7 +221,7 @@ bool ncclDevrIsOneLsaTeam(struct ncclComm* comm) {
   return lsaTeamSize == comm->nRanks; // Same as comm->nRanks / comm->devrState.lsaTeamSize == 1
 }
 
-ncclResult_t ncclDevrInitOnce(struct ncclComm* comm) {
+ncclResult_t ncclDevrInitOnce(struct ncclComm* comm) { /* 中文索引·体内调用 initLsaDomainData、computeLsaTeamSize。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   if (devr->bigSize != 0) return ncclSuccess;
@@ -278,7 +278,7 @@ static bool symHasCountedCftMemory(struct ncclDevrState* devr) {
   return false;
 }
 
-ncclResult_t ncclDevrFinalize(struct ncclComm* comm) {
+ncclResult_t ncclDevrFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclIntruQueueEmpty。 */
   struct ncclDevrState* devr = &comm->devrState;
   cudaStream_t stream;
   ncclResult_t ret = ncclSuccess;
@@ -343,7 +343,7 @@ struct symLsaMessage {
   size_t segmentSize;
 };
 
-static ncclResult_t symMemorySetAccessForVASegment(struct ncclComm* comm, symLsaMessage* message, CUdeviceptr addr) {
+static ncclResult_t symMemorySetAccessForVASegment(struct ncclComm* comm, symLsaMessage* message, CUdeviceptr addr) { /* 中文索引·体内调用 cuMemSetAccess。 */
   CUmemAccessDesc accessDesc;
   accessDesc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
   accessDesc.location.id = comm->cudaDev;
@@ -353,7 +353,7 @@ static ncclResult_t symMemorySetAccessForVASegment(struct ncclComm* comm, symLsa
 }
 
 static ncclResult_t symMemoryExportSegmentHandle(struct ncclComm* comm, symLsaMessage* msg,
-                                                 CUmemGenericAllocationHandle memHandle, size_t segmentSize) {
+                                                 CUmemGenericAllocationHandle memHandle, size_t segmentSize) { /* 中文索引·体内调用 cuMemGetAllocationPropertiesFromHandle、cuMemExportToShareableHandle。 */
   ncclResult_t ret = ncclSuccess;
   CUmemAllocationProp prop;
   CUCHECKGOTO(cuMemGetAllocationPropertiesFromHandle(&prop, memHandle), ret, fail);
@@ -370,7 +370,7 @@ fail:
 
 static ncclResult_t symMemoryImportAndMapSegmentHandle(struct ncclComm* comm, int r, CUdeviceptr addr,
                                                        symLsaMessage* msg, CUmemGenericAllocationHandle memHandle,
-                                                       bool reuseLocal) {
+                                                       bool reuseLocal) { /* 中文索引·体内调用 ncclProxyClientGetFdBlocking、cuMemImportFromShareableHandle。 */
   ncclResult_t ret = ncclSuccess;
   CUmemGenericAllocationHandle impHandle;
   if (reuseLocal) {
@@ -399,7 +399,7 @@ fail:
 
 static ncclResult_t symMemoryImportAndMapSegmentsForRank(struct ncclComm* comm, int r, symLsaMessage* messages,
                                                          int maxSegments, int numSegments,
-                                                         CUmemGenericAllocationHandle* memHandles, size_t bigOffset) {
+                                                         CUmemGenericAllocationHandle* memHandles, size_t bigOffset) { /* 中文索引·体内调用 ncclParamSymReuseSysmemHandles、symMemoryImportAndMapSegmentHandle。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   CUdeviceptr addr = reinterpret_cast<uintptr_t>((char*)devr->lsaFlatBase + r * devr->bigSize + bigOffset);
@@ -421,7 +421,7 @@ fail:
 // The regular LSA team occupies a contiguous subrange starting at lsaDomainSelf-lsaTeamSelf. Device windows bias their
 // lsaFlatBase to the beginning of that subrange so ncclGetLsaPointer can use direct LSA-rank arithmetic, while
 // ncclGetPeerPointer uses lsaPeerDelta4G to convert a world rank into an offset from the base.
-static ncclResult_t symMemoryMapLsa(struct ncclComm* comm, struct ncclDevrMemory* mem) {
+static ncclResult_t symMemoryMapLsa(struct ncclComm* comm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   symLsaMessage* messages = nullptr;
@@ -486,7 +486,7 @@ fail:
   goto leave;
 }
 
-static ncclResult_t symBindTeamMemory(struct ncclComm* comm, struct ncclDevrTeam* tm, struct ncclDevrMemory* mem) {
+static ncclResult_t symBindTeamMemory(struct ncclComm* comm, struct ncclDevrTeam* tm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclMcPartitionTryBindAddr。 */
   if (ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterLsa) && comm->nvlsSupport &&
       tm->mcPartition.ptr != nullptr) {
 #if CUDART_VERSION >= 12010
@@ -512,7 +512,7 @@ static ncclResult_t symBindTeamMemory(struct ncclComm* comm, struct ncclDevrTeam
   return ncclSuccess;
 }
 
-static ncclResult_t symUnbindTeamMemory(struct ncclComm* comm, struct ncclDevrTeam* tm, struct ncclDevrMemory* mem) {
+static ncclResult_t symUnbindTeamMemory(struct ncclComm* comm, struct ncclDevrTeam* tm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclMcPartitionUnbind。 */
   if (ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterLsa) && comm->nvlsSupport &&
       tm->mcPartition.ptr != nullptr && !mem->globalHasSysmemSegment) {
 #if CUDART_VERSION >= 12010
@@ -531,7 +531,7 @@ static bool symTeamIsNvlsDomain(struct ncclComm* comm, struct ncclDevrTeam* t) {
 
 // Caller must barrier the team afterward unless *needBarrier == false on return.
 ncclResult_t symTeamObtain(struct ncclComm* comm, struct ncclTeam team, bool multimem, bool counted, bool cftUc,
-                           bool cftMc, struct ncclDevrTeam** outTeam, bool* needBarrier) {
+                           bool cftMc, struct ncclDevrTeam** outTeam, bool* needBarrier) { /* 中文索引·体内调用 malloc、symTeamIsNvlsDomain。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   struct ncclDevrTeam* t = devr->teamHead;
@@ -626,7 +626,7 @@ fail:
   return ret;
 }
 
-static ncclResult_t symTeamDestroyAll(struct ncclComm* comm) {
+static ncclResult_t symTeamDestroyAll(struct ncclComm* comm) { /* 中文索引·体内调用 symUnbindTeamMemory、symUnbindTeamLe。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   while (devr->teamHead != nullptr) {
@@ -685,7 +685,7 @@ static ncclResult_t symTeamDestroyAll(struct ncclComm* comm) {
   return ret;
 }
 
-static ncclResult_t symMemoryRegisterGin(struct ncclComm* comm, struct ncclDevrMemory* mem) {
+static ncclResult_t symMemoryRegisterGin(struct ncclComm* comm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclDevrVerifySegmentLayouts。 */
   ncclResult_t ret = ncclSuccess;
   int numSegmentsRegistered = 0;
   size_t offset = 0;
@@ -727,7 +727,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t symMemoryRegisterRma(struct ncclComm* comm, struct ncclDevrMemory* mem) {
+static ncclResult_t symMemoryRegisterRma(struct ncclComm* comm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclRmaProxyConnectOnce。 */
   if (!ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterRma)) return ncclSuccess;
   NCCLCHECK(ncclRmaProxyConnectOnce(comm));
   if (mem->maxGlobalNumSegments == 1) {
@@ -746,7 +746,7 @@ static void symMemoryDeregisterRma(struct ncclComm* comm, struct ncclDevrMemory*
 // caller do a world barrier before returning to user.
 static ncclResult_t symMemoryObtain(struct ncclComm* comm, CUmemGenericAllocationHandle* memHandles, int numSegments,
                                     void* memAddr, size_t size, int winFlags, struct ncclDevrMemory** outMem,
-                                    bool hasSysmemSegment = false) {
+                                    bool hasSysmemSegment = false) { /* 中文索引·体内调用 std::equal、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   int64_t bigOffset = 0;
@@ -967,7 +967,7 @@ fail:
   return ret;
 }
 
-static void symMemoryUnmapLsaRank(struct ncclDevrState* devr, struct ncclDevrMemory* mem, int rank) {
+static void symMemoryUnmapLsaRank(struct ncclDevrState* devr, struct ncclDevrMemory* mem, int rank) { /* 中文索引·体内调用 cuMemGetAddressRange、cuMemUnmap。 */
   CUdeviceptr addr = reinterpret_cast<uintptr_t>((char*)devr->lsaFlatBase + rank * devr->bigSize + mem->bigOffset);
   for (int idx = 0; idx < mem->lsaNumSegments[rank]; idx++) {
     CUdeviceptr tmpBase;
@@ -978,7 +978,7 @@ static void symMemoryUnmapLsaRank(struct ncclDevrState* devr, struct ncclDevrMem
   }
 }
 
-static void symMemoryDropRef(struct ncclComm* comm, struct ncclDevrMemory* mem) {
+static void symMemoryDropRef(struct ncclComm* comm, struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclGinDeregister、symMemoryDeregisterRma。 */
   if (mem != nullptr && 0 == --mem->refCount) {
     struct ncclDevrState* devr = &comm->devrState;
     if (devr->ginEnabled && mem->ginSegmentInfos != nullptr) {
@@ -1032,7 +1032,7 @@ static ncclResult_t symWindowTableInitOnce(struct ncclComm* comm, cudaStream_t s
 }
 
 static ncclResult_t symWindowInitGin(struct ncclDevrState* devr, struct ncclDevrMemory* mem,
-                                     struct ncclWindow_vidmem* winDevHost, cudaStream_t stream) {
+                                     struct ncclWindow_vidmem* winDevHost, cudaStream_t stream) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、ncclDevrAllocAndPopulateSegmentWindows。 */
   ncclResult_t ret = ncclSuccess;
   if (!ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterGin)) return ret;
   struct ncclSegmentWindow* segmentWindowsDev;
@@ -1049,7 +1049,7 @@ static ncclResult_t symWindowInitGin(struct ncclDevrState* devr, struct ncclDevr
 // ncclGetLsaPointer uses lsaFlatBase + lsaTeamRank*stride4G, while ncclGetPeerPointer uses the more general
 // world-rank-indexed lsaPeerDelta4G table, whose entries are signed 4-GiB offsets from lsaFlatBase. An invalid entry
 // identifies a peer requiring GIN.
-static ncclResult_t symLsaPeerDelta4GInitOnce(struct ncclComm* comm, cudaStream_t stream) {
+static ncclResult_t symLsaPeerDelta4GInitOnce(struct ncclComm* comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclShadowPoolAlloc、cudaMemcpyAsync。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   int* peerDelta4GDev = nullptr;
@@ -1080,7 +1080,7 @@ fail:
 // On success we take callers reference on `mem`.
 static ncclResult_t symWindowCreate(struct ncclComm* comm, struct ncclDevrMemory* mem, size_t memOffset, void* userPtr,
                                     size_t userSize, int winFlags, void* localReg, struct ncclWindow_vidmem** outWinDev,
-                                    struct ncclDevrWindow** outWin, cudaStream_t stream) {
+                                    struct ncclDevrWindow** outWin, cudaStream_t stream) { /* 中文索引·体内调用 symLsaPeerDelta4GInitOnce、malloc。 */
   uintptr_t userAddr = reinterpret_cast<uintptr_t>(userPtr);
   struct ncclDevrState* devr = &comm->devrState;
   struct ncclDevrWindow* win;
@@ -1160,7 +1160,7 @@ static ncclResult_t symWindowCreate(struct ncclComm* comm, struct ncclDevrMemory
   return ncclSuccess;
 }
 
-static ncclResult_t symWindowDestroy(struct ncclComm* comm, struct ncclWindow_vidmem* winDev, cudaStream_t stream) {
+static ncclResult_t symWindowDestroy(struct ncclComm* comm, struct ncclWindow_vidmem* winDev, cudaStream_t stream) { /* 中文索引·体内调用 ncclShadowPoolToHost、symMemoryDropRef。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   struct ncclWindow_vidmem* winDevHost;
@@ -1232,7 +1232,7 @@ fail:
 }
 
 ncclResult_t ncclDevrWindowRegisterInGroup(struct ncclComm* comm, void* userPtr, size_t userSize, int winFlags,
-                                           ncclWindow_t* outWinDev) {
+                                           ncclWindow_t* outWinDev) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclCommRegister。 */
   ncclResult_t ret = ncclSuccess;
   CUdeviceptr memAddr = 0;
   size_t memSize = 0;
@@ -1346,7 +1346,7 @@ fail:
 }
 
 static ncclResult_t deepCopyDevCommRequirements(struct ncclDevCommRequirements const* src,
-                                                struct ncclDevCommRequirements** dst) {
+                                                struct ncclDevCommRequirements** dst) { /* 中文索引·体内调用 ncclCalloc、memcpy。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevResourceRequirements** dstRes;
   struct ncclTeamRequirements** dstTeam;
@@ -1390,7 +1390,7 @@ fail:
   goto exit;
 }
 
-void freeDevCommRequirements(struct ncclDevCommRequirements* reqs) {
+void freeDevCommRequirements(struct ncclDevCommRequirements* reqs) { /* 中文索引·体内调用 free。 */
   if (reqs) {
     while (reqs->resourceRequirementsList) {
       struct ncclDevResourceRequirements* rr_next = reqs->resourceRequirementsList->next;
@@ -1424,7 +1424,7 @@ bool ncclGinResourcesRequested(struct ncclDevCommRequirements const* reqs) {
 
 #if defined(NCCL_OS_LINUX)
 #include "nccl_device/gin/gdaki/gin_gdaki_device_host_common.h"
-static void ncclDevCommGdakiDump(void* handle) {
+static void ncclDevCommGdakiDump(void* handle) { /* 中文索引·体内调用 cudaMemcpy、printf。 */
   struct ncclGinGdakiGPUContext ctx;
   if (cudaMemcpy(&ctx, handle, sizeof(ctx), cudaMemcpyDeviceToHost) == cudaSuccess) {
     printf("    GDAKI qp %p companion qp %p sink buffer lkey %x\n", ctx.gdqp, ctx.companion_gdqp, ctx.sink_buffer_lkey);
@@ -1440,7 +1440,7 @@ static void ncclDevCommEfaGdaDump(void* handle) {
 }
 
 #include "nccl_device/gin/proxy/gin_proxy_device_host_common.h"
-static void ncclDevCommProxyDump(void* handle) {
+static void ncclDevCommProxyDump(void* handle) { /* 中文索引·体内调用 cudaMemcpy、printf。 */
   ncclGinProxyGpuCtx_t ctx;
   if (cudaMemcpy(&ctx, handle, sizeof(ctx), cudaMemcpyDeviceToHost) == cudaSuccess) {
     printf("    PROXY nranks %d queue size %d queues %p\n", ctx.nranks, ctx.queueSize, ctx.queues);
@@ -1459,7 +1459,7 @@ static void ncclDevCommProxyDump(void* handle) {
 }
 #endif /* !NCCL_OS_WINDOWS */
 
-void ncclDevCommDump(struct ncclDevComm* devComm) {
+void ncclDevCommDump(struct ncclDevComm* devComm) { /* 中文索引·体内调用 printf、ncclDevCommGdakiDump。 */
   printf("**** Dev Comm Dump %p ****\n", devComm);
   printf(" Rank %d/%d CPC32 %d\n", devComm->rank, devComm->nRanks, devComm->nRanks_rcp32);
   printf(" LSA Rank %d/%d CPC32 %d\n", devComm->lsaRank, devComm->lsaSize, devComm->lsaSize_rcp32);
@@ -1489,7 +1489,7 @@ void ncclDevCommDump(struct ncclDevComm* devComm) {
 }
 
 ncclResult_t ncclDevrCommCreateInternal(struct ncclComm* comm, struct ncclDevCommRequirements* reqs,
-                                        struct ncclDevComm* outDevComm, bool isInternal, uint32_t deviceCodeVersion) {
+                                        struct ncclDevComm* outDevComm, bool isInternal, uint32_t deviceCodeVersion) { /* 中文索引·体内调用 ncclTeamWorld、ncclTeamInnerFactor。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrState* devr = &comm->devrState;
   struct ncclTeam world = ncclTeamWorld(comm);
@@ -1866,7 +1866,7 @@ static void ncclDevrRegAsyncJobFree(void* _job) {
   delete (struct ncclDevrRegAsyncJob*)_job;
 }
 
-static ncclResult_t ncclDevrWindowRegisterJob(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclDevrWindowRegisterJob(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclRmaCeInit。 */
   struct ncclDevrRegAsyncJob* job = (struct ncclDevrRegAsyncJob*)job_;
   ncclResult_t ret = ncclSuccess;
 
@@ -1892,13 +1892,13 @@ struct ncclDevrCommCreateAsyncJob {
   bool isInternal;
 };
 
-static void ncclDevrCommCreateAsyncJobFree(void* _job) {
+static void ncclDevrCommCreateAsyncJobFree(void* _job) { /* 中文索引·体内调用 freeDevCommRequirements。 */
   struct ncclDevrCommCreateAsyncJob* job = (struct ncclDevrCommCreateAsyncJob*)_job;
   freeDevCommRequirements(job->reqs);
   delete job;
 }
 
-static ncclResult_t ncclDevrCommCreateJob(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclDevrCommCreateJob(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclDevrCommCreateInternal。 */
   struct ncclDevrCommCreateAsyncJob* job = (struct ncclDevrCommCreateAsyncJob*)job_;
   ncclResult_t ret = ncclSuccess;
 
@@ -1917,7 +1917,7 @@ fail:
 
 NCCL_API(ncclResult_t, ncclCommWindowRegister, ncclComm_t comm, void* buff, size_t size, ncclWindow_t* win,
          int winFlags);
-ncclResult_t ncclCommWindowRegister(ncclComm_t comm, void* buff, size_t size, ncclWindow_t* win, int winFlags) {
+ncclResult_t ncclCommWindowRegister(ncclComm_t comm, void* buff, size_t size, ncclWindow_t* win, int winFlags) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(win, __func__, "win"));
   *win = nullptr;
@@ -1990,7 +1990,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommWindowDeregister, ncclComm_t comm, ncclWindow_t win);
-ncclResult_t ncclCommWindowDeregister(struct ncclComm* comm, struct ncclWindow_vidmem* winDev) {
+ncclResult_t ncclCommWindowDeregister(struct ncclComm* comm, struct ncclWindow_vidmem* winDev) { /* 中文索引·体内调用 CommCheck、cudaThreadExchangeStreamCaptureMode。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   ncclResult_t ret = ncclSuccess;
   int saveDev;
@@ -2015,7 +2015,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclDevrFindWindow(struct ncclComm* comm, void const* userPtr, struct ncclDevrWindow** outWin) {
+ncclResult_t ncclDevrFindWindow(struct ncclComm* comm, void const* userPtr, struct ncclDevrWindow** outWin) { /* 中文索引·体内调用 listFindSortedLub。 */
   struct ncclDevrState* devr = &comm->devrState;
   uintptr_t userAddr = reinterpret_cast<uintptr_t>(userPtr);
   int i = listFindSortedLub(&ncclDevrWindowSorted::userAddr, devr->winSorted, devr->winSortedCount, userAddr);
@@ -2036,7 +2036,7 @@ bool ncclDevrWindowHasSysmemSegment(struct ncclDevrWindow* win) {
 }
 
 NCCL_API(ncclResult_t, ncclCommQueryProperties, ncclComm_t, ncclCommProperties_t*);
-ncclResult_t ncclCommQueryProperties(ncclComm_t comm, ncclCommProperties_t* props) {
+ncclResult_t ncclCommQueryProperties(ncclComm_t comm, ncclCommProperties_t* props) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(props, __func__, "props"));
 
@@ -2095,7 +2095,7 @@ ncclResult_t ncclCommQueryProperties(ncclComm_t comm, ncclCommProperties_t* prop
 }
 
 ncclResult_t ncclDevrCommCreateAsync(ncclComm_t comm, struct ncclDevCommRequirements const* reqs,
-                                     struct ncclDevComm* outDevComm, bool isInternal, uint32_t deviceCodeVersion) {
+                                     struct ncclDevComm* outDevComm, bool isInternal, uint32_t deviceCodeVersion) { /* 中文索引·体内调用 getNcclVersionCompat、ncclParamEnqueueRearchEnable。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclDevrCommCreateTask* task = nullptr;
   struct ncclDevrCommCreateAsyncJob* createJob = nullptr;
@@ -2173,7 +2173,7 @@ fail:
 NCCL_API(ncclResult_t, ncclDevCommCreate, ncclComm_t comm, ncclDevCommRequirements_t const* reqs,
          ncclDevComm_t* outDevComm);
 ncclResult_t ncclDevCommCreate(ncclComm_t comm, struct ncclDevCommRequirements const* reqs,
-                               struct ncclDevComm* outDevComm) {
+                               struct ncclDevComm* outDevComm) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(reqs, __func__, "reqs"));
   if (reqs->magic != NCCL_API_MAGIC) {
@@ -2220,7 +2220,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclDevCommDestroy, ncclComm_t comm, ncclDevComm_t const* devComm);
-ncclResult_t ncclDevCommDestroy(struct ncclComm* comm, struct ncclDevComm const* devComm) {
+ncclResult_t ncclDevCommDestroy(struct ncclComm* comm, struct ncclDevComm const* devComm) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(devComm, __func__, "devComm"));
   int saveDev;
@@ -2258,7 +2258,7 @@ end:
 }
 
 NCCL_API(ncclResult_t, ncclWinGetUserPtr, ncclComm_t comm, ncclWindow_t win, void** outUserPtr);
-ncclResult_t ncclWinGetUserPtr(struct ncclComm* comm, struct ncclWindow_vidmem* win, void** outUserPtr) {
+ncclResult_t ncclWinGetUserPtr(struct ncclComm* comm, struct ncclWindow_vidmem* win, void** outUserPtr) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(outUserPtr, __func__, "outUserPtr"));
 
@@ -2284,7 +2284,7 @@ ncclResult_t ncclWinGetUserPtr(struct ncclComm* comm, struct ncclWindow_vidmem* 
   return ncclSuccess;
 }
 
-ncclResult_t ncclDevrWorldToLsaRank(struct ncclComm* comm, int peerWorldRank, int* peerLsaRank) {
+ncclResult_t ncclDevrWorldToLsaRank(struct ncclComm* comm, int peerWorldRank, int* peerLsaRank) { /* 中文索引·体内调用 ncclTeamWorld、ncclTeamLsa。 */
   ncclTeam_t worldTeam = ncclTeamWorld(comm);
   ncclTeam_t lsaTeam = ncclTeamLsa(comm);
   if (!ncclTeamRankIsMember(lsaTeam, worldTeam, peerWorldRank)) {
@@ -2297,7 +2297,7 @@ ncclResult_t ncclDevrWorldToLsaRank(struct ncclComm* comm, int peerWorldRank, in
 
 // Get the corresponding pointer in another lsa rank's symmetric memory window
 ncclResult_t ncclDevrGetLsaRankPtr(struct ncclComm* comm, struct ncclDevrWindow* winHost, size_t offset, int lsaRank,
-                                   void** outPtr) {
+                                   void** outPtr) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(PtrCheck(outPtr, __func__, "outPtr"));
 
@@ -2346,7 +2346,7 @@ size_t ncclDevrGetWinOffset(struct ncclDevrWindow* winHost) {
 
 // Get the multicast address for a given team
 ncclResult_t ncclDevrGetLsaTeamPtrMC(struct ncclComm* comm, struct ncclDevrWindow* winHost, size_t offset,
-                                     struct ncclTeam lsaTeam, void** outPtr) {
+                                     struct ncclTeam lsaTeam, void** outPtr) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、symTeamObtain。 */
   if (winHost == nullptr || outPtr == nullptr) return ncclInternalError;
   if (!ncclDevrWinRegEnabled(winHost->winFlags, ncclDevrRegisterLsa)) {
     WARN("Multimem pointer access is disabled because the window was not registered for LSA");
@@ -2374,7 +2374,7 @@ ncclResult_t ncclDevrGetLsaTeamPtrMC(struct ncclComm* comm, struct ncclDevrWindo
 }
 
 ncclResult_t findCommAndHostWindowFromDeviceWindow(ncclWindow_t devWindow, ncclComm_t* foundComm,
-                                                   ncclDevrWindow** hostWindow) {
+                                                   ncclDevrWindow** hostWindow) { /* 中文索引·体内调用 ncclIntruAddressMapFind。 */
   struct ncclDevrWindow* winHost = nullptr;
   std::lock_guard<std::mutex> lock(ncclWindowMapMutex);
   NCCLCHECK(ncclIntruAddressMapFind(&ncclWindowMap, devWindow, &winHost));
@@ -2393,7 +2393,7 @@ ncclResult_t findCommAndHostWindowFromDeviceWindow(ncclWindow_t devWindow, ncclC
 NCCL_API(ncclResult_t, ncclGetMultimemDevicePointer, ncclWindow_t window, size_t offset, ncclMultimemHandle multimem,
          void** outPtr);
 ncclResult_t ncclGetMultimemDevicePointer(ncclWindow_t window, size_t offset, ncclMultimemHandle multimem,
-                                          void** outPtr) {
+                                          void** outPtr) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(outPtr, __func__, "outPtr"));
   if (multimem.mcBasePtr == nullptr) {
@@ -2419,7 +2419,7 @@ ncclResult_t ncclGetMultimemDevicePointer(ncclWindow_t window, size_t offset, nc
 }
 
 NCCL_API(ncclResult_t, ncclGetLsaMultimemDevicePointer, ncclWindow_t window, size_t offset, void** outPtr);
-ncclResult_t ncclGetLsaMultimemDevicePointer(ncclWindow_t window, size_t offset, void** outPtr) {
+ncclResult_t ncclGetLsaMultimemDevicePointer(ncclWindow_t window, size_t offset, void** outPtr) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(outPtr, __func__, "outPtr"));
 
@@ -2438,7 +2438,7 @@ ncclResult_t ncclGetLsaMultimemDevicePointer(ncclWindow_t window, size_t offset,
 }
 
 NCCL_API(ncclResult_t, ncclGetLsaDevicePointer, ncclWindow_t window, size_t offset, int lsaRank, void** outPtr);
-ncclResult_t ncclGetLsaDevicePointer(ncclWindow_t window, size_t offset, int lsaRank, void** outPtr) {
+ncclResult_t ncclGetLsaDevicePointer(ncclWindow_t window, size_t offset, int lsaRank, void** outPtr) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(outPtr, __func__, "outPtr"));
 
@@ -2462,7 +2462,7 @@ ncclResult_t ncclGetLsaDevicePointer(ncclWindow_t window, size_t offset, int lsa
 }
 
 NCCL_API(ncclResult_t, ncclGetPeerDevicePointer, ncclWindow_t window, size_t offset, int peer, void** outPtr);
-ncclResult_t ncclGetPeerDevicePointer(ncclWindow_t window, size_t offset, int peer, void** outPtr) {
+ncclResult_t ncclGetPeerDevicePointer(ncclWindow_t window, size_t offset, int peer, void** outPtr) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(outPtr, __func__, "outPtr"));
 
@@ -2510,7 +2510,7 @@ static int listFindSortedLub(Key Obj::* key, Obj* sorted, int count, Key arg) {
 }
 
 template <typename Obj>
-static void listInsert(Obj** list, int* capacity, int* count, int index, Obj val) {
+static void listInsert(Obj** list, int* capacity, int* count, int index, Obj val) { /* 中文索引·体内调用 realloc。 */
   if (*capacity < *count + 1) {
     *capacity *= 2;
     if (*capacity == 0) *capacity = 16;

@@ -14,14 +14,14 @@
 #include "../cost_model.h"
 #include "rubin.h"
 
-static ncclResult_t ncclTuningGetModelPlatformEntry(int compCap, int id, struct ncclTuningModelEntry_t** entry) {
+static ncclResult_t ncclTuningGetModelPlatformEntry(int compCap, int id, struct ncclTuningModelEntry_t** entry) { /* 中文索引·体内调用 ncclTuningRubinGetModelEntry。 */
   if (RUBIN_AND_LATER(compCap)) {
     NCCLCHECK(ncclTuningRubinGetModelEntry(compCap, id, entry));
   }
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTuningPlatformPreInit(struct ncclComm* comm) {
+static ncclResult_t ncclTuningPlatformPreInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningRubinPreInit。 */
   if (RUBIN_AND_LATER(comm->minCompCap)) {
     ncclTuningRubinPreInit(comm);
   }
@@ -29,7 +29,7 @@ static ncclResult_t ncclTuningPlatformPreInit(struct ncclComm* comm) {
 }
 
 static ncclResult_t ncclTuningPlatformChannelTuning(struct ncclTuningInput_t* const input,
-                                                    const struct ncclTuningResult_t* result, int* maxChannels) {
+                                                    const struct ncclTuningResult_t* result, int* maxChannels) { /* 中文索引·体内调用 ncclTuningRubinChannelTuning。 */
   if (RUBIN_AND_LATER(input->comm->minCompCap)) {
     NCCLCHECK(ncclTuningRubinChannelTuning(input, result, maxChannels));
   }

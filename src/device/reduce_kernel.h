@@ -359,7 +359,7 @@ struct Apply_Reduce<FuncMinMax<T>, /*EltPerPack=*/1> {
 // Optimizations for specfic types and element count combinations:
 template <>
 struct Apply_Reduce<FuncSum<uint8_t>, /*EltPerPack=*/4> {
-  __device__ __forceinline__ static BytePack<4> reduce(FuncSum<uint8_t> fn, BytePack<4> a, BytePack<4> b) {
+  __device__ __forceinline__ static BytePack<4> reduce(FuncSum<uint8_t> fn, BytePack<4> a, BytePack<4> b) { /* 中文索引·体内调用 __byte_perm。 */
     constexpr uint32_t even = 0x00ff00ffu;
     uint32_t x = (a.native & even) + (b.native & even);
     uint32_t y = (a.native & ~even) + (b.native & ~even);
@@ -371,7 +371,7 @@ struct Apply_Reduce<FuncSum<uint8_t>, /*EltPerPack=*/4> {
 
 template <>
 struct Apply_Reduce<FuncMinMax<uint8_t>, /*EltPerPack=*/4> {
-  __device__ static BytePack<4> reduce(FuncMinMax<uint8_t> fn, BytePack<4> a, BytePack<4> b) {
+  __device__ static BytePack<4> reduce(FuncMinMax<uint8_t> fn, BytePack<4> a, BytePack<4> b) { /* 中文索引·体内调用 __byte_perm。 */
     constexpr uint32_t ones = 0x01010101u;
     constexpr uint32_t even = 0x00ff00ffu; // even byte mask
     // Replicate xormask to all bytes
@@ -395,7 +395,7 @@ struct Apply_Reduce<FuncMinMax<uint8_t>, /*EltPerPack=*/4> {
 
 template <>
 struct Apply_Reduce<FuncProd<uint8_t>, /*EltPerPack=*/4> {
-  __device__ __forceinline__ static BytePack<4> reduce(FuncProd<uint8_t> fn, BytePack<4> apack, BytePack<4> bpack) {
+  __device__ __forceinline__ static BytePack<4> reduce(FuncProd<uint8_t> fn, BytePack<4> apack, BytePack<4> bpack) { /* 中文索引·体内调用 __byte_perm。 */
     uint32_t a = apack.native;
     uint32_t b = bpack.native;
     uint32_t ab0 = (a * b) & 0xffu;
@@ -647,7 +647,7 @@ struct FuncPreMulSum<__nv_bfloat16> {
   }
 #else
   float scalar;
-  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg = 0) {
+  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg = 0) { /* 中文索引·体内调用 __bfloat162float。 */
     union {
       uint64_t u64;
       __nv_bfloat16 val;
@@ -665,7 +665,7 @@ template <>
 struct FuncPreMulSum<__nv_fp8_e4m3> {
   using EltType = __nv_fp8_e4m3;
   __half2 scalar2;
-  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg) {
+  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg) { /* 中文索引·体内调用 __half、__nv_cvt_fp8_to_halfraw。 */
     union {
       uint64_t u64;
       __nv_fp8_storage_t val;
@@ -680,7 +680,7 @@ template <>
 struct FuncPreMulSum<__nv_fp8_e5m2> {
   using EltType = __nv_fp8_e5m2;
   __half2 scalar2;
-  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg) {
+  __device__ __forceinline__ FuncPreMulSum(uint64_t opArg) { /* 中文索引·体内调用 __half、__nv_cvt_fp8_to_halfraw。 */
     union {
       uint64_t u64;
       __nv_fp8_storage_t val;
@@ -717,7 +717,7 @@ struct Apply_PreOp<FuncPreMulSum<T>, /*EltPerPack=*/1> {
 template <>
 struct Apply_PreOp<FuncPreMulSum<half>, /*EltPerPack=*/1> {
   static constexpr bool IsIdentity = false;
-  __device__ __forceinline__ static BytePack<sizeof(half)> preOp(FuncPreMulSum<half> fn, BytePack<sizeof(half)> a) {
+  __device__ __forceinline__ static BytePack<sizeof(half)> preOp(FuncPreMulSum<half> fn, BytePack<sizeof(half)> a) { /* 中文索引·体内调用 __hmul、__float2half。 */
 #if __CUDA_ARCH__ >= 530 && __CUDA_ARCH__ != 610
     return toPack<half>(__hmul(fromPack<half>(a), fn.scalar.x));
 #else
@@ -743,7 +743,7 @@ template <>
 struct Apply_PreOp<FuncPreMulSum<__nv_bfloat16>, /*EltPerPack=*/1> {
   static constexpr bool IsIdentity = false;
   __device__ __forceinline__ static BytePack<sizeof(__nv_bfloat16)> preOp(FuncPreMulSum<__nv_bfloat16> fn,
-                                                                          BytePack<sizeof(__nv_bfloat16)> a) {
+                                                                          BytePack<sizeof(__nv_bfloat16)> a) { /* 中文索引·体内调用 __hmul、__float2bfloat16。 */
 #if __CUDA_ARCH__ >= 800
     return toPack<__nv_bfloat16>(__hmul(fromPack<__nv_bfloat16>(a), fn.scalar.x));
 #else
@@ -832,7 +832,7 @@ struct FuncSumPostDiv<__nv_bfloat16> {
   }
 #else
   float scalar;
-  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) {
+  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) { /* 中文索引·体内调用 __bfloat162float。 */
     union {
       uint64_t u64;
       __nv_bfloat16 val;
@@ -905,7 +905,7 @@ template <>
 struct FuncSumPostDiv<__nv_fp8_e4m3> {
   using EltType = __nv_fp8_e4m3;
   __half2 scalar2;
-  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) {
+  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) { /* 中文索引·体内调用 __half、__nv_cvt_fp8_to_halfraw。 */
     union {
       uint64_t u64;
       __nv_fp8_storage_t val;
@@ -920,7 +920,7 @@ template <>
 struct FuncSumPostDiv<__nv_fp8_e5m2> {
   using EltType = __nv_fp8_e5m2;
   __half2 scalar2;
-  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) {
+  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg) { /* 中文索引·体内调用 __half、__nv_cvt_fp8_to_halfraw。 */
     union {
       uint64_t u64;
       __nv_fp8_storage_t val;
@@ -941,12 +941,12 @@ struct FuncSumPostDiv {
   uint32_t divisor:31, isSigned:1;
   UintType recip;
 
-  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg = 0) {
+  __device__ __forceinline__ FuncSumPostDiv(uint64_t opArg = 0) { /* 中文索引·体内调用 UintType。 */
     isSigned = opArg & 1;
     divisor = opArg >> 1;
     recip = UintType(-1) / divisor;
   }
-  __device__ __forceinline__ T divide(T x) {
+  __device__ __forceinline__ T divide(T x) { /* 中文索引·体内调用 __umul64hi、__umulhi。 */
     // x is negative iff we are in signed mode and the top bit is set
     bool xneg = isSigned && (x & ~(T(-1) >> 1));
     // Compute abs(x):
@@ -999,7 +999,7 @@ template <>
 struct Apply_PostOp<FuncSumPostDiv<__nv_bfloat16>, /*EltPerPack=*/1> {
   static constexpr bool IsIdentity = false;
   __device__ __forceinline__ static BytePack<sizeof(__nv_bfloat16)> postOp(FuncSumPostDiv<__nv_bfloat16> fn,
-                                                                           BytePack<sizeof(__nv_bfloat16)> a) {
+                                                                           BytePack<sizeof(__nv_bfloat16)> a) { /* 中文索引·体内调用 __hmul、__float2bfloat16。 */
 #if __CUDA_ARCH__ >= 800
     return toPack<__nv_bfloat16>(__hmul(fromPack<__nv_bfloat16>(a), fn.scalar.x));
 #else
@@ -1023,7 +1023,7 @@ struct Apply_PostOp<FuncSumPostDiv<__nv_bfloat16>, /*EltPerPack=*/2> {
 template <>
 struct Apply_PostOp<FuncSumPostDiv<half>, /*EltPerPack=*/1> {
   static constexpr bool IsIdentity = false;
-  __device__ __forceinline__ static BytePack<sizeof(half)> postOp(FuncSumPostDiv<half> fn, BytePack<sizeof(half)> a) {
+  __device__ __forceinline__ static BytePack<sizeof(half)> postOp(FuncSumPostDiv<half> fn, BytePack<sizeof(half)> a) { /* 中文索引·体内调用 __hmul、__float2half。 */
 #if __CUDA_ARCH__ >= 530 && __CUDA_ARCH__ != 610
     return toPack<half>(__hmul(fromPack<half>(a), fn.scalar.x));
 #else

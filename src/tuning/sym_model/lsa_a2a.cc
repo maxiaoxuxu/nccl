@@ -234,7 +234,7 @@ static int lsaA2AAllReduceKernelIndex(enum ncclSymkKernelId kernelId) {
   }
 }
 
-static int lsaA2AActiveCtas(size_t logicalBytes, int requestedCtas) {
+static int lsaA2AActiveCtas(size_t logicalBytes, int requestedCtas) { /* 中文索引·体内调用 divUp、size_t。 */
   size_t cells = logicalBytes / NCCL_SYM_KERNEL_CELL_SIZE + (logicalBytes % NCCL_SYM_KERNEL_CELL_SIZE != 0);
   size_t cellsPerCta = divUp(cells, size_t(requestedCtas));
   return (int)divUp(cells, cellsPerCta);
@@ -242,7 +242,7 @@ static int lsaA2AActiveCtas(size_t logicalBytes, int requestedCtas) {
 
 // Apply measured effective-CTA scaling for AllGather kernels.
 static double lsaA2AAllGatherCtaScale(const struct ncclSymkLsaA2AKernelTuningParameters* tuning,
-                                      enum ncclSymkKernelId kernelId, int nRanks, int activeCtas) {
+                                      enum ncclSymkKernelId kernelId, int nRanks, int activeCtas) { /* 中文索引·体内调用 std::log2。 */
   if (kernelId == ncclSymkKernelId_AllGather_TmaSTMC && activeCtas == 1) return 1.1445;
   if (kernelId != ncclSymkKernelId_AllGather_LL || nRanks <= 4 || activeCtas <= 4 || activeCtas >= 64) {
     return 1.0;
@@ -266,7 +266,7 @@ static double lsaA2AAllGatherCtaScale(const struct ncclSymkLsaA2AKernelTuningPar
 }
 
 static const struct ncclSymkLsaA2AKernelTuningParameters* lsaA2AParametersForKernel(
-  const struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId) {
+  const struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId) { /* 中文索引·体内调用 lsaA2AArchTuningForComm、lsaA2AAllReduceKernelIndex。 */
   if (input->comm->nRanks < 2 || input->nWorks != 1) return nullptr;
   const struct ncclSymkLsaA2AArchTuningParameters* archTuning = lsaA2AArchTuningForComm(input->comm);
   if (archTuning == nullptr) return nullptr;
@@ -301,7 +301,7 @@ static const struct ncclSymkLsaA2AKernelTuningParameters* lsaA2AParametersForKer
 }
 
 ncclResult_t ncclSymkLsaA2AModel(const struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId,
-                                 int requestedCtas, float* timeUs, bool* modeled) {
+                                 int requestedCtas, float* timeUs, bool* modeled) { /* 中文索引·体内调用 ncclTypeSize、lsaA2AParametersForKernel。 */
   *modeled = false;
   *timeUs = 0.0f;
   if (requestedCtas < 1) return ncclSuccess;

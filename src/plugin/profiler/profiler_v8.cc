@@ -11,7 +11,7 @@
 #include "checks.h"
 #include "os.h"
 
-ncclProfiler_t* getNcclProfiler_v8(void* lib, void** target) {
+ncclProfiler_t* getNcclProfiler_v8(void* lib, void** target) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclProfiler_v8_t* profiler = (ncclProfiler_v8_t*)ncclOsDlsym(lib, "ncclProfiler_v8");
   *target = profiler;
   if (profiler) {

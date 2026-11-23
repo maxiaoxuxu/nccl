@@ -60,7 +60,7 @@ inline __device__ void bulkLoad(const int t, const uint32_t len, char* cpy_src, 
 template <>
 inline __device__ void bulkLoad<1>(const int t, const uint32_t len, char* cpy_src, char* cpy_dst, BytePack<1> reg[16],
                                    const int w, loadMeta* g_meta, loadMeta* s_meta, uint32_t src_off,
-                                   uint64_t dst_off) {
+                                   uint64_t dst_off) { /* 中文索引·体内调用 load128。 */
   uint64_t data_s;
   for (data_s = t * DATA_LOAD_SIZE; data_s + DATA_LOAD_SIZE - 1 < len; data_s += WARP_SIZE * DATA_LOAD_SIZE) {
 #ifdef ALIGNED_LOAD
@@ -82,7 +82,7 @@ inline __device__ void bulkLoad<1>(const int t, const uint32_t len, char* cpy_sr
 template <>
 inline __device__ void bulkLoad<2>(const int t, const uint32_t len, char* cpy_src, char* cpy_dst, BytePack<2> reg[8],
                                    const int w, loadMeta* g_meta, loadMeta* s_meta, uint32_t src_off,
-                                   uint64_t dst_off) {
+                                   uint64_t dst_off) { /* 中文索引·体内调用 load128。 */
   uint64_t data_s;
   for (data_s = t * DATA_LOAD_SIZE; data_s + DATA_LOAD_SIZE - 1 < len; data_s += WARP_SIZE * DATA_LOAD_SIZE) {
 #ifdef ALIGNED_LOAD
@@ -104,7 +104,7 @@ inline __device__ void bulkLoad<2>(const int t, const uint32_t len, char* cpy_sr
 template <>
 inline __device__ void bulkLoad<4>(const int t, const uint32_t len, char* cpy_src, char* cpy_dst, BytePack<4> reg[4],
                                    const int w, loadMeta* g_meta, loadMeta* s_meta, uint32_t src_off,
-                                   uint64_t dst_off) {
+                                   uint64_t dst_off) { /* 中文索引·体内调用 load128。 */
   uint64_t data_s;
   for (data_s = t * DATA_LOAD_SIZE; data_s + DATA_LOAD_SIZE - 1 < len; data_s += WARP_SIZE * DATA_LOAD_SIZE) {
 #ifdef ALIGNED_LOAD
@@ -126,7 +126,7 @@ inline __device__ void bulkLoad<4>(const int t, const uint32_t len, char* cpy_sr
 template <>
 inline __device__ void bulkLoad<8>(const int t, const uint32_t len, char* cpy_src, char* cpy_dst, BytePack<8> reg[2],
                                    const int w, loadMeta* g_meta, loadMeta* s_meta, uint32_t src_off,
-                                   uint64_t dst_off) {
+                                   uint64_t dst_off) { /* 中文索引·体内调用 load128。 */
   uint64_t data_s;
   for (data_s = t * DATA_LOAD_SIZE; data_s + DATA_LOAD_SIZE - 1 < len; data_s += WARP_SIZE * DATA_LOAD_SIZE) {
 #ifdef ALIGNED_LOAD
@@ -203,7 +203,7 @@ inline __device__ void ncclNetDeviceUnpack</*Recv=*/1>(const int tid, const int 
 
 inline __device__ void ncclNetDeviceUnpackInner(const int tid, const int tidInBlock, const int nworkers,
                                                 const int group, const int index, void* src, const int nbytes,
-                                                const uint64_t step) {
+                                                const uint64_t step) { /* 中文索引·体内调用 __syncwarp、ncclShmemScratchWarpSize。 */
   // from src/collectives/device/common_kernel.h
   const int w = tid / WARP_SIZE;        // Warp number
   const int nw = nworkers / WARP_SIZE;  // Number of warps

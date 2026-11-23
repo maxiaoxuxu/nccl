@@ -108,7 +108,7 @@ ncclResult_t wrap_ibv_fork_init() {
   IBV_INT_CHECK(ibvSymbols, ibv_internal_fork_init, ibv_internal_fork_init(), -1, "ibv_fork_init");
 }
 
-ncclResult_t wrap_ibv_get_device_list(struct ibv_device*** ret, int* num_devices) {
+ncclResult_t wrap_ibv_get_device_list(struct ibv_device*** ret, int* num_devices) { /* 中文索引·体内调用 ibvSymbols.ibv_internal_get_device_list。 */
   *ret = ibvSymbols.ibv_internal_get_device_list(num_devices);
   if (*ret == NULL) *num_devices = 0;
   return ncclSuccess;
@@ -118,7 +118,7 @@ ncclResult_t wrap_ibv_free_device_list(struct ibv_device** list) {
   IBV_PASSTHRU(ibvSymbols, ibv_internal_free_device_list, ibv_internal_free_device_list(list));
 }
 
-const char* wrap_ibv_get_device_name(struct ibv_device* device) {
+const char* wrap_ibv_get_device_name(struct ibv_device* device) { /* 中文索引·体内调用 exit、ibvSymbols.ibv_internal_get_device_name。 */
   if (ibvSymbols.ibv_internal_get_device_name == NULL) {
     WARN("lib wrapper not initialized.");
     exit(-1);
@@ -136,7 +136,7 @@ ncclResult_t wrap_ibv_close_device(struct ibv_context* context) { /*returns 0 on
 }
 
 ncclResult_t wrap_ibv_get_async_event(struct ibv_context* context,
-                                      struct ibv_async_event* event) { /*returns 0 on success, and -1 on error*/
+                                      struct ibv_async_event* event) { /* 中文索引·体内调用 ibv_internal_get_async_event。 */ /*returns 0 on success, and -1 on error*/
   IBV_INT_CHECK(ibvSymbols, ibv_internal_get_async_event, ibv_internal_get_async_event(context, event), -1,
                 "ibv_get_async_event");
 }
@@ -148,12 +148,12 @@ ncclResult_t wrap_ibv_ack_async_event(struct ibv_async_event* event) {
 ncclResult_t wrap_ibv_query_device(
   struct ibv_context* context,
   struct ibv_device_attr*
-    device_attr) { /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
+    device_attr) { /* 中文索引·体内调用 ibv_internal_query_device。 */ /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
   IBV_INT_CHECK_RET_ERRNO(ibvSymbols, ibv_internal_query_device, ibv_internal_query_device(context, device_attr), 0,
                           "ibv_query_device");
 }
 
-ncclResult_t wrap_ibv_query_port(struct ibv_context* context, uint8_t port_num, struct ibv_port_attr* port_attr) {
+ncclResult_t wrap_ibv_query_port(struct ibv_context* context, uint8_t port_num, struct ibv_port_attr* port_attr) { /* 中文索引·体内调用 ibv_query_port_ex、memset。 */
 #ifndef NCCL_BUILD_RDMA_CORE
   // First try and query the extended port attributes (e.g. active_speed_ex)
   if (ibv_query_port_ex(context, port_num, port_attr) != 0) {
@@ -181,7 +181,7 @@ ncclResult_t wrap_ibv_query_pkey(struct ibv_context* context, uint8_t port_num, 
 }
 
 ncclResult_t wrap_ibv_query_qp(struct ibv_qp* qp, struct ibv_qp_attr* attr, int attr_mask,
-                               struct ibv_qp_init_attr* init_attr) {
+                               struct ibv_qp_init_attr* init_attr) { /* 中文索引·体内调用 ibv_internal_query_qp。 */
   IBV_INT_CHECK_RET_ERRNO(ibvSymbols, ibv_internal_query_qp, ibv_internal_query_qp(qp, attr, attr_mask, init_attr), 0,
                           "ibv_query_qp");
 }
@@ -200,7 +200,7 @@ ncclResult_t wrap_ibv_reg_mr(struct ibv_mr** ret, struct ibv_pd* pd, void* addr,
                       "ibv_reg_mr");
 }
 
-struct ibv_mr* wrap_direct_ibv_reg_mr(struct ibv_pd* pd, void* addr, size_t length, int access) {
+struct ibv_mr* wrap_direct_ibv_reg_mr(struct ibv_pd* pd, void* addr, size_t length, int access) { /* 中文索引·体内调用 ibvSymbols.ibv_internal_reg_mr。 */
   if (ibvSymbols.ibv_internal_reg_mr == NULL) {
     WARN("lib wrapper not initialized.");
     return NULL;
@@ -209,7 +209,7 @@ struct ibv_mr* wrap_direct_ibv_reg_mr(struct ibv_pd* pd, void* addr, size_t leng
 }
 
 ncclResult_t wrap_ibv_reg_mr_iova2(struct ibv_mr** ret, struct ibv_pd* pd, void* addr, size_t length, uint64_t iova,
-                                   int access) {
+                                   int access) { /* 中文索引·体内调用 ibv_internal_reg_mr_iova2。 */
   if (ibvSymbols.ibv_internal_reg_mr_iova2 == NULL) {
     return ncclInternalError;
   }
@@ -220,14 +220,14 @@ ncclResult_t wrap_ibv_reg_mr_iova2(struct ibv_mr** ret, struct ibv_pd* pd, void*
 
 /* DMA-BUF support */
 ncclResult_t wrap_ibv_reg_dmabuf_mr(struct ibv_mr** ret, struct ibv_pd* pd, uint64_t offset, size_t length,
-                                    uint64_t iova, int fd, int access) {
+                                    uint64_t iova, int fd, int access) { /* 中文索引·体内调用 ibv_internal_reg_dmabuf_mr。 */
   IBV_PTR_CHECK_ERRNO(ibvSymbols, ibv_internal_reg_dmabuf_mr,
                       ibv_internal_reg_dmabuf_mr(pd, offset, length, iova, fd, access), *ret, NULL,
                       "ibv_reg_dmabuf_mr");
 }
 
 struct ibv_mr* wrap_direct_ibv_reg_dmabuf_mr(struct ibv_pd* pd, uint64_t offset, size_t length, uint64_t iova, int fd,
-                                             int access) {
+                                             int access) { /* 中文索引·体内调用 ibvSymbols.ibv_internal_reg_dmabuf_mr。 */
   if (ibvSymbols.ibv_internal_reg_dmabuf_mr == NULL) {
     errno = EOPNOTSUPP; // ncclIbDmaBufSupport() requires this errno being set
     return NULL;
@@ -241,7 +241,7 @@ ncclResult_t wrap_ibv_dereg_mr(
 }
 
 ncclResult_t wrap_ibv_create_cq(struct ibv_cq** ret, struct ibv_context* context, int cqe, void* cq_context,
-                                struct ibv_comp_channel* channel, int comp_vector) {
+                                struct ibv_comp_channel* channel, int comp_vector) { /* 中文索引·体内调用 ibv_internal_create_cq。 */
   IBV_PTR_CHECK_ERRNO(ibvSymbols, ibv_internal_create_cq,
                       ibv_internal_create_cq(context, cqe, cq_context, channel, comp_vector), *ret, NULL,
                       "ibv_create_cq");
@@ -260,7 +260,7 @@ ncclResult_t wrap_ibv_create_qp(struct ibv_qp** ret, struct ibv_pd* pd, struct i
                       "ibv_create_qp");
 }
 
-static void ibvQpStateName(enum ibv_qp_state state, char* msg, const size_t len) {
+static void ibvQpStateName(enum ibv_qp_state state, char* msg, const size_t len) { /* 中文索引·体内调用 snprintf。 */
   switch (state) {
   case (IBV_QPS_RESET):
     snprintf(msg, len, "RESET");
@@ -295,7 +295,7 @@ static void ibvQpStateName(enum ibv_qp_state state, char* msg, const size_t len)
 #define QP_ATTR(attr, userAttr, userFlag, mask) ((userFlag & mask) ? (userAttr) : (attr))
 
 static void ibvModifyQpLog(struct ibv_qp* qp, enum ibv_qp_state qpState, struct ibv_qp_attr* userAttr, int userFlag,
-                           char* msg, size_t msgLen) {
+                           char* msg, size_t msgLen) { /* 中文索引·体内调用 ibvQpStateName、snprintf。 */
   ncclResult_t res;
   int portNum = -1, gidIndex = -1;
   char localGidName[INET6_ADDRSTRLEN], remoteGidName[INET6_ADDRSTRLEN];
@@ -357,7 +357,7 @@ static void printIbModifyQpHint(int status) {
   }
 }
 
-ncclResult_t wrap_ibv_modify_qp(struct ibv_qp* qp, struct ibv_qp_attr* attr, int attr_mask) {
+ncclResult_t wrap_ibv_modify_qp(struct ibv_qp* qp, struct ibv_qp_attr* attr, int attr_mask) { /* 中文索引·体内调用 ncclParamIbMQpRetryCnt、ncclParamIbMQpRetryTimeout。 */
   char qpMsg[1024];
   int ret = 0, attempts = 0;
   int maxCnt = (int)ncclParamIbMQpRetryCnt() + 1; // number of attempts = number of retry + 1
@@ -386,19 +386,19 @@ ncclResult_t wrap_ibv_modify_qp(struct ibv_qp* qp, struct ibv_qp_attr* attr, int
 
 ncclResult_t wrap_ibv_query_ece(
   struct ibv_qp* qp, struct ibv_ece* ece,
-  int* supported) { /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
+  int* supported) { /* 中文索引·体内调用 ibv_internal_query_ece。 */ /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
   IBV_INT_CHECK_RET_ERRNO_OPTIONAL(ibvSymbols, ibv_internal_query_ece, ibv_internal_query_ece(qp, ece), 0,
                                    "ibv_query_ece", supported);
 }
 
 ncclResult_t wrap_ibv_set_ece(
   struct ibv_qp* qp, struct ibv_ece* ece,
-  int* supported) { /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
+  int* supported) { /* 中文索引·体内调用 ibv_internal_set_ece。 */ /*returns 0 on success, or the value of errno on failure (which indicates the failure reason)*/
   IBV_INT_CHECK_RET_ERRNO_OPTIONAL(ibvSymbols, ibv_internal_set_ece, ibv_internal_set_ece(qp, ece), 0, "ibv_set_ece",
                                    supported);
 }
 
-ncclResult_t wrap_ibv_query_port_speed(struct ibv_context* context, uint8_t port_num, uint64_t* speed) {
+ncclResult_t wrap_ibv_query_port_speed(struct ibv_context* context, uint8_t port_num, uint64_t* speed) { /* 中文索引·体内调用 ncclParamIbQueryPortSpeed、ibv_internal_query_port_speed。 */
   if (!ncclParamIbQueryPortSpeed() || ibvSymbols.ibv_internal_query_port_speed == NULL) {
     return ncclSystemError;
   }

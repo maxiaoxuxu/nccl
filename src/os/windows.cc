@@ -57,7 +57,7 @@
 
 static thread_local char ncclDlErrorBuf[256] = {0};
 
-static void saveDlError() {
+static void saveDlError() { /* 中文索引·体内调用 GetLastError、FormatMessageA。 */
   DWORD err = GetLastError();
   if (err != 0) {
     DWORD len = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err,
@@ -70,7 +70,7 @@ static void saveDlError() {
   }
 }
 
-ncclOsLibraryHandle ncclOsDlopen(const char* filename) {
+ncclOsLibraryHandle ncclOsDlopen(const char* filename) { /* 中文索引·体内调用 LoadLibraryA、saveDlError。 */
   ncclOsLibraryHandle handle = (ncclOsLibraryHandle)LoadLibraryA(filename);
   if (handle == NULL) {
     saveDlError();
@@ -78,7 +78,7 @@ ncclOsLibraryHandle ncclOsDlopen(const char* filename) {
   return handle;
 }
 
-void* ncclOsDlsym(ncclOsLibraryHandle handle, const char* symbol) {
+void* ncclOsDlsym(ncclOsLibraryHandle handle, const char* symbol) { /* 中文索引·体内调用 GetProcAddress、saveDlError。 */
   void* ptr = (void*)GetProcAddress((HMODULE)handle, symbol);
   if (ptr == NULL) {
     saveDlError();
@@ -90,7 +90,7 @@ const char* ncclOsDlerror() {
   return ncclDlErrorBuf;
 }
 
-ncclOsLibraryHandle ncclOsDlopen(const char* path, int mode) {
+ncclOsLibraryHandle ncclOsDlopen(const char* path, int mode) { /* 中文索引·体内调用 LoadLibraryA、saveDlError。 */
   (void)mode;
   ncclOsLibraryHandle handle = (ncclOsLibraryHandle)LoadLibraryA(path);
   if (handle == NULL) saveDlError();
@@ -113,7 +113,7 @@ uint64_t ncclOsGetTid() {
   return (uint64_t)GetCurrentThreadId();
 }
 
-size_t ncclOsGetPageSize() {
+size_t ncclOsGetPageSize() { /* 中文索引·体内调用 GetSystemInfo。 */
   SYSTEM_INFO si;
   GetSystemInfo(&si);
   return (size_t)si.dwPageSize;
@@ -131,7 +131,7 @@ void ncclOsAlignedFree(void* ptr) {
   _aligned_free(ptr);
 }
 
-void ncclOsSetEnv(const char* name, const char* value) {
+void ncclOsSetEnv(const char* name, const char* value) { /* 中文索引·体内调用 GetEnvironmentVariableA、SetEnvironmentVariableA。 */
   // Check if the environment variable already has the desired value before overriding.
   // MSDN documents the maximum environment variable size as 32767 characters
   // https://learn.microsoft.com/en-us/windows/win32/procthread/environment-variables
@@ -145,7 +145,7 @@ void ncclOsSetEnv(const char* name, const char* value) {
   }
 }
 
-char* ncclOsStrSep(char** stringp, const char* delim) {
+char* ncclOsStrSep(char** stringp, const char* delim) { /* 中文索引·体内调用 strpbrk。 */
   if (*stringp == NULL) return NULL;
   char* start = *stringp;
   char* found = strpbrk(start, delim);
@@ -158,7 +158,7 @@ char* ncclOsStrSep(char** stringp, const char* delim) {
   return start;
 }
 
-ncclResult_t ncclOsInitialize() {
+ncclResult_t ncclOsInitialize() { /* 中文索引·体内调用 WSAStartup。 */
   // Windows Winsock initialization
   WSADATA wsaData;
   int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -186,7 +186,7 @@ bool ncclOsSocketIsValid(struct ncclSocket* sock) {
 extern int ncclParamPollTimeOut();
 extern int ncclParamRetryTimeOut();
 
-void ncclOsPollSocket(SOCKET sock, int op) {
+void ncclOsPollSocket(SOCKET sock, int op) { /* 中文索引·体内调用 memset、WSAPoll。 */
   WSAPOLLFD pfd;
   memset(&pfd, 0, sizeof(WSAPOLLFD));
   pfd.fd = sock;
@@ -194,7 +194,7 @@ void ncclOsPollSocket(SOCKET sock, int op) {
   WSAPoll(&pfd, 1, ncclParamPollTimeOut());
 }
 
-static const char* getWSAErrorMessage(int error) {
+static const char* getWSAErrorMessage(int error) { /* 中文索引·体内调用 FormatMessageA。 */
   static char errorMsg[256];
   FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, error,
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), errorMsg, sizeof(errorMsg), NULL);
@@ -203,7 +203,7 @@ static const char* getWSAErrorMessage(int error) {
 
 extern long int ncclParamRetryCnt();
 
-ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 accept、ncclOsSocketIsValid。 */
   int socklen = sizeof(union ncclSocketAddress);
   sock->socketDescriptor = accept(sock->acceptSocketDescriptor, (struct sockaddr*)&sock->addr, &socklen);
   if (ncclOsSocketIsValid(sock)) {
@@ -231,7 +231,7 @@ ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) {
 extern int ncclParamSocketMaxRecvBuff();
 extern int ncclParamSocketMaxSendBuff();
 
-ncclResult_t ncclOsSocketSetFlags(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketSetFlags(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketIsValid、ioctlsocket。 */
   const int one = 1;
   ncclResult_t ret = ncclSuccess;
   int sndBuf, rcvBuf;
@@ -270,7 +270,7 @@ fail:
   goto exit;
 }
 
-void ncclOsSocketResetAccept(struct ncclSocket* sock) {
+void ncclOsSocketResetAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 closesocket。 */
   // Close the accepted peer and return to listening for another connection (see socketFinalizeAccept logging).
   (void)closesocket(sock->socketDescriptor);
   sock->socketDescriptor = NCCL_INVALID_SOCKET;
@@ -278,7 +278,7 @@ void ncclOsSocketResetAccept(struct ncclSocket* sock) {
   sock->finalizeCounter = 0;
 }
 
-ncclResult_t ncclOsSocketResetFd(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketResetFd(struct ncclSocket* sock) { /* 中文索引·体内调用 socket、WSAGetLastError。 */
   ncclResult_t ret = ncclSuccess;
   SOCKET newSocket = INVALID_SOCKET;
 
@@ -306,7 +306,7 @@ cleanup:
   goto exit;
 }
 
-static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, const char funcName[]) {
+static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, const char funcName[]) { /* 中文索引·体内调用 ncclParamRetryCnt、ncclSocketToString。 */
   char line[SOCKET_NAME_MAXLEN + 1];
   if (errCode == 0) {
     sock->state = ncclSocketStateConnected;
@@ -339,13 +339,13 @@ static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, con
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketStartConnect(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketStartConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 connect、socketConnectCheck。 */
   /* blocking/non-blocking connect() is determined by asyncFlag. */
   int ret = connect(sock->socketDescriptor, &sock->addr.sa, sock->salen);
   return socketConnectCheck(sock, (ret == -1) ? WSAGetLastError() : 0, __func__);
 }
 
-ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 memset、WSAPoll。 */
   WSAPOLLFD pfd;
   int timeout = 1, ret;
   int optlen = sizeof(int);  /* Windows getsockopt expects int* for optlen */
@@ -371,7 +371,7 @@ ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) {
 }
 
 ncclResult_t ncclOsSocketProgressOpt(int op, struct ncclSocket* sock, void* ptr, int size, int* offset, int block,
-                                     int* closed) {
+                                     int* closed) { /* 中文索引·体内调用 ioctlsocket、recv。 */
   int bytes = 0;
   *closed = 0;
   char* data = (char*)ptr;
@@ -422,7 +422,7 @@ ncclResult_t ncclOsSocketProgressOpt(int op, struct ncclSocket* sock, void* ptr,
 }
 
 ncclResult_t ncclOsFindInterfaces(const char* prefixList, char* names, union ncclSocketAddress* addrs, int sock_family,
-                                  int maxIfNameSize, int maxIfs, int* found) {
+                                  int maxIfNameSize, int maxIfs, int* found) { /* 中文索引·体内调用 parseStringList、GetAdaptersAddresses。 */
 #ifdef ENABLE_TRACE
   char line[SOCKET_NAME_MAXLEN + 1];
 #endif
@@ -522,7 +522,7 @@ exit:
   return ret;
 }
 
-static bool matchSubnet(IP_ADAPTER_UNICAST_ADDRESS* local_addr, union ncclSocketAddress* remote) {
+static bool matchSubnet(IP_ADAPTER_UNICAST_ADDRESS* local_addr, union ncclSocketAddress* remote) { /* 中文索引·体内调用 htonl。 */
   /* Check family first */
   int family = local_addr->Address.lpSockaddr->sa_family;
   if (family != remote->sa.sa_family) {
@@ -591,7 +591,7 @@ static bool matchSubnet(IP_ADAPTER_UNICAST_ADDRESS* local_addr, union ncclSocket
 }
 
 ncclResult_t ncclFindInterfaceMatchSubnet(char* ifName, union ncclSocketAddress* localAddr,
-                                          union ncclSocketAddress* remoteAddr, int ifNameMaxSize, int* found) {
+                                          union ncclSocketAddress* remoteAddr, int ifNameMaxSize, int* found) { /* 中文索引·体内调用 GetAdaptersAddresses、malloc。 */
 #ifdef ENABLE_TRACE
   char line[SOCKET_NAME_MAXLEN + 1];
   char line_a[SOCKET_NAME_MAXLEN + 1];
@@ -668,7 +668,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclSocketClose(struct ncclSocket* sock, bool wait) {
+ncclResult_t ncclSocketClose(struct ncclSocket* sock, bool wait) { /* 中文索引·体内调用 ncclOsSocketIsValid、ncclSocketProgress。 */
   if (sock != NULL) {
     if (sock->state > ncclSocketStateNone && sock->state < ncclSocketStateNum && ncclOsSocketIsValid(sock)) {
       if (wait) {
@@ -745,7 +745,7 @@ ncclAffinity ncclOsCpuAnd(const ncclAffinity& a, const ncclAffinity& b) {
   return result;
 }
 
-ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) {
+ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) { /* 中文索引·体内调用 GetThreadGroupAffinity、GetCurrentThread。 */
   GROUP_AFFINITY groupAffinity = {};
   BOOL result = GetThreadGroupAffinity(GetCurrentThread(), &groupAffinity);
   if (result == FALSE) {
@@ -757,7 +757,7 @@ ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSetAffinity(const ncclAffinity& affinity) {
+ncclResult_t ncclOsSetAffinity(const ncclAffinity& affinity) { /* 中文索引·体内调用 SetThreadGroupAffinity、GetCurrentThread。 */
   int groupCount = 0;
   WORD selectedGroup = 0;
   for (WORD group = 0; group < NCCL_WINDOWS_PROCESSOR_GROUP_COUNT; group++) {
@@ -783,13 +783,13 @@ ncclResult_t ncclOsSetAffinity(const ncclAffinity& affinity) {
   return ncclSuccess;
 }
 
-int ncclOsGetCpu() {
+int ncclOsGetCpu() { /* 中文索引·体内调用 GetCurrentProcessorNumberEx。 */
   PROCESSOR_NUMBER processorNumber = {};
   GetCurrentProcessorNumberEx(&processorNumber);
   return processorNumber.Group * NCCL_WINDOWS_PROCESSORS_PER_GROUP + processorNumber.Number;
 }
 
-ncclResult_t ncclOsNvmlOpen(ncclOsLibraryHandle* handle) {
+ncclResult_t ncclOsNvmlOpen(ncclOsLibraryHandle* handle) { /* 中文索引·体内调用 ncclOsDlopen、GetLastError。 */
   *handle = nullptr;
 
   // On Windows, try multiple possible locations for nvml.dll
@@ -813,7 +813,7 @@ ncclResult_t ncclOsNvmlOpen(ncclOsLibraryHandle* handle) {
   return ncclSuccess;
 }
 
-char* ncclOsRealpath(const char* path, char* resolved_path) {
+char* ncclOsRealpath(const char* path, char* resolved_path) { /* 中文索引·体内调用 malloc、_fullpath。 */
   if (path == NULL) {
     errno = EINVAL;
     return NULL;
@@ -849,7 +849,7 @@ char* ncclOsRealpath(const char* path, char* resolved_path) {
 #include <stdlib.h>
 
 void ncclOsShmHandleInit(ncclShmDescriptor shmDesc, char* shmPath, size_t shmSize, size_t realShmSize, char* hptr,
-                         void* dptr, bool create, struct ncclShmHandleInternal* handle) {
+                         void* dptr, bool create, struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 strlen、malloc。 */
   handle->shmDesc = shmDesc;
   handle->shmPtr = hptr;
   handle->devShmPtr = dptr;
@@ -866,7 +866,7 @@ void ncclOsShmHandleInit(ncclShmDescriptor shmDesc, char* shmPath, size_t shmSiz
   }
 }
 
-static ncclResult_t ncclOsShmPathSubstituteRandomLetters(char* suffix) {
+static ncclResult_t ncclOsShmPathSubstituteRandomLetters(char* suffix) { /* 中文索引·体内调用 getRandomData。 */
   static const char randomChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   unsigned char randBytes[sizeof("XXXXXX") - 1];
 
@@ -878,7 +878,7 @@ static ncclResult_t ncclOsShmPathSubstituteRandomLetters(char* suffix) {
 }
 
 ncclResult_t ncclOsShmOpen(char* shmPath, size_t shmPathSize, size_t shmSize, void** shmPtr, void** devShmPtr,
-                           int refcount, struct ncclShmHandleInternal** handle) {
+                           int refcount, struct ncclShmHandleInternal** handle) { /* 中文索引·体内调用 calloc、snprintf。 */
   HANDLE hMapFile = NULL;
   char* hptr = NULL;
   void* dptr = NULL;
@@ -1022,7 +1022,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) {
+ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 cudaHostUnregister、UnmapViewOfFile。 */
   ncclResult_t ret = ncclSuccess;
   if (handle) {
     if (handle->shmPtr) {
@@ -1048,7 +1048,7 @@ ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) {
   return ret;
 }
 
-ncclResult_t ncclOsShmUnlink(struct ncclShmHandleInternal* handle) {
+ncclResult_t ncclOsShmUnlink(struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 free。 */
   ncclResult_t ret = ncclSuccess;
   if (handle) {
     // On Windows, shared memory is automatically cleaned up when all handles are closed
@@ -1062,7 +1062,7 @@ ncclResult_t ncclOsShmUnlink(struct ncclShmHandleInternal* handle) {
 }
 
 /* gettimeofday() replacement for Windows (struct timeval is in winsock2.h via os.h) */
-int gettimeofday(struct timeval* tv, void* tz) {
+int gettimeofday(struct timeval* tv, void* tz) { /* 中文索引·体内调用 GetSystemTimeAsFileTime。 */
   (void)tz;
   FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
@@ -1080,7 +1080,7 @@ int gettimeofday(struct timeval* tv, void* tz) {
 #define BUSID_SIZE 13 // "0000:00:00.0" + null terminator
 
 // Helper function to parse PCI bus ID format and convert to Windows format
-static bool parsePciBusId(const char* busId, DWORD* bus, DWORD* device, DWORD* function) {
+static bool parsePciBusId(const char* busId, DWORD* bus, DWORD* device, DWORD* function) { /* 中文索引·体内调用 sscanf。 */
   // Expected format: DDDD:BB:DD.F (domain:bus:device.function)
   unsigned int domain, b, d, f;
   if (sscanf(busId, "%x:%x:%x.%x", &domain, &b, &d, &f) == 4) {
@@ -1100,7 +1100,7 @@ struct DeviceInfo {
 };
 
 // Helper to get device info from SetupAPI
-static ncclResult_t getDeviceInfo(DWORD bus, DWORD device, DWORD function, DeviceInfo* devInfo) {
+static ncclResult_t getDeviceInfo(DWORD bus, DWORD device, DWORD function, DeviceInfo* devInfo) { /* 中文索引·体内调用 SetupDiGetClassDevs、SetupDiEnumDeviceInfo。 */
   HDEVINFO deviceInfoSet = SetupDiGetClassDevs(NULL, "PCI", NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES);
   if (deviceInfoSet == INVALID_HANDLE_VALUE) {
     return ncclSystemError;
@@ -1148,7 +1148,7 @@ static ncclResult_t getDeviceInfo(DWORD bus, DWORD device, DWORD function, Devic
 }
 
 // Helper to get PCI bus ID string from DEVINST
-static bool getPciBusIdFromDevInst(DEVINST devInst, char* busIdOut, size_t bufSize) {
+static bool getPciBusIdFromDevInst(DEVINST devInst, char* busIdOut, size_t bufSize) { /* 中文索引·体内调用 CM_Get_DevNode_Registry_Property、snprintf。 */
   ULONG busNumber = 0, addressNumber = 0;
   ULONG bufferSize = sizeof(ULONG);
 
@@ -1181,7 +1181,7 @@ ncclResult_t ncclOsGetBcmLinks(const char* busId, int* nlinks, char** peers) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsGetPciPath(const char* busId, char** path) {
+ncclResult_t ncclOsGetPciPath(const char* busId, char** path) { /* 中文索引·体内调用 parsePciBusId、getDeviceInfo。 */
   DWORD bus, device, function;
   if (!parsePciBusId(busId, &bus, &device, &function)) {
     WARN("Invalid PCI bus ID format: %s", busId);
@@ -1202,7 +1202,7 @@ ncclResult_t ncclOsGetPciPath(const char* busId, char** path) {
 }
 
 // Helper to extract hex value from hardware ID string (e.g., "VEN_10DE" -> "0x10de")
-static bool extractHexFromHwId(const char* hwId, const char* prefix, char* output, int maxLen) {
+static bool extractHexFromHwId(const char* hwId, const char* prefix, char* output, int maxLen) { /* 中文索引·体内调用 strstr、strlen。 */
   const char* pos = strstr(hwId, prefix);
   if (pos != NULL) {
     pos += strlen(prefix);
@@ -1221,7 +1221,7 @@ static bool extractHexFromHwId(const char* hwId, const char* prefix, char* outpu
 }
 
 // Helper to get device registry key path
-static bool getDeviceRegPath(const char* deviceInstanceId, char* regPath, int maxLen) {
+static bool getDeviceRegPath(const char* deviceInstanceId, char* regPath, int maxLen) { /* 中文索引·体内调用 snprintf。 */
   // Convert device instance ID to registry path
   // Device instance: PCI\VEN_10DE&DEV_1234...\4&1234abcd&0&00
   // Registry path: SYSTEM\CurrentControlSet\Enum\PCI\VEN_10DE&DEV_1234...\4&1234abcd&0&00
@@ -1230,7 +1230,7 @@ static bool getDeviceRegPath(const char* deviceInstanceId, char* regPath, int ma
 }
 
 // Helper to read PCI configuration space from registry
-static bool readPciConfigSpace(DEVINST devInst, BYTE* configData, DWORD maxSize, DWORD* actualSize) {
+static bool readPciConfigSpace(DEVINST devInst, BYTE* configData, DWORD maxSize, DWORD* actualSize) { /* 中文索引·体内调用 CM_Get_Device_ID、getDeviceRegPath。 */
   char deviceInstanceId[MAX_PATH];
   if (CM_Get_Device_ID(devInst, deviceInstanceId, MAX_PATH, 0) != CR_SUCCESS) {
     return false;
@@ -1255,7 +1255,7 @@ static bool readPciConfigSpace(DEVINST devInst, BYTE* configData, DWORD maxSize,
 
 // Helper to find PCIe capability in config space and read max link width
 // Reads from Link Capabilities Register (PCIe Cap + 0x0C), bits 9:4
-static bool getPcieMaxLinkWidth(DEVINST devInst, char* strValue, int maxLen) {
+static bool getPcieMaxLinkWidth(DEVINST devInst, char* strValue, int maxLen) { /* 中文索引·体内调用 readPciConfigSpace、snprintf。 */
   BYTE configData[256];
   DWORD configSize = 0;
 
@@ -1308,7 +1308,7 @@ constexpr size_t pcieGenSpeedsCount = sizeof(pcieGenSpeedStr) / sizeof(pcieGenSp
 
 // Helper to find PCIe capability and read current link speed
 // Reads from Link Capabilities Register (PCIe Cap + 0x0C), bits 3:0
-static bool getPcieMaxLinkSpeed(DEVINST devInst, char* strValue, int maxLen) {
+static bool getPcieMaxLinkSpeed(DEVINST devInst, char* strValue, int maxLen) { /* 中文索引·体内调用 readPciConfigSpace、snprintf。 */
   BYTE configData[256];
   DWORD configSize = 0;
 
@@ -1350,7 +1350,7 @@ static bool getPcieMaxLinkSpeed(DEVINST devInst, char* strValue, int maxLen) {
   return false;
 }
 
-ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, char* strValue, int maxLen) {
+ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, char* strValue, int maxLen) { /* 中文索引·体内调用 SetupDiGetClassDevs、GetLastError。 */
   // Initialize to empty
   strValue[0] = '\0';
 
@@ -1494,7 +1494,7 @@ ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, cha
 }
 
 /* NUMA and PCI device class functions */
-ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, size_t maxLen, int* cpuOffset) {
+ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, size_t maxLen, int* cpuOffset) { /* 中文索引·体内调用 GetNumaNodeProcessorMaskEx、snprintf。 */
   *cpuOffset = 0;
   GROUP_AFFINITY groupAffinity = {};
   if (GetNumaNodeProcessorMaskEx((USHORT)numaId, &groupAffinity)) {
@@ -1512,7 +1512,7 @@ ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, s
 }
 
 // Get device class by busId (works for any PCI device - GPUs, switches, bridges, etc.)
-ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass, size_t maxLen) {
+ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass, size_t maxLen) { /* 中文索引·体内调用 parsePciBusId、getDeviceInfo。 */
   // Parse the bus ID to extract bus, device, and function numbers
   DWORD bus, dev, func;
   if (!parsePciBusId(busId, &bus, &dev, &func)) {
@@ -1592,7 +1592,7 @@ ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsGetPciDeviceClass(nvmlDevice_t device, char* deviceClass, size_t maxLen) {
+ncclResult_t ncclOsGetPciDeviceClass(nvmlDevice_t device, char* deviceClass, size_t maxLen) { /* 中文索引·体内调用 ncclNvmlDeviceGetPciInfo、ncclOsGetPciDeviceClassByBusId。 */
   // Get PCI bus ID from NVML device
   nvmlPciInfo_t pciInfo;
   ncclResult_t ret = ncclNvmlDeviceGetPciInfo(device, &pciInfo);
@@ -1607,7 +1607,7 @@ ncclResult_t ncclOsGetPciDeviceClass(nvmlDevice_t device, char* deviceClass, siz
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsGetPciDeviceParent(nvmlDevice_t device, char** parentBusId) {
+ncclResult_t ncclOsGetPciDeviceParent(nvmlDevice_t device, char** parentBusId) { /* 中文索引·体内调用 ncclNvmlDeviceGetPciInfo、parsePciBusId。 */
   *parentBusId = NULL;
 
   // Get PCI bus ID from NVML device

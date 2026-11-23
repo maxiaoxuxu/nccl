@@ -33,7 +33,7 @@ inline __device__ void storeShmem128(uint64_t* shmemAsmPtr, uint64_t v0, uint64_
 }
 
 template <typename T>
-inline __device__ void loadShmemMisaligned128(T* ptr, uint64_t& v0, uint64_t& v1) {
+inline __device__ void loadShmemMisaligned128(T* ptr, uint64_t& v0, uint64_t& v1) { /* 中文索引·体内调用 uintptr_t、__funnelshift_r。 */
   union {
     uint32_t tmp4[4];
     uint64_t tmp8[2];
@@ -70,7 +70,7 @@ __device__ __forceinline__ uintptr_t cvta_to_global(T* ptr) {
 }
 
 template <typename T>
-__device__ __forceinline__ T* cvta_from_shared(uint32_t shptr) {
+__device__ __forceinline__ T* cvta_from_shared(uint32_t shptr) { /* 中文索引·体内调用 uint64_t。 */
   T* ans;
   asm("cvta.shared.u64 %0, %1;" : "=l"(ans) : "l"(uint64_t(shptr)));
   return ans;
@@ -339,12 +339,12 @@ __device__ __forceinline__ void st_relaxed_gpu_global<16>(uintptr_t addr, BytePa
 ////////////////////////////////////////////////////////////////////////////////
 // Atomic load/store using c++ pointers.
 
-__device__ __forceinline__ uint64_t ld_volatile_global(uint64_t* ptr) {
+__device__ __forceinline__ uint64_t ld_volatile_global(uint64_t* ptr) { /* 中文索引·体内调用 cvta_to_global。 */
   uint64_t ans;
   asm volatile("ld.volatile.global.u64 %0, [%1];" : "=l"(ans) : "l"(cvta_to_global(ptr)) : "memory");
   return ans;
 }
-__device__ __forceinline__ uint64_t ld_relaxed_sys_global(uint64_t* ptr) {
+__device__ __forceinline__ uint64_t ld_relaxed_sys_global(uint64_t* ptr) { /* 中文索引·体内调用 cvta_to_global。 */
   uint64_t ans;
 #if __CUDA_ARCH__ >= 700
   asm volatile("ld.relaxed.sys.global.u64 %0, [%1];" : "=l"(ans) : "l"(cvta_to_global(ptr)) : "memory");
@@ -353,7 +353,7 @@ __device__ __forceinline__ uint64_t ld_relaxed_sys_global(uint64_t* ptr) {
 #endif
   return ans;
 }
-__device__ __forceinline__ uint64_t ld_relaxed_gpu_global(uint64_t* ptr) {
+__device__ __forceinline__ uint64_t ld_relaxed_gpu_global(uint64_t* ptr) { /* 中文索引·体内调用 cvta_to_global。 */
   uint64_t ans;
 #if __CUDA_ARCH__ >= 700
   asm volatile("ld.relaxed.gpu.global.u64 %0, [%1];" : "=l"(ans) : "l"(cvta_to_global(ptr)) : "memory");
@@ -362,7 +362,7 @@ __device__ __forceinline__ uint64_t ld_relaxed_gpu_global(uint64_t* ptr) {
 #endif
   return ans;
 }
-__device__ __forceinline__ uint64_t ld_acquire_sys_global(uint64_t* ptr) {
+__device__ __forceinline__ uint64_t ld_acquire_sys_global(uint64_t* ptr) { /* 中文索引·体内调用 cvta_to_global。 */
   uint64_t ans;
 #if __CUDA_ARCH__ >= 700
   asm volatile("ld.acquire.sys.global.u64 %0, [%1];" : "=l"(ans) : "l"(cvta_to_global(ptr)) : "memory");
@@ -375,14 +375,14 @@ __device__ __forceinline__ uint64_t ld_acquire_sys_global(uint64_t* ptr) {
 __device__ __forceinline__ void st_volatile_global(uint64_t* ptr, uint64_t val) {
   asm volatile("st.volatile.global.u64 [%0], %1;" ::"l"(cvta_to_global(ptr)), "l"(val) : "memory");
 }
-__device__ __forceinline__ void st_relaxed_sys_global(uint64_t* ptr, uint64_t val) {
+__device__ __forceinline__ void st_relaxed_sys_global(uint64_t* ptr, uint64_t val) { /* 中文索引·体内调用 cvta_to_global。 */
 #if __CUDA_ARCH__ >= 700
   asm volatile("st.relaxed.sys.global.u64 [%0], %1;" ::"l"(cvta_to_global(ptr)), "l"(val) : "memory");
 #else
   asm volatile("st.volatile.global.u64 [%0], %1;" ::"l"(cvta_to_global(ptr)), "l"(val) : "memory");
 #endif
 }
-__device__ __forceinline__ void st_release_sys_global(uint64_t* ptr, uint64_t val) {
+__device__ __forceinline__ void st_release_sys_global(uint64_t* ptr, uint64_t val) { /* 中文索引·体内调用 cvta_to_global。 */
 #if __CUDA_ARCH__ >= 700
   asm volatile("st.release.sys.global.u64 [%0], %1;" ::"l"(cvta_to_global(ptr)), "l"(val) : "memory");
 #else
@@ -447,7 +447,7 @@ __device__ __forceinline__ void multimem_st_global(uintptr_t addr, BytePack<Size
 
 // Load pack starting at index in array. Ignore elements past end (length of array).
 template <typename Pack, typename T>
-__device__ __forceinline__ Pack loadPack(T* ptr, int ix, int end) {
+__device__ __forceinline__ Pack loadPack(T* ptr, int ix, int end) { /* 中文索引·体内调用 uintptr_t、__funnelshift_r。 */
   constexpr int Size = sizeof(Pack);
   ptr += ix;
   int n = end - ix;
@@ -510,7 +510,7 @@ __device__ __forceinline__ void storePack(T* ptr, int ix, int end, Pack val) {
 // is interpeted as zero. EltSize is the guaranteed alignment of the addresses and sizes.
 template <int EltSize, int MaxBytes, bool Multimem, typename IntBytes>
 __device__ __forceinline__ void copyGlobalShared_WarpUnrolled(int lane, uintptr_t dstAddr, uint32_t srcAddr,
-                                                              IntBytes nBytesAhead) {
+                                                              IntBytes nBytesAhead) { /* 中文索引·体内调用 divUp、__funnelshift_r。 */
   static_assert(std::is_signed<IntBytes>::value, "`IntBytes` must be a signed integral type.");
   int nBytes = min(nBytesAhead, (IntBytes)MaxBytes);
   int nFrontBytes = min(nBytes, (16 - int(dstAddr % 16)) % 16);

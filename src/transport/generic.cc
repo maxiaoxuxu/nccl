@@ -11,7 +11,7 @@
 
 NCCL_PARAM(MultiSegmentRegister, "MULTI_SEGMENT_REGISTER", 1);
 
-ncclResult_t ncclTransportRingConnect(struct ncclComm* comm) {
+ncclResult_t ncclTransportRingConnect(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTransportP2pConnect、ncclTransportP2pSetup。 */
   struct ringConnInfo {
     bool useNetPXN;
     bool useGdr;
@@ -46,7 +46,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclTransportTreeConnect(struct ncclComm* comm) {
+ncclResult_t ncclTransportTreeConnect(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTransportP2pConnect、ncclTransportP2pSetup。 */
   ncclResult_t ret = ncclSuccess;
   if (comm && comm->nRanks > 1) {
     // Connect Trees
@@ -67,7 +67,7 @@ fail:
 }
 
 // Build a node-major rank order with the supplied transport heads first.
-ncclResult_t ncclTransportInitRankMap(struct ncclComm* comm, int nHeads, const int* heads) {
+ncclResult_t ncclTransportInitRankMap(struct ncclComm* comm, int nHeads, const int* heads) { /* 中文索引·体内调用 ncclCalloc、bootstrapAllGather。 */
   ncclResult_t ret = ncclSuccess;
   if (comm->denseToUserRank != nullptr) return ncclSuccess;
 
@@ -101,7 +101,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclTransportPatConnect(struct ncclComm* comm) {
+ncclResult_t ncclTransportPatConnect(struct ncclComm* comm) { /* 中文索引·体内调用 ncclPatEnable、ncclNvlsTransportEnabled。 */
   ncclResult_t ret = ncclSuccess;
   if (ncclPatEnable(comm) == 0) goto exit;
   if (comm && comm->nRanks > 1) {

@@ -7,7 +7,7 @@
 
 #include "core.h"
 
-void dumpLine(int* values, int nranks, const char* prefix) {
+void dumpLine(int* values, int nranks, const char* prefix) { /* 中文索引·体内调用 snprintf。 */
   constexpr int line_length = 128;
   char line[line_length];
   int num_width = snprintf(nullptr, 0, "%d", nranks - 1);  // safe as per "man snprintf"
@@ -26,7 +26,7 @@ void dumpLine(int* values, int nranks, const char* prefix) {
   INFO(NCCL_INIT, "%s", line);
 }
 
-ncclResult_t ncclBuildRings(int nrings, int* rings, int rank, int nranks, int* prev, int* next) {
+ncclResult_t ncclBuildRings(int nrings, int* rings, int rank, int nranks, int* prev, int* next) { /* 中文索引·体内调用 ncclCalloc、snprintf。 */
   ncclResult_t ret = ncclSuccess;
   uint64_t* rankFound;
   int rankFoundSize = DIVUP(nranks, 64);

@@ -29,7 +29,7 @@ typedef struct {
 } ncclTunerConstants_v7_t;
 
 // Convenient constant conversion functions.
-inline void ncclTunerConstants_v7_to_v5(ncclTunerConstants_v5_t* dst, const ncclTunerConstants_v7_t* src) {
+inline void ncclTunerConstants_v7_to_v5(ncclTunerConstants_v5_t* dst, const ncclTunerConstants_v7_t* src) { /* 中文索引·体内调用 memcpy。 */
   memcpy(dst->baseLatencies, src->baseLatencies, sizeof(dst->baseLatencies));
   memcpy(dst->hwLatencies, src->hwLatencies, sizeof(dst->hwLatencies));
 
@@ -40,7 +40,7 @@ inline void ncclTunerConstants_v7_to_v5(ncclTunerConstants_v5_t* dst, const nccl
   memcpy(dst->perChMaxNVLSTreeBws, src->perChMaxNVLSTreeBws, sizeof(dst->perChMaxNVLSTreeBws));
 }
 
-inline void ncclTunerConstants_v5_to_v7(ncclTunerConstants_v7_t* dst, const ncclTunerConstants_v5_t* src) {
+inline void ncclTunerConstants_v5_to_v7(ncclTunerConstants_v7_t* dst, const ncclTunerConstants_v5_t* src) { /* 中文索引·体内调用 memcpy。 */
   memcpy(dst->baseLatencies, src->baseLatencies, sizeof(src->baseLatencies));
   memcpy(dst->hwLatencies, src->hwLatencies, sizeof(src->hwLatencies));
 

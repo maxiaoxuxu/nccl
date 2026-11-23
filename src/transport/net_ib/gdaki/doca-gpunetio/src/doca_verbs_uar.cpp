@@ -83,7 +83,7 @@ doca_error_t convert_doca_verbs_uar_type_to_mlx5_uar_type(doca_verbs_uar_allocat
 
 doca_verbs_uar_open::doca_verbs_uar_open(struct ibv_context *context,
                                          enum doca_verbs_uar_allocation_type allocation_type)
-    : m_ibv_ctx(context), m_allocation_type(allocation_type) {
+    : m_ibv_ctx(context), m_allocation_type(allocation_type) { /* 中文索引·体内调用 create、destroy。 */
     try {
         create();
     } catch (...) {
@@ -98,7 +98,7 @@ doca_verbs_uar_open::~doca_verbs_uar_open() { static_cast<void>(destroy()); }
 static const off64_t DOCA_VERBS_UAR_DBR_LESS_DB_OFFSET = 0x600LLU;
 static const uintptr_t DOCA_VERBS_UAR_ADAPTER_PAGE_SIZE = uintptr_t{1} << MLX5_ADAPTER_PAGE_SHIFT;
 
-void doca_verbs_uar_open::create() {
+void doca_verbs_uar_open::create() { /* 中文索引·体内调用 convert_doca_verbs_uar_type_to_mlx5_uar_type、doca_verbs_wrapper_mlx5dv_devx_alloc_uar。 */
     uint32_t mlx5_uar_type{};
     auto status = convert_doca_verbs_uar_type_to_mlx5_uar_type(m_allocation_type, mlx5_uar_type);
     if (status != DOCA_SUCCESS) {
@@ -121,7 +121,7 @@ void doca_verbs_uar_open::create() {
     m_dbr_less_addr = reinterpret_cast<void *>(uar_page_addr + DOCA_VERBS_UAR_DBR_LESS_DB_OFFSET);
 }
 
-doca_error_t doca_verbs_uar_open::destroy() noexcept {
+doca_error_t doca_verbs_uar_open::destroy() noexcept { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_free_uar。 */
     if (m_uar) {
         auto free_uar_status = doca_verbs_wrapper_mlx5dv_devx_free_uar(m_uar);
         if (free_uar_status != DOCA_SUCCESS) {
@@ -140,7 +140,7 @@ doca_error_t doca_verbs_uar_open::destroy() noexcept {
 
 doca_error_t doca_verbs_uar_create(doca_dev_t *net_dev,
                                    enum doca_verbs_uar_allocation_type allocation_type,
-                                   doca_verbs_uar_t **uar) {
+                                   doca_verbs_uar_t **uar) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_uar_create。 */
     doca_verbs_uar_t *uar_ = nullptr;
 
     if (uar == nullptr) {
@@ -199,7 +199,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_uar_destroy(doca_verbs_uar_t *uar) {
+doca_error_t doca_verbs_uar_destroy(doca_verbs_uar_t *uar) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_uar_destroy、uar->open->destroy。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (uar == nullptr) {
@@ -239,7 +239,7 @@ exit:
     return status;
 }
 
-doca_error_t doca_verbs_uar_id_get(const doca_verbs_uar_t *uar, uint32_t *uar_id) {
+doca_error_t doca_verbs_uar_id_get(const doca_verbs_uar_t *uar, uint32_t *uar_id) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_uar_get_id、uar->open->get_uar_id。 */
     if (uar == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get uar id: parameter uar is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -269,7 +269,7 @@ doca_error_t doca_verbs_uar_id_get(const doca_verbs_uar_t *uar, uint32_t *uar_id
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_uar_reg_addr_get(const doca_verbs_uar_t *uar, void **reg_addr) {
+doca_error_t doca_verbs_uar_reg_addr_get(const doca_verbs_uar_t *uar, void **reg_addr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_uar_reg_addr_get、uar->open->get_reg_addr。 */
     if (uar == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get uar address: parameter uar is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -299,7 +299,7 @@ doca_error_t doca_verbs_uar_reg_addr_get(const doca_verbs_uar_t *uar, void **reg
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_uar_dbr_less_addr_get(const doca_verbs_uar_t *uar, void **reg_addr) {
+doca_error_t doca_verbs_uar_dbr_less_addr_get(const doca_verbs_uar_t *uar, void **reg_addr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_uar_reg_addr_get、uar->open->get_dbr_less_addr。 */
     if (uar == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get uar address: parameter uar is NULL");
         return DOCA_ERROR_INVALID_VALUE;

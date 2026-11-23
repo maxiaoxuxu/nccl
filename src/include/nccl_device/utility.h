@@ -178,7 +178,7 @@ NCCL_HOST_DEVICE_INLINE constexpr bool isPow2(Int x) {
 }
 
 template <typename Uint>
-NCCL_HOST_DEVICE_INLINE bool rollingLessEq(Uint a, Uint b, int nBits = 8 * sizeof(Uint)) {
+NCCL_HOST_DEVICE_INLINE bool rollingLessEq(Uint a, Uint b, int nBits = 8 * sizeof(Uint)) { /* 中文索引·体内调用 Uint。 */
   static_assert(Uint(0) < Uint(-1), "Uint must be unsigned.");
   Uint m = Uint(-1) >> (8 * sizeof(Uint) - nBits);
   return ((b - a) & m) <= m >> 1;
@@ -196,14 +196,14 @@ NCCL_HOST_DEVICE_INLINE constexpr uint64_t idivRcp64(uint64_t x) {
   return uint64_t(-1) / x + isPow2(x);
 }
 
-NCCL_HOST_DEVICE_INLINE uint32_t mul32hi(uint32_t a, uint32_t b) {
+NCCL_HOST_DEVICE_INLINE uint32_t mul32hi(uint32_t a, uint32_t b) { /* 中文索引·体内调用 __umulhi、uint64_t。 */
 #if __CUDA_ARCH__
   return __umulhi(a, b);
 #else
   return uint64_t(a) * b >> 32;
 #endif
 }
-NCCL_HOST_DEVICE_INLINE uint64_t mul64hi(uint64_t a, uint64_t b) {
+NCCL_HOST_DEVICE_INLINE uint64_t mul64hi(uint64_t a, uint64_t b) { /* 中文索引·体内调用 __umul64hi、__umulh。 */
 #if __CUDA_ARCH__
   return __umul64hi(a, b);
 #elif defined(NCCL_OS_WINDOWS)
@@ -216,7 +216,7 @@ NCCL_HOST_DEVICE_INLINE uint64_t mul64hi(uint64_t a, uint64_t b) {
 
 // Produce the reciprocal of x*y given their respective reciprocals. This incurs
 // no integer division on device.
-NCCL_HOST_DEVICE_INLINE uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_t y, uint32_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 mul32hi。 */
   if (xrcp == 0) return yrcp;
   if (yrcp == 0) return xrcp;
   uint32_t rcp = mul32hi(xrcp, yrcp);
@@ -224,7 +224,7 @@ NCCL_HOST_DEVICE_INLINE uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_t y
   if (x * y <= rem) rcp += 1;
   return rcp;
 }
-NCCL_HOST_DEVICE_INLINE uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_t y, uint64_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 mul64hi。 */
   if (xrcp == 0) return yrcp;
   if (yrcp == 0) return xrcp;
   uint64_t rcp = mul64hi(xrcp, yrcp);
@@ -235,7 +235,7 @@ NCCL_HOST_DEVICE_INLINE uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_t y
 
 // Fast unsigned integer division where divisor has precomputed reciprocal.
 // idivFast(x, y, idivRcp(y)) == x/y
-NCCL_HOST_DEVICE_INLINE void idivmodFast32(uint32_t* quo, uint32_t* rem, uint32_t x, uint32_t y, uint32_t yrcp) {
+NCCL_HOST_DEVICE_INLINE void idivmodFast32(uint32_t* quo, uint32_t* rem, uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 mul32hi。 */
   uint32_t q = yrcp == 0 ? x : mul32hi(x, yrcp);
   uint32_t r = x - y * q;
   if (r >= y) {
@@ -245,7 +245,7 @@ NCCL_HOST_DEVICE_INLINE void idivmodFast32(uint32_t* quo, uint32_t* rem, uint32_
   *quo = q;
   *rem = r;
 }
-NCCL_HOST_DEVICE_INLINE void idivmodFast64(uint64_t* quo, uint64_t* rem, uint64_t x, uint64_t y, uint64_t yrcp) {
+NCCL_HOST_DEVICE_INLINE void idivmodFast64(uint64_t* quo, uint64_t* rem, uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 mul64hi。 */
   uint64_t q = yrcp == 0 ? x : mul64hi(x, yrcp);
   uint64_t r = x - y * q;
   if (r >= y) {
@@ -256,23 +256,23 @@ NCCL_HOST_DEVICE_INLINE void idivmodFast64(uint64_t* quo, uint64_t* rem, uint64_
   *rem = r;
 }
 
-NCCL_HOST_DEVICE_INLINE uint32_t idivFast32(uint32_t x, uint32_t y, uint32_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint32_t idivFast32(uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 idivmodFast32。 */
   uint32_t q, r;
   idivmodFast32(&q, &r, x, y, yrcp);
   return q;
 }
-NCCL_HOST_DEVICE_INLINE uint32_t idivFast64(uint64_t x, uint64_t y, uint64_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint32_t idivFast64(uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 idivmodFast64。 */
   uint64_t q, r;
   idivmodFast64(&q, &r, x, y, yrcp);
   return (uint32_t)q;
 }
 
-NCCL_HOST_DEVICE_INLINE uint32_t imodFast32(uint32_t x, uint32_t y, uint32_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint32_t imodFast32(uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 idivmodFast32。 */
   uint32_t q, r;
   idivmodFast32(&q, &r, x, y, yrcp);
   return r;
 }
-NCCL_HOST_DEVICE_INLINE uint64_t imodFast64(uint64_t x, uint64_t y, uint64_t yrcp) {
+NCCL_HOST_DEVICE_INLINE uint64_t imodFast64(uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 idivmodFast64。 */
   uint64_t q, r;
   idivmodFast64(&q, &r, x, y, yrcp);
   return r;
@@ -281,7 +281,7 @@ NCCL_HOST_DEVICE_INLINE uint64_t imodFast64(uint64_t x, uint64_t y, uint64_t yrc
 #ifdef __CUDACC__
 // Precomputed integer reciprocoals for denominator values 1..64 inclusive.
 // Pass these to idivFast64() for fast division on the GPU.
-NCCL_DEVICE_INLINE uint64_t idivRcp64_upto64(int x) {
+NCCL_DEVICE_INLINE uint64_t idivRcp64_upto64(int x) { /* 中文索引·体内调用 idivRcp64。 */
   // clang-format off
   static constexpr uint64_t table[65] = {
     idivRcp64(0x01), idivRcp64(0x01), idivRcp64(0x02), idivRcp64(0x03),
@@ -328,7 +328,7 @@ NCCL_DEVICE_INLINE cuda::memory_order releaseOrderOf(cuda::memory_order ord) {
 
 #ifdef __CUDACC__
 template <typename T>
-NCCL_DEVICE_INLINE T atomicLoad(T* ptr, cuda::memory_order ord, cuda::thread_scope scope) {
+NCCL_DEVICE_INLINE T atomicLoad(T* ptr, cuda::memory_order ord, cuda::thread_scope scope) { /* 中文索引·体内调用 __builtin_unreachable。 */
   switch (scope) {
   case cuda::thread_scope_thread:
     return cuda::atomic_ref<T, cuda::thread_scope_thread>{*ptr}.load(ord);
@@ -346,7 +346,7 @@ NCCL_DEVICE_INLINE T atomicLoad(T* ptr, cuda::memory_order ord, cuda::thread_sco
 
 #ifdef __CUDACC__
 template <typename T>
-NCCL_DEVICE_INLINE void atomicStore(T* ptr, T val, cuda::memory_order ord, cuda::thread_scope scope) {
+NCCL_DEVICE_INLINE void atomicStore(T* ptr, T val, cuda::memory_order ord, cuda::thread_scope scope) { /* 中文索引·体内调用 __builtin_unreachable。 */
   switch (scope) {
   case cuda::thread_scope_thread:
     cuda::atomic_ref<T, cuda::thread_scope_thread>{*ptr}.store(val, ord);
@@ -383,7 +383,7 @@ NCCL_DEVICE_INLINE unsigned int lanemask_lt() {
 #define NCCL_DEVICE_LOADCONST_USE_LDG 0
 
 template <typename T>
-NCCL_DEVICE_INLINE T loadConstLdg(T const* p) {
+NCCL_DEVICE_INLINE T loadConstLdg(T const* p) { /* 中文索引·体内调用 __ldg。 */
   if (alignof(T) == 1) {
     union {
       uint8_t part[sizeof(T)];
@@ -425,7 +425,7 @@ NCCL_DEVICE_INLINE T loadConstLdg(T const* p) {
 
 // Use ordinary dereference loads with CUDA versions affected by the __ldg/acquire-fence regression.
 template <typename T>
-NCCL_DEVICE_INLINE T loadConst(T const* p) {
+NCCL_DEVICE_INLINE T loadConst(T const* p) { /* 中文索引·体内调用 loadConstLdg。 */
 #if NCCL_DEVICE_LOADCONST_USE_LDG
   return loadConstLdg(p);
 #else

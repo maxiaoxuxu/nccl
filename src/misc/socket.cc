@@ -22,7 +22,7 @@ NCCL_PARAM(PollTimeOut, "SOCKET_POLL_TIMEOUT_MSEC", 0);
 NCCL_PARAM(SocketMaxRecvBuff, "SOCKET_RCVBUF", -1);
 NCCL_PARAM(SocketMaxSendBuff, "SOCKET_SNDBUF", -1);
 
-uint64_t ncclSocketDefaultMagic(void) {
+uint64_t ncclSocketDefaultMagic(void) { /* 中文索引·体内调用 std::call_once、ncclGetEnv。 */
   /* Default is the historical constant; env may override on first init. */
   static uint64_t cached = NCCL_SOCKET_MAGIC;
   static std::once_flag once;
@@ -45,7 +45,7 @@ uint64_t ncclSocketDefaultMagic(void) {
   return cached;
 }
 
-void ncclSocketMove(struct ncclSocket* dst, struct ncclSocket* src) {
+void ncclSocketMove(struct ncclSocket* dst, struct ncclSocket* src) { /* 中文索引·体内调用 memcpy、ncclCryptRebindSocket。 */
   memcpy(dst, src, sizeof(struct ncclSocket));
   ncclCryptRebindSocket(dst);
   src->socketDescriptor = NCCL_INVALID_SOCKET;
@@ -55,7 +55,7 @@ void ncclSocketMove(struct ncclSocket* dst, struct ncclSocket* src) {
 }
 
 static ncclResult_t socketProgressRaw(int op, struct ncclSocket* sock, void* ptr, int size, int* offset,
-                                      bool* pclosed = nullptr) {
+                                      bool* pclosed = nullptr) { /* 中文索引·体内调用 ncclOsSocketProgressOpt、ncclSocketToString。 */
   int closed;
   NCCLCHECK(ncclOsSocketProgressOpt(op, sock, ptr, size, offset, 0, &closed));
   if (closed) {
@@ -73,7 +73,7 @@ static ncclResult_t socketProgressRaw(int op, struct ncclSocket* sock, void* ptr
 }
 
 static ncclResult_t socketProgress(int op, struct ncclSocket* sock, void* ptr, int size, int* offset,
-                                   bool* pclosed = nullptr) {
+                                   bool* pclosed = nullptr) { /* 中文索引·体内调用 ncclCryptSocketSend、ncclCryptSocketRecv。 */
   if (sock->crypto) {
     if (size <= *offset) return ncclSuccess;
     if (op == NCCL_SOCKET_SEND) NCCLCHECK(ncclCryptSocketSend(sock, ptr, size, offset, pclosed));
@@ -84,7 +84,7 @@ static ncclResult_t socketProgress(int op, struct ncclSocket* sock, void* ptr, i
   return ncclSuccess;
 }
 
-static ncclResult_t socketWait(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) {
+static ncclResult_t socketWait(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) { /* 中文索引·体内调用 socketProgress、ncclParamPollTimeOut。 */
   while (*offset < size) {
     NCCLCHECK(socketProgress(op, sock, ptr, size, offset));
     // If we have more data to read or write, use the poll system call to wait
@@ -100,7 +100,7 @@ uint16_t ncclSocketToPort(union ncclSocketAddress* addr) {
   return ntohs(addr->sa.sa_family == AF_INET ? addr->sin.sin_port : addr->sin6.sin6_port);
 }
 
-ncclResult_t ncclSocketShutdown(struct ncclSocket* sock, int how) {
+ncclResult_t ncclSocketShutdown(struct ncclSocket* sock, int how) { /* 中文索引·体内调用 ncclOsSocketIsValid、shutdown。 */
   if (sock != NULL) {
     if (ncclOsSocketIsValid(sock)) {
       SYSCHECK(shutdown(sock->socketDescriptor, how), "shutdown");
@@ -128,7 +128,7 @@ ncclResult_t ncclSocketSetFd(ncclSocketDescriptor socketDescriptor, struct ncclS
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketListen(struct ncclSocket* sock) {
+ncclResult_t ncclSocketListen(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketIsValid、ncclSocketToPort。 */
   if (sock == NULL) {
     WARN("ncclSocketListen: pass NULL socket");
     return ncclInvalidArgument;
@@ -178,7 +178,7 @@ ncclResult_t ncclSocketListen(struct ncclSocket* sock) {
  *
  * Output: "IPv4/IPv6 address<port>"
  */
-const char* ncclSocketToString(const union ncclSocketAddress* addr, char* buf, const int numericHostForm /*= 1*/) {
+const char* ncclSocketToString(const union ncclSocketAddress* addr, char* buf, const int numericHostForm /*= 1*/) { /* 中文索引·体内调用 getnameinfo、sprintf。 */
   const struct sockaddr* saddr = &addr->sa;
   char host[NI_MAXHOST], service[NI_MAXSERV];
   int flag = NI_NUMERICSERV | (numericHostForm ? NI_NUMERICHOST : 0);
@@ -196,7 +196,7 @@ fail:
 }
 
 /* Allow the user to force the IPv4/IPv6 interface selection */
-int ncclEnvSocketFamily(void) {
+int ncclEnvSocketFamily(void) { /* 中文索引·体内调用 ncclGetEnv、strcmp。 */
   int family = -1; // Family selection is not forced, will use first one found
   const char* env = ncclGetEnv("NCCL_SOCKET_FAMILY");
   if (env == NULL) return family;
@@ -209,7 +209,7 @@ int ncclEnvSocketFamily(void) {
 }
 
 ncclResult_t ncclFindInterfaces(char* ifNames, union ncclSocketAddress* ifAddrs, int ifNameMaxSize, int maxIfs,
-                                int* nIfs) {
+                                int* nIfs) { /* 中文索引·体内调用 ncclEnvSocketFamily、ncclGetEnv。 */
   static int shownIfName = 0;
   // Allow user to force the INET socket family selection
   int sock_family = ncclEnvSocketFamily();
@@ -252,7 +252,7 @@ ncclResult_t ncclFindInterfaces(char* ifNames, union ncclSocketAddress* ifAddrs,
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketGetAddrFromString(union ncclSocketAddress* ua, const char* ip_port_pair) {
+ncclResult_t ncclSocketGetAddrFromString(union ncclSocketAddress* ua, const char* ip_port_pair) { /* 中文索引·体内调用 strlen、parseStringList。 */
   if (!(ip_port_pair && strlen(ip_port_pair) > 1)) {
     WARN("Net : string is null");
     return ncclInvalidArgument;
@@ -335,7 +335,7 @@ ncclResult_t ncclSocketGetAddrFromString(union ncclSocketAddress* ua, const char
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketGetAddr(struct ncclSocket* sock, union ncclSocketAddress* addr) {
+ncclResult_t ncclSocketGetAddr(struct ncclSocket* sock, union ncclSocketAddress* addr) { /* 中文索引·体内调用 memcpy。 */
   if (sock == NULL) {
     WARN("ncclSocketGetAddr: pass NULL socket");
     return ncclInvalidArgument;
@@ -345,13 +345,13 @@ ncclResult_t ncclSocketGetAddr(struct ncclSocket* sock, union ncclSocketAddress*
   return ncclSuccess;
 }
 
-static void socketResetAccept(struct ncclSocket* sock) {
+static void socketResetAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketResetAccept、ncclCryptFree。 */
   ncclOsSocketResetAccept(sock);
   ncclCryptFree(sock->crypto);
   sock->crypto = nullptr;
 }
 
-static ncclResult_t socketFinalizeAccept(struct ncclSocket* sock) {
+static ncclResult_t socketFinalizeAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketSetFlags、ncclCryptAcceptHello。 */
   NCCLCHECK(ncclOsSocketSetFlags(sock));
 
   ncclResult_t ret;
@@ -372,7 +372,7 @@ static ncclResult_t socketFinalizeAccept(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketPollConnect(struct ncclSocket* sock) {
+ncclResult_t ncclSocketPollConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketPollConnect。 */
   if (sock == NULL) {
     WARN("ncclSocketPollConnect: pass NULL socket");
     return ncclInvalidArgument;
@@ -381,7 +381,7 @@ ncclResult_t ncclSocketPollConnect(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-static ncclResult_t socketFinalizeConnect(struct ncclSocket* sock) {
+static ncclResult_t socketFinalizeConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclCryptConnectHello。 */
   ncclResult_t ret;
   do {
     NCCLCHECK(ret = ncclCryptConnectHello(sock));
@@ -391,7 +391,7 @@ static ncclResult_t socketFinalizeConnect(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-static ncclResult_t socketProgressState(struct ncclSocket* sock) {
+static ncclResult_t socketProgressState(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketTryAccept、socketFinalizeAccept。 */
   if (sock->state == ncclSocketStateAccepting) {
     NCCLCHECK(ncclOsSocketTryAccept(sock));
   }
@@ -410,7 +410,7 @@ static ncclResult_t socketProgressState(struct ncclSocket* sock) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketReady(struct ncclSocket* sock, int* running) {
+ncclResult_t ncclSocketReady(struct ncclSocket* sock, int* running) { /* 中文索引·体内调用 socketProgressState。 */
   if (sock == NULL) {
     *running = 0;
     return ncclSuccess;
@@ -428,7 +428,7 @@ ncclResult_t ncclSocketReady(struct ncclSocket* sock, int* running) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketConnect(struct ncclSocket* sock) {
+ncclResult_t ncclSocketConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketIsValid、ncclSocketToString。 */
 #ifdef ENABLE_TRACE
   char line[SOCKET_NAME_MAXLEN + 1];
 #endif
@@ -476,7 +476,7 @@ ncclResult_t ncclSocketConnect(struct ncclSocket* sock) {
   }
 }
 
-ncclResult_t ncclSocketAccept(struct ncclSocket* sock, struct ncclSocket* listenSock, bool retry) {
+ncclResult_t ncclSocketAccept(struct ncclSocket* sock, struct ncclSocket* listenSock, bool retry) { /* 中文索引·体内调用 ncclOsSocketDescriptorIsValid、memcpy。 */
   ncclResult_t ret = ncclSuccess;
 
   if (listenSock == NULL || sock == NULL) {
@@ -533,7 +533,7 @@ exit:
 }
 
 ncclResult_t ncclSocketInit(struct ncclSocket* sock, const union ncclSocketAddress* addr, uint64_t magic,
-                            enum ncclSocketType type, volatile uint32_t* abortFlag, int asyncFlag, int customRetry) {
+                            enum ncclSocketType type, volatile uint32_t* abortFlag, int asyncFlag, int customRetry) { /* 中文索引·体内调用 memcpy、ncclSocketToString。 */
   ncclResult_t ret = ncclSuccess;
 
   if (sock == NULL) goto exit;
@@ -578,7 +578,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclSocketProgress(int op, struct ncclSocket* sock, void* ptr, int size, int* offset, bool* closed) {
+ncclResult_t ncclSocketProgress(int op, struct ncclSocket* sock, void* ptr, int size, int* offset, bool* closed) { /* 中文索引·体内调用 socketProgress。 */
   if (sock == NULL) {
     WARN("ncclSocketProgress: pass NULL socket");
     return ncclInvalidArgument;
@@ -587,7 +587,7 @@ ncclResult_t ncclSocketProgress(int op, struct ncclSocket* sock, void* ptr, int 
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketWait(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) {
+ncclResult_t ncclSocketWait(int op, struct ncclSocket* sock, void* ptr, int size, int* offset) { /* 中文索引·体内调用 socketWait。 */
   if (sock == NULL) {
     WARN("ncclSocketWait: pass NULL socket");
     return ncclInvalidArgument;
@@ -596,7 +596,7 @@ ncclResult_t ncclSocketWait(int op, struct ncclSocket* sock, void* ptr, int size
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketSend(struct ncclSocket* sock, void* ptr, int size) {
+ncclResult_t ncclSocketSend(struct ncclSocket* sock, void* ptr, int size) { /* 中文索引·体内调用 socketWait。 */
   int offset = 0;
   if (sock == NULL) {
     WARN("ncclSocketSend: pass NULL socket");
@@ -610,7 +610,7 @@ ncclResult_t ncclSocketSend(struct ncclSocket* sock, void* ptr, int size) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketRecv(struct ncclSocket* sock, void* ptr, int size) {
+ncclResult_t ncclSocketRecv(struct ncclSocket* sock, void* ptr, int size) { /* 中文索引·体内调用 socketWait。 */
   int offset = 0;
   if (sock == NULL) {
     WARN("ncclSocketRecv: pass NULL socket");
@@ -625,7 +625,7 @@ ncclResult_t ncclSocketRecv(struct ncclSocket* sock, void* ptr, int size) {
 }
 
 ncclResult_t ncclSocketSendRecv(struct ncclSocket* sendSock, void* sendPtr, int sendSize, struct ncclSocket* recvSock,
-                                void* recvPtr, int recvSize) {
+                                void* recvPtr, int recvSize) { /* 中文索引·体内调用 socketProgress。 */
   int sendOffset = 0, recvOffset = 0;
   if (sendSock == NULL || recvSock == NULL) {
     WARN("ncclSocketSendRecv: invalid socket %p/%p", sendSock, recvSock);
@@ -643,7 +643,7 @@ ncclResult_t ncclSocketSendRecv(struct ncclSocket* sendSock, void* sendPtr, int 
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketMultiOp(struct ncclSocketOp* ops, int numOps) {
+ncclResult_t ncclSocketMultiOp(struct ncclSocketOp* ops, int numOps) { /* 中文索引·体内调用 socketProgress。 */
   if (ops == NULL || numOps <= 0) {
     WARN("ncclSocketMultiOp: invalid arguments ops=%p numOps=%d", ops, numOps);
     return ncclInvalidArgument;
@@ -667,7 +667,7 @@ ncclResult_t ncclSocketMultiOp(struct ncclSocketOp* ops, int numOps) {
   return ncclSuccess;
 }
 // Receive or detect connection closed
-ncclResult_t ncclSocketTryRecv(struct ncclSocket* sock, void* ptr, int size, bool* closed, bool blocking) {
+ncclResult_t ncclSocketTryRecv(struct ncclSocket* sock, void* ptr, int size, bool* closed, bool blocking) { /* 中文索引·体内调用 socketProgress。 */
   int offset = 0;
   if (sock == NULL) {
     WARN("ncclSocketTryRecv: pass NULL socket");

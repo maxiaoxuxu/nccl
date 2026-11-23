@@ -18,7 +18,7 @@ template <bool Send, bool DirectSend, bool Recv, bool DirectRecv, typename T, ty
           typename RedOp>
 NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::process(
   bool sendDirect, bool recvDirect, ncclSymPtr<T> input, ncclSymPtr<T> output, SrcLambda srcLambda, int nSrc,
-  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolSimple>) {
+  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolSimple>) { /* 中文索引·体内调用 assert、nccl::utility::divUp。 */
   static_assert(sizeof(T) <= 16 && 16 % sizeof(T) == 0, "T must divide the 16-byte transfer alignment");
   Backend& backend = *static_cast<Backend*>(this);
   ncclFlowPartShmem& shmem = *partShmem;

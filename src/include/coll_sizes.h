@@ -13,7 +13,7 @@
 #define NCCL_MAX_NET_SIZE (1024 * 1024 * 1024L) // Rather than send INT_MAX which is 2G-1, send a power of two.
 
 // CHUNKSIZE must be a multiple of SLICESIZE
-#define ALLREDUCE_SLICESTEPS (NCCL_STEPS / 4)
+/* 中文图解·fifo｜Simple Ring AllReduce 的 slice 占两步，chunk 占四步，所以每个 chunk 预留两次 slice 推进。 */ #define ALLREDUCE_SLICESTEPS (NCCL_STEPS / 4)
 #define ALLREDUCE_CHUNKSTEPS (NCCL_STEPS / 2)
 #define ALLGATHER_SLICESTEPS (NCCL_STEPS / 4)
 #define ALLGATHER_CHUNKSTEPS (NCCL_STEPS / 2)
@@ -112,7 +112,7 @@ inline size_t ncclSizePerChannel(size_t nBytes, int nChannels) {
   return nChannels > 0 ? DIVUP(nBytes, nChannels) : 0;
 }
 
-inline size_t ncclGetChunkSize(int protocol, size_t stepSize, int chunkSteps) {
+/* 中文图解·fifo｜名义 chunk 字节从 step 容量换算。LL 的标志占半行，LL128 的标志占整行的一个 64 位字。 */ inline size_t ncclGetChunkSize(int protocol, size_t stepSize, int chunkSteps) {
   size_t chunkSize = stepSize * chunkSteps;
   if (protocol == NCCL_PROTO_LL) chunkSize /= 2;
   if (protocol == NCCL_PROTO_LL128) chunkSize = (chunkSize / NCCL_LL128_LINEELEMS) * NCCL_LL128_DATAELEMS;
@@ -126,7 +126,7 @@ inline size_t ncclNominalSliceSize(size_t chunkSize, int chunkSteps, int sliceSt
 // Return the slice size used by Simple primitives for a chunk containing
 // nelem elements. All size arguments and the result are expressed in elements.
 template <typename Int>
-__host__ __device__ inline Int ncclSimpleSliceSize(Int nelem, int slicesPerChunk, Int nominalSliceSize) {
+/* 中文图解·fifo｜Simple 的动态 slice 既考虑当前有效元素，也有名义 slice 的 1/32 下限；实际执行时会再裁尾。 */ __host__ __device__ inline Int ncclSimpleSliceSize(Int nelem, int slicesPerChunk, Int nominalSliceSize) {
   Int aligned = DIVUP(nelem, 16 * slicesPerChunk) * 16;
   Int minimum = nominalSliceSize / 32;
   return aligned > minimum ? aligned : minimum;
@@ -134,7 +134,7 @@ __host__ __device__ inline Int ncclSimpleSliceSize(Int nelem, int slicesPerChunk
 
 // Divides elements by divider while maintaining alignment
 template <typename Int>
-__host__ __device__ inline Int ncclElementAlignedDivUp(Int elements, int divider, Int elementSize, Int alignment) {
+/* 中文图解·layout｜先将剩余元素向上分给各 rank，再以 alignment/elementSize 个元素为倍数向上对齐。 */ __host__ __device__ inline Int ncclElementAlignedDivUp(Int elements, int divider, Int elementSize, Int alignment) {
   Int alignmentElements = alignment / elementSize;
   Int rankElements = DIVUP(elements, static_cast<Int>(divider));
   Int alignedRankElements = DIVUP(rankElements, alignmentElements) * alignmentElements;

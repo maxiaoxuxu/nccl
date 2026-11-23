@@ -79,7 +79,7 @@ private:
   int slicePerChunk;
 
 public:
-  void getNextSendAddr(int curStep, uint8_t** sendbuffOut, size_t* sizeOut, void** mhandleOut) {
+  void getNextSendAddr(int curStep, uint8_t** sendbuffOut, size_t* sizeOut, void** mhandleOut) { /* 中文索引·体内调用 alignUp、divUp。 */
     int curLoop = curStep / nStepsPerLoop;
     int curLoopStage = (curStep % nStepsPerLoop) / chunkSteps;
     int chunkStage = curLoopStage % nRanks;
@@ -122,7 +122,7 @@ public:
     return;
   }
 
-  void getNextRecvAddr(int curStep, uint8_t** recvbuffOut, size_t* sizeOut, void** mhandleOut) {
+  void getNextRecvAddr(int curStep, uint8_t** recvbuffOut, size_t* sizeOut, void** mhandleOut) { /* 中文索引·体内调用 alignUp、divUp。 */
     int curLoop = curStep / nStepsPerLoop;
     int curLoopStage = ((curStep + chunkSteps) % nStepsPerLoop) / chunkSteps;
     int chunkStage = curLoopStage % nRanks;
@@ -197,7 +197,7 @@ private:
   int slicePerChunk;
 
 public:
-  void getNextSendAddr(int curStep, uint8_t** sendbuffOut, size_t* sizeOut, void** mhandleOut) {
+  void getNextSendAddr(int curStep, uint8_t** sendbuffOut, size_t* sizeOut, void** mhandleOut) { /* 中文索引·体内调用 ncclSimpleSliceSize。 */
     int curLoop = curStep / nStepsPerLoop;
     int chunkStage = (curStep % nStepsPerLoop) / chunkSteps;
     int sliceStage = (curStep % chunkSteps) / sliceSteps;
@@ -231,7 +231,7 @@ public:
     return;
   }
 
-  void getNextRecvAddr(int curStep, uint8_t** recvbuffOut, size_t* sizeOut, void** mhandleOut) {
+  void getNextRecvAddr(int curStep, uint8_t** recvbuffOut, size_t* sizeOut, void** mhandleOut) { /* 中文索引·体内调用 ncclSimpleSliceSize。 */
     int curLoop = curStep / nStepsPerLoop;
     int chunkStage = ((curStep + chunkSteps) % nStepsPerLoop) / chunkSteps;
     int sliceStage = (curStep % chunkSteps) / sliceSteps;
@@ -446,7 +446,7 @@ class PatRSAlgorithm {
     return ret;
   }
 
-  __device__ __host__ int firstBitSet(int i, int max) {
+  __device__ __host__ int firstBitSet(int i, int max) { /* 中文索引·体内调用 __ffs。 */
     int ffs =
 #ifdef __CUDA_ARCH__
       __ffs(i);
@@ -464,7 +464,7 @@ class PatRSAlgorithm {
     if (phase == 4) lastA = 1;
   }
 
-  __device__ __host__ void reset() {
+  __device__ __host__ void reset() { /* 中文索引·体内调用 getNelem、resetA。 */
     nelem = getNelem();
     phase = 0;
     scale = 1;
@@ -472,7 +472,7 @@ class PatRSAlgorithm {
     resetA();
   }
 
-  __device__ __host__ int nBitsSet(int i) {
+  __device__ __host__ int nBitsSet(int i) { /* 中文索引·体内调用 __popc。 */
     int nbits =
 #ifdef __CUDA_ARCH__
       __popc(i);
@@ -492,7 +492,7 @@ class PatRSAlgorithm {
 public:
   __device__ __host__ PatRSAlgorithm(int stepSize, int stepDepth, int maxParallelFactor, size_t offset, size_t end,
                                      size_t count, int chunkCount, int rank, int nranks)
-    : offset(offset), end(end), count(count), chunkCount(chunkCount), rank(rank), nranks(nranks) {
+    : offset(offset), end(end), count(count), chunkCount(chunkCount), rank(rank), nranks(nranks) { /* 中文索引·体内调用 log2Up、reset。 */
     parallelFactor = maxParallelFactor;
     psIdx = 0;
     aggDelta = nrPow2 = (1 << log2Up(nranks));
@@ -519,7 +519,7 @@ public:
     return parallelFactor;
   }
 
-  __device__ __host__ void getNextOp(struct ncclPatStep* ps) {
+  __device__ __host__ void getNextOp(struct ncclPatStep* ps) { /* 中文索引·体内调用 mirrorInvert、firstBitSet。 */
     ps->last = 0;
     ps->nelem = nelem;
     ps->outIx = offset;
@@ -713,7 +713,7 @@ class PatAGAlgorithm {
     return ret;
   }
 
-  __device__ __host__ int firstBitSet(int i, int max) {
+  __device__ __host__ int firstBitSet(int i, int max) { /* 中文索引·体内调用 __ffs。 */
     int ffs =
 #ifdef __CUDA_ARCH__
       __ffs(i);
@@ -729,7 +729,7 @@ class PatAGAlgorithm {
     if (phase >= 2) lastA /= 2 * scale;
   }
 
-  __device__ __host__ void reset() {
+  __device__ __host__ void reset() { /* 中文索引·体内调用 getNelem、nextAs。 */
     nelem = getNelem();
     scale = aggFactor / 2;
     phase = scale ? 2 : 1;
@@ -742,7 +742,7 @@ class PatAGAlgorithm {
     resetA();
   }
 
-  __device__ __host__ int nextAs() {
+  __device__ __host__ int nextAs() { /* 中文索引·体内调用 firstBitSet。 */
     for (int d = 0; d < asDim; d++) {
       int p = 1 << d;
       bitCount[d]--;
@@ -765,7 +765,7 @@ class PatAGAlgorithm {
 public:
   __device__ __host__ PatAGAlgorithm(int stepSize, int stepDepth, int maxParallelFactor, size_t offset, size_t end,
                                      size_t count, int chunkCount, int rank, int nranks)
-    : offset(offset), end(end), count(count), chunkCount(chunkCount), rank(rank), nranks(nranks) {
+    : offset(offset), end(end), count(count), chunkCount(chunkCount), rank(rank), nranks(nranks) { /* 中文索引·体内调用 log2Up、reset。 */
     parallelFactor = maxParallelFactor;
     psIdx = 0;
     aggDelta = nrPow2 = (1 << log2Up(nranks));
@@ -793,7 +793,7 @@ public:
     return parallelFactor;
   }
 
-  __device__ __host__ void getNextOp(struct ncclPatStep* ps) {
+  __device__ __host__ void getNextOp(struct ncclPatStep* ps) { /* 中文索引·体内调用 firstBitSet、nextAs。 */
     ps->last = 0;
     ps->nelem = nelem;
     ps->inpIx = offset;

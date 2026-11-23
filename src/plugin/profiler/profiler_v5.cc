@@ -184,7 +184,7 @@ static ncclResult_t ncclProfiler_stopEvent(void* eHandle, ncclProfilerEventDescr
 
 static ncclResult_t ncclProfiler_init(void** ctx, uint64_t commId, int* eActivationMask, const char* commName,
                                       int nNodes, int nRanks, int rank, ncclDebugLogger_t logfn,
-                                      ncclProfilerConfig_t* config __attribute__((unused))) {
+                                      ncclProfilerConfig_t* config __attribute__((unused))) { /* 中文索引·体内调用 getActiveProfiler、p->init。 */
   ncclProfilerShim_t* p = getActiveProfiler();
   if (p == nullptr) return ncclInternalError;
   NCCLCHECK(p->init(ctx, commId, eActivationMask, commName, nNodes, nRanks, rank, logfn));

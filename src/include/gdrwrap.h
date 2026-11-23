@@ -131,7 +131,7 @@ typedef struct gdr_mem_desc {
   gdr_mh_t gdrMh;
 } gdr_mem_desc_t;
 
-static gdr_t ncclGdrInit() {
+static gdr_t ncclGdrInit() { /* 中文索引·体内调用 wrap_gdr_symbols、wrap_gdr_open。 */
   int libMajor = 0, libMinor = 0, drvMajor = 0, drvMinor = 0;
   gdr_t handle = NULL;
   // Dynamically load the GDRAPI library symbols
@@ -176,7 +176,7 @@ error:
   return NULL;
 }
 
-static ncclResult_t ncclGdrCudaUnmapPointer(gdr_mh_t mh, void* map, size_t mapSize) {
+static ncclResult_t ncclGdrCudaUnmapPointer(gdr_mh_t mh, void* map, size_t mapSize) { /* 中文索引·体内调用 wrap_gdr_unmap、wrap_gdr_unpin_buffer。 */
   ncclResult_t ret = ncclSuccess;
   NCCLCHECKIGNORE(wrap_gdr_unmap(ncclGdrCopy, mh, map, mapSize), ret);
   NCCLCHECKIGNORE(wrap_gdr_unpin_buffer(ncclGdrCopy, mh), ret);
@@ -184,7 +184,7 @@ static ncclResult_t ncclGdrCudaUnmapPointer(gdr_mh_t mh, void* map, size_t mapSi
 }
 
 static ncclResult_t ncclGdrCudaMapAligned(uint64_t alignedAddr, size_t alignedSize, gdr_mh_t* mh, void** map,
-                                          gdr_info_t* info, uint32_t pinFlags = 0) {
+                                          gdr_info_t* info, uint32_t pinFlags = 0) { /* 中文索引·体内调用 ncclGdrPinV2Available、wrap_gdr_pin_buffer_v2。 */
   ncclResult_t ret = ncclSuccess;
 
   if (ncclGdrPinV2Available() || pinFlags == GDR_PIN_FLAG_FORCE_PCIE) {
@@ -208,7 +208,7 @@ fail_unpin:
 }
 
 static ncclResult_t ncclGdrCudaMapPointer(void* data, size_t size, gdr_mh_t* mh, void** map, size_t* mapSize,
-                                          gdr_info_t* info, uint32_t pinFlags = 0) {
+                                          gdr_info_t* info, uint32_t pinFlags = 0) { /* 中文索引·体内调用 ncclGdrCudaMapAligned、ncclGdrCudaUnmapPointer。 */
   uint64_t dataAddr = (uint64_t)(uintptr_t)data;
   uint64_t alignedAddr = dataAddr & GPU_PAGE_MASK;
   *mapSize = size + (dataAddr - alignedAddr);
@@ -224,7 +224,7 @@ static ncclResult_t ncclGdrCudaMapPointer(void* data, size_t size, gdr_mh_t* mh,
 }
 
 template <typename T>
-static ncclResult_t ncclGdrCudaCalloc(T** ptr, T** devPtr, size_t nelem, void** gdrHandle, struct ncclMemManager* manager, uint32_t pinFlags = 0) {
+static ncclResult_t ncclGdrCudaCalloc(T** ptr, T** devPtr, size_t nelem, void** gdrHandle, struct ncclMemManager* manager, uint32_t pinFlags = 0) { /* 中文索引·体内调用 ncclCudaCalloc、ncclGdrCudaMapAligned。 */
   ncclGdrInfo_t info = {};
   size_t mapSize;
   gdr_mh_t mh;
@@ -264,7 +264,7 @@ static ncclResult_t ncclGdrCudaCalloc(T** ptr, T** devPtr, size_t nelem, void** 
 }
 
 template <typename T>
-static ncclResult_t ncclGdrCudaCopy(void *gdrHandle, T* dst, T* src, size_t nelem) {
+static ncclResult_t ncclGdrCudaCopy(void *gdrHandle, T* dst, T* src, size_t nelem) { /* 中文索引·体内调用 wrap_gdr_copy_to_mapping。 */
   gdr_mem_desc_t *md = (gdr_mem_desc_t*)gdrHandle;
   NCCLCHECK(wrap_gdr_copy_to_mapping(md->gdrMh, dst, src, nelem*ncclSizeOfT<T>()));
   return ncclSuccess;
@@ -275,7 +275,7 @@ static ncclResult_t ncclGdrCudaRead(void* gdrHandle, void* dst, const void* src,
   return wrap_gdr_copy_from_mapping(md->gdrMh, dst, src, size);
 }
 
-static ncclResult_t ncclGdrCudaFree(void* gdrHandle, struct ncclMemManager* manager) {
+static ncclResult_t ncclGdrCudaFree(void* gdrHandle, struct ncclMemManager* manager) { /* 中文索引·体内调用 ncclGdrCudaUnmapPointer、ncclCudaFree。 */
   gdr_mem_desc_t *md = (gdr_mem_desc_t*)gdrHandle;
   NCCLCHECK(ncclGdrCudaUnmapPointer(md->gdrMh, md->gdrMap, md->gdrMapSize));
   NCCLCHECK(ncclCudaFree(md->gdrDevMem, manager));
@@ -287,7 +287,7 @@ static ncclResult_t ncclGdrCudaFree(void* gdrHandle, struct ncclMemManager* mana
 // Helper: Allocate memory accessible from CPU (either GDR or host memory)
 template <typename T>
 static ncclResult_t allocMemCPUAccessible(T **ptr, T **devPtr, size_t nelem, int host_flags,
-                                          void **gdrHandle, struct ncclMemManager* manager, bool forceHost = false) {
+                                          void **gdrHandle, struct ncclMemManager* manager, bool forceHost = false) { /* 中文索引·体内调用 ncclGdrCudaCalloc、ncclCuMemHostEnable。 */
   if (ncclGdrCopy && !forceHost) {
     NCCLCHECK(ncclGdrCudaCalloc(ptr, devPtr, nelem, gdrHandle, manager));
   } else {
@@ -305,7 +305,7 @@ static ncclResult_t allocMemCPUAccessible(T **ptr, T **devPtr, size_t nelem, int
 
 // Helper: Free memory allocated by allocMemCPUAccessible
 template <typename T>
-static ncclResult_t freeMemCPUAccessible(T *ptr, void *gdrHandle, struct ncclMemManager* manager) {
+static ncclResult_t freeMemCPUAccessible(T *ptr, void *gdrHandle, struct ncclMemManager* manager) { /* 中文索引·体内调用 ncclGdrCudaFree、ncclCuMemHostEnable。 */
   if (gdrHandle != NULL) {
     // If a GDR handle exists, it was GDR memory
     NCCLCHECK(ncclGdrCudaFree(gdrHandle, manager));

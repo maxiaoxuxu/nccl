@@ -18,7 +18,7 @@ NCCL_PARAM(IbReceiverSideMatchingScheme, "IB_RECEIVER_SIDE_MATCHING_SCHEME", -2)
 
 const char* ncclIbReqTypeStr[] = {"Unused", "Send", "Recv", "Flush", "IPut", "IGet"};
 
-ncclResult_t ncclIbGetRequest(struct ncclIbNetCommBase* base, struct ncclIbRequest** req) {
+ncclResult_t ncclIbGetRequest(struct ncclIbNetCommBase* base, struct ncclIbRequest** req) { /* 中文索引·体内调用 memset。 */
   for (int i = 0; i < NET_IB_MAX_REQUESTS; i++) {
     struct ncclIbRequest* r = base->reqs + i;
     if (r->type == NCCL_NET_IB_REQ_UNUSED) {
@@ -40,14 +40,14 @@ ncclResult_t ncclIbFreeRequest(struct ncclIbRequest* r) {
   return ncclSuccess;
 }
 
-void ncclIbAddEvent(struct ncclIbRequest* req, int devIndex) {
+void ncclIbAddEvent(struct ncclIbRequest* req, int devIndex) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase。 */
   struct ncclIbNetCommDevBase* base = ncclIbGetNetCommDevBase(req->base, devIndex);
   req->events[devIndex]++;
   req->devBases[devIndex] = base;
 }
 
 #ifdef ENABLE_TRACE
-static ncclResult_t ncclIbPrintWr(struct ibv_send_wr* wr, char* wrStr) {
+static ncclResult_t ncclIbPrintWr(struct ibv_send_wr* wr, char* wrStr) { /* 中文索引·体内调用 sprintf、ibvWrOpcodeStr。 */
   if (wr == NULL) {
     sprintf(wrStr, "wr=NULL");
     return ncclSuccess;
@@ -80,7 +80,7 @@ static ncclResult_t ncclIbPrintWr(struct ibv_send_wr* wr, char* wrStr) {
 // The alignment for IB writes that is required to make LL and LL128 protocols work
 #define IB_WRITE_CHUNK_ALIGNMENT 128
 
-ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) {
+ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) { /* 中文索引·体内调用 ncclIbCommBaseGetNqpsPerRequest、ncclIbCommBaseGetQpForRequest。 */
   struct ncclIbRequest** reqs = comm->sendReqs[slot];
   volatile struct ncclIbSendFifo* slots = comm->ctsFifo[slot];
   int nreqs = slots[0].nreqs;
@@ -90,7 +90,7 @@ ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) {
         reqs[0]->base, reqs[0]->id, slot, nreqs);
 
   int nqps = 0;
-  NCCLCHECK(ncclIbCommBaseGetNqpsPerRequest(&comm->base, &nqps));
+  /* 中文图解·qp｜先确定本请求用几个 QP，再通过请求序号和局部 QP 序号选具体队列。 */ NCCLCHECK(ncclIbCommBaseGetNqpsPerRequest(&comm->base, &nqps));
 #ifdef NCCL_ENABLE_NET_PROFILING
   if (nqps > MAX_QPS_PER_REQ) {
     WARN("NET/IB: QP count %d exceeds maximum profiler event handle capacity %d", nqps, MAX_QPS_PER_REQ);
@@ -187,7 +187,7 @@ ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) {
         DIVUP(DIVUP((uint64_t)reqs[r]->send.size * weights[origDevIndex], 100 * qpsPerDev[origDevIndex]),
               IB_WRITE_CHUNK_ALIGNMENT) *
         IB_WRITE_CHUNK_ALIGNMENT;
-      // Check the data left to send. If the send is too small, it might be
+      /* 中文图解·qp｜按设备权重分摊请求，向上对齐 128 B 后裁到剩余字节，每个请求分别维护 sendOffsets。 */ // Check the data left to send. If the send is too small, it might be
       // that on the current QP there is no data left to be sent.
       comm->wrs[r].sg_list->length = std::min(reqs[r]->send.size - sendOffsets[r], comm->wrs[r].sg_list->length);
       if (comm->wrs[r].sg_list->length == 0) {
@@ -248,7 +248,7 @@ ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) {
       }
 #endif // ENABLE_TRACE
       if (ncclIbWqeLatEnabled) ncclIbWqeLatMonStampSend(qp, comm->wrs);
-      NCCLCHECK(wrap_ibv_post_send(qp->qp, comm->wrs, &bad_wr));
+      /* 中文图解·qp｜把这一 QP 的工作请求链提交给 verbs；这里的 SGE 长度描述数据区间。 */ NCCLCHECK(wrap_ibv_post_send(qp->qp, comm->wrs, &bad_wr));
     }
 
     // Update the send offset and addresses for the next QP according to the
@@ -273,7 +273,7 @@ ncclResult_t ncclIbMultiSend(struct ncclIbSendComm* comm, int slot) {
 }
 
 ncclResult_t ncclIbIsend(void* sendComm, void* data, size_t size, int tag, void* mhandle, void* phandle,
-                         void** request) {
+                         void** request) { /* 中文索引·体内调用 ncclIbStatsCheckFatalCount、std::atomic_thread_fence。 */
   struct ncclIbSendComm* comm = (struct ncclIbSendComm*)sendComm;
   if (comm->base.ready == 0) {
     WARN("NET/IB: ncclIbIsend() called when comm->base.ready == 0");
@@ -390,7 +390,7 @@ ncclResult_t ncclIbIsend(void* sendComm, void* data, size_t size, int tag, void*
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPostFifo(struct ncclIbRecvComm* comm, struct ncclIbRequest* req, int slot) {
+ncclResult_t ncclIbPostFifo(struct ncclIbRecvComm* comm, struct ncclIbRequest* req, int slot) { /* 中文索引·体内调用 ncclIbRecvCommGetQpForCts、memset。 */
   ncclIbQp* ctsQp = NULL;
   NCCLCHECK(ncclIbRecvCommGetQpForCts(comm, req->id, &ctsQp));
 
@@ -457,7 +457,7 @@ ncclResult_t ncclIbPostFifo(struct ncclIbRecvComm* comm, struct ncclIbRequest* r
 }
 
 ncclResult_t ncclIbIrecv(void* recvComm, int n, void** data, size_t* sizes, int* tags, void** mhandles, void** phandles,
-                         void** request) {
+                         void** request) { /* 中文索引·体内调用 ncclIbStatsCheckFatalCount、ncclIbCommBaseGetNqpsPerRequest。 */
   struct ncclIbRecvComm* comm = (struct ncclIbRecvComm*)recvComm;
   if (comm->base.ready == 0) {
     WARN("NET/IB: ncclIbIrecv() called when comm->base.ready == 0");
@@ -568,7 +568,7 @@ ncclResult_t ncclIbIrecv(void* recvComm, int n, void** data, size_t* sizes, int*
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbIflush(void* recvComm, int n, void** data, int* sizes, void** mhandles, void** request) {
+ncclResult_t ncclIbIflush(void* recvComm, int n, void** data, int* sizes, void** mhandles, void** request) { /* 中文索引·体内调用 ncclIbCreateFlushQp、ncclIbGetRequest。 */
   struct ncclIbRecvComm* comm = (struct ncclIbRecvComm*)recvComm;
   int last = -1;
   for (int i = 0; i < n; i++) {
@@ -627,7 +627,7 @@ static int getReqQpIndex(struct ncclIbRequest* req, int request, int qpNumber) {
 #endif
 
 static inline ncclResult_t ncclIbRequestRetrieveFromCompletion(struct ncclIbNetCommBase* base, ibv_wc* wc,
-                                                               ncclIbRequest** req) {
+                                                               ncclIbRequest** req) { /* 中文索引·体内调用 ibvWcStatusStr、ibvWcOpcodeStr。 */
   if (req == NULL) {
     WARN("NET/IB: Request output pointer is NULL");
     return ncclInternalError;
@@ -674,7 +674,7 @@ static inline ncclResult_t ncclIbRequestRetrieveFromCompletion(struct ncclIbNetC
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbRequestIsComplete(struct ncclIbRequest* request, bool* complete) {
+static inline ncclResult_t ncclIbRequestIsComplete(struct ncclIbRequest* request, bool* complete) { /* 中文索引·体内调用 ncclIbResiliencyRequestIsComplete。 */
   *complete =
     (request->events[0] == 0 && request->events[1] == 0 && request->events[2] == 0 && request->events[3] == 0);
   if (!*complete && request->base->resiliency) {
@@ -683,7 +683,7 @@ static inline ncclResult_t ncclIbRequestIsComplete(struct ncclIbRequest* request
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbRequestComplete(struct ncclIbRequest* r, int* done, int* sizes) {
+static inline ncclResult_t ncclIbRequestComplete(struct ncclIbRequest* r, int* done, int* sizes) { /* 中文索引·体内调用 ncclProfilerFunction、memset。 */
   TRACE(NCCL_NET, "NET/IB: %s: %s request completed (req=%p, comm=%p, id=%ld, type=%s)", __func__,
         r->base->isSend ? "Send" : "Recv", r, r->base, r->id, ncclIbReqTypeStr[r->type]);
   *done = 1;
@@ -727,7 +727,7 @@ static inline ncclResult_t ncclIbRequestComplete(struct ncclIbRequest* r, int* d
   return ncclSuccess;
 }
 
-static ncclResult_t ncclIbPostSpeedUpdateToRemote(struct ncclIbRecvComm* comm) {
+static ncclResult_t ncclIbPostSpeedUpdateToRemote(struct ncclIbRecvComm* comm) { /* 中文索引·体内调用 memcmp、memcpy。 */
   uint64_t counter = COMPILER_ATOMIC_LOAD(&ncclIbSpeedChangeCounter, std::memory_order_acquire);
   if (counter == comm->base.speedChangeCounter || comm->remSpeedBufAddr == 0 || comm->postedSpeedUpdate) {
     return ncclSuccess;
@@ -769,7 +769,7 @@ static ncclResult_t ncclIbPostSpeedUpdateToRemote(struct ncclIbRecvComm* comm) {
 
 // Log the details of a completion with error. The provided devIndex is the index
 // of the IB device on which the completion was received.
-static ncclResult_t ncclIbLogCompletionWithError(struct ncclIbNetCommBase* commBase, struct ibv_wc* wc, int devIndex) {
+static ncclResult_t ncclIbLogCompletionWithError(struct ncclIbNetCommBase* commBase, struct ibv_wc* wc, int devIndex) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase、ibvGetGidStr。 */
   struct ncclIbNetCommDevBase* devBase = ncclIbGetNetCommDevBase(commBase, devIndex);
   char localGidString[INET6_ADDRSTRLEN] = "";
   char remoteGidString[INET6_ADDRSTRLEN] = "";
@@ -793,7 +793,7 @@ static ncclResult_t ncclIbLogCompletionWithError(struct ncclIbNetCommBase* commB
 }
 
 static inline ncclResult_t ncclIbCompletionEventProcess(struct ncclIbNetCommBase* commBase, struct ibv_wc* wc,
-                                                        int devIndex) {
+                                                        int devIndex) { /* 中文索引·体内调用 ncclSocketGetAddr、ncclIbRequestRetrieveFromCompletion。 */
   if (wc->wr_id == NCCL_IB_SPEED_UPDATE_WR_ID) {
     struct ncclIbRecvComm* rComm = (struct ncclIbRecvComm*)commBase;
     rComm->postedSpeedUpdate = false;
@@ -923,7 +923,7 @@ static inline ncclResult_t ncclIbCompletionEventProcess(struct ncclIbNetCommBase
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbTest(void* request, int* done, int* sizes) {
+ncclResult_t ncclIbTest(void* request, int* done, int* sizes) { /* 中文索引·体内调用 ncclIbResiliencyProgress、ncclIbStatsCheckFatalCount。 */
   struct ncclIbRequest* r = (struct ncclIbRequest*)request;
   *done = 0;
 

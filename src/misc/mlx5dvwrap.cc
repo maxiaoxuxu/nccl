@@ -51,14 +51,14 @@ ncclResult_t wrap_mlx5dv_symbols(void) {
   } \
   return ncclSuccess;
 
-bool wrap_mlx5dv_is_supported(struct ibv_device* device) {
+bool wrap_mlx5dv_is_supported(struct ibv_device* device) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_is_supported。 */
   if (mlx5dvSymbols.mlx5dv_internal_is_supported == NULL) {
     return 0;
   }
   return mlx5dvSymbols.mlx5dv_internal_is_supported(device);
 }
 
-ncclResult_t wrap_mlx5dv_get_data_direct_sysfs_path(struct ibv_context* context, char* buf, size_t buf_len) {
+ncclResult_t wrap_mlx5dv_get_data_direct_sysfs_path(struct ibv_context* context, char* buf, size_t buf_len) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_get_data_direct_sysfs_path、strerror。 */
   CHECK_NOT_NULL(mlx5dvSymbols, mlx5dv_internal_get_data_direct_sysfs_path);
   int ret = mlx5dvSymbols.mlx5dv_internal_get_data_direct_sysfs_path(context, buf, buf_len);
   if (ret == 0) return ncclSuccess;
@@ -71,14 +71,14 @@ ncclResult_t wrap_mlx5dv_get_data_direct_sysfs_path(struct ibv_context* context,
 
 /* DMA-BUF support */
 ncclResult_t wrap_mlx5dv_reg_dmabuf_mr(struct ibv_mr** ret, struct ibv_pd* pd, uint64_t offset, size_t length,
-                                       uint64_t iova, int fd, int access, int mlx5_access) {
+                                       uint64_t iova, int fd, int access, int mlx5_access) { /* 中文索引·体内调用 mlx5dv_internal_reg_dmabuf_mr。 */
   MLX5DV_PTR_CHECK_ERRNO(mlx5dvSymbols, mlx5dv_internal_reg_dmabuf_mr,
                          mlx5dv_internal_reg_dmabuf_mr(pd, offset, length, iova, fd, access, mlx5_access), *ret, NULL,
                          "mlx5dv_reg_dmabuf_mr");
 }
 
 struct ibv_mr* wrap_direct_mlx5dv_reg_dmabuf_mr(struct ibv_pd* pd, uint64_t offset, size_t length, uint64_t iova,
-                                                int fd, int access, int mlx5_access) {
+                                                int fd, int access, int mlx5_access) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_reg_dmabuf_mr。 */
   if (mlx5dvSymbols.mlx5dv_internal_reg_dmabuf_mr == NULL) {
     errno = EOPNOTSUPP; // ncclIbDmaBufSupport() requires this errno being set
     return NULL;
@@ -92,7 +92,7 @@ ncclResult_t wrap_mlx5dv_query_device(struct ibv_context* ctx_in, struct mlx5dv_
 }
 
 struct ibv_qp* wrap_mlx5dv_create_qp(struct ibv_context* context, struct ibv_qp_init_attr_ex* qp_attr,
-                                     struct mlx5dv_qp_init_attr* mlx5_qp_attr) {
+                                     struct mlx5dv_qp_init_attr* mlx5_qp_attr) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_create_qp。 */
   if (mlx5dvSymbols.mlx5dv_internal_create_qp == NULL) {
     return 0;
   }
@@ -101,7 +101,7 @@ struct ibv_qp* wrap_mlx5dv_create_qp(struct ibv_context* context, struct ibv_qp_
 
 /* DevX object support. Create/query failures are logged at INFO level since callers may treat them as non-fatal. */
 ncclResult_t wrap_mlx5dv_devx_obj_create(struct mlx5dv_devx_obj** ret, struct ibv_context* context, const void* in,
-                                         size_t inlen, void* out, size_t outlen) {
+                                         size_t inlen, void* out, size_t outlen) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_devx_obj_create、strerror。 */
   CHECK_NOT_NULL(mlx5dvSymbols, mlx5dv_internal_devx_obj_create);
   *ret = mlx5dvSymbols.mlx5dv_internal_devx_obj_create(context, in, inlen, out, outlen);
   if (*ret == NULL) {
@@ -112,7 +112,7 @@ ncclResult_t wrap_mlx5dv_devx_obj_create(struct mlx5dv_devx_obj** ret, struct ib
 }
 
 ncclResult_t wrap_mlx5dv_devx_obj_query(struct mlx5dv_devx_obj* obj, const void* in, size_t inlen, void* out,
-                                        size_t outlen) {
+                                        size_t outlen) { /* 中文索引·体内调用 mlx5dvSymbols.mlx5dv_internal_devx_obj_query、strerror。 */
   CHECK_NOT_NULL(mlx5dvSymbols, mlx5dv_internal_devx_obj_query);
   int ret = mlx5dvSymbols.mlx5dv_internal_devx_obj_query(obj, in, inlen, out, outlen);
   if (ret != 0) {

@@ -43,7 +43,7 @@ double ncclTuningGetGinBw(struct ncclComm* comm) {
 // Bus multipliers count number of times data is sent through that widget.
 void ncclTuningGetBusMulReduceScatterRailA2A(struct ncclComm* comm, bool ldmc,
                                              // Bus multipliers per bottleneck
-                                             double* out_smMul, double* out_lsaMul, double* out_ginMul) {
+                                             double* out_smMul, double* out_lsaMul, double* out_ginMul) { /* 中文索引·体内调用 ncclTeamLsa、ncclTeamRail。 */
   int lsaRanks = ncclTeamLsa(comm).nRanks;
   int railRanks = ncclTeamRail(comm).nRanks;
   // LSA
@@ -102,7 +102,7 @@ static constexpr double alltoAllLLLsaPeakEfficiency = 0.60880;
 static constexpr double alltoAllLLGinPeakEfficiency = 0.47968;
 
 static bool ncclSymkAlltoAllLLModel(struct ncclTuningInput_t* input, size_t payloadBytes, int activeBlocks,
-                                    int warpsPerBlock, float* timeUs) {
+                                    int warpsPerBlock, float* timeUs) { /* 中文索引·体内调用 ncclTeamLsa、ncclSymkAlltoAllLLGinLinesPerWarp。 */
   struct ncclComm* comm = input->comm;
   if (activeBlocks < 1 || warpsPerBlock < 1 || payloadBytes == 0) return false;
 
@@ -142,7 +142,7 @@ static bool ncclSymkAlltoAllLLModel(struct ncclTuningInput_t* input, size_t payl
 }
 
 // Calculate saturation block count.
-int ncclTuningCalcSatBlocksReduceScatterRailA2A(struct ncclComm* comm, bool ldmc) {
+int ncclTuningCalcSatBlocksReduceScatterRailA2A(struct ncclComm* comm, bool ldmc) { /* 中文索引·体内调用 ncclTuningGetLsaBw、ncclTuningGetGinBw。 */
   double lsaBw = ncclTuningGetLsaBw(comm);
   double ginBw = ncclTuningGetGinBw(comm);
   double smBw = getSmBw_ReduceScatter_RailA2A(comm, ldmc);
@@ -157,7 +157,7 @@ int ncclTuningCalcSatBlocksReduceScatterRailA2A(struct ncclComm* comm, bool ldmc
 }
 
 ncclResult_t ncclSymkGinModel(struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId, size_t nBytes,
-                              float* timeUs, int* nBlocks) {
+                              float* timeUs, int* nBlocks) { /* 中文索引·体内调用 ncclTeamRail、ncclTuningGetLsaBw。 */
   struct ncclComm* comm = input->comm;
   struct ncclSymkState* symk = &comm->symkState;
   // ncclTeam world = ncclTeamWorld(comm);

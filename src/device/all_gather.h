@@ -11,7 +11,7 @@
 
 namespace {
 template <typename T, typename RedOp, typename Proto, bool isNetOffload = false>
-__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.directSend。 */
   ncclRing* ring = &ncclShmem.channel.ring;
   const int* ringRanks = ring->userRanks;
   const int nranks = ncclShmem.comm.nRanks;
@@ -50,7 +50,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
 
       // step 0: push data to next GPU
       rankDest = ringRanks[0];
-      offset = dataOffset + rankDest * count;
+      /* 中文图解·five｜rankDest 来自本 channel 环的 userRanks，用全局 rank 乘 count 得到输出槽基址。 */ offset = dataOffset + rankDest * count;
 
       if ((inputBuf + dataOffset == outputBuf + offset) || isNetOffload) {
         // In place or onePPN
@@ -115,7 +115,7 @@ struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_LL128
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_PAT, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、ncclScratchForWarp。 */
 #if __CUDA_ARCH__ >= 600
     using Proto = ProtoSimple<1, 1>;
     const int nranks = ncclShmem.comm.nRanks;
@@ -281,7 +281,7 @@ struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_SIMPL
     template <int SlicePerChunk, int MinSrcs, int MaxSrcs, int MinDsts, int MaxDsts, int MultimemSrcs, int MultimemDsts>
     __device__ __forceinline__ void operator()(int tid, int tn, int slice, int maxSliceSize, int nSrcs, void** srcPtrs,
                                                int nDsts, void** dstPtrs, int32_t* dstSizes, uint32_t sendDirectFlag,
-                                               uint32_t recvDirectFlag) {
+                                               uint32_t recvDirectFlag) { /* 中文索引·体内调用 __device__。 */
       static_assert(SlicePerChunk == 1, "require: SlicePerChunk==1");
       static_assert(MaxDsts <= 1 || MaxSrcs <= 1, "require: MaxDsts<=1 || MaxSrcs<=1");
 
@@ -341,7 +341,7 @@ struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_SIMPL
     }
   };
 
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 roundUp、ncclCollCbdPart。 */
     struct ncclNvls* nvls = &ncclShmem.channel.nvls;
     int nelem;
 
@@ -509,7 +509,7 @@ struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NCCL_P
     template <int SlicePerChunk, int MinSrcs, int MaxSrcs, int MinDsts, int MaxDsts, int MultimemSrcs, int MultimemDsts>
     __device__ __forceinline__ void operator()(int tid, int tn, int slice, int maxSliceSize, int nSrcs, void** srcPtrs,
                                                int nDsts, void** dstPtrs, int32_t* dstSizes, uint32_t sendDirectFlag,
-                                               uint32_t recvDirectFlag) {
+                                               uint32_t recvDirectFlag) { /* 中文索引·体内调用 __device__。 */
       static_assert(SlicePerChunk == 1, "require: SlicePerChunk==1");
       static_assert(MaxDsts <= 1 || MaxSrcs <= 1, "require: MaxDsts<=1 || MaxSrcs<=1");
 
@@ -576,7 +576,7 @@ struct RunWorkColl<ncclFuncAllGather, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NCCL_P
     }
   };
 
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 float、divUp。 */
     const int part = ncclShmem.channelId - work->channelLo;
     const int nChannels = work->channelHi - work->channelLo + 1;
     struct ncclDirect* direct = &ncclShmem.channel.collnetDirect;

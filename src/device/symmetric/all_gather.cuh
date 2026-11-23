@@ -12,7 +12,7 @@
 template <int BytePerPack, int UnrollPacks, int UnrollPeers, bool EnableTma>
 static __device__ void bcastDeep(ncclSymkArgsHandler const& handler, int tn, int t, bool waitNeeded,
                                  ncclLsaBarrierSession<ncclCoopCta>& bar, ncclSymPtr<char> input,
-                                 ncclSymPtr<char> output, bool inPlace, int nIters) {
+                                 ncclSymPtr<char> output, bool inPlace, int nIters) { /* 中文索引·体内调用 input.localPtr、intptr_t。 */
   using Pack = BytePack<BytePerPack>;
   int wn = tn / WARP_SIZE;
   int w = t / WARP_SIZE;
@@ -141,7 +141,7 @@ static __device__ void bcastDeep(ncclSymkArgsHandler const& handler, int tn, int
 
 template <int UnrollPeers, typename T>
 static __device__ void bcastEnds(ncclSymkArgsHandler const& handler, int tn, int t, ncclSymPtr<T> input,
-                                 ncclSymPtr<T> output, bool inPlace, size_t nElts, uint32_t nPreElts, size_t nSufElts) {
+                                 ncclSymPtr<T> output, bool inPlace, size_t nElts, uint32_t nPreElts, size_t nSufElts) { /* 中文索引·体内调用 input.localPtr、outPacks.lsaPtr。 */
   int const& rank = handler.comm.rank;
   int const& nRanks = handler.comm.nRanks;
   BytePack<sizeof(T)>* inpPacks = (BytePack<sizeof(T)>*)input.localPtr();
@@ -269,7 +269,7 @@ static __device__ void bcast(ncclSymkArgsHandler const& handler, int tn, int t, 
 }
 
 template <bool EnableProfiler, bool EnableTma>
-__device__ __forceinline__ void ncclSymkRun_AllGather_ST_impl(ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AllGather_ST_impl(ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamTagLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLsaBarrierSession<ncclCoopCta> bar{ncclCoopCta(), handler.comm, ncclTeamTagLsa(), blockIdx.x};
   int const& rank = handler.comm.rank;
@@ -309,7 +309,7 @@ __device__ __forceinline__ void ncclSymkRun_AllGather_TmaST(ncclSymkDevWorkArgs 
 }
 
 template <bool EnableProfiler, bool EnableTma>
-__device__ __forceinline__ void ncclSymkRun_AllGather_STMC_impl(ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AllGather_STMC_impl(ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamTagLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLsaBarrierSession<ncclCoopCta> bar(ncclCoopCta(), handler.comm, ncclTeamTagLsa(), blockIdx.x, /*multimem=*/true);
   int const& rank = handler.comm.rank;
@@ -343,7 +343,7 @@ __device__ __forceinline__ void ncclSymkRun_AllGather_TmaSTMC(ncclSymkDevWorkArg
 template <bool EnableProfiler, typename EltType>
 static __device__ void allgather_LL_body(ncclSymkDevWorkArgs const* args, ncclSymkArgsHandler& handler,
                                          ncclLLA2ASession<ncclCoopCta>& lla2a, EltType* input, EltType* output,
-                                         int nElts, int nPacks, int nStrideElts) {
+                                         int nElts, int nPacks, int nStrideElts) { /* 中文索引·体内调用 lla2a.bcast、storePack。 */
   using Pack = BytePack<8>;
   constexpr int EltPerPack = 8 / sizeof(EltType);
   int const& rank = handler.comm.rank;
@@ -435,7 +435,7 @@ static __device__ void allgather_LL_body(ncclSymkDevWorkArgs const* args, ncclSy
 }
 
 template <bool EnableProfiler>
-static __device__ void ncclSymkRun_AllGather_LL_impl(ncclSymkDevWorkArgs const* args, bool multimem) {
+static __device__ void ncclSymkRun_AllGather_LL_impl(ncclSymkDevWorkArgs const* args, bool multimem) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLLA2ASession<ncclCoopCta> lla2a(ncclCoopCta(), handler.comm, ncclTeamLsa(handler.comm), handler.lsaLLA2A,
                                       blockIdx.x, /*maxElts=*/ncclSymkMaxThreads, multimem, handler.comm.lsaMultimem);

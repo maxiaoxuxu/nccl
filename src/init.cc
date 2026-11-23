@@ -93,7 +93,7 @@ static bool ctaPolicyIsValid(int ctaPolicy) {
 
 static int ctaPolicyEnv = NCCL_CONFIG_UNDEF_INT;
 static std::once_flag onceEnvCtaPolicy;
-static void getEnvCtaPolicyOnce() {
+static void getEnvCtaPolicyOnce() { /* 中文索引·体内调用 ncclGetEnv、isdigit。 */
   const char* env = ncclGetEnv("NCCL_CTA_POLICY");
   if (env == NULL) return;
 
@@ -157,7 +157,7 @@ NCCL_PARAM(IgnoreCollNetMismatch, "IGNORE_COLLNET_MISMATCH", 0);
 // GDRCOPY support
 gdr_t ncclGdrCopy = NULL;
 
-ncclResult_t initGdrCopy() {
+ncclResult_t initGdrCopy() { /* 中文索引·体内调用 ncclParamGdrCopyEnable、ncclGdrInit。 */
   if (ncclParamGdrCopyEnable() == 1) {
     ncclGdrCopy = ncclGdrInit();
     if (ncclGdrCopy == NULL && ncclGdrInternalDmaBufRequired()) {
@@ -171,7 +171,7 @@ ncclResult_t initGdrCopy() {
 static ncclResult_t initResult = ncclSuccess;
 static std::once_flag initOnceFlag;
 
-static void initOnceFunc() {
+static void initOnceFunc() { /* 中文索引·体内调用 ncclOsInitialize、initGdrCopy。 */
   NCCLCHECKGOTO(ncclOsInitialize(), initResult, exit);
   NCCLCHECKGOTO(initGdrCopy(), initResult, exit);
   // Always initialize bootstrap network
@@ -207,7 +207,7 @@ ncclResult_t ncclGetVersion(int* version) {
 }
 
 NCCL_API(ncclResult_t, ncclGetUniqueId, ncclUniqueId* out);
-ncclResult_t ncclGetUniqueId(ncclUniqueId* out) {
+ncclResult_t ncclGetUniqueId(ncclUniqueId* out) { /* 中文索引·体内调用 ncclInitEnv、ncclInit。 */
   NCCLCHECK(ncclInitEnv());
   NCCLCHECK(ncclInit());
   NCCLCHECK(PtrCheck(out, "GetUniqueId", "out"));
@@ -291,7 +291,7 @@ void ncclCommPushCudaGdrFree(struct ncclComm* comm, void* handle) {
   comm->destructorHead = dtor;
 }
 
-static ncclResult_t commFree(ncclComm_t comm) {
+static ncclResult_t commFree(ncclComm_t comm) { /* 中文索引·体内调用 ncclCeFinalize、ncclRmaCeFinalize。 */
   int abort = 0;
   /* commFree() should not involve any sync among ranks. */
   if (comm == NULL) return ncclSuccess;
@@ -421,7 +421,7 @@ static ncclResult_t commFree(ncclComm_t comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclUncapturedStreamPoolAcquire(struct ncclUncapturedStreamPool* pool, cudaStream_t* stream) {
+ncclResult_t ncclUncapturedStreamPoolAcquire(struct ncclUncapturedStreamPool* pool, cudaStream_t* stream) { /* 中文索引·体内调用 cudaStreamIsCapturing、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclUncapturedStreamPoolNode* tail = nullptr;
   for (struct ncclUncapturedStreamPoolNode* node = pool->head; node != nullptr; node = node->next) {
@@ -450,7 +450,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclUncapturedStreamPoolDestroy(struct ncclUncapturedStreamPool* pool) {
+ncclResult_t ncclUncapturedStreamPoolDestroy(struct ncclUncapturedStreamPool* pool) { /* 中文索引·体内调用 cudaStreamDestroy、free。 */
   while (pool->head != nullptr) {
     struct ncclUncapturedStreamPoolNode* node = pool->head;
     pool->head = node->next;
@@ -471,7 +471,7 @@ enum ncclLaunchMode ncclParamLaunchMode;
 NCCL_PARAM(DmaBufEnable, "DMABUF_ENABLE", 1);
 
 // Detect DMA-BUF support
-static ncclResult_t dmaBufSupported(struct ncclComm* comm) {
+static ncclResult_t dmaBufSupported(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamDmaBufEnable、ncclCudaLibraryInit。 */
   if (ncclParamDmaBufEnable() == 0 || comm->ncclNet->regMrDmaBuf == NULL || ncclCudaLibraryInit() != ncclSuccess) {
     return ncclInternalError;
   }
@@ -491,7 +491,7 @@ static ncclResult_t dmaBufSupported(struct ncclComm* comm) {
   return ncclInternalError;
 }
 
-ncclResult_t ncclCommEnsureReady(ncclComm_t comm) {
+ncclResult_t ncclCommEnsureReady(ncclComm_t comm) { /* 中文索引·体内调用 ncclGroupJobAbort、ncclCommGetAsyncError。 */
   /* comm must be ready, or error will be reported */
   ncclResult_t ret = ncclSuccess;
   if (COMPILER_ATOMIC_LOAD(comm->abortFlag, std::memory_order_acquire)) {
@@ -510,7 +510,7 @@ exit:
   return ret;
 }
 
-static ncclResult_t commAlloc(struct ncclComm* comm, struct ncclComm* parent, int ndev, int rank) {
+static ncclResult_t commAlloc(struct ncclComm* comm, struct ncclComm* parent, int ndev, int rank) { /* 中文索引·体内调用 ncclMemoryStackConstruct、cudaGetDevice。 */
   if (ndev < 1) {
     WARN("invalid device count (%d) requested", ndev);
     return ncclInvalidArgument;
@@ -658,7 +658,7 @@ static ncclResult_t commAlloc(struct ncclComm* comm, struct ncclComm* parent, in
   return ncclSuccess;
 }
 
-static int64_t progressCounterCalibrateGpuTimer(struct ncclComm* comm, cudaStream_t deviceStream) {
+static int64_t progressCounterCalibrateGpuTimer(struct ncclComm* comm, cudaStream_t deviceStream) { /* 中文索引·体内调用 ncclCudaCalloc、cudaStreamSynchronize。 */
   if (comm->cudaDev < 0 || comm->cudaDev >= kRasMaxCudaDevices) return 0;
 
   // Cache the CPU/GPU timer offset per device. Failed calibrations are retried.
@@ -711,7 +711,7 @@ static int64_t progressCounterCalibrateGpuTimer(struct ncclComm* comm, cudaStrea
   return offsetNs;
 }
 
-static ncclResult_t devCommSetup(ncclComm_t comm) {
+static ncclResult_t devCommSetup(ncclComm_t comm) { /* 中文索引·体内调用 memset、ncclStrongStreamAcquire。 */
   ncclResult_t ret = ncclSuccess;
   int nRanks = comm->nRanks;
   struct ncclKernelCommAndChannels tmpCommAndChans;
@@ -860,7 +860,7 @@ fail:
     "+cuda" STR(CUDA_MAJOR) "." STR(CUDA_MINOR)
 extern const char* ncclGetGitVersion(void);
 extern const char* ncclGetGitCommitHash(void);
-static void showVersion() {
+static void showVersion() { /* 中文索引·体内调用 ncclGetGitVersion。 */
   uint32_t levelMask = COMPILER_ATOMIC_LOAD(&ncclDebugLevelMask, std::memory_order_acquire);
   if ((levelMask & (1u << NCCL_LOG_INFO)) == 0) {
     VERSION("%s", VERSION_STRING);
@@ -887,7 +887,7 @@ static const char* mnnvlDegradedBwStr(unsigned int healthMask) {
   }
 }
 
-static ncclResult_t fillInfo(struct ncclComm* comm, struct ncclPeerInfo* info, uint64_t commHash) {
+static ncclResult_t fillInfo(struct ncclComm* comm, struct ncclPeerInfo* info, uint64_t commHash) { /* 中文索引·体内调用 ncclGetGitCommitHash、getHash。 */
   cudaDeviceProp prop;
   info->rank = comm->rank;
   info->cudaDev = comm->cudaDev;
@@ -986,7 +986,7 @@ static ncclResult_t fillInfo(struct ncclComm* comm, struct ncclPeerInfo* info, u
   return ncclSuccess;
 }
 
-static ncclResult_t setupChannel(struct ncclComm* comm, int channelId, int rank, int nranks, int* ringRanks) {
+static ncclResult_t setupChannel(struct ncclComm* comm, int channelId, int rank, int nranks, int* ringRanks) { /* 中文索引·体内调用 initChannel。 */
   TRACE(NCCL_INIT, "rank %d nranks %d", rank, nranks);
   NCCLCHECK(initChannel(comm, channelId));
 
@@ -997,7 +997,7 @@ static ncclResult_t setupChannel(struct ncclComm* comm, int channelId, int rank,
     if (ringRanks[i] == 0) ixZero = i;
     if (ringRanks[i] == rank) ixRank = i;
   }
-  ring->index = (ixRank - ixZero + nranks) % nranks;
+  /* 中文图解·ring｜以 rank 0 的环位置为基准得到 index；userRanks 则从本 rank 开始旋转。 */ ring->index = (ixRank - ixZero + nranks) % nranks;
   for (int i = 0; i < nranks; i++) {
     ring->userRanks[i] = ringRanks[(i + ixRank) % nranks];
     ring->rankToIndex[ring->userRanks[i]] = i;
@@ -1021,12 +1021,12 @@ NCCL_PARAM(P2pNetChunkSize, "P2P_NET_CHUNKSIZE", -2);
 NCCL_PARAM(P2pPciChunkSize, "P2P_PCI_CHUNKSIZE", -2);
 NCCL_PARAM(P2pNvlChunkSize, "P2P_NVL_CHUNKSIZE", -2);
 
-ncclResult_t ncclComputeBuffSizes(struct ncclComm* comm) {
+ncclResult_t ncclComputeBuffSizes(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamLlBuffSize、ncclParamLl128BuffSize。 */
   int64_t envs[NCCL_NUM_PROTOCOLS] = {ncclParamLlBuffSize(), ncclParamLl128BuffSize(), ncclParamBuffSize()};
   int defaults[NCCL_NUM_PROTOCOLS] = {DEFAULT_LL_BUFFSIZE, DEFAULT_LL128_BUFFSIZE, DEFAULT_BUFFSIZE};
 
   for (int p = 0; p < NCCL_NUM_PROTOCOLS; p++) {
-    comm->buffSizes[p] = envs[p] != -2 ? envs[p] : defaults[p];
+    /* 中文图解·fifo｜每种协议的连接缓冲容量由环境配置或对应默认值决定。 */ comm->buffSizes[p] = envs[p] != -2 ? envs[p] : defaults[p];
   }
 
   if (comm->nNodes > 1) {
@@ -1099,7 +1099,7 @@ static ncclResult_t initNvlDomainInfo(struct ncclComm* comm) {
 
 NCCL_PARAM(GroupSize, "P2P_SCHEDULE_GROUP_SIZE", NCCL_MAX_DEV_WORK_P2P_PER_BATCH);
 
-static ncclResult_t ncclP2pSchedule(struct ncclComm* comm) {
+static ncclResult_t ncclP2pSchedule(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamGroupSize、gcd。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclNodeRanks* nodeRanks = comm->nodeRanks;
   // For MNNVL systems, we need to split the nodes into different groups to guarantee the proper PXN
@@ -1217,7 +1217,7 @@ cleanup:
 }
 
 static ncclResult_t initTransportsRank(struct ncclComm* comm, struct ncclComm* parent,
-                                       uint64_t timers[TIMERS_INIT_COUNT]) {
+                                       uint64_t timers[TIMERS_INIT_COUNT]) { /* 中文索引·体内调用 clockNano、ncclCalloc。 */
   // We use 2 AllGathers
   // 1. { peerInfo, comm, compCap}
   // 2. { nChannels, graphInfo, topoRanks }
@@ -1484,7 +1484,7 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, struct ncclComm* p
   ringGraph->pattern = NCCL_TOPO_PATTERN_RING;
   ringGraph->minChannels = 1;
   ringGraph->maxChannels = MAXCHANNELS / 2;
-  NCCLCHECKGOTO(ncclTopoCompute(comm->topo, ringGraph), ret, fail);
+  /* 中文图解·host｜拓扑搜索分别生成各算法的图；Ring 图给出可连接的顺序与通道资源。 */ NCCLCHECKGOTO(ncclTopoCompute(comm->topo, ringGraph), ret, fail);
   NCCLCHECKGOTO(ncclTopoPrintGraph(comm->topo, ringGraph), ret, fail);
 
   memset(treeGraph, 0, sizeof(struct ncclTopoGraph));
@@ -1788,7 +1788,7 @@ static ncclResult_t initTransportsRank(struct ncclComm* comm, struct ncclComm* p
   comm->isOneRPN = (comm->maxLocalRanks == 1);
 
   NCCLCHECKGOTO(ncclCalloc(&rings, nranks * MAXCHANNELS), ret, fail);
-  NCCLCHECKGOTO(ncclTopoPostset(comm, nodesFirstRank, nodesTreePatterns, allTopoRanks, rings, graphs, parent), ret,
+  /* 中文图解·host｜跨 rank 汇总的拓扑信息进入 postset，构建各 channel 可执行的邻接关系。 */ NCCLCHECKGOTO(ncclTopoPostset(comm, nodesFirstRank, nodesTreePatterns, allTopoRanks, rings, graphs, parent), ret,
                 fail);
 
   if (ncclNvlsTransportEnabled(comm)) {
@@ -2160,7 +2160,7 @@ typedef struct {
   int color;
 } commSplitInfo;
 static ncclResult_t commGetSplitInfo(struct ncclComm* comm, struct ncclComm* parent, int color, int key, int* nRanksRet,
-                                     int* myRankRet, int* parentRanksRet) {
+                                     int* myRankRet, int* parentRanksRet) { /* 中文索引·体内调用 ncclCalloc、bootstrapAllGather。 */
   int nRanks = 0, myRank = 0;
   ncclResult_t ret = ncclSuccess;
 
@@ -2218,7 +2218,7 @@ static ncclResult_t getParentRanks(int parentRanks, int parentRank, int* exclude
   return ncclSuccess;
 }
 
-static ncclResult_t ncclCommInitRankFunc(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclCommInitRankFunc(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 clockNano、cudaSetDevice。 */
   struct ncclCommInitRankAsyncJob* job = (struct ncclCommInitRankAsyncJob*)job_;
   ncclComm_t comm = job->comm;
   ncclResult_t res = ncclSuccess;
@@ -2373,7 +2373,7 @@ fail:
     INFO(NCCL_ENV, "Comm config " fieldStr " set to " format, config->field); \
   }
 
-static ncclResult_t envConfigOverride(ncclComm_t comm) {
+static ncclResult_t envConfigOverride(ncclComm_t comm) { /* 中文索引·体内调用 ncclParamCommBlocking、ncclParamCGAClusterSize。 */
   ncclResult_t ret = ncclSuccess;
   const char* tmpNetName = comm->config.netName;
   const char* envNetName;
@@ -2665,13 +2665,13 @@ static ncclResult_t envConfigOverride(ncclComm_t comm) {
   return ret;
 }
 
-static ncclResult_t copyCommConfig(ncclComm_t childComm, ncclComm_t parnet) {
+static ncclResult_t copyCommConfig(ncclComm_t childComm, ncclComm_t parnet) { /* 中文索引·体内调用 memcpy、envConfigOverride。 */
   memcpy(&childComm->config, &parnet->config, sizeof(ncclConfig_t));
   NCCLCHECK(envConfigOverride(childComm));
   return ncclSuccess;
 }
 
-ncclResult_t ncclParseCommConfig(ncclComm_t comm, ncclConfig_t* config) {
+ncclResult_t ncclParseCommConfig(ncclComm_t comm, ncclConfig_t* config) { /* 中文索引·体内调用 memcpy、ctaPolicyIsValid。 */
   ncclResult_t ret = ncclSuccess;
   /* config must not be NULL in this function */
   ncclConfig_t defaultConfig = NCCL_CONFIG_INITIALIZER;
@@ -2958,14 +2958,14 @@ fail:
   goto exit;
 }
 
-static void ncclCommInitJobFree(void* _job) {
+static void ncclCommInitJobFree(void* _job) { /* 中文索引·体内调用 free。 */
   struct ncclCommInitRankAsyncJob* job = (struct ncclCommInitRankAsyncJob*)_job;
   free(job->commId);
   delete job;
 }
 
 static ncclResult_t ncclCommInitRankDev(ncclComm_t* newcomm, int nranks, int nId, ncclUniqueId* commId, int myrank,
-                                        int cudaDev, ncclConfig_t* config, const char funcName[]) {
+                                        int cudaDev, ncclConfig_t* config, const char funcName[]) { /* 中文索引·体内调用 ncclInit、std::call_once。 */
   if (nId <= 0 || nId > nranks) {
     WARN("improper usage of ncclCommInitRank: nId = %d, nranks=%d", nId, nranks);
     return ncclInvalidArgument;
@@ -3060,7 +3060,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommInitRank, ncclComm_t* newcomm, int nranks, ncclUniqueId commId, int myrank);
-ncclResult_t ncclCommInitRank(ncclComm_t* newcomm, int nranks, ncclUniqueId commId, int myrank) {
+ncclResult_t ncclCommInitRank(ncclComm_t* newcomm, int nranks, ncclUniqueId commId, int myrank) { /* 中文索引·体内调用 ncclInitEnv、ncclCudaLibraryInit。 */
   ncclResult_t ret = ncclSuccess;
   NCCLCHECK(ncclInitEnv());
   NVTX3_RANGE(NcclNvtxParamsCommInitRank)
@@ -3087,7 +3087,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommInitAll, ncclComm_t* comms, int ndev, const int* devlist);
-ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
+ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) { /* 中文索引·体内调用 ncclCudaLibraryInit、cudaGetDevice。 */
   ncclResult_t ret = ncclSuccess;
   int totalnDev;
   int* gpuFlags = NULL;
@@ -3164,7 +3164,7 @@ ncclResult_t ncclCommSetAsyncError(ncclComm_t comm, ncclResult_t nextState) {
 NCCL_API(ncclResult_t, ncclCommInitRankConfig, ncclComm_t* comm, int nranks, ncclUniqueId commId, int myrank,
          ncclConfig_t* config);
 ncclResult_t ncclCommInitRankConfig(ncclComm_t* newcomm, int nranks, ncclUniqueId commId, int myrank,
-                                    ncclConfig_t* config) {
+                                    ncclConfig_t* config) { /* 中文索引·体内调用 ncclInitEnv、ncclGroupStartInternal。 */
   int cudaDev;
   ncclResult_t ret = ncclSuccess;
   ncclConfig_t internalConfig = NCCL_CONFIG_INITIALIZER;
@@ -3202,7 +3202,7 @@ fail:
 NCCL_API(ncclResult_t, ncclCommInitRankScalable, ncclComm_t* newcomm, int nranks, int myrank, int nId,
          ncclUniqueId* commId, ncclConfig_t* config);
 ncclResult_t ncclCommInitRankScalable(ncclComm_t* newcomm, int nranks, int myrank, int nId, ncclUniqueId* commId,
-                                      ncclConfig_t* config) {
+                                      ncclConfig_t* config) { /* 中文索引·体内调用 ncclInitEnv、ncclGroupStartInternal。 */
   NCCLCHECK(ncclInitEnv());
   NVTX3_RANGE(NcclNvtxParamsCommInitRankScalable);
 
@@ -3236,7 +3236,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t commDestroySync(struct ncclAsyncJob* job_) {
+static ncclResult_t commDestroySync(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclStrongStreamSynchronize。 */
   struct ncclCommFinalizeAsyncJob* job = (struct ncclCommFinalizeAsyncJob*)job_;
   ncclComm_t comm = job->comm;
   ncclResult_t ret = ncclSuccess;
@@ -3310,7 +3310,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t commCleanup(ncclComm_t comm) {
+static ncclResult_t commCleanup(ncclComm_t comm) { /* 中文索引·体内调用 cudaSetDevice、ncclProgressCounterMonitorDestroy。 */
   CUDACHECK(cudaSetDevice(comm->cudaDev));
   // Stop the counter monitor before freeing counter buffers.
   NCCLCHECK(ncclProgressCounterMonitorDestroy(comm));
@@ -3320,7 +3320,7 @@ static ncclResult_t commCleanup(ncclComm_t comm) {
 }
 
 NCCL_API(ncclResult_t, ncclCommFinalize, ncclComm_t comm);
-ncclResult_t ncclCommFinalize(ncclComm_t comm) {
+ncclResult_t ncclCommFinalize(ncclComm_t comm) { /* 中文索引·体内调用 ncclGroupStartInternal、ncclCommEnsureReady。 */
   NVTX3_RANGE(NcclNvtxParamsCommFinalize);
 
   ncclResult_t ret = ncclSuccess;
@@ -3371,7 +3371,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t commReclaim(struct ncclAsyncJob* job_) {
+static ncclResult_t commReclaim(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 commDestroySync、lbd。 */
   struct ncclCommFinalizeAsyncJob* job = (struct ncclCommFinalizeAsyncJob*)job_;
   ncclComm_t comm = job->comm;
   ncclResult_t ret = ncclSuccess;
@@ -3447,7 +3447,7 @@ exit:
 }
 
 NCCL_API(ncclResult_t, ncclCommDestroy, ncclComm_t comm);
-ncclResult_t ncclCommDestroy(ncclComm_t comm) {
+ncclResult_t ncclCommDestroy(ncclComm_t comm) { /* 中文索引·体内调用 ncclGroupStartInternal、ncclCommEnsureReady。 */
   if (comm == NULL) {
     NCCL_NVTX3_FUNC_RANGE;
     return ncclSuccess;
@@ -3507,7 +3507,7 @@ struct ncclCommRevokeAsyncJob {
   ncclComm_t comm;
 };
 
-static ncclResult_t commRevokeAsync(struct ncclAsyncJob* job_) {
+static ncclResult_t commRevokeAsync(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 PtrCheck、cudaSetDevice。 */
   struct ncclCommRevokeAsyncJob* job = (struct ncclCommRevokeAsyncJob*)job_;
   ncclComm_t comm = job->comm;
   ncclResult_t res = ncclSuccess;
@@ -3540,7 +3540,7 @@ exit:
   return res;
 }
 
-ncclResult_t ncclCommRevoke(ncclComm_t comm, int revokeFlags) {
+ncclResult_t ncclCommRevoke(ncclComm_t comm, int revokeFlags) { /* 中文索引·体内调用 ncclGroupStartInternal、setCommAbortFlags。 */
   NVTX3_RANGE(NcclNvtxParamsCommRevoke);
 
   if (comm == NULL) {
@@ -3605,7 +3605,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommAbort, ncclComm_t comm);
-ncclResult_t ncclCommAbort(ncclComm_t comm) {
+ncclResult_t ncclCommAbort(ncclComm_t comm) { /* 中文索引·体内调用 ncclGroupStartInternal、setCommAbortFlags。 */
   NVTX3_RANGE(NcclNvtxParamsCommAbort);
 
   if (comm == NULL) {
@@ -3651,7 +3651,7 @@ fail:
   goto exit;
 }
 
-static void childCommCleanupJob(void* job) {
+static void childCommCleanupJob(void* job) { /* 中文索引·体内调用 free。 */
   struct ncclCommInitRankAsyncJob* initJob = (struct ncclCommInitRankAsyncJob*)job;
   if (initJob->excludeRanksList) free(initJob->excludeRanksList);
   delete initJob;
@@ -3660,7 +3660,7 @@ static void childCommCleanupJob(void* job) {
 // initializing a child communicator (for both split and shrink)
 static ncclResult_t ncclCommInitChildComm(ncclComm_t comm, ncclComm_t* newcomm, bool isShrink, int flags, int color,
                                           int key, int* excludeRanksList, int excludeRanksCount, ncclConfig_t* config,
-                                          const char* caller) {
+                                          const char* caller) { /* 中文索引·体内调用 cudaGetDevice、CommCheck。 */
   struct ncclCommInitRankAsyncJob* job = NULL;
   struct ncclComm* childComm = NCCL_COMM_NULL;
   ncclResult_t res = ncclSuccess;
@@ -3794,7 +3794,7 @@ fail:
 NCCL_API(ncclResult_t, ncclCommShrink, ncclComm_t comm, int* excludeRanksList, int excludeRanksCount,
          ncclComm_t* newcomm, ncclConfig_t* config, int shrinkFlags);
 ncclResult_t ncclCommShrink(ncclComm_t comm, int* excludeRanksList, int excludeRanksCount, ncclComm_t* newcomm,
-                            ncclConfig_t* config, int shrinkFlags) {
+                            ncclConfig_t* config, int shrinkFlags) { /* 中文索引·体内调用 ncclGroupStartInternal、setCommAbortFlags。 */
   NVTX3_RANGE(NcclNvtxParamsCommShrink)
   ncclResult_t res = ncclSuccess;
   NCCLCHECK(ncclGroupStartInternal());
@@ -3822,7 +3822,7 @@ exit:
 }
 
 NCCL_API(ncclResult_t, ncclCommGetUniqueId, ncclComm_t comm, ncclUniqueId* uniqueId);
-ncclResult_t ncclCommGetUniqueId(ncclComm_t comm, ncclUniqueId* uniqueId) {
+ncclResult_t ncclCommGetUniqueId(ncclComm_t comm, ncclUniqueId* uniqueId) { /* 中文索引·体内调用 CommCheck、ncclCommEnsureReady。 */
   NCCLCHECK(CommCheck(comm, __func__, "comm"));
   NCCLCHECK(ncclCommEnsureReady(comm));
   NCCLCHECK(PtrCheck(uniqueId, "CommGetUniqueId", "uniqueId"));
@@ -3841,7 +3841,7 @@ ncclResult_t ncclCommGetUniqueId(ncclComm_t comm, ncclUniqueId* uniqueId) {
 NCCL_API(ncclResult_t, ncclCommGrow, ncclComm_t comm, int nRanks, const ncclUniqueId* uniqueId, int rank,
          ncclComm_t* newcomm, ncclConfig_t* config);
 ncclResult_t ncclCommGrow(ncclComm_t comm, int nRanks, const ncclUniqueId* uniqueId, int rank, ncclComm_t* newcomm,
-                          ncclConfig_t* config) {
+                          ncclConfig_t* config) { /* 中文索引·体内调用 ncclGroupStartInternal、CommCheck。 */
   NVTX3_RANGE(NcclNvtxParamsCommGrow)
 
   if (newcomm == NULL) return ncclInvalidArgument;
@@ -4017,7 +4017,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommSplit, ncclComm_t comm, int color, int key, ncclComm_t* newcomm, ncclConfig_t* config);
-ncclResult_t ncclCommSplit(ncclComm_t comm, int color, int key, ncclComm_t* newcomm, ncclConfig_t* config) {
+ncclResult_t ncclCommSplit(ncclComm_t comm, int color, int key, ncclComm_t* newcomm, ncclConfig_t* config) { /* 中文索引·体内调用 ncclGroupStartInternal、ncclCommInitChildComm。 */
   NVTX3_RANGE(NcclNvtxParamsCommSplit)
 
   ncclResult_t res = ncclSuccess;
@@ -4074,7 +4074,7 @@ const char* ncclGetLastError(ncclComm_t comm) {
 }
 
 NCCL_API(ncclResult_t, ncclCommGetAsyncError, ncclComm_t comm, ncclResult_t* asyncError);
-ncclResult_t ncclCommGetAsyncError(ncclComm_t comm, ncclResult_t* asyncError) {
+ncclResult_t ncclCommGetAsyncError(ncclComm_t comm, ncclResult_t* asyncError) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCLCHECK(CommCheck(comm, "ncclGetAsyncError", "comm"));
   NCCLCHECK(PtrCheck(asyncError, "ncclGetAsyncError", "asyncError"));
 
@@ -4110,7 +4110,7 @@ ncclResult_t ncclCommGetAsyncError(ncclComm_t comm, ncclResult_t* asyncError) {
 }
 
 NCCL_API(ncclResult_t, ncclCommCount, const ncclComm_t comm, int* count);
-ncclResult_t ncclCommCount(const ncclComm_t comm, int* count) {
+ncclResult_t ncclCommCount(const ncclComm_t comm, int* count) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "CommCount", "comm"));
@@ -4124,7 +4124,7 @@ ncclResult_t ncclCommCount(const ncclComm_t comm, int* count) {
 }
 
 NCCL_API(ncclResult_t, ncclCommCuDevice, const ncclComm_t comm, int* devid);
-ncclResult_t ncclCommCuDevice(const ncclComm_t comm, int* devid) {
+ncclResult_t ncclCommCuDevice(const ncclComm_t comm, int* devid) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "CommCuDevice", "comm"));
@@ -4137,7 +4137,7 @@ ncclResult_t ncclCommCuDevice(const ncclComm_t comm, int* devid) {
 }
 
 NCCL_API(ncclResult_t, ncclCommUserRank, const ncclComm_t comm, int* rank);
-ncclResult_t ncclCommUserRank(const ncclComm_t comm, int* rank) {
+ncclResult_t ncclCommUserRank(const ncclComm_t comm, int* rank) { /* 中文索引·体内调用 CommCheck、PtrCheck。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "CommUserRank", "comm"));

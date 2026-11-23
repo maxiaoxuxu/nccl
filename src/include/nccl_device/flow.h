@@ -24,7 +24,7 @@
 // nullptr divides them evenly. Pass ncclFlowGetSignalWarpsPerPart(Protocol) for protocols whose signaling-warp
 // count differs from the default.
 NCCL_DEVICE_INLINE int ncclFlowThreadPart(int nWorkerWarps, int nParts, int const* partWorkerWarps = nullptr,
-                                          int signalWarpsPerPart = NCCL_FLOW_SIGNAL_WARPS_PER_PART) {
+                                          int signalWarpsPerPart = NCCL_FLOW_SIGNAL_WARPS_PER_PART) { /* 中文索引·体内调用 ncclFlowPartWorkerWarp0、ncclFlowPartWorkerWarps。 */
   int const warp = (int)threadIdx.x / 32;
   for (int part = 0; part < nParts; part++) {
     int const partWarpEnd = ncclFlowPartWorkerWarp0(nWorkerWarps, nParts, part, partWorkerWarps, signalWarpsPerPart) +
@@ -186,7 +186,7 @@ struct ncclFlowProcessor
             typename RedOp>
   NCCL_DEVICE_INLINE void process(ncclFlowSendTag<Send, DirectSend> send, ncclFlowRecvTag<Recv, DirectRecv> recv,
                                   ncclSymPtr<T> input, ncclSymPtr<T> output, SrcLambda srcLambda, int nSrc,
-                                  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts) {
+                                  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts) { /* 中文索引·体内调用 Base::process。 */
     Base::process(send, recv, input, output, srcLambda, nSrc, dstLambda, nDst, redOp, nElts);
   }
 

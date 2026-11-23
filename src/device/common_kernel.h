@@ -39,7 +39,7 @@ template <typename RedFn, typename T, int Unroll, int BytePerPack, int MultimemS
           typename DstPtrFn>
 __device__ __forceinline__ void reduceCopyPacks(int nThreads, int& thread, uint64_t redArg, bool postOp, int nSrcs,
                                                 SrcPtrFn const& srcPtrFn, int nDsts, DstPtrFn const& dstPtrFn,
-                                                IntBytes& nBytesBehind, IntBytes& nBytesAhead) {
+                                                IntBytes& nBytesBehind, IntBytes& nBytesAhead) { /* 中文索引·体内调用 __trap、cvta_to_global。 */
   static_assert(std::is_signed<IntBytes>::value, "IntBytes must be a signed integral type.");
   if (BytePerPack == 0) __trap();
 
@@ -209,7 +209,7 @@ template <int Unroll, typename RedFn, typename T, int MultimemSrcs, int MinSrcs,
           int MinDsts, int MaxDsts, int PreOpSrcs, typename IntBytes, typename SrcPtrFn, typename DstPtrFn>
 __device__ __forceinline__ void reduceCopy(int thread, int nThreads, uint64_t redArg, bool postOp, int nSrcs,
                                            SrcPtrFn const& srcPtrFn, int nDsts, DstPtrFn const& dstPtrFn,
-                                           IntBytes nElts) {
+                                           IntBytes nElts) { /* 中文索引·体内调用 cvta_to_global、srcPtrFn。 */
   static_assert(MultimemSrcs <= MinSrcs && MultimemDsts <= MinDsts,
                 "Multimem pointers cannot exceed respective Min values.");
   // int nWarps = nThreads/WARP_SIZE;
@@ -257,7 +257,7 @@ __device__ __forceinline__ void reduceCopy(int thread, int nThreads, uint64_t re
 template <int Unroll, typename RedFn, typename T, int MultimemSrcs, int MinSrcs, int MaxSrcs, int MultimemDsts,
           int MinDsts, int MaxDsts, int PreOpSrcs, typename IntBytes>
 __device__ __forceinline__ void reduceCopy(int thread, int nThreads, uint64_t redArg, bool postOp, int nSrcs,
-                                           void** srcPtrs, int nDsts, void** dstPtrs, IntBytes nElts) {
+                                           void** srcPtrs, int nDsts, void** dstPtrs, IntBytes nElts) { /* 中文索引·体内调用 __device__。 */
   reduceCopy<Unroll, RedFn, T, MultimemSrcs, MinSrcs, MaxSrcs, MultimemDsts, MinDsts, MaxDsts, PreOpSrcs, IntBytes>(
     thread, nThreads, redArg, postOp, nSrcs, [=] __device__(int i) { return srcPtrs[i]; }, nDsts,
     [=] __device__(int i) { return dstPtrs[i]; }, nElts);

@@ -11,7 +11,7 @@
 #include "os.h"
 #include <x86intrin.h>
 static double freq = -1;
-static void calibrate() {
+static void calibrate() { /* 中文索引·体内调用 gettimeofday、__rdtsc。 */
   struct timeval tv;
   gettimeofday(&tv, NULL);
   uint64_t timeCycles = __rdtsc();

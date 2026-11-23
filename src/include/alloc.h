@@ -58,7 +58,7 @@ using ncclUniqueArrayPtr = std::unique_ptr<T[], ncclDeleterFree>;
 #if CUDART_VERSION >= 12020
 
 static inline ncclResult_t ncclCuMemHostAllocDebug(void** ptr, CUmemGenericAllocationHandle* handlep, size_t size,
-                                                   const char* file, int line, const char* callerFunc) {
+                                                   const char* file, int line, const char* callerFunc) { /* 中文索引·体内调用 cudaGetDevice、cuDeviceGet。 */
   ncclResult_t result = ncclSuccess;
   size_t granularity = 0;
   CUdevice currentDev;
@@ -106,7 +106,7 @@ static inline ncclResult_t ncclCuMemHostAllocDebug(void** ptr, CUmemGenericAlloc
 #define ncclCuMemHostAlloc(ptr, handlep, size) \
   ncclCuMemHostAllocDebug((ptr), (handlep), (size), __FILE__, __LINE__, __func__)
 
-static inline ncclResult_t ncclCuMemHostFree(void* ptr) {
+static inline ncclResult_t ncclCuMemHostFree(void* ptr) { /* 中文索引·体内调用 cuMemRetainAllocationHandle、cuMemRelease。 */
   if (ptr == NULL) return ncclSuccess;
   ncclResult_t result = ncclSuccess;
   CUmemGenericAllocationHandle handle;
@@ -145,7 +145,7 @@ static inline ncclResult_t ncclCuMemHostFree(void* ptr) {
 #endif  /* CUDART_VERSION >= 12020 */
 
 template <typename T>
-ncclResult_t ncclCudaHostCallocDebug(T** ptr, size_t nelem, const char* file, int line, const char* callerFunc) {
+ncclResult_t ncclCudaHostCallocDebug(T** ptr, size_t nelem, const char* file, int line, const char* callerFunc) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaHostAlloc。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   *ptr = nullptr;
@@ -171,7 +171,7 @@ static inline ncclResult_t ncclCudaHostFree(void* ptr) {
 
 template <typename T>
 ncclResult_t ncclCallocDebug(T** ptr, size_t nelem, const char* file, int line, const char* callerFunc,
-                             bool logHostAlloc) {
+                             bool logHostAlloc) { /* 中文索引·体内调用 malloc、memset。 */
   if (nelem > 0) {
     T* p = (T*)malloc(nelem * ncclSizeOfT<T>());
     if (p == NULL) {
@@ -191,7 +191,7 @@ ncclResult_t ncclCallocDebug(T** ptr, size_t nelem, const char* file, int line, 
 
 template <typename T>
 ncclResult_t ncclCallocDebug(ncclUniquePtr<T>& ptr, size_t nelem, const char* file, int line, const char* callerFunc,
-                             bool logHostAlloc) {
+                             bool logHostAlloc) { /* 中文索引·体内调用 ncclCallocDebug、ptr.reset。 */
   typename ncclUniquePtr<T>::pointer p = nullptr;
   ncclResult_t result = ncclCallocDebug(&p, nelem, file, line, callerFunc, logHostAlloc);
   ptr.reset(p);
@@ -200,7 +200,7 @@ ncclResult_t ncclCallocDebug(ncclUniquePtr<T>& ptr, size_t nelem, const char* fi
 
 template <typename T>
 ncclResult_t ncclCallocDebug(ncclUniqueArrayPtr<T>& ptr, size_t nelem, const char* file, int line,
-                             const char* callerFunc, bool logHostAlloc) {
+                             const char* callerFunc, bool logHostAlloc) { /* 中文索引·体内调用 ncclCallocDebug、ptr.reset。 */
   typename ncclUniqueArrayPtr<T>::pointer p = nullptr;
   ncclResult_t result = ncclCallocDebug(&p, nelem, file, line, callerFunc, logHostAlloc);
   ptr.reset(p);
@@ -213,7 +213,7 @@ ncclResult_t ncclCallocDebug(ncclUniqueArrayPtr<T>& ptr, size_t nelem, const cha
 
 template <typename T>
 ncclResult_t ncclReallocDebug(T** ptr, size_t oldNelem, size_t nelem, const char* file, int line,
-                              const char* callerFunc, bool logHostAlloc) {
+                              const char* callerFunc, bool logHostAlloc) { /* 中文索引·体内调用 malloc、memcpy。 */
   T* oldp = *ptr;
   if (nelem < oldNelem || (oldp == NULL && oldNelem > 0)) return ncclInternalError;
   if (nelem == oldNelem) return ncclSuccess;
@@ -244,7 +244,7 @@ ncclResult_t ncclReallocDebug(T** ptr, size_t oldNelem, size_t nelem, const char
 
 // Helper function to map memory and set access permissions for a device
 static inline ncclResult_t ncclCuMemMapAndSetAccess(void* ptr, size_t size, CUmemGenericAllocationHandle handle,
-                                                    int cudaDev) {
+                                                    int cudaDev) { /* 中文索引·体内调用 cuMemMap、cuMemSetAccess。 */
   ncclResult_t result = ncclSuccess;
   // Map the virtual address range to the physical allocation
   CUCHECK(cuMemMap((CUdeviceptr)ptr, size, 0, handle, 0));
@@ -258,7 +258,7 @@ static inline ncclResult_t ncclCuMemMapAndSetAccess(void* ptr, size_t size, CUme
 }
 
 // ncclCuMemAllocAddr takes memory handle and size and returns the mapped address pointer
-static inline ncclResult_t ncclCuMemAllocAddr(void** ptr, CUmemGenericAllocationHandle* handleIn, size_t size) {
+static inline ncclResult_t ncclCuMemAllocAddr(void** ptr, CUmemGenericAllocationHandle* handleIn, size_t size) { /* 中文索引·体内调用 cudaGetDevice、cuMemGetAllocationPropertiesFromHandle。 */
   ncclResult_t result = ncclSuccess;
   size_t granularity = 0;
   CUmemAllocationProp prop = {};
@@ -275,7 +275,7 @@ static inline ncclResult_t ncclCuMemAllocAddr(void** ptr, CUmemGenericAllocation
   return result;
 }
 
-static inline ncclResult_t ncclCuMemFreeAddr(void* ptr, struct ncclMemManager* manager, int numSegments = 1) {
+static inline ncclResult_t ncclCuMemFreeAddr(void* ptr, struct ncclMemManager* manager, int numSegments = 1) { /* 中文索引·体内调用 ncclMemUntrackDynamic、cuMemGetAddressRange。 */
   if (ptr == NULL) return ncclSuccess;
   ncclResult_t result = ncclSuccess;
   size_t totalSize = 0;
@@ -311,7 +311,7 @@ fail:
 
 static inline ncclResult_t ncclCuMemAlloc(void** ptr, CUmemGenericAllocationHandle* handlep,
                                           CUmemAllocationHandleType type, size_t size, struct ncclMemManager* manager,
-                                          ncclMemType_t memType = ncclMemPersist) {
+                                          ncclMemType_t memType = ncclMemPersist) { /* 中文索引·体内调用 cudaGetDevice、cuDeviceGet。 */
   ncclResult_t result = ncclSuccess;
   size_t granularity = 0;
   CUdevice currentDev;
@@ -345,7 +345,7 @@ static inline ncclResult_t ncclCuMemAlloc(void** ptr, CUmemGenericAllocationHand
   return result;
 }
 
-static inline ncclResult_t ncclCuMemFree(void* ptr, struct ncclMemManager* manager, int numSegments = 1) {
+static inline ncclResult_t ncclCuMemFree(void* ptr, struct ncclMemManager* manager, int numSegments = 1) { /* 中文索引·体内调用 ncclMemUntrackDynamic、cuMemRetainAllocationHandle。 */
   if (ptr == NULL) return ncclSuccess;
   ncclResult_t result = ncclSuccess;
   size_t totalSize = 0;
@@ -388,7 +388,7 @@ fail:
 // Get the base and size of all segments that span a given user buffer
 static inline ncclResult_t ncclCuMemGetAddressRange(CUdeviceptr userBuff, size_t userBuffSize,
                                                     CUdeviceptr* mappedPtrBase, size_t* totalMappedBufferSize,
-                                                    int* numSegments, bool* hasSysmemSegment = nullptr) {
+                                                    int* numSegments, bool* hasSysmemSegment = nullptr) { /* 中文索引·体内调用 cuMemGetAddressRange、cuMemRetainAllocationHandle。 */
   *totalMappedBufferSize = 0;
   *mappedPtrBase = 0;
   if (numSegments) *numSegments = 0;
@@ -472,7 +472,7 @@ static inline ncclResult_t ncclCuMemGetAddressRange(CUdeviceptr userBuff, size_t
 
 template <typename T>
 ncclResult_t ncclCudaMallocDebug(T** ptr, size_t nelem, const char* file, int line, const char* callerFunc,
-                                 struct ncclMemManager* manager, ncclMemType_t memType = ncclMemPersist) {
+                                 struct ncclMemManager* manager, ncclMemType_t memType = ncclMemPersist) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclCuMemEnable。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   *ptr = nullptr;
@@ -497,7 +497,7 @@ finish:
 
 template <typename T>
 ncclResult_t ncclCudaCallocDebug(T** ptr, size_t nelem, const char* file, int line, const char* callerFunc,
-                                 struct ncclMemManager* manager, ncclMemType_t memType = ncclMemPersist) {
+                                 struct ncclMemManager* manager, ncclMemType_t memType = ncclMemPersist) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaStreamCreateWithFlags。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   *ptr = nullptr;
@@ -529,7 +529,7 @@ finish:
 template <typename T>
 ncclResult_t ncclCudaCallocAsyncDebug(T** ptr, size_t nelem, cudaStream_t stream, const char* file, int line,
                                       const char* callerFunc, struct ncclMemManager* manager,
-                                      ncclMemType_t memType = ncclMemPersist) {
+                                      ncclMemType_t memType = ncclMemPersist) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclCuMemEnable。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   *ptr = nullptr;
@@ -554,7 +554,7 @@ finish:
   ncclCudaCallocAsyncDebug(ptr, nelem, stream, __FILE__, __LINE__, __func__, manager, ##__VA_ARGS__)
 
 template <typename T>
-ncclResult_t ncclCudaMemcpy(T* dst, T* src, size_t nelem) {
+ncclResult_t ncclCudaMemcpy(T* dst, T* src, size_t nelem) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaStreamCreateWithFlags。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   CUDACHECK(cudaThreadExchangeStreamCaptureMode(&mode));
@@ -570,7 +570,7 @@ finish:
 }
 
 template <typename T>
-ncclResult_t ncclCudaMemcpyAsync(T* dst, T* src, size_t nelem, cudaStream_t stream) {
+ncclResult_t ncclCudaMemcpyAsync(T* dst, T* src, size_t nelem, cudaStream_t stream) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaMemcpyAsync。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   CUDACHECK(cudaThreadExchangeStreamCaptureMode(&mode));
@@ -580,7 +580,7 @@ finish:
   return result;
 }
 
-static inline ncclResult_t ncclCudaMemsetSync(void* ptr, int value, size_t size, cudaStream_t stream) {
+static inline ncclResult_t ncclCudaMemsetSync(void* ptr, int value, size_t size, cudaStream_t stream) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaMemsetAsync。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   CUDACHECK(cudaThreadExchangeStreamCaptureMode(&mode));
@@ -592,7 +592,7 @@ finish:
 }
 
 template <typename T>
-ncclResult_t ncclCudaFree(T* ptr, struct ncclMemManager* manager, int numSegments = 1) {
+ncclResult_t ncclCudaFree(T* ptr, struct ncclMemManager* manager, int numSegments = 1) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、ncclCuMemEnable。 */
   ncclResult_t result = ncclSuccess;
   cudaStreamCaptureMode mode = cudaStreamCaptureModeRelaxed;
   TRACE(NCCL_ALLOC, "Cuda Free pointer %p", ptr);
@@ -615,7 +615,7 @@ finish:
 // Allocate memory to be potentially ibv_reg_mr'd. This needs to be
 // allocated on separate pages as those pages will be marked DONTFORK
 // and if they are shared, that could cause a crash in a child process
-inline ncclResult_t ncclIbMallocDebug(void** ptr, size_t size, const char* file, int line, const char* callerFunc) {
+inline ncclResult_t ncclIbMallocDebug(void** ptr, size_t size, const char* file, int line, const char* callerFunc) { /* 中文索引·体内调用 ncclOsGetPageSize、posix_memalign。 */
   if (size > 0) {
     void* p = NULL;
     size_t page_size = ncclOsGetPageSize();

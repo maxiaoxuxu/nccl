@@ -11,7 +11,7 @@
 
 namespace {
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.send。 */
   ncclRing* ring = &ncclShmem.channel.ring;
   int const* ringRanks = ring->userRanks;
   const int nranks = ncclShmem.comm.nRanks;
@@ -38,7 +38,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     /////////////// begin ReduceScatter steps ///////////////
     // step 0: push data to next GPU
     rankDest = ringRanks[nranks - 1];
-    offset = dataOffset + rankDest * count;
+    /* 中文图解·five｜输入缓冲区有 nRanks 个目的段，入参 recvcount 描述其中一个段。 */ offset = dataOffset + rankDest * count;
     prims.send(offset, nelem);
 
     // k-2 steps: reduce and copy to next GPU
@@ -51,7 +51,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     // step k-1: reduce this buffer and data, which will produce the final result
     rankDest = ringRanks[0];
     offset = dataOffset + rankDest * count;
-    prims.recvReduceCopy(offset, dataOffset, nelem, /*postOp=*/true);
+    /* 中文图解·five｜最后把本 rank 对应段的归约结果写到较短输出中的 dataOffset。 */ prims.recvReduceCopy(offset, dataOffset, nelem, /*postOp=*/true);
   }
 }
 } // namespace
@@ -80,7 +80,7 @@ struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_RING, NCCL_PROTO_L
 
 template <typename T, typename RedOp>
 struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_PAT, NCCL_PROTO_SIMPLE> {
-  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、ncclScratchForWarp。 */
 #if __CUDA_ARCH__ >= 600
     using Proto = ProtoSimple<1, 1>;
     const int nranks = ncclShmem.comm.nRanks;
@@ -240,7 +240,7 @@ struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_S
     template <int SlicePerChunk, int MinSrcs, int MaxSrcs, int MinDsts, int MaxDsts, int MultimemSrcs, int MultimemDsts>
     __device__ __forceinline__ void operator()(int tid, int tn, int slice, int maxSliceSize, int nSrcs, void** srcPtrs,
                                                int nDsts, void** dstPtrs, int32_t* dstSizes, uint32_t sendDirectFlag,
-                                               uint32_t recvDirectFlag) {
+                                               uint32_t recvDirectFlag) { /* 中文索引·体内调用 __device__。 */
       static_assert(SlicePerChunk == 1, "require: SlicePerChunk==1");
       static_assert(MaxDsts <= 1 || MaxSrcs <= 1, "require: MaxDsts<=1 || MaxSrcs<=1");
 
@@ -297,7 +297,7 @@ struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_NVLS, NCCL_PROTO_S
     }
   };
 
-  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int /*nthreads*/, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 roundUp、ncclCollCbdPart。 */
     struct ncclNvls* nvls = &ncclShmem.channel.nvls;
     int nelem;
 
@@ -451,7 +451,7 @@ struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NC
     template <int SlicePerChunk, int MinSrcs, int MaxSrcs, int MinDsts, int MaxDsts, int MultimemSrcs, int MultimemDsts>
     __device__ __forceinline__ void operator()(int tid, int tn, int slice, int maxSliceSize, int nSrcs, void** srcPtrs,
                                                int nDsts, void** dstPtrs, int32_t* dstSizes, uint32_t sendDirectFlag,
-                                               uint32_t recvDirectFlag) {
+                                               uint32_t recvDirectFlag) { /* 中文索引·体内调用 __device__。 */
       static_assert(SlicePerChunk == 1, "require: SlicePerChunk==1");
       static_assert(MaxDsts <= 1 || MaxSrcs <= 1, "require: MaxDsts<=1 || MaxSrcs<=1");
 
@@ -509,7 +509,7 @@ struct RunWorkColl<ncclFuncReduceScatter, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NC
     }
   };
 
-  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) {
+  __device__ __forceinline__ void run(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 __trap、float。 */
     const int part = ncclShmem.channelId - work->channelLo;
     const int nChannels = work->channelHi - work->channelLo + 1;
     struct ncclDirect* direct = &ncclShmem.channel.collnetDirect;

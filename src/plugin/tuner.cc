@@ -37,7 +37,7 @@ enum {
 
 static int status = tunerPluginLoadReady;
 
-ncclResult_t ncclTunerPluginLoad(struct ncclComm* comm) {
+ncclResult_t ncclTunerPluginLoad(struct ncclComm* comm) { /* 中文索引·体内调用 ncclGetEnv、strcasecmp。 */
   const char* tunerName = nullptr;
   bool tunerPluginRequested = false;
   // Initialize to nullptr by default if plugin tuner cannot be loaded.
@@ -112,7 +112,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclTunerPluginUnload(struct ncclComm* comm) {
+ncclResult_t ncclTunerPluginUnload(struct ncclComm* comm) { /* 中文索引·体内调用 ncclClosePluginLib。 */
   std::lock_guard<std::mutex> lock(tunerPluginMutex);
   if (comm->tunerPluginLoaded && 0 == (--tunerPluginRefCount)) {
     INFO(NCCL_DESTROY | NCCL_TUNING, "TUNER/Plugin: Closing tuner: '%s'", tunerSymbol->name);

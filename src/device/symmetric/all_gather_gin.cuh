@@ -11,7 +11,7 @@
 #include "gin_scratch__types.h"
 
 template <bool EnableProfiler>
-__device__ __forceinline__ void ncclSymkRun_AllGather_RailRing_LsaSTMC(struct ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AllGather_RailRing_LsaSTMC(struct ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclTeamRail、ncclTeamLsa。 */
   ncclCoopCta cta;
   ncclSymkArgsHandler handler(args);
   ncclTeam rail = ncclTeamRail(handler.comm);

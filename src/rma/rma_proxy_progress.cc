@@ -19,7 +19,7 @@ static inline bool ncclRmaProxyCanIssueRequest(struct ncclRmaProxyCtx* ctx, int 
 
 // Issue one putSignal op via the network.
 static ncclResult_t ncclRmaProxyIssuePutSignal(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx,
-                                               struct ncclRmaPutSignalOp* ps) {
+                                               struct ncclRmaPutSignalOp* ps) { /* 中文索引·体内调用 ncclRmaProxyWorldToPeer、ncclRma->iput。 */
   // Since we previously connected to handles[] of length railsize, iput's rank argument is a slot in that array, not a world rank.
   // ps->targetRank is passed as a world rank, so you convert at the ncclRma->op call.
   int targetPeer;
@@ -42,7 +42,7 @@ static ncclResult_t ncclRmaProxyIssuePutSignal(ncclRma_t* ncclRma, struct ncclRm
 }
 
 static ncclResult_t ncclRmaProxyTestPutSignal(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx,
-                                              struct ncclRmaPutSignalOp* ps, int* done) {
+                                              struct ncclRmaPutSignalOp* ps, int* done) { /* 中文索引·体内调用 ncclRma->test。 */
   NCCLCHECK(ncclRma->test(ctx->rmaCollComm, ps->request, done));
   if (*done) {
     if (ctx->inflightRequests[ps->targetRank] == 0) {
@@ -56,7 +56,7 @@ static ncclResult_t ncclRmaProxyTestPutSignal(ncclRma_t* ncclRma, struct ncclRma
 }
 
 static ncclResult_t ncclRmaProxyProgressPutSignalGroup(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx,
-                                                       struct ncclRmaPutSignalGroupOp* group) {
+                                                       struct ncclRmaPutSignalGroupOp* group) { /* 中文索引·体内调用 ncclRmaProxyTestPutSignal、ncclRmaProxyCanIssueRequest。 */
   // Test the completion of the issued ops.
   for (int i = 0; i < group->nIssued; i++) {
     if (group->ops[i].request == nullptr) continue;
@@ -78,7 +78,7 @@ static ncclResult_t ncclRmaProxyProgressPutSignalGroup(ncclRma_t* ncclRma, struc
 
 // Poll and test completion of InProgress Descs for a given peer.
 // Returns after testing head Desc (stops on first incomplete to enforce FIFO).
-static ncclResult_t ncclRmaProxyPollNonPersistCompletion(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) {
+static ncclResult_t ncclRmaProxyPollNonPersistCompletion(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclRmaProxyTestPutSignal。 */
   while (true) {
     struct ncclRmaProxyDesc* head = ncclIntruQueueHead(&ctx->inProgressQueues[peer]);
     if (head == nullptr) break; // No InProgress Descs
@@ -111,7 +111,7 @@ static ncclResult_t ncclRmaProxyPollNonPersistCompletion(ncclRma_t* ncclRma, str
 
 // Poll and issue ready Pending Descs for a given peer
 // Moves ready Descs from pending queue to InProgress queue
-static ncclResult_t ncclRmaProxyPollNonPersistDesc(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) {
+static ncclResult_t ncclRmaProxyPollNonPersistDesc(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) { /* 中文索引·体内调用 ncclRmaProxyCircularBufEmpty、ncclRmaProxyCanIssueRequest。 */
   while (true) {
     if (ncclRmaProxyCircularBufEmpty(ctx, peer)) break;
 
@@ -156,7 +156,7 @@ static ncclResult_t ncclRmaProxyPollNonPersistDesc(ncclRma_t* ncclRma, struct nc
 // Issues a local iput to the flush buffer registered with strict ordering and
 // spins until the NIC reports completion, guaranteeing that all prior data
 // written through the NIC-GPU path is visible in vidmem.
-static ncclResult_t ncclRmaProxyFlushNicGpuPath(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx) {
+static ncclResult_t ncclRmaProxyFlushNicGpuPath(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx) { /* 中文索引·体内调用 ncclRmaProxyWorldToPeer、ncclRma->iput。 */
   void* request = nullptr;
   int targetPeer;
   NCCLCHECK(ncclRmaProxyWorldToPeer(ctx, ctx->comm->rank, &targetPeer));
@@ -171,7 +171,7 @@ static ncclResult_t ncclRmaProxyFlushNicGpuPath(ncclRma_t* ncclRma, struct ncclR
 }
 
 // Poll persistent descriptors for a given peer (graph mode).
-static ncclResult_t ncclRmaProxyPollPersistDesc(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) {
+static ncclResult_t ncclRmaProxyPollPersistDesc(ncclRma_t* ncclRma, struct ncclRmaProxyCtx* ctx, int peer) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclRmaProxyCanIssueRequest。 */
   struct ncclRmaProxyDesc* desc = ncclIntruQueueHead(&ctx->persistentQueues[peer]);
   while (desc != nullptr) {
     if (!COMPILER_ATOMIC_LOAD(&desc->persistDescValid, std::memory_order_acquire)) {
@@ -275,7 +275,7 @@ static ncclResult_t ncclRmaProxyPollPersistDesc(ncclRma_t* ncclRma, struct ncclR
 }
 
 // Checks the RMA proxy progress.
-ncclResult_t ncclRmaProxyProgress(ncclRma_t* ncclRma, void* rmaProxyCtx) {
+ncclResult_t ncclRmaProxyProgress(ncclRma_t* ncclRma, void* rmaProxyCtx) { /* 中文索引·体内调用 ncclRma->rmaProgress、ncclRmaProxyPollNonPersistCompletion。 */
   struct ncclRmaProxyCtx* ctx = (struct ncclRmaProxyCtx*)rmaProxyCtx;
 
   if (ncclRma->rmaProgress) NCCLCHECK(ncclRma->rmaProgress(ctx->rmaCtx));

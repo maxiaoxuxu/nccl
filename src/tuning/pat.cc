@@ -12,7 +12,7 @@
 #include <cfloat>
 
 NCCL_PARAM(PatEnable, "PAT_ENABLE", 2);
-int ncclPatEnable(struct ncclComm* comm) {
+int ncclPatEnable(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamPatEnable、ncclNvlsTransportEnabled。 */
   int patEnable = ncclParamPatEnable();
   if (comm->minCompCap < 60) return 0; // Need SM60 or higher for CUDA atomics
   if (patEnable != 2) return patEnable;
@@ -25,7 +25,7 @@ int ncclPatEnable(struct ncclComm* comm) {
 }
 
 ncclResult_t ncclTuningPatModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                    struct ncclTuningModelState* /*internal*/) {
+                                    struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclPatEnable、memset。 */
   ncclResult_t ret = ncclSuccess;
   if (ncclPatEnable(comm) == 0) {
     memset(enabled, 0, NCCL_NUM_FUNCTIONS * sizeof(int));
@@ -79,7 +79,7 @@ ncclResult_t ncclTuningPatModelInit(struct ncclComm* comm, int id, int enabled[N
 }
 
 ncclResult_t ncclTuningPatModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                   struct ncclTuningModelState* /*internal*/) {
+                                   struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclNvlsSupported、ncclTuningGetTime。 */
   ncclResult_t ret = ncclSuccess;
   if (inputs->func == ncclFuncReduceScatter && !inputs->comm->isOneRPN &&
       !ncclNvlsSupported(inputs->devRedOp, inputs->datatype)) {

@@ -36,7 +36,7 @@ static int launchOrderImplicitEffective(int launchOrderImplicit) {
   return launchOrderImplicit == 1 ? 1 : 0;
 }
 
-ncclResult_t ncclCudaContextTrack(struct ncclCudaContext** out, int launchOrderImplicit, uint64_t commHash) {
+ncclResult_t ncclCudaContextTrack(struct ncclCudaContext** out, int launchOrderImplicit, uint64_t commHash) { /* 中文索引·体内调用 cuCtxGetCurrent、launchOrderImplicitEffective。 */
   ncclResult_t result = ncclSuccess;
   CUcontext hcontext;
   CUCHECK(cuCtxGetCurrent(&hcontext));
@@ -75,7 +75,7 @@ leave:
   return ncclSuccess;
 }
 
-void ncclCudaContextDrop(struct ncclCudaContext* cxt) {
+void ncclCudaContextDrop(struct ncclCudaContext* cxt) { /* 中文索引·体内调用 ncclStrongStreamDestruct。 */
   std::lock_guard<std::mutex> lock(cxtListMutex);
   if (0 == --cxt->refCount) {
     struct ncclCudaContext** pp = &cxtListHead;
@@ -89,7 +89,7 @@ void ncclCudaContextDrop(struct ncclCudaContext* cxt) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ncclResult_t ncclCudaGetCapturingGraph(struct ncclCudaGraph* graph, cudaStream_t stream, int graphUsageMode) {
+ncclResult_t ncclCudaGetCapturingGraph(struct ncclCudaGraph* graph, cudaStream_t stream, int graphUsageMode) { /* 中文索引·体内调用 ncclCudaDriverVersion、cudaStreamGetCaptureInfo。 */
 #if CUDART_VERSION >= 10000 // cudaStreamGetCaptureInfo
   int driver;
   NCCLCHECK(ncclCudaDriverVersion(&driver));
@@ -129,7 +129,7 @@ ncclResult_t ncclCudaGetCapturingGraph(struct ncclCudaGraph* graph, cudaStream_t
   return ncclSuccess;
 }
 
-ncclResult_t ncclCudaGraphAddDestructor(struct ncclCudaGraph graph, cudaHostFn_t fn, void* arg) {
+ncclResult_t ncclCudaGraphAddDestructor(struct ncclCudaGraph graph, cudaHostFn_t fn, void* arg) { /* 中文索引·体内调用 cudaUserObjectCreate、cudaGraphRetainUserObject。 */
 #if CUDART_VERSION >= 11030
   cudaUserObject_t object;
   CUDACHECK(cudaUserObjectCreate(&object, arg, fn, /*initialRefcount=*/1, cudaUserObjectNoDestructorSync));
@@ -143,7 +143,7 @@ ncclResult_t ncclCudaGraphAddDestructor(struct ncclCudaGraph graph, cudaHostFn_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ncclResult_t ncclStrongStreamConstruct(struct ncclStrongStream* ss) {
+ncclResult_t ncclStrongStreamConstruct(struct ncclStrongStream* ss) { /* 中文索引·体内调用 cudaStreamCreateWithFlags、cudaEventCreateWithFlags。 */
   CUDACHECK(cudaStreamCreateWithFlags(&ss->liveStream, cudaStreamNonBlocking));
 #if CUDART_VERSION >= 11030
   ss->everCaptured = false;
@@ -153,7 +153,7 @@ ncclResult_t ncclStrongStreamConstruct(struct ncclStrongStream* ss) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclStrongStreamDestruct(struct ncclStrongStream* ss) {
+ncclResult_t ncclStrongStreamDestruct(struct ncclStrongStream* ss) { /* 中文索引·体内调用 cudaStreamDestroy、free。 */
   CUDACHECK(cudaStreamDestroy(ss->liveStream));
 #if CUDART_VERSION >= 11030
   struct ncclStrongStreamCapture* cap = ss->captureHead;
@@ -177,7 +177,7 @@ static void* localThreadId() {
 }
 
 ncclResult_t ncclStrongStreamAcquire(struct ncclCudaGraph graph, struct ncclStrongStream* ss, bool concurrent,
-                                     cudaStream_t* workStream) {
+                                     cudaStream_t* workStream) { /* 中文索引·体内调用 localThreadId、cudaStreamWaitEvent。 */
 #if CUDART_VERSION >= 11030
   bool mixing = graph.graphUsageMode == 2;
   if (graph.graphId == ULLONG_MAX) {
@@ -267,7 +267,7 @@ ncclResult_t ncclStrongStreamAcquire(struct ncclCudaGraph graph, struct ncclStro
 }
 
 ncclResult_t ncclStrongStreamAcquiredWorkStream(struct ncclCudaGraph graph, struct ncclStrongStream* ss,
-                                                bool concurrent, cudaStream_t* workStream) {
+                                                bool concurrent, cudaStream_t* workStream) { /* 中文索引·体内调用 lock.lock。 */
 #if CUDART_VERSION >= 11030
   if (graph.graphId == ULLONG_MAX) {
     *workStream = ss->liveStream;
@@ -292,7 +292,7 @@ ncclResult_t ncclStrongStreamAcquiredWorkStream(struct ncclCudaGraph graph, stru
 // will get unexpected topology that breaks cudaGraphExecUpdate.
 #if CUDART_VERSION >= 11030
 static ncclResult_t recordEventOnStream(struct ncclCudaGraph graph, cudaEvent_t event, cudaStream_t stream,
-                                        bool updateFrontier) {
+                                        bool updateFrontier) { /* 中文索引·体内调用 cudaGraphAddEventRecordNode、cudaStreamGetCaptureInfo_v3。 */
   cudaGraphNode_t recordNode;
   CUDACHECK(cudaGraphAddEventRecordNode(&recordNode, graph.graph, nullptr, 0, event));
 
@@ -340,7 +340,7 @@ static ncclResult_t recordEventOnStream(struct ncclCudaGraph graph, cudaEvent_t 
 }
 #endif
 
-ncclResult_t ncclStrongStreamRelease(struct ncclCudaGraph graph, struct ncclStrongStream* ss, bool concurrent) {
+ncclResult_t ncclStrongStreamRelease(struct ncclCudaGraph graph, struct ncclStrongStream* ss, bool concurrent) { /* 中文索引·体内调用 cudaEventRecord、localThreadId。 */
 #if CUDART_VERSION >= 11030
   bool mixing = graph.graphUsageMode == 2;
   if (mixing) {
@@ -374,7 +374,7 @@ ncclResult_t ncclStrongStreamRelease(struct ncclCudaGraph graph, struct ncclStro
 // Record `event` on `stream` as a graph node with the stream's current capture
 // frontier as dependencies. Used when GRAPH_STREAM_ORDERING=0 to serialize
 // collectives across graph launches without an ss-owned captureStream.
-ncclResult_t ncclCudaGraphRecordEvent(struct ncclCudaGraph graph, cudaEvent_t event, cudaStream_t stream) {
+ncclResult_t ncclCudaGraphRecordEvent(struct ncclCudaGraph graph, cudaEvent_t event, cudaStream_t stream) { /* 中文索引·体内调用 recordEventOnStream。 */
 #if CUDART_VERSION >= 11030
   if (graph.graphId != ULLONG_MAX) {
     NCCLCHECK(recordEventOnStream(graph, event, stream, /*updateFrontier=*/false));
@@ -383,13 +383,13 @@ ncclResult_t ncclCudaGraphRecordEvent(struct ncclCudaGraph graph, cudaEvent_t ev
   return ncclSuccess;
 }
 
-ncclResult_t ncclStreamWaitStream(cudaStream_t a, cudaStream_t b, cudaEvent_t scratchEvent) {
+ncclResult_t ncclStreamWaitStream(cudaStream_t a, cudaStream_t b, cudaEvent_t scratchEvent) { /* 中文索引·体内调用 cudaEventRecord、cudaStreamWaitEvent。 */
   CUDACHECK(cudaEventRecord(scratchEvent, b));
   CUDACHECK(cudaStreamWaitEvent(a, scratchEvent, 0));
   return ncclSuccess;
 }
 
-ncclResult_t ncclStreamAdvanceToEvent(struct ncclCudaGraph g, cudaStream_t s, cudaEvent_t e) {
+ncclResult_t ncclStreamAdvanceToEvent(struct ncclCudaGraph g, cudaStream_t s, cudaEvent_t e) { /* 中文索引·体内调用 cudaStreamWaitEvent、cudaStreamCreateWithFlags。 */
   ncclResult_t ret = ncclSuccess;
   cudaStream_t tmp = nullptr;
   if (g.graphId == ULLONG_MAX) {
@@ -443,7 +443,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclStrongStreamSynchronize(struct ncclStrongStream* ss) {
+ncclResult_t ncclStrongStreamSynchronize(struct ncclStrongStream* ss) { /* 中文索引·体内调用 cudaStreamWaitEvent、cudaStreamSynchronize。 */
 #if CUDART_VERSION >= 11030
   CUDACHECK(cudaStreamWaitEvent(ss->liveStream, ss->serialEvent, 0));
 #endif

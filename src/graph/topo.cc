@@ -39,7 +39,7 @@ const char* topoPathTypeStr[] = {"LOC", "NVL", "NVB", "C2C", "PIX", "PXB", "P2C"
 /******************* Graph Creation Functions *********************/
 /******************************************************************/
 
-static ncclResult_t findLocalCpu(struct ncclTopoNode* node, struct ncclTopoNode** cpu, struct ncclTopoNode* from) {
+static ncclResult_t findLocalCpu(struct ncclTopoNode* node, struct ncclTopoNode** cpu, struct ncclTopoNode* from) { /* 中文索引·体内调用 findLocalCpu。 */
   *cpu = NULL;
   if (node->type == CPU) {
     *cpu = node;
@@ -141,7 +141,7 @@ ncclResult_t ncclTopoCreateNode(struct ncclTopoSystem* system, struct ncclTopoNo
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoRemoveNode(struct ncclTopoSystem* system, int type, int index) {
+ncclResult_t ncclTopoRemoveNode(struct ncclTopoSystem* system, int type, int index) { /* 中文索引·体内调用 memmove。 */
   struct ncclTopoNode* delNode = system->nodes[type].nodes + index;
   for (int t = 0; t < NCCL_TOPO_NODE_TYPES; t++) {
     if (delNode->paths[t] != nullptr) {
@@ -177,7 +177,7 @@ ncclResult_t ncclTopoRemoveNode(struct ncclTopoSystem* system, int type, int ind
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoConnectNodes(struct ncclTopoNode* node, struct ncclTopoNode* remNode, int type, float bw) {
+ncclResult_t ncclTopoConnectNodes(struct ncclTopoNode* node, struct ncclTopoNode* remNode, int type, float bw) { /* 中文索引·体内调用 memcpy。 */
   // Aggregate links into higher bw for NVLink
   struct ncclTopoLink* link;
   for (link = node->links; link - node->links != NCCL_TOPO_MAX_LINKS && link->remNode; link++) {
@@ -213,7 +213,7 @@ int getBcmGen(uint64_t id, int level) {
   if ((id & 0xfffffffffffff000) == (0x1000c03010000000 | level * 0x1000)) return 5;
   return 0;
 }
-ncclResult_t ncclTopoFlattenBcmSwitches(struct ncclTopoSystem* system) {
+ncclResult_t ncclTopoFlattenBcmSwitches(struct ncclTopoSystem* system) { /* 中文索引·体内调用 getBcmGen、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   for (int s = 0; s < system->nodes[PCI].count; s++) {
     struct ncclTopoNode* pciSwitch = system->nodes[PCI].nodes + s;
@@ -279,7 +279,7 @@ ncclResult_t ncclTopoFlattenBcmSwitches(struct ncclTopoSystem* system) {
   return ret;
 }
 
-ncclResult_t ncclTopoConnectCpus(struct ncclTopoSystem* system) {
+ncclResult_t ncclTopoConnectCpus(struct ncclTopoSystem* system) { /* 中文索引·体内调用 ncclTopoGetInterCpuBw、ncclTopoConnectNodes。 */
   // And connect all CPU nodes together
   for (int n = 0; n < system->nodes[CPU].count; n++) {
     struct ncclTopoNode* cpu1 = system->nodes[CPU].nodes + n;
@@ -294,7 +294,7 @@ ncclResult_t ncclTopoConnectCpus(struct ncclTopoSystem* system) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoPrintRec(struct ncclTopoNode* node, struct ncclTopoNode* prevNode, char* line, int offset) {
+static ncclResult_t ncclTopoPrintRec(struct ncclTopoNode* node, struct ncclTopoNode* prevNode, char* line, int offset) { /* 中文索引·体内调用 snprintf、sprintf。 */
   if (node->type == GPU) {
     char mloStr[128] = "";
     snprintf(mloStr, sizeof(mloStr), " [MLOPart %d]", node->gpu.mloPart);
@@ -345,7 +345,7 @@ static ncclResult_t ncclTopoPrintRec(struct ncclTopoNode* node, struct ncclTopoN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoPrint(struct ncclTopoSystem* s) {
+ncclResult_t ncclTopoPrint(struct ncclTopoSystem* s) { /* 中文索引·体内调用 ncclTopoPrintRec、ncclTopoPrintPaths。 */
   INFO(NCCL_GRAPH, "=== System : maxBw %2.1f totalBw %2.1f ===", s->maxBw, s->totalBw);
   char line[1024];
   for (int n = 0; n < s->nodes[CPU].count; n++) NCCLCHECK(ncclTopoPrintRec(s->nodes[CPU].nodes + n, NULL, line, 0));
@@ -354,7 +354,7 @@ ncclResult_t ncclTopoPrint(struct ncclTopoSystem* s) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoSort(struct ncclTopoNode* node, struct ncclTopoNode* upNode) {
+static ncclResult_t ncclTopoSort(struct ncclTopoNode* node, struct ncclTopoNode* upNode) { /* 中文索引·体内调用 memcpy、ncclTopoSort。 */
   // Shift all links to have upLink as last link
   if (upNode) {
     int l = 0;
@@ -388,7 +388,7 @@ ncclResult_t ncclTopoSortSystem(struct ncclTopoSystem* system) {
 
 // Minimum network BW of a single device accessible by rank.
 // Note: This function does not sum up the bw over multiple NICs if many are accessible.
-ncclResult_t ncclTopoGetMinNetBw(struct ncclTopoSystem* system, int rank, float* bw) {
+ncclResult_t ncclTopoGetMinNetBw(struct ncclTopoSystem* system, int rank, float* bw) { /* 中文索引·体内调用 ncclTopoGetLocalNet、ncclTopoIdToIndex。 */
   int g = 0;
   while (g < system->nodes[GPU].count && system->nodes[GPU].nodes[g].gpu.rank != rank) g++;
   if (g == system->nodes[GPU].count) return ncclInternalError;
@@ -410,7 +410,7 @@ ncclResult_t ncclTopoGetMinNetBw(struct ncclTopoSystem* system, int rank, float*
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoGetNetDevKey(struct ncclXmlNode* xmlNet, uint64_t* key) {
+static ncclResult_t ncclTopoGetNetDevKey(struct ncclXmlNode* xmlNet, uint64_t* key) { /* 中文索引·体内调用 xmlGetAttrUint64Default、eatHash。 */
   // Create the unique key per device to be used for rail logic.
   // Note: virtual device might have the same key as their first physical device.
   uint64_t hacc[2] = {1, 1}, guid;
@@ -421,7 +421,7 @@ static ncclResult_t ncclTopoGetNetDevKey(struct ncclXmlNode* xmlNet, uint64_t* k
 }
 
 // return the index of the rail key in the unique rail key table
-static ncclResult_t ncclTopoGetNetRailKeyIndex(struct ncclTopoNetRailKeyList* list, uint64_t key, int* railId) {
+static ncclResult_t ncclTopoGetNetRailKeyIndex(struct ncclTopoNetRailKeyList* list, uint64_t key, int* railId) { /* 中文索引·体内调用 list->keys.find、list->keys.end。 */
   auto it = list->keys.find(key);
   if (it != list->keys.end()) {
     *railId = it->second;
@@ -437,7 +437,7 @@ static ncclResult_t ncclTopoGetNetRailKeyIndex(struct ncclTopoNetRailKeyList* li
 }
 
 static ncclResult_t ncclTopoGetRailPlane(struct ncclTopoNetRailKeyList* list, struct ncclXmlNode* xmlNet, int* rail,
-                                         int* plane) {
+                                         int* plane) { /* 中文索引·体内调用 ncclTopoGetNetDevKey、ncclTopoGetNetRailKeyIndex。 */
   if (*rail == NCCL_TOPO_UNDEF) {
     uint64_t railKey;
     int keyIndex;
@@ -463,7 +463,7 @@ static ncclResult_t ncclTopoGetRailPlane(struct ncclTopoNetRailKeyList* list, st
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoAddNetAsic(struct ncclXmlNode* xmlNet, int64_t netId, struct ncclTopoNode* net) {
+static ncclResult_t ncclTopoAddNetAsic(struct ncclXmlNode* xmlNet, int64_t netId, struct ncclTopoNode* net) { /* 中文索引·体内调用 xmlGetAttr、strtoull。 */
   const char* str;
   NCCLCHECK(xmlGetAttr(xmlNet, "guid", &str));
   // if not guid is present use the net->id unique id instead, which will be unique within the node/NVLD
@@ -472,7 +472,7 @@ static ncclResult_t ncclTopoAddNetAsic(struct ncclXmlNode* xmlNet, int64_t netId
 }
 
 static ncclResult_t ncclTopoAddNet(struct ncclXmlNode* xmlNet, struct ncclXmlNode* parent,
-                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) {
+                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) { /* 中文索引·体内调用 xmlGetAttrInt、ncclTopoCreateNode。 */
   int dev;
   NCCLCHECK(xmlGetAttrInt(xmlNet, "dev", &dev));
 
@@ -516,7 +516,7 @@ static ncclResult_t ncclTopoAddNet(struct ncclXmlNode* xmlNet, struct ncclXmlNod
 }
 
 static ncclResult_t ncclTopoAddGin(struct ncclXmlNode* xmlNet, struct ncclXmlNode* parent,
-                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) {
+                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) { /* 中文索引·体内调用 xmlGetAttrInt、ncclTopoCreateNode。 */
   int dev;
   NCCLCHECK(xmlGetAttrInt(xmlNet, "dev", &dev));
 
@@ -545,7 +545,7 @@ static ncclResult_t ncclTopoAddGin(struct ncclXmlNode* xmlNet, struct ncclXmlNod
 }
 
 static ncclResult_t ncclTopoAddRma(struct ncclXmlNode* xmlNet, struct ncclXmlNode* parent,
-                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) {
+                                   struct ncclTopoSystem* system, struct ncclTopoNode* nic, int systemId) { /* 中文索引·体内调用 xmlGetAttrInt、ncclTopoCreateNode。 */
   int dev;
   NCCLCHECK(xmlGetAttrInt(xmlNet, "dev", &dev));
 
@@ -574,7 +574,7 @@ static ncclResult_t ncclTopoAddRma(struct ncclXmlNode* xmlNet, struct ncclXmlNod
 }
 
 ncclResult_t ncclTopoAddNic(struct ncclXmlNode* xmlNic, struct ncclTopoSystem* system, struct ncclTopoNode* nic,
-                            int systemId) {
+                            int systemId) { /* 中文索引·体内调用 strcmp、xmlGetAttrIntDefault。 */
   // Find the closest PCI ancestor to the NIC
   struct ncclXmlNode* parent = xmlNic->parent;
   while (parent != NULL && strcmp(parent->name, "pci") != 0) parent = parent->parent;
@@ -600,7 +600,7 @@ ncclResult_t ncclTopoAddNic(struct ncclXmlNode* xmlNic, struct ncclTopoSystem* s
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoAddGpu(struct ncclXmlNode* xmlGpu, struct ncclTopoSystem* system, struct ncclTopoNode* gpu) {
+ncclResult_t ncclTopoAddGpu(struct ncclXmlNode* xmlGpu, struct ncclTopoSystem* system, struct ncclTopoNode* gpu) { /* 中文索引·体内调用 xmlGetAttrInt、xmlGetAttrIntDefault。 */
   NCCLCHECK(xmlGetAttrInt(xmlGpu, "rank", &gpu->gpu.rank));
   NCCLCHECK(xmlGetAttrInt(xmlGpu, "sm", &gpu->gpu.cudaCompCap));
   NCCLCHECK(xmlGetAttrInt(xmlGpu, "dev", &gpu->gpu.dev));
@@ -610,7 +610,7 @@ ncclResult_t ncclTopoAddGpu(struct ncclXmlNode* xmlGpu, struct ncclTopoSystem* s
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoGetIntDevice(struct ncclXmlNode* xmlPci, uint64_t* device) {
+static ncclResult_t ncclTopoGetIntDevice(struct ncclXmlNode* xmlPci, uint64_t* device) { /* 中文索引·体内调用 xmlGetAttr、strtol。 */
   uint64_t ret = 0;
   const char* str;
   NCCLCHECK(xmlGetAttr(xmlPci, "vendor", &str));
@@ -681,7 +681,7 @@ NCCL_PARAM(TopoSplitMlopart, "TOPO_SPLIT_MLOPART", 1);
 
 static ncclResult_t ncclTopoAddGpuSub(struct ncclXmlNode* xmlPci, struct ncclXmlNode* xmlGpu,
                                       struct ncclTopoSystem* system, struct ncclTopoNode* parent, int systemId,
-                                      int64_t busId, float bw) {
+                                      int64_t busId, float bw) { /* 中文索引·体内调用 ncclTopoCheckMloPartBusId、xmlGetAttrIntDefault。 */
   int mloPart = 0, sm = 0;
   int64_t devBusId = busId;
   NCCLCHECK(ncclTopoCheckMloPartBusId(busId));
@@ -727,7 +727,7 @@ static ncclResult_t ncclTopoAddGpuSub(struct ncclXmlNode* xmlPci, struct ncclXml
 }
 
 ncclResult_t ncclTopoAddPci(struct ncclXmlNode* xmlPci, struct ncclTopoSystem* system, struct ncclTopoNode* parent,
-                            int systemId, int numaId) {
+                            int systemId, int numaId) { /* 中文索引·体内调用 xmlGetAttrStr、kvConvertToInt。 */
   const char* str;
 
   int type;
@@ -803,7 +803,7 @@ struct kvDict kvDictCpuVendor[] = {{"GenuineIntel", NCCL_TOPO_CPU_VENDOR_INTEL},
                                    {"  Shanghai  ", NCCL_TOPO_CPU_VENDOR_ZHAOXIN},
                                    {NULL, 0}};
 
-ncclResult_t ncclGetSystemId(struct ncclTopoSystem* system, struct ncclXmlNode* xmlCpu, int* systemIdPtr) {
+ncclResult_t ncclGetSystemId(struct ncclTopoSystem* system, struct ncclXmlNode* xmlCpu, int* systemIdPtr) { /* 中文索引·体内调用 xmlGetAttr、strtoull。 */
   const char* hostHashStr;
   NCCLCHECK(xmlGetAttr(xmlCpu, "host_hash", &hostHashStr));
   uint64_t hostHash = hostHashStr ? strtoull(hostHashStr, NULL, 16) : 0;
@@ -816,7 +816,7 @@ ncclResult_t ncclGetSystemId(struct ncclTopoSystem* system, struct ncclXmlNode* 
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoAddCpu(struct ncclXmlNode* xmlCpu, struct ncclTopoSystem* system) {
+ncclResult_t ncclTopoAddCpu(struct ncclXmlNode* xmlCpu, struct ncclTopoSystem* system) { /* 中文索引·体内调用 xmlGetAttrInt、ncclGetSystemId。 */
   int numaId;
   NCCLCHECK(xmlGetAttrInt(xmlCpu, "numaid", &numaId));
   int systemId;
@@ -890,7 +890,7 @@ ncclResult_t ncclTopoAddCpu(struct ncclXmlNode* xmlCpu, struct ncclTopoSystem* s
 }
 
 static ncclResult_t ncclTopoGetGpuDevNode(struct ncclXmlNode* xmlGpu, const char* busId, int systemId,
-                                          struct ncclTopoSystem* system, struct ncclTopoNode** devNode) {
+                                          struct ncclTopoSystem* system, struct ncclTopoNode** devNode) { /* 中文索引·体内调用 busIdToInt64、ncclTopoCheckMloPartBusId。 */
   int mloPart, sm;
   int64_t rawBusId;
   NCCLCHECK(busIdToInt64(busId, &rawBusId));
@@ -904,7 +904,7 @@ static ncclResult_t ncclTopoGetGpuDevNode(struct ncclXmlNode* xmlGpu, const char
 }
 
 // Return true only for the first GPU sibling (in XML order) that shares the same DEV node.
-static ncclResult_t ncclTopoXmlIsPrimaryGpuForDev(struct ncclXmlNode* xmlGpu, bool* isPrimary) {
+static ncclResult_t ncclTopoXmlIsPrimaryGpuForDev(struct ncclXmlNode* xmlGpu, bool* isPrimary) { /* 中文索引·体内调用 xmlGetAttrIntDefault、strcmp。 */
   *isPrimary = true;
   int myMloPart = NCCL_TOPO_UNDEF;
   NCCLCHECK(xmlGetAttrIntDefault(xmlGpu, "mlopart", &myMloPart, NCCL_TOPO_UNDEF));
@@ -923,7 +923,7 @@ static ncclResult_t ncclTopoXmlIsPrimaryGpuForDev(struct ncclXmlNode* xmlGpu, bo
 }
 
 ncclResult_t ncclTopoAddNvLinks(struct ncclXmlNode* node, struct ncclTopoSystem* system, const char* parentBusId,
-                                int systemId) {
+                                int systemId) { /* 中文索引·体内调用 strcmp、ncclTopoXmlIsPrimaryGpuForDev。 */
   if (strcmp(node->name, "nvlink") == 0) {
     bool isPrimary;
     NCCLCHECK(ncclTopoXmlIsPrimaryGpuForDev(node->parent, &isPrimary));
@@ -985,7 +985,7 @@ ncclResult_t ncclTopoAddNvLinks(struct ncclXmlNode* node, struct ncclTopoSystem*
 }
 
 ncclResult_t ncclTopoAddPciLinks(struct ncclXmlNode* node, struct ncclTopoSystem* system, const char* parentBusId,
-                                 int systemId) {
+                                 int systemId) { /* 中文索引·体内调用 strcmp、busIdToInt64。 */
   if (strcmp(node->name, "pcilink") == 0) {
     struct ncclTopoNode* pci = NULL;
     int64_t pBusId;
@@ -1017,7 +1017,7 @@ ncclResult_t ncclTopoAddPciLinks(struct ncclXmlNode* node, struct ncclTopoSystem
 }
 
 ncclResult_t ncclTopoAddC2c(struct ncclXmlNode* node, struct ncclTopoSystem* system, const char* parentBusId,
-                            int systemId) {
+                            int systemId) { /* 中文索引·体内调用 strcmp、ncclTopoXmlIsPrimaryGpuForDev。 */
   if (strcmp(node->name, "c2c") == 0) {
     bool isPrimary;
     NCCLCHECK(ncclTopoXmlIsPrimaryGpuForDev(node->parent, &isPrimary));
@@ -1070,7 +1070,7 @@ ncclResult_t ncclTopoAddC2c(struct ncclXmlNode* node, struct ncclTopoSystem* sys
 }
 
 ncclResult_t ncclTopoGetSystemFromXml(struct ncclXml* xml, struct ncclTopoSystem** topoSystem,
-                                      const uint64_t localHostHash) {
+                                      const uint64_t localHostHash) { /* 中文索引·体内调用 ncclCalloc、xmlFindTag。 */
   NCCLCHECK(ncclCalloc(topoSystem, 1));
   struct ncclTopoSystem* system = *topoSystem;
   struct ncclXmlNode* topNode;
@@ -1106,7 +1106,7 @@ ncclResult_t ncclTopoGetSystemFromXml(struct ncclXml* xml, struct ncclTopoSystem
 NCCL_PARAM(TopoDumpFileRank, "TOPO_DUMP_FILE_RANK", 0);
 
 // Only set values if not already set
-static ncclResult_t xmlInitAttrInt(struct ncclXmlNode* node, const char* attrName, const int value) {
+static ncclResult_t xmlInitAttrInt(struct ncclXmlNode* node, const char* attrName, const int value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -1117,7 +1117,7 @@ static ncclResult_t xmlInitAttrInt(struct ncclXmlNode* node, const char* attrNam
   }
   return ncclSuccess;
 }
-static ncclResult_t xmlInitAttrFloat(struct ncclXmlNode* node, const char* attrName, const float value) {
+static ncclResult_t xmlInitAttrFloat(struct ncclXmlNode* node, const char* attrName, const float value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -1129,7 +1129,7 @@ static ncclResult_t xmlInitAttrFloat(struct ncclXmlNode* node, const char* attrN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoRefreshBcmP2pLinks(void) {
+ncclResult_t ncclTopoRefreshBcmP2pLinks(void) { /* 中文索引·体内调用 fopen、fread。 */
 #ifdef NCCL_OS_LINUX
   // refresh the switch topology by reading the link below
   FILE* fp = fopen("/sys/kernel/pci_switch_link/refresh_switch_toplogy", "r");
@@ -1144,7 +1144,7 @@ ncclResult_t ncclTopoRefreshBcmP2pLinks(void) {
 }
 
 // This is just checking for direct descendence
-int ncclTopoCheckPix(ncclXmlNode* common, ncclXmlNode** nodes, int nNodes) {
+int ncclTopoCheckPix(ncclXmlNode* common, ncclXmlNode** nodes, int nNodes) { /* 中文索引·体内调用 xmlGetAttrStr、strcmp。 */
   const char* tempBusId;
   // If the common parent isn't a pci switch, then this isn't PIX
   NCCLCHECK(xmlGetAttrStr(common, "busid", &tempBusId));
@@ -1178,7 +1178,7 @@ typedef struct xmlNodeStack {
   ncclXmlNode* elems[NCCL_TOPO_XML_DEPTH_MAX];
   int tail;
 
-  ncclXmlNode* top() {
+  ncclXmlNode* top() { /* 中文索引·体内调用 empty。 */
     if (!empty()) {
       return elems[tail - 1];
     } else {
@@ -1186,7 +1186,7 @@ typedef struct xmlNodeStack {
     }
   }
 
-  ncclXmlNode* pop() {
+  ncclXmlNode* pop() { /* 中文索引·体内调用 top。 */
     ncclXmlNode* node = top();
     if (node) {
       tail--;
@@ -1206,7 +1206,7 @@ typedef struct xmlNodeStack {
 
 } xmlNodeStack;
 
-ncclResult_t ncclFindFirstPciParent(ncclXmlNode** parent) {
+ncclResult_t ncclFindFirstPciParent(ncclXmlNode** parent) { /* 中文索引·体内调用 strcmp。 */
   ncclXmlNode* newParent = *parent;
   while (strcmp(newParent->name, "pci") != 0) {
     newParent = newParent->parent;
@@ -1218,7 +1218,7 @@ ncclResult_t ncclFindFirstPciParent(ncclXmlNode** parent) {
 }
 
 // 1. Find the common parent xmlNode between the given set of nodes
-ncclResult_t ncclTopoGetPath(ncclXmlNode** nodes, int nNodes, int* path, ncclXmlNode** parent) {
+ncclResult_t ncclTopoGetPath(ncclXmlNode** nodes, int nNodes, int* path, ncclXmlNode** parent) { /* 中文索引·体内调用 ncclCalloc、strcmp。 */
   // Track a stack of parents per-net node being merged
   xmlNodeStack* parents;
   NCCLCHECK(ncclCalloc(&parents, nNodes));
@@ -1325,7 +1325,7 @@ out:
 }
 
 ncclResult_t ncclTopoMakeUniqueBusId(struct ncclXml* xml, char* busId, struct ncclXmlNode** pciNode,
-                                     struct ncclXmlNode* parent) {
+                                     struct ncclXmlNode* parent) { /* 中文索引·体内调用 busIdToInt64、int64ToBusId。 */
   int i = 0;
   int64_t rBusId;
   NCCLCHECK(busIdToInt64(busId, &rBusId));
@@ -1351,7 +1351,7 @@ ncclResult_t ncclTopoMakeUniqueBusId(struct ncclXml* xml, char* busId, struct nc
 }
 
 // Add a new PCI node with a unique busId under (*parent) and overwrite the value of (*parent) to point to the new node
-ncclResult_t ncclTopoMakePciParent(struct ncclXml* xml, struct ncclXmlNode** parent, struct ncclXmlNode* physNetNode) {
+ncclResult_t ncclTopoMakePciParent(struct ncclXml* xml, struct ncclXmlNode** parent, struct ncclXmlNode* physNetNode) { /* 中文索引·体内调用 strcmp、memset。 */
   struct ncclXmlNode* newBusId = NULL;
   struct ncclXmlNode* pci = physNetNode->parent;
   if (pci) {
@@ -1385,7 +1385,7 @@ ncclResult_t ncclTopoMakePciParent(struct ncclXml* xml, struct ncclXmlNode** par
 }
 
 ncclResult_t ncclTopoMakeVnic(struct ncclXml* xml, struct ncclTopoNetInfo* netInfo, ncclNetVDeviceProps_t* vProps,
-                              struct ncclXmlNode** physNetNodes) {
+                              struct ncclXmlNode** physNetNodes) { /* 中文索引·体内调用 netInfo->makeVDevice。 */
   if (vProps->ndevs > netInfo->maxDevsPerNic) {
     WARN("TOPO/NET : Tried to merge too many NICs. %d > %d", vProps->ndevs, netInfo->maxDevsPerNic);
     return ncclInternalError;
@@ -1414,7 +1414,7 @@ ncclResult_t ncclTopoMakeVnic(struct ncclXml* xml, struct ncclTopoNetInfo* netIn
 }
 
 ncclResult_t ncclTopoForceMerge(struct ncclXml* xml, struct ncclTopoNetInfo* netInfo, int* placedDevs,
-                                ncclNetProperties_t* propsList, struct ncclXmlNode** physNetNodes, int nPhysDevs) {
+                                ncclNetProperties_t* propsList, struct ncclXmlNode** physNetNodes, int nPhysDevs) { /* 中文索引·体内调用 ncclCalloc、strlen。 */
   ncclResult_t ret = ncclSuccess;
   const char* str = netInfo->forceMerge;
   INFO(NCCL_ENV | NCCL_NET, "TOPO/NET : Force-fusing NICs using NCCL_NET_FORCE_MERGE=%s", str);
@@ -1478,7 +1478,7 @@ fail:
 }
 
 ncclResult_t ncclTopoAutoMerge(struct ncclXml* xml, struct ncclTopoNetInfo* netInfo, int* placedDevs,
-                               ncclNetProperties_t* propsList, struct ncclXmlNode** physNetNodes, int nPhysDevs) {
+                               ncclNetProperties_t* propsList, struct ncclXmlNode** physNetNodes, int nPhysDevs) { /* 中文索引·体内调用 ncclCalloc、ncclTopoGetPath。 */
   // Compute the path type between each device
   int* paths = NULL;
   ncclResult_t res = ncclSuccess;
@@ -1565,7 +1565,7 @@ struct kvDict nicPathKvList[] = {
 // clang-format on
 
 ncclResult_t ncclTopoFindLinkWidthRec(ncclXmlNode* node, ncclXmlNode** physNetNodes, int ndevs, int* foundPhysNet,
-                                      int* linkWidth) {
+                                      int* linkWidth) { /* 中文索引·体内调用 strcmp、xmlGetAttrInt。 */
   int myLinkWidth = 0;
   if (strcmp(node->name, "pci") == 0) {
     NCCLCHECK(xmlGetAttrInt(node, "link_width", &myLinkWidth));
@@ -1618,7 +1618,7 @@ ncclResult_t ncclTopoFindLinkWidthRec(ncclXmlNode* node, ncclXmlNode** physNetNo
 
 // DFS over nodes under common parent
 // Exclude link widths of non-physNetNodes chains
-ncclResult_t ncclTopoFindLinkWidth(ncclXmlNode* parent, ncclXmlNode** physNetNodes, int ndevs, int* linkWidth) {
+ncclResult_t ncclTopoFindLinkWidth(ncclXmlNode* parent, ncclXmlNode** physNetNodes, int ndevs, int* linkWidth) { /* 中文索引·体内调用 ncclTopoFindLinkWidthRec。 */
   *linkWidth = 0;
   for (int i = 0; i < parent->nSubs; i++) {
     ncclXmlNode* child = parent->subs[i];
@@ -1635,7 +1635,7 @@ ncclResult_t ncclTopoFindLinkWidth(ncclXmlNode* parent, ncclXmlNode** physNetNod
 
 ncclResult_t ncclTopoGetVNicParent(struct ncclXml* xml, const char* tagName,
                                    ncclResult_t (*getProperties)(int, ncclNetProperties_t*),
-                                   ncclNetVDeviceProps_t* vProps, ncclXmlNode** parent) {
+                                   ncclNetVDeviceProps_t* vProps, ncclXmlNode** parent) { /* 中文索引·体内调用 getProperties、xmlFindTagKv。 */
   ncclNetProperties_t props[NCCL_NET_MAX_DEVS_PER_NIC];
   ncclXmlNode* physNetNodes[NCCL_NET_MAX_DEVS_PER_NIC];
   for (int i = 0; i < vProps->ndevs; i++) {
@@ -1689,7 +1689,7 @@ ncclResult_t ncclTopoGetVNicParent(struct ncclXml* xml, const char* tagName,
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoMakeVNics(struct ncclXml* xml, struct ncclTopoNetInfo* netInfo, int physicalDevs) {
+ncclResult_t ncclTopoMakeVNics(struct ncclXml* xml, struct ncclTopoNetInfo* netInfo, int physicalDevs) { /* 中文索引·体内调用 ncclCalloc、netInfo->getProperties。 */
   int* placedDevs = NULL;
   struct ncclXmlNode** physNetNodes = NULL;
   ncclNetProperties_t* props = NULL;
@@ -1720,7 +1720,7 @@ out:
 }
 
 static ncclResult_t ncclTopoPopulateNics(ncclXml* xml, int startIndex, int endIndex, struct ncclTopoNetInfo* netInfo,
-                                         int virtualNics) {
+                                         int virtualNics) { /* 中文索引·体内调用 netInfo->getProperties、xmlFindTagKv。 */
   const char* tagName = netInfo->gin ? "gin" : (netInfo->rma ? "rma" : "net");
   for (int n = startIndex; n < endIndex; n++) {
     ncclNetProperties_t props;
@@ -1830,7 +1830,7 @@ static ncclResult_t ncclTopoPopulateNics(ncclXml* xml, int startIndex, int endIn
 }
 
 static ncclResult_t ncclTopoUpdateVNics(ncclXml* xml, struct ncclTopoNetInfo* net, int nPhysicalNics,
-                                        int nVirtualNics) {
+                                        int nVirtualNics) { /* 中文索引·体内调用 net->getProperties、xmlFindTagKv。 */
   for (int n = nPhysicalNics; n < nPhysicalNics + nVirtualNics; n++) {
     ncclNetProperties_t vProps;
     NCCLCHECK(net->getProperties(n, &vProps));
@@ -1855,7 +1855,7 @@ static ncclResult_t ncclTopoUpdateVNics(ncclXml* xml, struct ncclTopoNetInfo* ne
 }
 
 // Calls to network plugin APIs should be protected. This function should be called inside a per-process lock.
-ncclResult_t ncclTopoProcessNet(ncclXml* xml, const char* dumpXmlFile, struct ncclTopoNetInfo* net) {
+ncclResult_t ncclTopoProcessNet(ncclXml* xml, const char* dumpXmlFile, struct ncclTopoNetInfo* net) { /* 中文索引·体内调用 net->getDevCount、ncclTopoPopulateNics。 */
   bool usePhysicalDevices = (dumpXmlFile || net->makeVDevice == NULL);
   int nPhysicalNics, nVirtualNics;
   NCCLCHECK(net->getDevCount(net->netPluginIndex, &nPhysicalNics, &nVirtualNics));
@@ -1885,7 +1885,7 @@ ncclResult_t ncclTopoProcessNet(ncclXml* xml, const char* dumpXmlFile, struct nc
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetXmlCpuArch(ncclXml* xml, int* cpuArch) {
+ncclResult_t ncclTopoGetXmlCpuArch(ncclXml* xml, int* cpuArch) { /* 中文索引·体内调用 xmlFindTag、xmlGetAttr。 */
   // loop over the CPUs until we find the arch
   const char* str = NULL;
   struct ncclXmlNode* cpu = NULL;
@@ -1903,7 +1903,7 @@ static bool ncclTopoIsVeraRubin(int cudaCompCap, int cpuArch) {
   return cpuArch == NCCL_TOPO_CPU_ARCH_ARM && RUBIN_AND_LATER(cudaCompCap);
 }
 
-ncclResult_t ncclTopoGetFusionEnv(int* mergeLevel, const char** forceMerge, int cudaCompCap, int cpuArch) {
+ncclResult_t ncclTopoGetFusionEnv(int* mergeLevel, const char** forceMerge, int cudaCompCap, int cpuArch) { /* 中文索引·体内调用 ncclGetEnv、kvConvertToInt。 */
   if (forceMerge) *forceMerge = ncclGetEnv("NCCL_NET_FORCE_MERGE");
   const char* mergeLevelEnv = ncclGetEnv("NCCL_NET_MERGE_LEVEL");
   if (mergeLevelEnv) {
@@ -1914,7 +1914,7 @@ ncclResult_t ncclTopoGetFusionEnv(int* mergeLevel, const char** forceMerge, int 
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoGetMergePolicy(int* mergePolicy, int cudaCompCap, int cpuArch) {
+static ncclResult_t ncclTopoGetMergePolicy(int* mergePolicy, int cudaCompCap, int cpuArch) { /* 中文索引·体内调用 ncclTopoIsVeraRubin、ncclGetEnv。 */
   *mergePolicy = ncclTopoIsVeraRubin(cudaCompCap, cpuArch) ? NCCL_NET_MERGE_POLICY_RAIL : NCCL_NET_MERGE_POLICY_ALL;
   const char* env = ncclGetEnv("NCCL_NET_MERGE_POLICY");
   if (env) {
@@ -1934,7 +1934,7 @@ static ncclResult_t ncclTopoGetMergePolicy(int* mergePolicy, int cudaCompCap, in
 static std::mutex netMutex;
 
 ncclResult_t ncclTopoGetNetPropertiesSnapshot(struct ncclComm* comm, bool requireCommInitialized,
-                                              struct ncclTopoNetPropertiesSnapshot** snapshots, int* nSnapshots) {
+                                              struct ncclTopoNetPropertiesSnapshot** snapshots, int* nSnapshots) { /* 中文索引·体内调用 net->devices、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   int count = 0;
 
@@ -1991,7 +1991,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclTopoGetSystem(struct ncclComm* comm, struct ncclTopoSystem** system, const char* dumpXmlFile) {
+ncclResult_t ncclTopoGetSystem(struct ncclComm* comm, struct ncclTopoSystem** system, const char* dumpXmlFile) { /* 中文索引·体内调用 xmlAlloc、ncclGetEnv。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclXml* xml;
   char* mem = NULL;
@@ -2219,7 +2219,7 @@ ncclResult_t ncclTopoGetLocal(struct ncclTopoSystem* system, int type, int index
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetLocalNetCountByBw(struct ncclTopoSystem* system, int gpu, int* count, float* bw) {
+ncclResult_t ncclTopoGetLocalNetCountByBw(struct ncclTopoSystem* system, int gpu, int* count, float* bw) { /* 中文索引·体内调用 ncclGetLocalCpu、ncclTopoGetLocalNet。 */
   // Assuming BW to CPU reflects the GPU bandwidth via P2P or C2C.
   // Caveat, this could be wrong if there is a PCIe switch, and a narrower link to the CPU.
   int c;
@@ -2249,7 +2249,7 @@ ncclResult_t ncclTopoGetLocalNetCountByBw(struct ncclTopoSystem* system, int gpu
 
 static int netDevsPolicyNum = -1;
 static enum netDevsPolicy netDevsPolicy = NETDEVS_POLICY_UNDEF;
-static void getNetDevsPolicyOnce() {
+static void getNetDevsPolicyOnce() { /* 中文索引·体内调用 ncclGetEnv、strcasecmp。 */
   const char* envStr = ncclGetEnv("NCCL_NETDEVS_POLICY");
   if (envStr) {
     if (strcasecmp(envStr, "AUTO") == 0) {
@@ -2272,7 +2272,7 @@ static void getNetDevsPolicyOnce() {
   if (netDevsPolicy == NETDEVS_POLICY_UNDEF) netDevsPolicy = NETDEVS_POLICY_AUTO;
 }
 
-ncclResult_t ncclTopoGetNetDevsPolicy(enum netDevsPolicy* policy, int* policyNum) {
+ncclResult_t ncclTopoGetNetDevsPolicy(enum netDevsPolicy* policy, int* policyNum) { /* 中文索引·体内调用 std::call_once。 */
   static std::once_flag onceFlag;
   std::call_once(onceFlag, getNetDevsPolicyOnce);
   if (netDevsPolicy == NETDEVS_POLICY_MAX && netDevsPolicyNum <= 0) {
@@ -2302,7 +2302,7 @@ static int compareRailPlane(const void* a, const void* b) {
 }
 
 static ncclResult_t ncclTopoSortDevsByRailPlane(struct ncclTopoSystem* system, int type, int* localNets,
-                                                int localNetCount, int* railOffset, int* localRailCount) {
+                                                int localNetCount, int* railOffset, int* localRailCount) { /* 中文索引·体内调用 qsort。 */
   *localRailCount = 0;
   if (localNetCount == 0) return ncclSuccess;
 
@@ -2333,7 +2333,7 @@ static ncclResult_t ncclTopoSortDevsByRailPlane(struct ncclTopoSystem* system, i
 }
 
 ncclResult_t ncclTopoGetLocalNetType(struct ncclTopoSystem* system, int type, int rank, int channelId, int64_t* id,
-                                     int* dev) {
+                                     int* dev) { /* 中文索引·体内调用 ncclTopoRankToIndex、ncclTopoGetLocal。 */
   int gpu;
   NCCLCHECK(ncclTopoRankToIndex(system, rank, &gpu, /*showWarn=*/true));
 
@@ -2389,7 +2389,7 @@ ncclResult_t ncclTopoGetLocalGinDev(struct ncclTopoSystem* system, int rank, int
   return ncclTopoGetLocalNetType(system, GIN, rank, channelId, id, dev);
 }
 
-ncclResult_t ncclTopoGetLocalGinDevs(struct ncclComm* comm, int* localGinDevs, int* localGinCount) {
+ncclResult_t ncclTopoGetLocalGinDevs(struct ncclComm* comm, int* localGinDevs, int* localGinCount) { /* 中文索引·体内调用 ncclTopoGetLocalGinDev。 */
   for (int c = 0; c < NCCL_TOPO_MAX_NODES; c++) {
     NCCLCHECK(ncclTopoGetLocalGinDev(comm->topo, comm->rank, c, NULL, localGinDevs + c));
     if (c > 0 && localGinDevs[c] == localGinDevs[0]) {
@@ -2404,7 +2404,7 @@ ncclResult_t ncclTopoGetLocalRmaDev(struct ncclTopoSystem* system, int rank, int
   return ncclTopoGetLocalNetType(system, RMA, rank, channelId, id, dev);
 }
 
-ncclResult_t ncclTopoGetLocalRmaDevs(struct ncclComm* comm, int* localRmaDevs, int* localRmaCount) {
+ncclResult_t ncclTopoGetLocalRmaDevs(struct ncclComm* comm, int* localRmaDevs, int* localRmaCount) { /* 中文索引·体内调用 ncclTopoGetLocalRmaDev。 */
   for (int c = 0; c < NCCL_TOPO_MAX_NODES; c++) {
     NCCLCHECK(ncclTopoGetLocalRmaDev(comm->topo, comm->rank, c, NULL, localRmaDevs + c));
     if (c > 0 && localRmaDevs[c] == localRmaDevs[0]) {
@@ -2415,7 +2415,7 @@ ncclResult_t ncclTopoGetLocalRmaDevs(struct ncclComm* comm, int* localRmaDevs, i
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetLocalGpu(struct ncclTopoSystem* system, int64_t netId, int* gpuIndex) {
+ncclResult_t ncclTopoGetLocalGpu(struct ncclTopoSystem* system, int64_t netId, int* gpuIndex) { /* 中文索引·体内调用 ncclTopoIdToIndex、ncclTopoGetLocal。 */
   ncclResult_t ret = ncclSuccess;
   int netIndex;
   NCCLCHECK(ncclTopoIdToIndex(system, NET, netId, &netIndex));
@@ -2455,7 +2455,7 @@ ncclResult_t ncclTopoCpuType(struct ncclTopoSystem* system, int* arch, int* vend
 
 NCCL_PARAM(IgnoreCpuAffinity, "IGNORE_CPU_AFFINITY", 0);
 
-ncclResult_t ncclTopoGetCpuAffinity(struct ncclTopoSystem* system, int rank, ncclAffinity* affinity) {
+ncclResult_t ncclTopoGetCpuAffinity(struct ncclTopoSystem* system, int rank, ncclAffinity* affinity) { /* 中文索引·体内调用 ncclTopoRankToIndex、ncclGetLocalCpu。 */
   struct ncclTopoNode *cpu = NULL, *gpu = NULL;
   int gpuIndex, cpuIndex;
   NCCLCHECK(ncclTopoRankToIndex(system, rank, &gpuIndex, /*showWarn=*/true));

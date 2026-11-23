@@ -64,7 +64,7 @@ struct LocalInfo {
 };
 
 // Hostnames and device names must be terminated and safe as a single, non-option shell argument.
-static bool isSafeShellArgument(const char* name, size_t size) {
+static bool isSafeShellArgument(const char* name, size_t size) { /* 中文索引·体内调用 strnlen、strspn。 */
   size_t length = strnlen(name, size);
   if (length == 0 || length == size || name[0] == '-') return false;
   return strspn(name, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-") == length;
@@ -82,7 +82,7 @@ struct DeviceGroup {
 };
 
 // Distinct first-device names in first-appearance order (the pairing geometry), each with its ranks.
-static std::vector<DeviceGroup> nodeInventory(const ncclComm* comm, const LocalInfo* rankInfo, int node) {
+static std::vector<DeviceGroup> nodeInventory(const ncclComm* comm, const LocalInfo* rankInfo, int node) { /* 中文索引·体内调用 inventory.size、strcmp。 */
   std::vector<DeviceGroup> inventory;
   for (int localRank = 0; localRank < comm->nodeRanks[node].localRanks; localRank++) {
     int rank = comm->nodeRanks[node].localRankToRank[localRank];
@@ -95,7 +95,7 @@ static std::vector<DeviceGroup> nodeInventory(const ncclComm* comm, const LocalI
   return inventory;
 }
 
-static int findGroup(const std::vector<DeviceGroup>& inventory, const char* name) {
+static int findGroup(const std::vector<DeviceGroup>& inventory, const char* name) { /* 中文索引·体内调用 inventory.size、strcmp。 */
   for (size_t i = 0; i < inventory.size(); i++) {
     if (strcmp(inventory[i].name, name) == 0) return (int)i;
   }
@@ -103,7 +103,7 @@ static int findGroup(const std::vector<DeviceGroup>& inventory, const char* name
 }
 
 // Position of `rank` among the ranks sharing its device: its pairing occurrence.
-static int rankPosition(const DeviceGroup& group, int rank) {
+static int rankPosition(const DeviceGroup& group, int rank) { /* 中文索引·体内调用 group.ranks.size。 */
   for (size_t i = 0; i < group.ranks.size(); i++) {
     if (group.ranks[i] == rank) return (int)i;
   }
@@ -114,7 +114,7 @@ static int rankPosition(const DeviceGroup& group, int rank) {
 // Server devices anchor on the same-named client device, rotated by one when cross; ranks sharing
 // a device pair k-th with k-th. False when this rank has no check this phase.
 static bool findPair(const ncclComm* comm, const LocalInfo* rankInfo, int phase, bool cross, int& serverRank,
-                     int& clientRank) {
+                     int& clientRank) { /* 中文索引·体内调用 nodeInventory、client.size。 */
   int nNodes = comm->nNodes;
   int serverNode, clientNode;
   if (comm->node % 2 == phase) {
@@ -168,7 +168,7 @@ static const char* toolFailure(int exitCode) {
 }
 
 // Matches a known plugin name exactly or followed by a delimiter, rejecting prefix-sharing names.
-static bool pluginSupportsIb(const char* name) {
+static bool pluginSupportsIb(const char* name) { /* 中文索引·体内调用 strlen、strncmp。 */
   static const char* const kIbPluginNames[] = {"IB", "IBext", "SPCX", "NCCL RDMA Plugin"};
   if (name == nullptr) return false;
   for (const char* plugin : kIbPluginNames) {
@@ -178,7 +178,7 @@ static bool pluginSupportsIb(const char* name) {
   return false;
 }
 
-static bool ibDeviceExists(const char* name) {
+static bool ibDeviceExists(const char* name) { /* 中文索引·体内调用 snprintf、access。 */
   char path[PATH_MAX];
   int length = snprintf(path, sizeof(path), "/sys/class/infiniband/%s", name);
   return length > 0 && length < static_cast<int>(sizeof(path)) && access(path, F_OK) == 0;
@@ -186,7 +186,7 @@ static bool ibDeviceExists(const char* name) {
 
 // Resolves one segment of a (possibly merged) device name, cutting a "_dma" suffix that sysfs
 // does not know. False when the name is malformed or not present in sysfs.
-static bool resolveDeviceName(const char* start, size_t length, char out[IB_BW_NAME_SIZE]) {
+static bool resolveDeviceName(const char* start, size_t length, char out[IB_BW_NAME_SIZE]) { /* 中文索引·体内调用 memcpy、ibDeviceExists。 */
   if (length == 0 || length >= IB_BW_NAME_SIZE) return false;
   memcpy(out, start, length);
   out[length] = '\0';
@@ -205,7 +205,7 @@ static int segmentCount(const char* name) {
   return count;
 }
 
-static int probeCapabilities(LocalInfo* local) {
+static int probeCapabilities(LocalInfo* local) { /* 中文索引·体内调用 ncclDiagChildRun、strstr。 */
   char output[IB_BW_TOOL_OUTPUT_BYTES];
   int exitCode = ncclDiagChildRun("ib_write_bw --help", IB_BW_TIMEOUT_SEC, output, IB_BW_TOOL_OUTPUT_BYTES);
   local->cuda = strstr(output, "--use_cuda") != nullptr;
@@ -213,7 +213,7 @@ static int probeCapabilities(LocalInfo* local) {
   return exitCode;
 }
 
-static void discoverLocal(ncclComm* comm, LocalInfo* local) {
+static void discoverLocal(ncclComm* comm, LocalInfo* local) { /* 中文索引·体内调用 memset、gethostname。 */
   memset(local, 0, sizeof(*local));
 
   if (gethostname(local->hostname, sizeof(local->hostname) - 1) != 0) {
@@ -300,7 +300,7 @@ static void discoverLocal(ncclComm* comm, LocalInfo* local) {
 // Builds the ib_write_bw command line; the client form appends the server hostname (the connect
 // target). Returns false on unsafe names or truncation.
 static bool buildCommand(char* out, int outSize, bool server, const LocalInfo& local, const LocalInfo& serverInfo,
-                         bool cudaEnabled, bool dmabufEnabled, int cudaDev, int port, int qps) {
+                         bool cudaEnabled, bool dmabufEnabled, int cudaDev, int port, int qps) { /* 中文索引·体内调用 isSafeShellArgument、snprintf。 */
   if (!isSafeShellArgument(local.device, sizeof(local.device)) ||
       (!server && !isSafeShellArgument(serverInfo.hostname, sizeof(serverInfo.hostname))))
     return false;
@@ -317,7 +317,7 @@ static bool buildCommand(char* out, int outSize, bool server, const LocalInfo& l
 }
 
 // Finds the "#bytes #iterations peak average" result row and extracts the average bandwidth.
-static bool parseBandwidth(const char* output, double& average) {
+static bool parseBandwidth(const char* output, double& average) { /* 中文索引·体内调用 sscanf、isfinite。 */
   for (const char* line = output; line != nullptr && *line != '\0';) {
     double peak;
     if (sscanf(line, "%*u %*u %lf %lf", &peak, &average) == 2 && isfinite(peak) && isfinite(average)) return true;
@@ -328,7 +328,7 @@ static bool parseBandwidth(const char* output, double& average) {
 }
 
 static int computeBandwidthStats(const RankBandwidth* bandwidth, int nRanks, bool cross, double* sorted,
-                                 double& minimum, double& median, double& maximum) {
+                                 double& minimum, double& median, double& maximum) { /* 中文索引·体内调用 std::sort。 */
   int measuredRanks = 0;
   for (int rank = 0; rank < nRanks; rank++) {
     double value = cross ? bandwidth[rank].cross : bandwidth[rank].direct;
@@ -346,7 +346,7 @@ static int computeBandwidthStats(const RankBandwidth* bandwidth, int nRanks, boo
 // One-byte allgather vote: true only when `localOk` was true on every rank. Completing the
 // allgather is also the lockstep point, so a rank that cannot proceed never strands a pair peer.
 // `transportOk` reports the transport; on failure the vote is false.
-static bool allRanksOk(ncclComm* comm, bool* votes, bool localOk, bool& transportOk) {
+static bool allRanksOk(ncclComm* comm, bool* votes, bool localOk, bool& transportOk) { /* 中文索引·体内调用 bootstrapAllGather。 */
   votes[comm->rank] = localOk;
   transportOk = bootstrapAllGather(comm->bootstrap, votes, sizeof(*votes)) == ncclSuccess;
   if (!transportOk) return false;
@@ -356,7 +356,7 @@ static bool allRanksOk(ncclComm* comm, bool* votes, bool localOk, bool& transpor
 }
 
 // Echoes the client's measurement to the server, so both endpoints hold the client-measured value.
-static bool syncPair(ncclComm* comm, bool isServer, int peer, double& bandwidth) {
+static bool syncPair(ncclComm* comm, bool isServer, int peer, double& bandwidth) { /* 中文索引·体内调用 bootstrapSend、bootstrapRecv。 */
   bool ok;
   if (!isServer) {
     ok = bootstrapSend(comm->bootstrap, peer, IB_BW_PAIR_SYNC_TAG, &bandwidth, sizeof(bandwidth)) == ncclSuccess;
@@ -374,7 +374,7 @@ static bool bandwidthOutlier(double value, double median) {
 }
 
 static void reportBandwidthStats(const ncclComm* comm, const LocalInfo* rankInfo, const RankBandwidth* bandwidth,
-                                 double* sorted, bool cross, bool complete) {
+                                 double* sorted, bool cross, bool complete) { /* 中文索引·体内调用 computeBandwidthStats、bandwidthOutlier。 */
   if (comm->rank != 0) return;
   const char* mode = cross ? "cross-nic" : "same-nic";
   double minimum = 0, median = 0, maximum = 0;
@@ -407,7 +407,7 @@ struct ServerReadyCtx {
   bool sent;
 };
 
-static void serverListenLine(const char* line, void* opaque) {
+static void serverListenLine(const char* line, void* opaque) { /* 中文索引·体内调用 strstr、bootstrapSend。 */
   ServerReadyCtx* ctx = static_cast<ServerReadyCtx*>(opaque);
   if (ctx->sent || strstr(line, "Waiting for client") == nullptr) return;
   bool ready = true;
@@ -417,7 +417,7 @@ static void serverListenLine(const char* line, void* opaque) {
 
 // Returns the client-measured bandwidth in Gbit/s (identical on both endpoints, see syncPair),
 // or -1 when the pair produced no measurement.
-static double runPair(ncclComm* comm, const LocalInfo* rankInfo, int serverRank, int clientRank, bool cross) {
+static double runPair(ncclComm* comm, const LocalInfo* rankInfo, int serverRank, int clientRank, bool cross) { /* 中文索引·体内调用 benchmarkPort、ncclParamIbQpsPerConn。 */
   bool isServer = comm->rank == serverRank;
   int peer = isServer ? clientRank : serverRank;
   const LocalInfo& serverInfo = rankInfo[serverRank];
@@ -496,7 +496,7 @@ static double runPair(ncclComm* comm, const LocalInfo* rankInfo, int serverRank,
 // Each phase opens with a vote that keeps phases in lockstep and stops all ranks together when the
 // allocated time runs out. Pair failures report locally; the return value is transport health only.
 static bool runSchedule(ncclComm* comm, const LocalInfo* rankInfo, bool* votes, bool useCrossNic, RankBandwidth& result,
-                        bool& allPairsRan) {
+                        bool& allPairsRan) { /* 中文索引·体内调用 ncclParamDiagIbBwTimeout、clockNano。 */
   double directSum = 0, crossSum = 0;
   int directCount = 0, crossCount = 0;
   bool complete = true;
@@ -545,7 +545,7 @@ static bool commUsesCrossNic(const ncclComm* comm) {
 
 } // namespace
 
-void ncclDiagRunIbWriteBw(ncclComm* comm) {
+void ncclDiagRunIbWriteBw(ncclComm* comm) { /* 中文索引·体内调用 ncclCalloc、discoverLocal。 */
   if (comm == nullptr || comm->peerInfo == nullptr || comm->nodeRanks == nullptr || comm->nRanks <= 0) return;
   LocalInfo* rankInfo = nullptr;
   bool* votes = nullptr;

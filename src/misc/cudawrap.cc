@@ -24,7 +24,7 @@ CUmemAllocationHandleType ncclCuMemHandleType = CU_MEM_HANDLE_TYPE_POSIX_FILE_DE
 static int ncclCuMemSupported = 0;
 
 // Determine whether CUMEM & VMM RDMA is supported on this platform
-int ncclIsCuMemSupported() {
+int ncclIsCuMemSupported() { /* 中文索引·体内调用 cudaDriverGetVersion、cudaGetDevice。 */
 #if CUDART_VERSION < 11030 || defined(NCCL_OS_WINDOWS)
   return 0;
 #else
@@ -47,13 +47,13 @@ error:
 #endif
 }
 
-int ncclCuMemEnable() {
+int ncclCuMemEnable() { /* 中文索引·体内调用 ncclParamCuMemEnable。 */
   // NCCL_CUMEM_ENABLE=-2 means auto-detect CUMEM support
   int param = ncclParamCuMemEnable();
   return param >= 0 ? param : (param == -2 && ncclCuMemSupported);
 }
 
-ncclResult_t ncclCuMemGdrSupport(int cudaDev, bool* support) {
+ncclResult_t ncclCuMemGdrSupport(int cudaDev, bool* support) { /* 中文索引·体内调用 ncclCuMemEnable、cuDeviceGet。 */
   *support = false;
   if (ncclCuMemEnable()) {
     CUdevice cuDev;
@@ -76,7 +76,7 @@ static int ncclCuMemHostProbeCache[NCCL_MAX_LOCAL_RANKS] = {};
 
 // Return whether the CUDA version and NCCL_CUMEM_HOST_ENABLE policy allow
 // attempting cuMem host allocations. This does not probe the current device.
-static bool ncclCuMemHostAllowed(int cudaApiVersion) {
+static bool ncclCuMemHostAllowed(int cudaApiVersion) { /* 中文索引·体内调用 ncclParamCuMemHostEnable、ncclNvmlSystemGetDriverVersion。 */
 #if CUDART_VERSION < 12020
   (void)cudaApiVersion;
   return false;
@@ -93,7 +93,7 @@ static bool ncclCuMemHostAllowed(int cudaApiVersion) {
 #endif
 }
 
-bool ncclCuMemHostEnable() {
+bool ncclCuMemHostEnable() { /* 中文索引·体内调用 cudaGetDevice、ncclCudaDriverVersion。 */
 #if CUDART_VERSION < 12020
   return false;
 #else
@@ -358,7 +358,7 @@ static ncclResult_t cudaPfnFuncLoader(void) {
 static std::once_flag initOnceFlag;
 static ncclResult_t initResult;
 
-static void initOnceFunc() {
+static void initOnceFunc() { /* 中文索引·体内调用 ncclGetEnv、cudaGetDevice。 */
   do {
     const char* val = ncclGetEnv("CUDA_LAUNCH_BLOCKING");
     ncclCudaLaunchBlocking = val != nullptr && val[0] != 0 && !(val[0] == '0' && val[1] == 0);
@@ -414,7 +414,7 @@ ncclResult_t ncclCudaLibraryInit() {
 }
 
 // Wrapper for cuStreamBatchMemOp that handles the 255 operations per call limit
-ncclResult_t ncclCuStreamBatchMemOp(cudaStream_t stream, unsigned int numOps, CUstreamBatchMemOpParams* batchParams) {
+ncclResult_t ncclCuStreamBatchMemOp(cudaStream_t stream, unsigned int numOps, CUstreamBatchMemOpParams* batchParams) { /* 中文索引·体内调用 cuStreamBatchMemOp。 */
   ncclResult_t ret = ncclSuccess;
   const unsigned int maxOpsPerBatch = 255;
 

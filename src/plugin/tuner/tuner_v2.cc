@@ -14,7 +14,7 @@
 static ncclTuner_v2_t* ncclTuner_v2;
 static ncclTuner_t ncclTuner;
 
-static int hasNvlsSupport(float** collCostTable) {
+static int hasNvlsSupport(float** collCostTable) { /* 中文索引·体内调用 float。 */
   // Requirements for support of different algorithms:
   //
   // - NVLS intra-node: nvlsSupport
@@ -39,7 +39,7 @@ static int hasCollNetSupport(float** collCostTable) {
 static ncclResult_t ncclTuner_getCollInfo(void* context, ncclFunc_t collType, size_t nBytes, int numPipeOps,
                                           float** collCostTable, int numAlgo __attribute__((unused)),
                                           int numProto __attribute__((unused)), int regBuff __attribute__((unused)),
-                                          int* nChannels) {
+                                          int* nChannels) { /* 中文索引·体内调用 hasNvlsSupport、hasCollNetSupport。 */
   int algorithm = NCCL_ALGO_UNDEF;
   int protocol = NCCL_PROTO_UNDEF;
   int nvlsSupport = hasNvlsSupport(collCostTable);
@@ -59,7 +59,7 @@ static ncclResult_t ncclTuner_finalize(void* ctx) {
 }
 
 static ncclResult_t ncclTuner_init(void** ctx, uint64_t commId, size_t nRanks, size_t nNodes, ncclDebugLogger_t logfn,
-                                   ncclNvlDomainInfo_v5_t* nvlDomainInfo, ncclTunerConstants_t* /*constants*/) {
+                                   ncclNvlDomainInfo_v5_t* nvlDomainInfo, ncclTunerConstants_t* /*constants*/) { /* 中文索引·体内调用 ncclTuner_v2->init。 */
   NCCLCHECK(ncclTuner_v2->init(nRanks, nNodes, logfn, ctx));
   ncclTuner.getCollInfo = ncclTuner_getCollInfo;
   ncclTuner.getChunkSize = NULL;
@@ -67,7 +67,7 @@ static ncclResult_t ncclTuner_init(void** ctx, uint64_t commId, size_t nRanks, s
   return ncclSuccess;
 }
 
-ncclTuner_t* getNcclTuner_v2(void* lib) {
+ncclTuner_t* getNcclTuner_v2(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclTuner_v2 = (ncclTuner_v2_t*)ncclOsDlsym(lib, "ncclTunerPlugin_v2");
   if (ncclTuner_v2) {
     ncclTuner.name = ncclTuner_v2->name;

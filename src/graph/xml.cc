@@ -35,7 +35,7 @@ struct xmlHandler {
 
 #if defined(NCCL_OS_LINUX)
 
-ncclResult_t xmlGetChar(FILE* file, char* c) {
+ncclResult_t xmlGetChar(FILE* file, char* c) { /* 中文索引·体内调用 fread。 */
   if (fread(c, 1, 1, file) == 0) {
     WARN("XML Parse : Unexpected EOF");
     return ncclInternalError;
@@ -43,7 +43,7 @@ ncclResult_t xmlGetChar(FILE* file, char* c) {
   return ncclSuccess;
 }
 
-ncclResult_t xmlGetValue(FILE* file, char* value, char* last) {
+ncclResult_t xmlGetValue(FILE* file, char* value, char* last) { /* 中文索引·体内调用 xmlGetChar。 */
   char c;
   NCCLCHECK(xmlGetChar(file, &c));
   if (c != '"' && c != '\'') {
@@ -84,7 +84,7 @@ ncclResult_t xmlGetValue(FILE* file, char* value, char* last) {
   return ncclSuccess;
 }
 
-ncclResult_t xmlGetToken(FILE* file, char* name, char* value, char* last) {
+ncclResult_t xmlGetToken(FILE* file, char* name, char* value, char* last) { /* 中文索引·体内调用 xmlGetChar、xmlGetValue。 */
   char c;
   char* ptr = name;
   int o = 0;
@@ -118,7 +118,7 @@ ncclResult_t xmlGetToken(FILE* file, char* name, char* value, char* last) {
     s[1] = s[2]; \
     s[2] = c; \
   } while (0)
-ncclResult_t xmlSkipComment(FILE* file, char* start, char next) {
+ncclResult_t xmlSkipComment(FILE* file, char* start, char next) { /* 中文索引·体内调用 strlen、strcmp。 */
   // Start from something neutral with \0 at the end.
   char end[4] = "...";
 
@@ -139,7 +139,7 @@ ncclResult_t xmlSkipComment(FILE* file, char* start, char next) {
   return ncclSuccess;
 }
 
-ncclResult_t xmlGetNode(FILE* file, struct ncclXmlNode* node) {
+ncclResult_t xmlGetNode(FILE* file, struct ncclXmlNode* node) { /* 中文索引·体内调用 fread、xmlGetToken。 */
   node->type = NODE_TYPE_NONE;
   char c = ' ';
   while (c == ' ' || c == '\n' || c == '\r') {
@@ -195,7 +195,7 @@ ncclResult_t xmlGetNode(FILE* file, struct ncclXmlNode* node) {
 }
 
 ncclResult_t xmlLoadSub(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head, struct xmlHandler handlers[],
-                        int nHandlers) {
+                        int nHandlers) { /* 中文索引·体内调用 memset、xmlGetNode。 */
   if (head && head->type == NODE_TYPE_SINGLE) return ncclSuccess;
   while (1) {
     if (xml->maxIndex == xml->maxNodes) {
@@ -272,7 +272,7 @@ ncclResult_t ncclTopoConvertXml(struct ncclXml* xml, uintptr_t base, int exp) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoDumpXmlRec(int indent, FILE* file, struct ncclXmlNode* node) {
+ncclResult_t ncclTopoDumpXmlRec(int indent, FILE* file, struct ncclXmlNode* node) { /* 中文索引·体内调用 fprintf、strcmp。 */
   for (int i = 0; i < indent; i++) fprintf(file, " ");
   fprintf(file, "<%s", node->name);
 
@@ -296,7 +296,7 @@ ncclResult_t ncclTopoDumpXmlRec(int indent, FILE* file, struct ncclXmlNode* node
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoDumpXmlToFile(const char* xmlTopoFile, struct ncclXml* xml) {
+ncclResult_t ncclTopoDumpXmlToFile(const char* xmlTopoFile, struct ncclXml* xml) { /* 中文索引·体内调用 fopen、ncclTopoDumpXmlRec。 */
   ncclResult_t ret = ncclSuccess;
   FILE* file = fopen(xmlTopoFile, "w");
   if (file == NULL) {
@@ -310,7 +310,7 @@ exit:
 }
 
 static ncclResult_t xmlTopoFuseXmlRecursive(struct ncclXml* dst, struct ncclXmlNode* dstParent,
-                                            struct ncclXmlNode* srcParent) {
+                                            struct ncclXmlNode* srcParent) { /* 中文索引·体内调用 xmlFindNode、xmlAddTree。 */
   for (int i = 0; i < srcParent->nSubs; i++) {
     struct ncclXmlNode* srcNode = srcParent->subs[i];
     struct ncclXmlNode* dstNode;
@@ -324,7 +324,7 @@ static ncclResult_t xmlTopoFuseXmlRecursive(struct ncclXml* dst, struct ncclXmlN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoFuseXml(struct ncclXml* dst, struct ncclXml* src) {
+ncclResult_t ncclTopoFuseXml(struct ncclXml* dst, struct ncclXml* src) { /* 中文索引·体内调用 xmlFindTag、xmlAddTree。 */
   struct ncclXmlNode* topNodeDst;
   NCCLCHECK(xmlFindTag(dst, "system", &topNodeDst));
 
@@ -361,7 +361,7 @@ ncclResult_t ncclTopoXmlLoadC2c(FILE* file, struct ncclXml* xml, struct ncclXmlN
   NCCLCHECK(xmlLoadSub(file, xml, head, NULL, 0));
   return ncclSuccess;
 }
-ncclResult_t ncclTopoXmlLoadGpu(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlLoadGpu(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {{"nvlink", ncclTopoXmlLoadNvlink}, {"c2c", ncclTopoXmlLoadC2c}};
   NCCLCHECK(xmlLoadSub(file, xml, head, handlers, 2));
   return ncclSuccess;
@@ -372,7 +372,7 @@ ncclResult_t ncclTopoXmlLoadNet(FILE* file, struct ncclXml* xml, struct ncclXmlN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlLoadNic(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlLoadNic(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {
     {"net", ncclTopoXmlLoadNet}, {"gin", ncclTopoXmlLoadNet}, {"rma", ncclTopoXmlLoadNet}
   };
@@ -380,7 +380,7 @@ ncclResult_t ncclTopoXmlLoadNic(FILE* file, struct ncclXml* xml, struct ncclXmlN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlLoadPci(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlLoadPci(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {{"pci", ncclTopoXmlLoadPci},
                                   {"gpu", ncclTopoXmlLoadGpu},
                                   {"nic", ncclTopoXmlLoadNic},
@@ -389,13 +389,13 @@ ncclResult_t ncclTopoXmlLoadPci(FILE* file, struct ncclXml* xml, struct ncclXmlN
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlLoadCpu(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlLoadCpu(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {{"pci", ncclTopoXmlLoadPci}, {"nic", ncclTopoXmlLoadNic}};
   NCCLCHECK(xmlLoadSub(file, xml, head, handlers, 2));
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlLoadSystem(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlLoadSystem(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlGetAttrInt、xmlGetAttr。 */
   int version;
   NCCLCHECK(xmlGetAttrInt(head, "version", &version));
   if (version != NCCL_TOPO_XML_VERSION) {
@@ -414,7 +414,7 @@ ncclResult_t ncclTopoXmlLoadSystem(FILE* file, struct ncclXml* xml, struct ncclX
 
 #endif // NCCL_OS_LINUX (XML file parsers)
 
-ncclResult_t ncclTopoGetXmlFromFile(const char* xmlTopoFile, struct ncclXml* xml, int warn) {
+ncclResult_t ncclTopoGetXmlFromFile(const char* xmlTopoFile, struct ncclXml* xml, int warn) { /* 中文索引·体内调用 fopen、strerror。 */
 #if NCCL_OS_LINUX
   ncclResult_t ret = ncclSuccess;
   FILE* file = fopen(xmlTopoFile, "r");
@@ -448,7 +448,7 @@ exit:
 #define BUSID_REDUCED_SIZE (sizeof("0000:00"))
 
 ncclResult_t ncclTopoSetAttrFromSys(struct ncclXmlNode* pciNode, const char* path, const char* fileName,
-                                    const char* attrName) {
+                                    const char* attrName) { /* 中文索引·体内调用 ncclOsTopoGetStrFromSys、xmlSetAttr。 */
   char strValue[MAX_STR_LEN];
   NCCLCHECK(ncclOsTopoGetStrFromSys(path, fileName, strValue, MAX_STR_LEN));
   if (strValue[0] != '\0') NCCLCHECK(xmlSetAttr(pciNode, attrName, strValue));
@@ -456,7 +456,7 @@ ncclResult_t ncclTopoSetAttrFromSys(struct ncclXmlNode* pciNode, const char* pat
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoSetAttrFromNvml(struct ncclXmlNode* pciNode, nvmlDevice_t device, const char* attrName) {
+ncclResult_t ncclTopoSetAttrFromNvml(struct ncclXmlNode* pciNode, nvmlDevice_t device, const char* attrName) { /* 中文索引·体内调用 ncclNvmlDeviceGetPciInfo、strcmp。 */
   nvmlPciInfo_t pciInfo;
   ncclResult_t ret = ncclNvmlDeviceGetPciInfo(device, &pciInfo);
   if (ret != ncclSuccess) return ret;
@@ -479,7 +479,7 @@ ncclResult_t ncclTopoSetAttrFromNvml(struct ncclXmlNode* pciNode, nvmlDevice_t d
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetXmlFromCpu(struct ncclXmlNode* cpuNode, struct ncclXml* xml) {
+ncclResult_t ncclTopoGetXmlFromCpu(struct ncclXmlNode* cpuNode, struct ncclXml* xml) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetAttr。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(cpuNode, "affinity", &index));
   if (index == -1) {
@@ -576,7 +576,7 @@ ncclResult_t ncclTopoGetXmlFromCpu(struct ncclXmlNode* cpuNode, struct ncclXml* 
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetPciNode(struct ncclXml* xml, const char* busId, struct ncclXmlNode** pciNode) {
+ncclResult_t ncclTopoGetPciNode(struct ncclXml* xml, const char* busId, struct ncclXmlNode** pciNode) { /* 中文索引·体内调用 xmlFindTagKv、xmlAddNode。 */
   NCCLCHECK(xmlFindTagKv(xml, "pci", pciNode, "busid", busId));
   if (*pciNode == NULL) {
     NCCLCHECK(xmlAddNode(xml, NULL, "pci", pciNode));
@@ -591,7 +591,7 @@ ncclResult_t ncclTopoGetPciNode(struct ncclXml* xml, const char* busId, struct n
 int isHex(char c) {
   return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
 }
-int checkBDFFormat(char* bdf) {
+int checkBDFFormat(char* bdf) { /* 中文索引·体内调用 strlen、isHex。 */
   if (strlen(bdf) != 12) return 0;
   if ((bdf[4] != ':') || (bdf[7] != ':') || (bdf[10] != '.')) return 0;
   if ((isHex(bdf[0]) == 0) || (isHex(bdf[1]) == 0) || (isHex(bdf[2]) == 0) || (isHex(bdf[3]) == 0) ||
@@ -601,7 +601,7 @@ int checkBDFFormat(char* bdf) {
   return 1;
 }
 
-ncclResult_t ncclTopoGetXmlFromSys(struct ncclXmlNode* pciNode, struct ncclXml* xml) {
+ncclResult_t ncclTopoGetXmlFromSys(struct ncclXmlNode* pciNode, struct ncclXml* xml) { /* 中文索引·体内调用 xmlGetAttr、ncclOsGetPciPath。 */
   ncclResult_t ret = ncclSuccess;
   const char* vendor = NULL;
   struct ncclXmlNode* parent = NULL;
@@ -915,7 +915,7 @@ exit:
 }
 
 ncclResult_t ncclTopoGetXmlFromGpu(struct ncclXmlNode* pciNode, nvmlDevice_t nvmlDev, struct ncclXml* xml,
-                                   struct ncclXmlNode** gpuNodeRet) {
+                                   struct ncclXmlNode** gpuNodeRet) { /* 中文索引·体内调用 xmlGetSub、xmlAddNode。 */
   struct ncclXmlNode* gpuNode = NULL;
   NCCLCHECK(xmlGetSub(pciNode, "gpu", &gpuNode));
   if (gpuNode == NULL) NCCLCHECK(xmlAddNode(xml, pciNode, "gpu", &gpuNode));
@@ -1083,7 +1083,7 @@ ncclResult_t ncclTopoGetXmlFromGpu(struct ncclXmlNode* pciNode, nvmlDevice_t nvm
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoFillGpu(struct ncclXml* xml, const char* busId, struct ncclXmlNode** gpuNode) {
+ncclResult_t ncclTopoFillGpu(struct ncclXml* xml, const char* busId, struct ncclXmlNode** gpuNode) { /* 中文索引·体内调用 ncclTopoGetPciNode、xmlSetAttrIfUnset。 */
   struct ncclXmlNode* node;
   NCCLCHECK(ncclTopoGetPciNode(xml, busId, &node));
   NCCLCHECK(xmlSetAttrIfUnset(node, "class", "0x03"));
@@ -1096,7 +1096,7 @@ ncclResult_t ncclTopoFillGpu(struct ncclXml* xml, const char* busId, struct nccl
 
 // Returns the subsystem name of a path, i.e. the end of the path
 // where sysPath/subsystem points to.
-ncclResult_t ncclTopoGetSubsystem(const char* sysPath, char* subSys) {
+ncclResult_t ncclTopoGetSubsystem(const char* sysPath, char* subSys) { /* 中文索引·体内调用 snprintf、ncclOsRealpath。 */
 #if NCCL_OS_LINUX
   char subSysPath[PATH_MAX];
   snprintf(subSysPath, sizeof(subSysPath), "%s/subsystem", sysPath);
@@ -1126,7 +1126,7 @@ ncclResult_t ncclTopoGetSubsystem(const char* sysPath, char* subSys) {
 }
 
 ncclResult_t ncclTopoFillNet(struct ncclXml* xml, const char* tagName, const char* pciPath, const char* netName,
-                             struct ncclXmlNode** netNode, struct ncclXmlNode* forceParent) {
+                             struct ncclXmlNode** netNode, struct ncclXmlNode* forceParent) { /* 中文索引·体内调用 xmlFindTagKv、ncclTopoGetSubsystem。 */
   NCCLCHECK(xmlFindTagKv(xml, tagName, netNode, "name", netName));
 
   if (*netNode != NULL) return ncclSuccess;
@@ -1190,7 +1190,7 @@ ncclResult_t ncclTopoFillNet(struct ncclXml* xml, const char* tagName, const cha
   return ncclSuccess;
 }
 
-ncclResult_t xmlUnsetAttr(struct ncclXmlNode* node, const char* attrName) {
+ncclResult_t xmlUnsetAttr(struct ncclXmlNode* node, const char* attrName) { /* 中文索引·体内调用 xmlGetAttrIndex、strcpy。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) return ncclSuccess;
@@ -1202,7 +1202,7 @@ ncclResult_t xmlUnsetAttr(struct ncclXmlNode* node, const char* attrName) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoTrimXmlRec(struct ncclXmlNode* node, int* keep) {
+ncclResult_t ncclTopoTrimXmlRec(struct ncclXmlNode* node, int* keep) { /* 中文索引·体内调用 xmlGetAttr、strcmp。 */
   const char* str;
   NCCLCHECK(xmlGetAttr(node, "keep", &str));
   if (str && strcmp(str, "1") == 0) {
@@ -1242,7 +1242,7 @@ ncclResult_t ncclTopoTrimXmlRec(struct ncclXmlNode* node, int* keep) {
   }
   return ncclSuccess;
 }
-ncclResult_t ncclTopoTrimXml(struct ncclXml* xml) {
+ncclResult_t ncclTopoTrimXml(struct ncclXml* xml) { /* 中文索引·体内调用 ncclTopoTrimXmlRec。 */
   int keep = 0;
   NCCLCHECK(ncclTopoTrimXmlRec(xml->nodes, &keep));
   return ncclSuccess;
@@ -1264,19 +1264,19 @@ ncclResult_t ncclTopoXmlGraphLoadNet(FILE* file, struct ncclXml* xml, struct ncc
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlGraphLoadChannel(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlGraphLoadChannel(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {{"net", ncclTopoXmlGraphLoadNet}, {"gpu", ncclTopoXmlGraphLoadGpu}};
   NCCLCHECK(xmlLoadSub(file, xml, head, handlers, 2));
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlGraphLoadGraph(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlGraphLoadGraph(FILE* file, struct ncclXml* xml, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlLoadSub。 */
   struct xmlHandler handlers[] = {{"channel", ncclTopoXmlGraphLoadChannel}};
   NCCLCHECK(xmlLoadSub(file, xml, head, handlers, 1));
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoXmlGraphLoadGraphs(FILE* file, struct ncclXml* xmlGraph, struct ncclXmlNode* head) {
+ncclResult_t ncclTopoXmlGraphLoadGraphs(FILE* file, struct ncclXml* xmlGraph, struct ncclXmlNode* head) { /* 中文索引·体内调用 xmlGetAttrInt、xmlGetAttr。 */
   int version;
   NCCLCHECK(xmlGetAttrInt(head, "version", &version));
   if (version != NCCL_GRAPH_XML_VERSION) {
@@ -1293,7 +1293,7 @@ ncclResult_t ncclTopoXmlGraphLoadGraphs(FILE* file, struct ncclXml* xmlGraph, st
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetXmlGraphFromFile(const char* xmlGraphFile, struct ncclXml* xml) {
+ncclResult_t ncclTopoGetXmlGraphFromFile(const char* xmlGraphFile, struct ncclXml* xml) { /* 中文索引·体内调用 fopen、strerror。 */
   ncclResult_t ret = ncclSuccess;
   FILE* file = fopen(xmlGraphFile, "r");
   if (file == NULL) {

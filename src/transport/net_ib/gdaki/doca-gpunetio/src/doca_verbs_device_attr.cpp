@@ -86,7 +86,7 @@ uint16_t translate_gid_table_size(uint16_t gid_table_size_prm) {
  * doca_verbs_device_attr Member Functions
  *********************************************************************************************************************/
 
-doca_verbs_device_attr::doca_verbs_device_attr(struct ibv_context *ibv_ctx) {
+doca_verbs_device_attr::doca_verbs_device_attr(struct ibv_context *ibv_ctx) { /* 中文索引·体内调用 query_caps。 */
     try {
         query_caps(ibv_ctx);
     } catch (...) {
@@ -95,7 +95,7 @@ doca_verbs_device_attr::doca_verbs_device_attr(struct ibv_context *ibv_ctx) {
     }
 }
 
-void doca_verbs_device_attr::query_caps(struct ibv_context *ibv_ctx) {
+void doca_verbs_device_attr::query_caps(struct ibv_context *ibv_ctx) { /* 中文索引·体内调用 doca_verbs_wrapper_ibv_query_device、doca_verbs_wrapper_mlx5dv_devx_general_cmd。 */
     struct ibv_device_attr device_attr {};
     bool has_hca_cap_2 = false;
     auto ret = doca_verbs_wrapper_ibv_query_device(ibv_ctx, &device_attr);
@@ -214,7 +214,7 @@ static std::mutex device_attr_cache_mutex;
 static std::unordered_map<std::string, std::unique_ptr<doca_verbs_device_attr>> device_attr_cache;
 
 doca_error_t doca_verbs_query_device(struct ibv_context *context,
-                                     struct doca_verbs_device_attr **verbs_device_attr) {
+                                     struct doca_verbs_device_attr **verbs_device_attr) { /* 中文索引·体内调用 doca_verbs_wrapper_ibv_get_device_name、cached.reset。 */
     if (context == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to query doca_verbs_device_attr. param context=NULL");
         return DOCA_ERROR_INVALID_VALUE;

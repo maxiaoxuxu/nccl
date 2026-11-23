@@ -70,7 +70,7 @@ using create_rmp_out = uint32_t[MLX5_ST_SZ_DW(create_rmp_out)];
 doca_error_t doca_verbs_srq::create_srq_obj(
     uint32_t log_srq_size, uint32_t log_stride, uint64_t dbr_umem_offset, uint32_t dbr_umem_id,
     uint64_t wq_umem_offset, uint32_t wq_umem_id,
-    struct doca_verbs_srq_init_attr &verbs_srq_init_attr) noexcept {
+    struct doca_verbs_srq_init_attr &verbs_srq_init_attr) noexcept { /* 中文索引·体内调用 memset、doca_verbs_wrapper_mlx5dv_init_obj。 */
     create_rmp_in create_in{0};
     create_rmp_out create_out{0};
 
@@ -132,7 +132,7 @@ doca_error_t doca_verbs_srq::create_srq_obj(
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_srq::destroy() noexcept {
+doca_error_t doca_verbs_srq::destroy() noexcept { /* 中文索引·体内调用 doca_verbs_device_attr_free、doca_verbs_wrapper_mlx5dv_devx_obj_destroy。 */
     if (m_verbs_device_attr) {
         auto status = doca_verbs_device_attr_free(m_verbs_device_attr);
         if (status != DOCA_SUCCESS) {
@@ -168,7 +168,7 @@ doca_error_t doca_verbs_srq::destroy() noexcept {
     return DOCA_SUCCESS;
 }
 
-void doca_verbs_srq::create(struct ibv_context *ctx) {
+void doca_verbs_srq::create(struct ibv_context *ctx) { /* 中文索引·体内调用 doca_verbs_query_device、doca_internal_utils_next_power_of_two。 */
     auto status{DOCA_SUCCESS};
     m_pd = m_init_attr.pd;
     m_ctx = ctx;
@@ -321,7 +321,7 @@ void doca_verbs_srq::create(struct ibv_context *ctx) {
 
 doca_verbs_srq::doca_verbs_srq(struct ibv_context *ctx,
                                struct doca_verbs_srq_init_attr &verbs_srq_init_attr)
-    : m_ctx(ctx), m_init_attr(verbs_srq_init_attr) {
+    : m_ctx(ctx), m_init_attr(verbs_srq_init_attr) { /* 中文索引·体内调用 create、destroy。 */
     try {
         create(ctx);
     } catch (...) {
@@ -348,7 +348,7 @@ uint32_t doca_verbs_srq::get_srqn() const noexcept { return m_srq_num; }
  *********************************************************************************************************************/
 
 doca_error_t doca_verbs_srq_init_attr_create(
-    struct doca_verbs_srq_init_attr **verbs_srq_init_attr) {
+    struct doca_verbs_srq_init_attr **verbs_srq_init_attr) { /* 中文索引·体内调用 calloc。 */
     if (verbs_srq_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to create srq_init_attr: parameter verbs_srq_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -365,7 +365,7 @@ doca_error_t doca_verbs_srq_init_attr_create(
 }
 
 doca_error_t doca_verbs_srq_init_attr_destroy(
-    struct doca_verbs_srq_init_attr *verbs_srq_init_attr) {
+    struct doca_verbs_srq_init_attr *verbs_srq_init_attr) { /* 中文索引·体内调用 free。 */
     if (verbs_srq_init_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to destroy srq_init_attr: parameter verbs_srq_init_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -404,7 +404,7 @@ doca_error_t doca_verbs_srq_create(struct ibv_context *context,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_srq_destroy(struct doca_verbs_srq *verbs_srq) {
+doca_error_t doca_verbs_srq_destroy(struct doca_verbs_srq *verbs_srq) { /* 中文索引·体内调用 verbs_srq->destroy。 */
     if (verbs_srq == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to destroy verbs_srq: parameter verbs_srq is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -565,7 +565,7 @@ doca_error_t doca_verbs_srq_init_attr_get_external_umem(
 }
 
 void doca_verbs_srq_get_wq(const struct doca_verbs_srq *verbs_srq, void **srq_buf,
-                           uint32_t *srq_num_entries, uint32_t *rwqe_size_bytes) {
+                           uint32_t *srq_num_entries, uint32_t *rwqe_size_bytes) { /* 中文索引·体内调用 verbs_srq->get_srq_buf、verbs_srq->get_srq_size。 */
     *srq_buf = verbs_srq->get_srq_buf();
     *srq_num_entries = verbs_srq->get_srq_size();
     *rwqe_size_bytes = verbs_srq->get_rcv_wqe_size();

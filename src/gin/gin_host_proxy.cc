@@ -110,7 +110,7 @@ static void proxyGinFreeOutstandingOp(struct ginProxyHostGpuCtx* hostGpuCtx, str
   hostGpuCtx->freeOps = op;
 }
 
-static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNonDataDirect = false) {
+static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNonDataDirect = false) { /* 中文索引·体内调用 ncclParamDmaBufEnable、ncclOsGetPageSize。 */
   if (ncclParamDmaBufEnable() == 0) return ncclInvalidUsage;
 
 #if CUDA_VERSION >= 11070
@@ -135,7 +135,7 @@ static ncclResult_t getDmaBufFd(void* addr, size_t length, int* fd, bool forceNo
 }
 
 static ncclResult_t proxyGinPollCompletions(void* collComm, struct ginProxyCtx* ctx,
-                                            struct ginProxyHostGpuCtx* hostGpuCtx) {
+                                            struct ginProxyHostGpuCtx* hostGpuCtx) { /* 中文索引·体内调用 rmaBackend->test、proxyGinFreeOutstandingOp。 */
   struct ginProxyOutstandingOp* prev = NULL;
   struct ginProxyOutstandingOp* op = hostGpuCtx->outstandingHead;
   while (op != NULL) {
@@ -212,7 +212,7 @@ static bool isGfdAvailable(struct ginProxyHostGpuCtx* hostGpuCtx, int targetRank
 }
 
 static int proxyGinPollGfd(ginProxyHostGpuCtx* hostGpuCtx, int targetRank, ncclGinProxyGfd_t* gfd,
-                           struct ginProxyOutstandingOp** outstandingOp) {
+                           struct ginProxyOutstandingOp** outstandingOp) { /* 中文索引·体内调用 isGfdAvailable、proxyGinAllocOutstandingOp。 */
   if (!isGfdAvailable(hostGpuCtx, targetRank)) return 0;
 
   struct ginProxyOutstandingOp* op = proxyGinAllocOutstandingOp(hostGpuCtx);
@@ -264,7 +264,7 @@ static int proxyGinPollGfd(ginProxyHostGpuCtx* hostGpuCtx, int targetRank, ncclG
   return 1;
 }
 
-static int mapGfdOpToSignalOp(ncclGinProxyGfd_t* gfd) {
+static int mapGfdOpToSignalOp(ncclGinProxyGfd_t* gfd) { /* 中文索引·体内调用 extractOp。 */
   ncclGinProxyOp_t op = extractOp(gfd);
   uint8_t signalOp = op & (ncclGinProxyOpWithSignalInc | ncclGinProxyOpWithSignalAdd);
   switch (signalOp) {
@@ -279,7 +279,7 @@ static int mapGfdOpToSignalOp(ncclGinProxyGfd_t* gfd) {
 
 static ncclResult_t proxyGinProcessGfd(struct ginProxyCtx* ctx, struct ginProxyHostGpuCtx* hostGpuCtx, int targetRank,
                                        ncclGinProxyGfd_t* gfd, struct ginProxyOutstandingOp* outstandingOp,
-                                       bool isLastInBatch) {
+                                       bool isLastInBatch) { /* 中文索引·体内调用 isGfdAvailable、extractOp。 */
   int signalOp;
   uint64_t signalVal;
   // Aggregate only when this peer's next GFD is already queued and this isn't the last op in the batch.
@@ -385,7 +385,7 @@ static ncclResult_t ncclGinProxyGetProperties(ncclGinProperties_t* ginProps) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinProxyListen(void* ctx, int dev, void* handle, void** listenComm) {
+static ncclResult_t ncclGinProxyListen(void* ctx, int dev, void* handle, void** listenComm) { /* 中文索引·体内调用 ncclCalloc、rmaBackend->listen。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGinProxyListenComm* lComm;
   NCCLCHECK(ncclCalloc(&lComm, 1));
@@ -398,7 +398,7 @@ end:
   return ret;
 }
 
-static ncclResult_t ncclGinProxyCloseListen(void* listenComm) {
+static ncclResult_t ncclGinProxyCloseListen(void* listenComm) { /* 中文索引·体内调用 rmaBackend->closeListen、free。 */
   struct ncclGinProxyListenComm* lComm = (struct ncclGinProxyListenComm*)listenComm;
   NCCLCHECK(rmaBackend->closeListen(lComm->listenComm));
   free(lComm);
@@ -411,7 +411,7 @@ struct ncclGinProxyCollComm {
   void* collComm;
 };
 
-ncclResult_t ncclGinProxyFlushesAllPutsOnAnySignal(void* collComm, bool* flushesAll) {
+ncclResult_t ncclGinProxyFlushesAllPutsOnAnySignal(void* collComm, bool* flushesAll) { /* 中文索引·体内调用 rmaBackend->getRmaProperties。 */
   struct ncclGinProxyCollComm* cComm = (struct ncclGinProxyCollComm*)collComm;
   ncclRmaProperties_t rmaProps = {};
   NCCLCHECK(rmaBackend->getRmaProperties(cComm->collComm, &rmaProps));
@@ -420,7 +420,7 @@ ncclResult_t ncclGinProxyFlushesAllPutsOnAnySignal(void* collComm, bool* flushes
 }
 
 static ncclResult_t ncclGinProxyConnect(void* ctx, void* handles[], int nranks, int rank, void* listenComm,
-                                        void** collComm, volatile uint32_t* abortFlag) {
+                                        void** collComm, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclCalloc、rmaBackend->getProperties。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGinProxyCollComm* cComm = NULL;
   struct ncclGinProxyListenComm* lComm = (struct ncclGinProxyListenComm*)listenComm;
@@ -436,7 +436,7 @@ end:
   return ret;
 }
 
-static ncclResult_t ncclGinProxyCloseColl(void* collComm) {
+static ncclResult_t ncclGinProxyCloseColl(void* collComm) { /* 中文索引·体内调用 rmaBackend->closeColl、free。 */
   struct ncclGinProxyCollComm* cComm = (struct ncclGinProxyCollComm*)collComm;
   NCCLCHECK(rmaBackend->closeColl(cComm->collComm));
   free(cComm);
@@ -446,7 +446,7 @@ static ncclResult_t ncclGinProxyCloseColl(void* collComm) {
 // Check if the GIN plugin supports DMA-BUF, if so we can try to get the DMA-BUF handle from CUDA,
 // if that fails we fallback to non-DMA-BUF
 static ncclResult_t ncclGinProxyRegMrSym(void* ginCtx, void* addr, size_t size, int type, uint64_t mrFlags,
-                                         void** mhandle, void** ginHandle) {
+                                         void** mhandle, void** ginHandle) { /* 中文索引·体内调用 rmaBackend->regMrSym、ncclParamDmaBufEnable。 */
   struct ncclGinProxyCollComm* cComm = (struct ncclGinProxyCollComm*)ginCtx;
   if (type == NCCL_PTR_HOST) {
     NCCLCHECK(rmaBackend->regMrSym(cComm->collComm, addr, size, type, mrFlags, mhandle));
@@ -483,7 +483,7 @@ static ncclResult_t ncclGinProxyRegMrSym(void* ginCtx, void* addr, size_t size, 
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinProxyDeregMrSym(void* collComm, void* mhandle) {
+static ncclResult_t ncclGinProxyDeregMrSym(void* collComm, void* mhandle) { /* 中文索引·体内调用 rmaBackend->deregMrSym。 */
   struct ncclGinProxyCollComm* cComm = (struct ncclGinProxyCollComm*)collComm;
   // Deregister the memory region with the GIN plugin
   NCCLCHECK(rmaBackend->deregMrSym(cComm->collComm, mhandle));
@@ -497,7 +497,7 @@ static uint64_t isPowerOfTwo(uint64_t n) {
 static ncclResult_t ncclGinProxyDestroyContext(void* ginCtx);
 
 static ncclResult_t ncclGinProxyCreateContext(void* collComm, ncclGinConfig_t* config, void** outGinCtx,
-                                              ncclNetDeviceHandle_t** outDevHandle) {
+                                              ncclNetDeviceHandle_t** outDevHandle) { /* 中文索引·体内调用 ncclCalloc、rmaBackend->createContext。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGinProxyCollComm* cComm = (struct ncclGinProxyCollComm*)collComm;
   void* devGpuCtxArray_h = nullptr;
@@ -660,7 +660,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclGinProxyDestroyContext(void* ginCtx) {
+static ncclResult_t ncclGinProxyDestroyContext(void* ginCtx) { /* 中文索引·体内调用 rmaBackend->destroyContext、freeMemCPUAccessible。 */
   if (!ginCtx) return ncclSuccess;
   struct ginProxyCtx* ctx = (struct ginProxyCtx*)ginCtx;
 
@@ -711,7 +711,7 @@ static ncclResult_t ncclGinProxyDestroyContext(void* ginCtx) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinProxyProgress(void* ginCtx) {
+static ncclResult_t ncclGinProxyProgress(void* ginCtx) { /* 中文索引·体内调用 proxyGinPollCompletions、proxyGinPollGfd。 */
   struct ginProxyCtx* ctx = (struct ginProxyCtx*)ginCtx;
 
   for (int contextId = 0; contextId < ctx->nContexts; contextId++) {
@@ -739,7 +739,7 @@ static ncclResult_t ncclGinProxyProgress(void* ginCtx) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclGinProxyQueryLastError(void* ginCtx, bool* hasError) {
+static ncclResult_t ncclGinProxyQueryLastError(void* ginCtx, bool* hasError) { /* 中文索引·体内调用 rmaBackend->queryLastError。 */
   struct ginProxyCtx* ctx = (struct ginProxyCtx*)ginCtx;
   *hasError = ctx->hasError;
   if (ctx->hasError == ncclSuccess && rmaBackend->queryLastError) {

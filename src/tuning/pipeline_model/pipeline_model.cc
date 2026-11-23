@@ -30,7 +30,7 @@ static float pipelineModel(size_t s, int count, struct ncclTuningPipelineStep in
 }
 
 ncclResult_t ncclTuningPipelineModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                        struct ncclTuningModelState* internal) {
+                                        struct ncclTuningModelState* internal) { /* 中文索引·体内调用 internal->pipeline.isValid、ncclAlgoToString。 */
   ncclResult_t ret = ncclSuccess;
 
   if (internal == nullptr || internal->pipeline.isValid == nullptr) return ncclInternalError;

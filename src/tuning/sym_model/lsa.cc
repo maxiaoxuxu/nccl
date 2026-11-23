@@ -15,7 +15,7 @@
 #include <cmath>
 
 static ncclResult_t evaluateLsaEstimate(struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId, size_t nBytes,
-                                        int nBlocks, struct ncclSymkLsaEstimate* estimate, bool* modeled) {
+                                        int nBlocks, struct ncclSymkLsaEstimate* estimate, bool* modeled) { /* 中文索引·体内调用 ncclSymkLsaA2AModel、ncclSymkLsaBaseModel。 */
   float selectionCostPercent = 0.0250f;
   NCCLCHECK(ncclSymkLsaA2AModel(input, kernelId, nBlocks, &estimate->timeUs, modeled));
   if (*modeled) {
@@ -33,7 +33,7 @@ static ncclResult_t evaluateLsaEstimate(struct ncclTuningInput_t* input, enum nc
 
 // Select the CTA count with the shared policy using either the A2A or base model.
 ncclResult_t ncclSymkLsaModel(struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId, size_t nBytes,
-                              float* timeUs, float* selectionTimeUs, int* nBlocks) {
+                              float* timeUs, float* selectionTimeUs, int* nBlocks) { /* 中文索引·体内调用 ncclSymkModelCtasEnvOverride、roundUp。 */
   struct ncclComm* comm = input->comm;
   int nMaxBlocks = std::min<int>(ncclSymkMaxBlocks, input->maxCTAs);
   int nMinBlocks = std::min(input->minCTAs, nMaxBlocks);

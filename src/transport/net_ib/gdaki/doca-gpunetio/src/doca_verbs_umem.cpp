@@ -62,7 +62,7 @@ doca_verbs_umem_open::doca_verbs_umem_open(struct ibv_context *ibv_ctx, void *ad
       m_size(size),
       m_access_flags(access_flags),
       m_dmabuf_fd(dmabuf_fd),
-      m_dmabuf_offset(dmabuf_offset) {
+      m_dmabuf_offset(dmabuf_offset) { /* 中文索引·体内调用 create、destroy。 */
     try {
         create();
     } catch (...) {
@@ -74,7 +74,7 @@ doca_verbs_umem_open::doca_verbs_umem_open(struct ibv_context *ibv_ctx, void *ad
 
 doca_verbs_umem_open::~doca_verbs_umem_open() { static_cast<void>(destroy()); }
 
-void doca_verbs_umem_open::create() {
+void doca_verbs_umem_open::create() { /* 中文索引·体内调用 sysconf、doca_verbs_wrapper_mlx5dv_devx_umem_reg_ex。 */
     doca_error_t umem_status;
 
     struct mlx5dv_devx_umem_in umem_in {
@@ -123,7 +123,7 @@ void doca_verbs_umem_open::create() {
     m_umem_id = m_umem->umem_id;
 }
 
-doca_error_t doca_verbs_umem_open::destroy() noexcept {
+doca_error_t doca_verbs_umem_open::destroy() noexcept { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_umem_dereg。 */
     if (m_umem) {
         auto dereg_status = doca_verbs_wrapper_mlx5dv_devx_umem_dereg(m_umem);
         if (dereg_status != DOCA_SUCCESS) {
@@ -142,7 +142,7 @@ doca_error_t doca_verbs_umem_open::destroy() noexcept {
 
 doca_error_t doca_verbs_umem_create(doca_dev_t *net_dev, doca_gpu_t *gpu, void *address,
                                     size_t size, uint32_t access_flags, int dmabuf_fd,
-                                    size_t dmabuf_offset, doca_verbs_umem_t **umem) {
+                                    size_t dmabuf_offset, doca_verbs_umem_t **umem) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_umem_create。 */
     doca_verbs_umem_t *umem_ = nullptr;
 
     if (umem == nullptr) {
@@ -209,7 +209,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_umem_destroy(doca_verbs_umem_t *umem) {
+doca_error_t doca_verbs_umem_destroy(doca_verbs_umem_t *umem) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_umem_destroy、umem->open->destroy。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (umem == nullptr) {
@@ -249,7 +249,7 @@ exit:
     return status;
 }
 
-doca_error_t doca_verbs_umem_get_id(const doca_verbs_umem_t *umem, uint32_t *umem_id) {
+doca_error_t doca_verbs_umem_get_id(const doca_verbs_umem_t *umem, uint32_t *umem_id) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_umem_get_id、umem->open->get_umem_id。 */
     if (umem == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get umem id: parameter umem is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -279,7 +279,7 @@ doca_error_t doca_verbs_umem_get_id(const doca_verbs_umem_t *umem, uint32_t *ume
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_umem_get_size(const doca_verbs_umem_t *umem, size_t *umem_size) {
+doca_error_t doca_verbs_umem_get_size(const doca_verbs_umem_t *umem, size_t *umem_size) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_umem_get_size、umem->open->get_umem_size。 */
     if (umem == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get umem size: parameter umem is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -309,7 +309,7 @@ doca_error_t doca_verbs_umem_get_size(const doca_verbs_umem_t *umem, size_t *ume
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_umem_get_address(const doca_verbs_umem_t *umem, void **umem_address) {
+doca_error_t doca_verbs_umem_get_address(const doca_verbs_umem_t *umem, void **umem_address) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_umem_get_address、umem->open->get_umem_address。 */
     if (umem == nullptr) {
         DOCA_LOG(LOG_INFO, "Failed to get umem address: parameter umem is NULL");
         return DOCA_ERROR_INVALID_VALUE;

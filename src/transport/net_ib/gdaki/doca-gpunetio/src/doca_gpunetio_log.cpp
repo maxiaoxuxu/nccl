@@ -45,7 +45,7 @@ static const char *doca_gpu_log_level_strings[] = {"EMERG",   "ALERT",  "CRIT", 
                                                    "WARNING", "NOTICE", "INFO", "DEBUG"};
 
 void doca_gpu_log_print(int log_level, const char *file, int line, const char *func,
-                        const char *fmt, ...) {
+                        const char *fmt, ...) { /* 中文索引·体内调用 getenv、atoi。 */
     static int cur_log_level = -1;
     if (cur_log_level < 0) {
         const char *debug_env = getenv("DOCA_GPUNETIO_LOG");

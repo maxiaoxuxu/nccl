@@ -55,7 +55,7 @@ namespace {} /* namespace */
  *********************************************************************************************************************/
 
 doca_dev_open::doca_dev_open(struct ibv_context *verbs_ctx, struct ibv_pd *verbs_pd)
-    : m_ibv_ctx(verbs_ctx), m_ibv_pd(verbs_pd) {
+    : m_ibv_ctx(verbs_ctx), m_ibv_pd(verbs_pd) { /* 中文索引·体内调用 std::invalid_argument。 */
     if (m_ibv_ctx == nullptr || m_ibv_pd == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to create doca_dev");
         throw std::invalid_argument("bad arg");
@@ -68,7 +68,7 @@ doca_dev_open::~doca_dev_open() {}
  * Public API functions
  *********************************************************************************************************************/
 
-doca_error_t doca_verbs_dev_open(struct ibv_pd *verbs_pd, doca_dev_t **net_dev) {
+doca_error_t doca_verbs_dev_open(struct ibv_pd *verbs_pd, doca_dev_t **net_dev) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_dev_open_from_pd。 */
     doca_dev_t *net_dev_ = nullptr;
 
     net_dev_ = (doca_dev_t *)calloc(1, sizeof(doca_dev_t));
@@ -119,7 +119,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_dev_close(doca_dev_t *net_dev) {
+doca_error_t doca_verbs_dev_close(doca_dev_t *net_dev) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_dev_close、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (net_dev == nullptr) {

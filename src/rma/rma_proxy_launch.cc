@@ -26,7 +26,7 @@
 ncclResult_t ncclRmaProxyPutBuildOp(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx, int ctx,
                                     bool persistent, struct ncclDevrWindow* srcWin, size_t srcOff,
                                     struct ncclDevrWindow* peerWin, size_t peerOff, size_t size, int peer,
-                                    int signalIdx, ncclSignalMode_t signalMode, struct ncclRmaPutSignalOp* op) {
+                                    int signalIdx, ncclSignalMode_t signalMode, struct ncclRmaPutSignalOp* op) { /* 中文索引·体内调用 ncclRmaProxyWorldToPeer、ncclDevrGetWinOffset。 */
   // validate that the given peer is on this context's rail
   int railPeer;
   NCCLCHECK(ncclRmaProxyWorldToPeer(rmaProxyCtx, peer, &railPeer));
@@ -58,7 +58,7 @@ ncclResult_t ncclRmaProxyPutBuildDesc(struct ncclComm* comm, struct ncclRmaProxy
                                       struct ncclKernelPlan* plan, struct ncclDevrWindow* srcWinHost,
                                       size_t srcWinOffset, struct ncclDevrWindow* peerWinHost, size_t peerWinOffset,
                                       size_t size, int peer, int ctx, int signalIdx, ncclSignalMode_t signalMode,
-                                      struct ncclRmaProxyDesc* desc) {
+                                      struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclRmaProxyPutBuildOp、allocMemCPUAccessible。 */
   ncclResult_t ret = ncclSuccess;
   bool persistent = plan->persistent;
 
@@ -114,7 +114,7 @@ fail:
 // pre-filled ops (can be populated via ncclRmaProxyPutBuildOp).
 ncclResult_t ncclRmaProxyPutGroupBuildDesc(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
                                            struct ncclKernelPlan* plan, int nOps, struct ncclRmaPutSignalOp** ops,
-                                           int ctx, struct ncclRmaProxyDesc* desc) {
+                                           int ctx, struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 allocMemCPUAccessible、freeMemCPUAccessible。 */
   ncclResult_t ret = ncclSuccess;
   bool persistent = plan->persistent;
   int slot = comm->rank;
@@ -170,7 +170,7 @@ fail:
 
 static ncclResult_t ncclRmaProxyPutDescFromTask(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
                                                 struct ncclKernelPlan* plan, struct ncclTaskRma* task,
-                                                struct ncclRmaProxyDesc* desc) {
+                                                struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclRmaProxyPutBuildDesc、ncclTypeSize。 */
   return ncclRmaProxyPutBuildDesc(comm, rmaProxyCtx, plan, task->srcWinHost, task->srcWinOffset, task->peerWinHost,
                                   task->peerWinOffset, task->count * ncclTypeSize(task->datatype), task->peer,
                                   task->ctx, task->signalIdx, task->signalMode, desc);
@@ -179,7 +179,7 @@ static ncclResult_t ncclRmaProxyPutDescFromTask(struct ncclComm* comm, struct nc
 // Build a wait-signal descriptor.
 ncclResult_t ncclRmaProxyWaitBuildDesc(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
                                        struct ncclKernelPlan* plan, int npeers, int** peers, int** nsignals,
-                                       int** signalIdxs, struct ncclRmaProxyDesc* desc) {
+                                       int** signalIdxs, struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 allocMemCPUAccessible、freeMemCPUAccessible。 */
   ncclResult_t ret = ncclSuccess;
   bool persistent = plan->persistent;
 
@@ -229,7 +229,7 @@ fail:
 // Build the wait descriptor from an ncclTaskRma
 static ncclResult_t ncclRmaProxyWaitDescFromTask(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
                                                  struct ncclKernelPlan* plan, struct ncclTaskRma* task,
-                                                 struct ncclRmaProxyDesc* desc) {
+                                                 struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclRmaProxyWaitBuildDesc。 */
   return ncclRmaProxyWaitBuildDesc(comm, rmaProxyCtx, plan, task->npeers, &task->peers, &task->nsignals,
                                    &task->signalIdxs, desc);
 }
@@ -238,7 +238,7 @@ static ncclResult_t ncclRmaProxyWaitDescFromTask(struct ncclComm* comm, struct n
 // Descriptor destroy
 // ============================================================================
 
-static ncclResult_t ncclRmaProxyDestroyDescNonPersistent(struct ncclRmaProxyDesc* desc) {
+static ncclResult_t ncclRmaProxyDestroyDescNonPersistent(struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 free。 */
   if (desc->rmaDescType == ncclRmaDescTypeWaitSignal) {
     free(desc->waitSignal.waitPeers);
     free(desc->waitSignal.waitSignals);
@@ -250,7 +250,7 @@ static ncclResult_t ncclRmaProxyDestroyDescNonPersistent(struct ncclRmaProxyDesc
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaProxyDestroyDescPersistent(struct ncclComm* comm, struct ncclRmaProxyDesc* desc) {
+static ncclResult_t ncclRmaProxyDestroyDescPersistent(struct ncclComm* comm, struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 freeMemCPUAccessible、free。 */
   if (desc->readySeqGdrHandle || desc->readySeq) {
     freeMemCPUAccessible(desc->readySeq, desc->readySeqGdrHandle, comm->memManager);
   }
@@ -269,7 +269,7 @@ static ncclResult_t ncclRmaProxyDestroyDescPersistent(struct ncclComm* comm, str
 }
 
 // Destroy a descriptor.
-ncclResult_t ncclRmaProxyDestroyDesc(struct ncclComm* comm, struct ncclRmaProxyDesc** desc) {
+ncclResult_t ncclRmaProxyDestroyDesc(struct ncclComm* comm, struct ncclRmaProxyDesc** desc) { /* 中文索引·体内调用 ncclRmaProxyDestroyDescNonPersistent、ncclRmaProxyDestroyDescPersistent。 */
   ncclResult_t ret;
   if ((*desc)->persistPlan == nullptr) {
     ret = ncclRmaProxyDestroyDescNonPersistent(*desc);
@@ -303,7 +303,7 @@ bool ncclRmaProxyCircularBufEmpty(struct ncclRmaProxyCtx* ctx, int peer) {
 //   PutSignalGroup, non-persistent  : pis[comm->rank] circular buffer full
 //   *,              persistent      : false  (linked list, unbounded)
 //   WaitSignal,     non-persistent  : false  (no queue exists)
-bool ncclRmaProxyEnqueueFull(struct ncclRmaProxyCtx* ctx, const struct ncclRmaProxyDesc* desc) {
+bool ncclRmaProxyEnqueueFull(struct ncclRmaProxyCtx* ctx, const struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclRmaProxyCircularBufFull。 */
   // Persistent queues are unbounded.
   if (desc->persistPlan != nullptr || desc->captured) return false;
   // Non-persistent wait has no queue.
@@ -325,7 +325,7 @@ bool ncclRmaProxyEnqueueFull(struct ncclRmaProxyCtx* ctx, const struct ncclRmaPr
 }
 
 static inline ncclResult_t ncclRmaProxyEnqueueNonPersistentDesc(struct ncclRmaProxyCtx* ctx, int peer,
-                                                                struct ncclRmaProxyDesc* desc) {
+                                                                struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclRmaProxyDestroyDesc、ncclRmaProxyCircularBufFull。 */
   if (desc->rmaDescType == ncclRmaDescTypeWaitSignal) {
     // Destroy the scratch desc for wait non-persistent
     return ncclRmaProxyDestroyDesc(ctx->comm, &desc);
@@ -345,7 +345,7 @@ static inline ncclResult_t ncclRmaProxyEnqueueNonPersistentDesc(struct ncclRmaPr
 }
 
 static inline ncclResult_t ncclRmaProxyEnqueuePersistentDesc(struct ncclRmaProxyCtx* ctx, int peer,
-                                                             struct ncclRmaProxyDesc* desc) {
+                                                             struct ncclRmaProxyDesc* desc) { /* 中文索引·体内调用 ncclIntruQueueEnqueue。 */
   ncclIntruQueueEnqueue(&ctx->persistentQueues[peer], desc);
   // Transition to persistent with RELEASE to guarantee all preceding writes are visible to proxy
   COMPILER_ATOMIC_STORE(&desc->persistDescValid, true, std::memory_order_release);
@@ -376,7 +376,7 @@ static inline ncclResult_t ncclRmaProxyEnqueuePersistentDesc(struct ncclRmaProxy
 //                                  | whose only purpose was to carry fields
 //                                  | into ncclRmaProxyWaitParams. Destroyed
 //                                  | in place.
-ncclResult_t ncclRmaProxyEnqueueDesc(struct ncclRmaProxyCtx* rmaProxyCtx, struct ncclRmaProxyDesc** desc) {
+ncclResult_t ncclRmaProxyEnqueueDesc(struct ncclRmaProxyCtx* rmaProxyCtx, struct ncclRmaProxyDesc** desc) { /* 中文索引·体内调用 ncclRmaProxyEnqueueFull、std::this_thread::yield。 */
   int peer;
   switch ((*desc)->rmaDescType) {
   case ncclRmaDescTypePutSignal:
@@ -544,7 +544,7 @@ int ncclRmaProxyWaitDoneNumOps(const struct ncclRmaProxyDesc* desc) {
 // For non-persistent descriptors this consumes the context's expected-signal
 // counters, so calls must follow the order the batches are emitted in.
 ncclResult_t ncclRmaProxyWaitDoneParams(struct ncclRmaProxyCtx* rmaProxyCtx, struct ncclRmaProxyDesc* desc,
-                                        CUstreamBatchMemOpParams* params) {
+                                        CUstreamBatchMemOpParams* params) { /* 中文索引·体内调用 ncclRmaSignalSlot。 */
   if (desc->rmaDescType != ncclRmaDescTypeWaitSignal) {
     WARN("ncclRmaProxyWaitDoneParams: descriptor is not a wait-signal type (%d)", desc->rmaDescType);
     return ncclInternalError;
@@ -587,7 +587,7 @@ int ncclRmaProxyWaitNumStreamOps(const struct ncclRmaProxyDesc* desc) {
 
 // Fill stream-batch memop params for a whole wait-signal descriptor.
 ncclResult_t ncclRmaProxyWaitParams(struct ncclRmaProxyCtx* rmaProxyCtx, struct ncclRmaProxyDesc* desc,
-                                    CUstreamBatchMemOpParams* params) {
+                                    CUstreamBatchMemOpParams* params) { /* 中文索引·体内调用 ncclRmaProxyWaitStartNumOps、ncclRmaProxyWaitStartParams。 */
   int nStart = ncclRmaProxyWaitStartNumOps(desc);
   NCCLCHECK(ncclRmaProxyWaitStartParams(desc, params));
   NCCLCHECK(ncclRmaProxyWaitDoneParams(rmaProxyCtx, desc, params + nStart));
@@ -598,7 +598,7 @@ ncclResult_t ncclRmaProxyWaitParams(struct ncclRmaProxyCtx* rmaProxyCtx, struct 
 // Launch-time API
 // ============================================================================
 
-ncclResult_t ncclRmaProxyPutLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaProxyPutLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclRmaProxyPutStartNumOps、ncclRmaProxyPutDoneNumOps。 */
   ncclResult_t ret = ncclSuccess;
 
   if (!comm->rmaState.rmaProxyState.connected) {
@@ -701,7 +701,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaProxyWaitLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaProxyWaitLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclIntruQueueDequeue。 */
   ncclResult_t ret = ncclSuccess;
 
   if (!comm->rmaState.rmaProxyState.connected) {
@@ -762,7 +762,7 @@ fail:
 
 // Free persistent descs belonging to the given plan.
 // ncclRmaProxyProgress is paused when this function is called, so no concurrent access to persistentQueues.
-static ncclResult_t ncclRmaProxyReclaimPersistDescs(struct ncclRmaProxyState* proxyState, struct ncclKernelPlan* plan) {
+static ncclResult_t ncclRmaProxyReclaimPersistDescs(struct ncclRmaProxyState* proxyState, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclRmaProxyDestroyDesc。 */
   struct ncclComm* comm = proxyState->comm;
 
   for (int c = 0; c < proxyState->rmaProxyCtxCount; c++) {
@@ -798,7 +798,7 @@ static ncclResult_t ncclRmaProxyReclaimPersistDescs(struct ncclRmaProxyState* pr
 // Destroy persistent descs belonging to the plan.
 // Called from reclaimPlan when the CUDA graph is destroyed.
 // Pauses the proxy thread, frees descs on the main thread, then resumes the proxy.
-ncclResult_t ncclRmaProxyReclaimPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclRmaProxyReclaimPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 proxyState->cond.notify_one、proxyState->cond.wait。 */
   struct ncclRmaProxyState* proxyState = &comm->rmaState.rmaProxyState;
   if (!proxyState->connected) return ncclSuccess;
 

@@ -35,7 +35,7 @@ static ncclResult_t getPath(struct ncclTopoSystem* system, struct ncclTopoNode* 
 
 NCCL_PARAM(NvbDisable, "NVB_DISABLE", 0);
 
-static ncclResult_t ncclTopoPathReserve(struct ncclTopoLinkList* path, int required) {
+static ncclResult_t ncclTopoPathReserve(struct ncclTopoLinkList* path, int required) { /* 中文索引·体内调用 ncclReallocQuiet。 */
   if (required <= path->capacity) return ncclSuccess;
   if (required > NCCL_TOPO_MAX_HOPS) {
     WARN("Path has %d hops, maximum is %d", required, NCCL_TOPO_MAX_HOPS);
@@ -49,7 +49,7 @@ static ncclResult_t ncclTopoPathReserve(struct ncclTopoLinkList* path, int requi
   return ncclSuccess;
 }
 
-static ncclResult_t ncclTopoSetPaths(struct ncclTopoNode* baseNode, struct ncclTopoSystem* system) {
+static ncclResult_t ncclTopoSetPaths(struct ncclTopoNode* baseNode, struct ncclTopoSystem* system) { /* 中文索引·体内调用 ncclCalloc、getPath。 */
   if (baseNode->paths[baseNode->type] == NULL) {
     NCCLCHECK(ncclCalloc(baseNode->paths + baseNode->type, system->nodes[baseNode->type].count));
     for (int i = 0; i < system->nodes[baseNode->type].count; i++) baseNode->paths[baseNode->type][i].type = PATH_DIS;
@@ -146,7 +146,7 @@ static ncclResult_t ncclTopoSetPaths(struct ncclTopoNode* baseNode, struct ncclT
   return ncclSuccess;
 }
 
-static void printNodePaths(struct ncclTopoSystem* system, struct ncclTopoNode* node) {
+static void printNodePaths(struct ncclTopoSystem* system, struct ncclTopoNode* node) { /* 中文索引·体内调用 snprintf、strlen。 */
   const int linesize = 1024;
   char line[linesize];
 #ifdef ENABLE_TRACE
@@ -186,7 +186,7 @@ static void printNodePaths(struct ncclTopoSystem* system, struct ncclTopoNode* n
 #endif
 }
 
-ncclResult_t ncclTopoPrintPaths(struct ncclTopoSystem* system) {
+ncclResult_t ncclTopoPrintPaths(struct ncclTopoSystem* system) { /* 中文索引·体内调用 printNodePaths。 */
   for (int i = 0; i < system->nodes[GPU].count; i++) {
     printNodePaths(system, system->nodes[GPU].nodes + i);
   }
@@ -202,7 +202,7 @@ ncclResult_t ncclTopoPrintPaths(struct ncclTopoSystem* system) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclGetLocalCpu(struct ncclTopoSystem* system, int gpu, int* cpu) {
+ncclResult_t ncclGetLocalCpu(struct ncclTopoSystem* system, int gpu, int* cpu) { /* 中文索引·体内调用 ncclTopoGetLocal。 */
   int localCpus[NCCL_TOPO_MAX_NODES], count;
   NCCLCHECK(ncclTopoGetLocal(system, GPU, gpu, CPU, localCpus, &count, NULL));
   if (count == 0) {
@@ -224,7 +224,7 @@ static int mergePathType(int type0, int type1) {
   else return max;
 }
 
-static ncclResult_t addInterStep(struct ncclTopoSystem* system, int tx, int ix, int t1, int i1, int t2, int i2) {
+static ncclResult_t addInterStep(struct ncclTopoSystem* system, int tx, int ix, int t1, int i1, int t2, int i2) { /* 中文索引·体内调用 ncclTopoPathReserve、mergePathType。 */
   struct ncclTopoNode* cpuNode = system->nodes[tx].nodes + ix;
   struct ncclTopoNode* srcNode = system->nodes[t1].nodes + i1;
   struct ncclTopoLinkList* path = srcNode->paths[t2] + i2;
@@ -246,7 +246,7 @@ static ncclResult_t addInterStep(struct ncclTopoSystem* system, int tx, int ix, 
 }
 
 // Remove/free all paths
-void ncclTopoRemovePaths(struct ncclTopoSystem* system) {
+void ncclTopoRemovePaths(struct ncclTopoSystem* system) { /* 中文索引·体内调用 free。 */
   for (int t1 = 0; t1 < NCCL_TOPO_NODE_TYPES; t1++) {
     for (int n = 0; n < system->nodes[t1].count; n++) {
       struct ncclTopoNode* node = system->nodes[t1].nodes + n;
@@ -262,7 +262,7 @@ void ncclTopoRemovePaths(struct ncclTopoSystem* system) {
 }
 
 static const int levelsOldToNew[] = {PATH_LOC, PATH_PIX, PATH_PXB, PATH_PHB, PATH_SYS, PATH_SYS};
-ncclResult_t ncclGetLevel(int* level, const char* disableEnv, const char* levelEnv) {
+ncclResult_t ncclGetLevel(int* level, const char* disableEnv, const char* levelEnv) { /* 中文索引·体内调用 ncclGetEnv、strtol。 */
   if (*level == -1) {
     int l = -1;
     if (disableEnv) {
@@ -306,7 +306,7 @@ static int ncclTopoUserP2pLevel = -1; // Initially "uninitialized".  When initia
 
 // Gets the user-provided value of NCCL_P2P_LEVEL/NCCL_P2P_DISABLE.  If the user did not provide any, the value
 // of the "level" argument is left unchanged.
-ncclResult_t ncclGetUserP2pLevel(int* level) {
+ncclResult_t ncclGetUserP2pLevel(int* level) { /* 中文索引·体内调用 ncclGetLevel。 */
   if (ncclTopoUserP2pLevel == -1) NCCLCHECK(ncclGetLevel(&ncclTopoUserP2pLevel, "NCCL_P2P_DISABLE", "NCCL_P2P_LEVEL"));
   if (ncclTopoUserP2pLevel != -2) *level = ncclTopoUserP2pLevel;
   return ncclSuccess;
@@ -318,7 +318,7 @@ ncclResult_t ncclGetUserP2pLevel(int* level) {
 // *isCrossClique returns 1 when P2P is classified using MNNVL fabric metadata.
 // The connection may go through an intermediate rank.
 ncclResult_t ncclTopoCheckP2p(struct ncclComm* comm, struct ncclTopoSystem* system, int rank1, int rank2, int* p2p,
-                              int* read, int* intermediateRank, int* cudaP2p, int* isCrossClique) {
+                              int* read, int* intermediateRank, int* cudaP2p, int* isCrossClique) { /* 中文索引·体内调用 ncclTopoCheckMNNVL、ncclGetUserP2pLevel。 */
   int mnnvl = 0;
   struct ncclPeerInfo* info1 = NULL;
   struct ncclPeerInfo* info2 = NULL;
@@ -462,7 +462,7 @@ ncclResult_t ncclTopoCheckP2p(struct ncclComm* comm, struct ncclTopoSystem* syst
 
 // MNNVL: Check whether peers are in the same fabric cluster and clique
 ncclResult_t ncclTopoCheckMNNVL(struct ncclComm* comm, struct ncclPeerInfo* info1, struct ncclPeerInfo* info2,
-                                int* ret) {
+                                int* ret) { /* 中文索引·体内调用 memcpy、memcmp。 */
   *ret = 0;
 
   nvmlGpuFabricInfoV_t* fabricInfo1 = &info1->fabricInfo;
@@ -492,7 +492,7 @@ const char* ncclTopoGdrModeStr[ncclTopoGdrModeNum] = {"Disabled", "Default", "PC
 NCCL_PARAM(NetGdrC2c, "NET_GDR_C2C", 1);
 
 ncclResult_t ncclTopoCheckGdr(struct ncclTopoSystem* system, int rank, int64_t netId, int read,
-                              enum ncclTopoGdrMode* gdrMode) {
+                              enum ncclTopoGdrMode* gdrMode) { /* 中文索引·体内调用 ncclTopoIdToIndex、ncclTopoRankToIndex。 */
   *gdrMode = ncclTopoGdrModeDisable;
 
   // Get GPU and NET
@@ -583,7 +583,7 @@ NCCL_PARAM(NetForceFlush, "NET_FORCE_FLUSH", 0);
 
 // Based on the system topology, determine whether an explicit iflush is needed on the GDR recv path.
 ncclResult_t ncclTopoNeedFlush(struct ncclComm* comm, int64_t netId, int netDev, int rank,
-                               enum ncclTopoFlushType* flush) {
+                               enum ncclTopoFlushType* flush) { /* 中文索引·体内调用 comm->ncclNet->getProperties、ncclParamNetForceFlush。 */
   *flush = ncclTopoFlushAlways;
   ncclNetProperties_t props;
   NCCLCHECK(comm->ncclNet->getProperties(netDev, &props));
@@ -612,7 +612,7 @@ ncclResult_t ncclTopoNeedFlush(struct ncclComm* comm, int64_t netId, int netDev,
 NCCL_PARAM(NetDisableIntra, "NET_DISABLE_INTRA", 0);
 
 // Check whether going through the network would be faster than going through P2P/SHM.
-ncclResult_t ncclTopoCheckNet(struct ncclTopoSystem* system, int rank1, int rank2, int* net) {
+ncclResult_t ncclTopoCheckNet(struct ncclTopoSystem* system, int rank1, int rank2, int* net) { /* 中文索引·体内调用 ncclParamNetDisableIntra、ncclTopoRankToIndex。 */
   if (ncclParamNetDisableIntra() == 1) {
     *net = 0;
     return ncclSuccess;
@@ -644,7 +644,7 @@ ncclResult_t ncclTopoCheckNet(struct ncclTopoSystem* system, int rank1, int rank
 }
 
 ncclResult_t ncclTopoGetIntermediateRank(struct ncclTopoSystem* system, int rank, int64_t netId,
-                                         int* intermediateRank) {
+                                         int* intermediateRank) { /* 中文索引·体内调用 ncclTopoIdToIndex、ncclTopoRankToIndex。 */
   // Get GPU and NET
   int n, g;
   NCCLCHECK(ncclTopoIdToIndex(system, NET, netId, &n));
@@ -682,7 +682,7 @@ NCCL_PARAM(PxnDisable, "PXN_DISABLE", 0);
 
 // Net v4 plugins don't have non-blocking connect/accept. We can't therefore use
 // remote proxies without risking deadlocks
-int ncclPxnDisable(struct ncclComm* comm) {
+int ncclPxnDisable(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamPxnDisable。 */
 #if defined(NCCL_OS_LINUX)
   static int pxnDisable = -1;
   if (pxnDisable == -1) {
@@ -699,7 +699,7 @@ int ncclPxnDisable(struct ncclComm* comm) {
 #endif
 }
 
-ncclResult_t ncclTopoGetPxnRanks(struct ncclComm* comm, int** intermediateRanks, int* nranks) {
+ncclResult_t ncclTopoGetPxnRanks(struct ncclComm* comm, int** intermediateRanks, int* nranks) { /* 中文索引·体内调用 ncclTopoGetNetDev、ncclTopoCheckGdr。 */
   struct ncclTopoSystem* system = comm->topo;
   *nranks = 0;
   *intermediateRanks = NULL;
@@ -731,7 +731,7 @@ ncclResult_t ncclTopoGetPxnRanks(struct ncclComm* comm, int** intermediateRanks,
 
 NCCL_PARAM(PxnC2c, "PXN_C2C", 1);
 
-ncclResult_t ncclTopoComputePaths(struct ncclTopoSystem* system, struct ncclComm* comm) {
+ncclResult_t ncclTopoComputePaths(struct ncclTopoSystem* system, struct ncclComm* comm) { /* 中文索引·体内调用 ncclTopoRemovePaths、ncclTopoSetPaths。 */
   // Precompute paths between GPUs/NICs.
 
   // Remove everything in case we're re-computing
@@ -877,7 +877,7 @@ ncclResult_t ncclTopoComputePaths(struct ncclTopoSystem* system, struct ncclComm
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoTrimSystem(struct ncclTopoSystem* system, struct ncclComm* comm) {
+ncclResult_t ncclTopoTrimSystem(struct ncclTopoSystem* system, struct ncclComm* comm) { /* 中文索引·体内调用 ncclCalloc、ncclTopoRemovePaths。 */
   ncclResult_t ret = ncclSuccess;
   int* domains;
   int64_t* ids = NULL;
@@ -932,7 +932,7 @@ void ncclTopoFree(struct ncclTopoSystem* system) {
 NCCL_PARAM(P2pPerChannelNetBw, "P2P_PER_CHANNEL_NET_BW", /*GB/s*/ 14);
 
 static ncclResult_t ncclTopoGetNchannels(struct ncclComm* comm, int g /*local gpu index*/, int peerRank,
-                                         int* nChannels) {
+                                         int* nChannels) { /* 中文索引·体内调用 ncclTopoRankToIndex、ncclTopoNVLinkBw。 */
   int peer;
   struct ncclTopoSystem* system = comm->topo;
   struct ncclTopoLinkList* path = NULL;
@@ -972,7 +972,7 @@ NCCL_PARAM(MinP2pNChannels, "MIN_P2P_NCHANNELS", 1);
 NCCL_PARAM(MaxP2pNChannels, "MAX_P2P_NCHANNELS", MAXCHANNELS);
 extern int64_t ncclParamWorkArgsBytes();
 
-ncclResult_t ncclTopoComputeP2pChannelsPerPeer(struct ncclComm* comm) {
+ncclResult_t ncclTopoComputeP2pChannelsPerPeer(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTopoGetNchannels。 */
   int g = 0;
   while (comm->topo->nodes[GPU].nodes[g].gpu.rank != comm->rank) g++;
   if (g == comm->topo->nodes[GPU].count) return ncclInternalError;
@@ -988,7 +988,7 @@ ncclResult_t ncclTopoComputeP2pChannelsPerPeer(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoComputeP2pChannels(struct ncclComm* comm) {
+ncclResult_t ncclTopoComputeP2pChannels(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamMaxP2pNChannels、ncclParamMinP2pNChannels。 */
   if (comm->sharedRes->owner != comm) {
     comm->p2pnChannels = std::min(comm->nChannels, (int)ncclParamMaxP2pNChannels());
     comm->p2pnChannels =
@@ -1024,7 +1024,7 @@ ncclResult_t ncclTopoComputeP2pChannels(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoGetNvbGpus(struct ncclTopoSystem* system, int rank, int* nranks, int** ranks) {
+ncclResult_t ncclTopoGetNvbGpus(struct ncclTopoSystem* system, int rank, int* nranks, int** ranks) { /* 中文索引·体内调用 ncclCalloc。 */
   int ngpus = system->nodes[GPU].count;
   NCCLCHECK(ncclCalloc(ranks, ngpus));
   int nvbGpus = 0;
@@ -1071,7 +1071,7 @@ ncclResult_t ncclTopoGetGpuMaxPath(struct ncclTopoSystem* system, int type, int*
 
 // Check whether the system is all GPUs directly or indirectly connected to each other
 // through NVLink and C2C.
-ncclResult_t ncclTopoPathAllNVLink(struct ncclTopoSystem* system, int* allNvLink) {
+ncclResult_t ncclTopoPathAllNVLink(struct ncclTopoSystem* system, int* allNvLink) { /* 中文索引·体内调用 ncclTopoGetGpuMaxPath。 */
   int maxPath;
   NCCLCHECK(ncclTopoGetGpuMaxPath(system, GPU, &maxPath));
   *allNvLink = maxPath >= PATH_PIX ? 0 : 1;
@@ -1079,7 +1079,7 @@ ncclResult_t ncclTopoPathAllNVLink(struct ncclTopoSystem* system, int* allNvLink
 }
 
 // Check whether the system is all GPUs connected directly to each other through NVLink/NVSwitch.
-ncclResult_t ncclTopoPathAllDirectNVLink(struct ncclTopoSystem* system, bool* directNvlink) {
+ncclResult_t ncclTopoPathAllDirectNVLink(struct ncclTopoSystem* system, bool* directNvlink) { /* 中文索引·体内调用 ncclTopoGetGpuMaxPath。 */
   int maxPath;
   NCCLCHECK(ncclTopoGetGpuMaxPath(system, GPU, &maxPath));
   *directNvlink = maxPath <= PATH_NVL;
@@ -1088,7 +1088,7 @@ ncclResult_t ncclTopoPathAllDirectNVLink(struct ncclTopoSystem* system, bool* di
 
 // Check whether we are in a split NVLink situation, with two NVLink domains, not
 // connected through NVLink (e.g. QPI).
-ncclResult_t ncclTopoSplitNvLink(struct ncclTopoSystem* system, int* splitNvLink) {
+ncclResult_t ncclTopoSplitNvLink(struct ncclTopoSystem* system, int* splitNvLink) { /* 中文索引·体内调用 ncclCalloc、free。 */
   ncclResult_t res = ncclSuccess;
   int nvlDomains = 0;
   int *nvlDomain = NULL, *nvlDomainCount = NULL;

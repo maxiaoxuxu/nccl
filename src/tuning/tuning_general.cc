@@ -40,7 +40,7 @@ int ncclTuningGetCompCapIndex(struct ncclComm* comm) {
   }
 }
 
-void ncclTuningGetConstantsIndexes(struct ncclComm* comm, int* index1, int* index2) {
+void ncclTuningGetConstantsIndexes(struct ncclComm* comm, int* index1, int* index2) { /* 中文索引·体内调用 ncclTuningGetCompCapIndex。 */
   if (index2 != nullptr) *index2 = comm->nNodes <= 2 ? comm->nNodes - 1 : 2;
   // LL: for single node, we look at GPU type; for multi-node, we look at CPU type
   if (index1 != nullptr)
@@ -91,7 +91,7 @@ static int ncclTuningGetNthreads(const char* name, int env, int min, int max, in
   return nt;
 }
 
-ncclResult_t ncclTuningSetThreadThresholds(struct ncclComm* comm) {
+ncclResult_t ncclTuningSetThreadThresholds(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningGetNthreads、ncclParamNthreads。 */
   int simpleDefaultThreads = NCCL_SIMPLE_MAX_NTHREADS;
   comm->tuningContext.maxThreads[NCCL_ALGO_RING][NCCL_PROTO_SIMPLE] = ncclTuningGetNthreads(
     "NCCL_NTHREADS", ncclParamNthreads(), 2 * WARP_SIZE, NCCL_SIMPLE_MAX_NTHREADS, simpleDefaultThreads);
@@ -147,7 +147,7 @@ ncclResult_t ncclTuningSetThreadThresholds(struct ncclComm* comm) {
 }
 
 ncclResult_t ncclTuningGetChannels(struct ncclTuningInput_t* const input, struct ncclTuningResult_t* const result,
-                                   bool forceMaxTreeThreads) {
+                                   bool forceMaxTreeThreads) { /* 中文索引·体内调用 ncclTuningPlatformChannelTuning。 */
   int nc = input->comm->nChannels;
   ncclTuningPlatformChannelTuning(input, result, &nc);
   int nt = input->comm->tuningContext.maxThreads[result->algo][result->proto];
@@ -235,7 +235,7 @@ ncclResult_t ncclTuningExpandId(int tuningId, int* algo, int* proto, int* symKer
 
 // Model one collective on an otherwise empty plan. Aggregation can move a
 // task's starting channel and changes the traffic budget shared by the plan.
-int ncclTuningGetActiveChannels(struct ncclTuningInput_t* const input, const struct ncclTuningResult_t* result) {
+int ncclTuningGetActiveChannels(struct ncclTuningInput_t* const input, const struct ncclTuningResult_t* result) { /* 中文索引·体内调用 ncclClampChannels、ncclCommNMaxChannels。 */
   int maxChannels = result->maxChannels > 0 ? result->maxChannels : result->nChannels;
   maxChannels = ncclClampChannels(maxChannels, input->minCTAs, input->maxCTAs);
 

@@ -79,7 +79,7 @@ template <typename Coop>
 NCCL_DEVICE_INLINE void ncclBarrierSession<Coop>::selectBarrierAlgo(ncclGinFenceLevel fence, bool* needsLsaBarrier,
                                                                     bool* needsRailGinBarrier,
                                                                     bool* needsDenseGinBarrier,
-                                                                    bool* needsProducerFlush) const {
+                                                                    bool* needsProducerFlush) const { /* 中文索引·体内调用 ncclTeamRail、this->gin.thing._flushesAllPutsOnAnySignal。 */
   *needsProducerFlush = false;
 
   // Barrier on TeamLsa
@@ -139,7 +139,7 @@ NCCL_DEVICE_INLINE void ncclBarrierSession<Coop>::selectBarrierAlgo(ncclGinFence
 
 #ifdef __CUDACC__
 template <typename Coop>
-NCCL_DEVICE_INLINE void ncclBarrierSession<Coop>::sync(Coop, cuda::memory_order ord, ncclGinFenceLevel fence) {
+NCCL_DEVICE_INLINE void ncclBarrierSession<Coop>::sync(Coop, cuda::memory_order ord, ncclGinFenceLevel fence) { /* 中文索引·体内调用 selectBarrierAlgo、this->gin.thing.flush。 */
   bool needsLsaBarrier, needsRailGinBarrier, needsDenseGinBarrier, needsProducerFlush;
   selectBarrierAlgo(fence, &needsLsaBarrier, &needsRailGinBarrier, &needsDenseGinBarrier, &needsProducerFlush);
   if (needsProducerFlush) {
@@ -213,14 +213,14 @@ NCCL_DEVICE_INLINE ncclResult_t ncclBarrierSession<Coop>::sync(Coop, cuda::memor
 #ifdef __CUDACC__
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclBarrier(Coop coop, ncclTeamTagWorld tag, ncclGin gin, uint32_t index,
-                                    cuda::memory_order ord, ncclGinFenceLevel fence, bool multimem) {
+                                    cuda::memory_order ord, ncclGinFenceLevel fence, bool multimem) { /* 中文索引·体内调用 session.sync。 */
   ncclBarrierSession<Coop> session(coop, tag, gin, index, multimem);
   session.sync(coop, ord, fence);
 }
 
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclBarrier(Coop coop, ncclTeamTagRail tag, ncclGin gin, uint32_t index, cuda::memory_order ord,
-                                    ncclGinFenceLevel fence) {
+                                    ncclGinFenceLevel fence) { /* 中文索引·体内调用 session.sync。 */
   ncclBarrierSession<Coop> session(coop, tag, gin, index);
   session.sync(coop, ord, fence);
 }

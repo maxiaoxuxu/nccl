@@ -13,7 +13,7 @@
 
 static char diagLogHost[64] = "";
 static int diagLogPid = 0;
-static void diagLogInit() {
+static void diagLogInit() { /* 中文索引·体内调用 gethostname、snprintf。 */
   if (diagLogPid != 0) return;
   if (gethostname(diagLogHost, sizeof(diagLogHost) - 1) != 0) {
     snprintf(diagLogHost, sizeof(diagLogHost), "?");

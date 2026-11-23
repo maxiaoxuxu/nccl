@@ -79,7 +79,7 @@ NCCL_PARAM(HierCeCollNumCtx, "HIER_CE_COLL_NUM_CTX", -1);
 
 // Decide multicast vs unicast for CE AllGather: a CE-only tuning mask lets
 // ncclTuningCompute pick the fastest CE method (UC vs MC).
-int ncclCeAllGatherUseMulticast(struct ncclComm* comm, size_t perRankBytes, int captured, int inPlace) {
+int ncclCeAllGatherUseMulticast(struct ncclComm* comm, size_t perRankBytes, int captured, int inPlace) { /* 中文索引·体内调用 ncclTuningCompute。 */
   if (!comm->symkState.hasLsaMultimem) return 0;
 
   int64_t thresholdOverride = comm->ceColl.agMulticastThreshold;
@@ -102,7 +102,7 @@ int ncclCeAllGatherUseMulticast(struct ncclComm* comm, size_t perRankBytes, int 
   return (result.ceMethodId == ncclCeMethodId_AllGather_MC) ? 1 : 0;
 }
 
-ncclResult_t ncclCeInit(struct ncclComm* comm) {
+ncclResult_t ncclCeInit(struct ncclComm* comm) { /* 中文索引·体内调用 alignUp、ncclDevrInitOnce。 */
   ncclResult_t ret = ncclSuccess;
 
   uint8_t* ceDevBase = nullptr;
@@ -147,7 +147,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCeFinalize(struct ncclComm* comm) {
+ncclResult_t ncclCeFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   ncclResult_t ret = ncclSuccess;
 
   // Clean up ceInitTaskQueue
@@ -172,7 +172,7 @@ ncclResult_t ncclCeFinalize(struct ncclComm* comm) {
   return ret;
 }
 
-bool ncclCeImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty) {
+bool ncclCeImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty) { /* 中文索引·体内调用 ncclCudaDriverVersion。 */
   int driverVersion;
   if (ncclCudaDriverVersion(&driverVersion) != ncclSuccess) return false;
 
@@ -192,7 +192,7 @@ bool ncclCeImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType
 }
 
 bool ncclCeAvailable(struct ncclComm* comm, ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty,
-                     ncclSymRegType_t winRegType, struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) {
+                     ncclSymRegType_t winRegType, struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) { /* 中文索引·体内调用 ncclCeImplemented、ncclDevrWindowHasSysmemSegment。 */
   if (!ncclCeImplemented(coll, red, ty)) {
     TRACE(NCCL_TUNING, "Skipping CE collective: not implemented");
     return false;
@@ -217,7 +217,7 @@ bool ncclCeAvailable(struct ncclComm* comm, ncclFunc_t coll, int /*ncclDevRedOp_
 }
 
 ncclResult_t ncclPrepMCSync(struct ncclComm* comm, bool isComplete, CUstreamBatchMemOpParams* batchParams,
-                            size_t* opIdx, cudaStream_t stream) {
+                            size_t* opIdx, cudaStream_t stream) { /* 中文索引·体内调用 ncclCudaGraphValid、ncclDevrGetLsaTeamPtrMC。 */
   ncclResult_t ret = ncclSuccess;
 
   int myLsaRank = comm->devrState.lsaTeamSelf;
@@ -267,7 +267,7 @@ fail:
 }
 
 ncclResult_t ncclPrepUCSync(struct ncclComm* comm, bool isComplete, CUstreamBatchMemOpParams* batchParams,
-                            size_t* opIdx, cudaStream_t stream) {
+                            size_t* opIdx, cudaStream_t stream) { /* 中文索引·体内调用 ncclCudaGraphValid、cuStreamWriteValue32。 */
   ncclResult_t ret = ncclSuccess;
 
   int myLsaRank = comm->devrState.lsaTeamSelf;
@@ -314,7 +314,7 @@ fail:
 }
 
 // Intra-LSA-rank synchronization through memory operations.
-ncclResult_t ncclMemOpSync(struct ncclComm* comm, cudaStream_t stream, struct ncclCeCollArgs* profilerArgs) {
+ncclResult_t ncclMemOpSync(struct ncclComm* comm, cudaStream_t stream, struct ncclCeCollArgs* profilerArgs) { /* 中文索引·体内调用 ncclProfilerStartCeSyncEvent、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclProfilerEventRef ceSyncHandle = {};
   int lsaSize = comm->devrState.lsaTeamSize;
@@ -370,7 +370,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCeInitBatchOpsParams(struct ncclCeBatchOpsParams* params, int capacity) {
+ncclResult_t ncclCeInitBatchOpsParams(struct ncclCeBatchOpsParams* params, int capacity) { /* 中文索引·体内调用 ncclCalloc、free。 */
   ncclResult_t ret = ncclSuccess;
 
   void** srcs = nullptr;
@@ -418,7 +418,7 @@ fail:
   goto exit;
 }
 
-void ncclCeFreeBatchOpsParams(struct ncclCeBatchOpsParams* params) {
+void ncclCeFreeBatchOpsParams(struct ncclCeBatchOpsParams* params) { /* 中文索引·体内调用 free。 */
   if (params->srcs) free(params->srcs);
   params->srcs = nullptr;
   if (params->dsts) free(params->dsts);
@@ -439,7 +439,7 @@ void ncclCeFreeBatchOpsParams(struct ncclCeBatchOpsParams* params) {
 
 #if CUDART_VERSION >= 12080
 static ncclResult_t ncclCeLaunchChunkedMemcpyBatchAsync(struct ncclCeBatchOpsParams* params, size_t chunkSize,
-                                                        cudaStream_t stream) {
+                                                        cudaStream_t stream) { /* 中文索引·体内调用 ncclCalloc、cudaMemcpyBatchAsync。 */
   ncclResult_t ret = ncclSuccess;
   size_t maxSize = 0;
   for (int i = 0; i < params->numOps; i++) {
@@ -490,7 +490,7 @@ fail:
 #endif
 
 ncclResult_t ncclCeLaunchBatchOps(struct ncclComm* comm, struct ncclCeBatchOpsParams* params, cudaStream_t stream,
-                                  struct ncclCeCollArgs* profilerArgs) {
+                                  struct ncclCeCollArgs* profilerArgs) { /* 中文索引·体内调用 ncclParamCeChunkSize、ncclCudaGraphValid。 */
   ncclResult_t ret = ncclSuccess;
   int driverVersion;
   int64_t chunkSizeParam = ncclParamCeChunkSize();
@@ -645,7 +645,7 @@ fail:
 }
 
 // AllGather across the LSA team (intra-node only).
-ncclResult_t ncclCeAllGather(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclCeAllGather(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeInitBatchOpsParams、ncclMemOpSync。 */
   ncclResult_t ret = ncclSuccess;
   int myLsaRank = comm->devrState.lsaTeamSelf;
   int lsaSize = comm->devrState.lsaTeamSize;
@@ -716,7 +716,7 @@ fail:
 }
 
 // AlltoAll across the LSA team (intra-node only).
-ncclResult_t ncclCeAlltoAll(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclCeAlltoAll(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeInitBatchOpsParams、ncclMemOpSync。 */
   ncclResult_t ret = ncclSuccess;
   int myLsaRank = comm->devrState.lsaTeamSelf;
   int lsaSize = comm->devrState.lsaTeamSize;
@@ -773,7 +773,7 @@ fail:
 }
 
 // Scatter across the LSA team (intra-node only).
-ncclResult_t ncclCeScatter(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclCeScatter(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeInitBatchOpsParams、ncclDevrWorldToLsaRank。 */
   ncclResult_t ret = ncclSuccess;
   int myLsaRank = comm->devrState.lsaTeamSelf;
   int lsaSize = comm->devrState.lsaTeamSize;
@@ -835,7 +835,7 @@ fail:
 }
 
 // Gather across the LSA team (intra-node only).
-ncclResult_t ncclCeGather(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) {
+ncclResult_t ncclCeGather(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeInitBatchOpsParams、ncclDevrWorldToLsaRank。 */
   ncclResult_t ret = ncclSuccess;
   int myLsaRank = comm->devrState.lsaTeamSelf;
   // Calculate the size of data each rank sends to every other rank
@@ -886,7 +886,7 @@ fail:
 }
 
 bool ncclHierCeAvailable(struct ncclComm* comm, ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty,
-                         ncclSymRegType_t winRegType, struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) {
+                         ncclSymRegType_t winRegType, struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) { /* 中文索引·体内调用 ncclCeImplemented、ncclDevrWindowHasSysmemSegment。 */
   if (!ncclCeImplemented(coll, red, ty)) {
     TRACE(NCCL_TUNING, "Skipping hierarchical CE collective: not implemented");
     return false;
@@ -954,7 +954,7 @@ struct ncclHierChunkPlan {
 // Build a uniform chunking plan
 // Every peer gets the same chunk list, last chunk per peer absorbs the remainder.
 static ncclResult_t ncclHierCollBuildChunk(size_t perRankBytes, int nPeers, size_t maxChunk,
-                                           struct ncclHierChunkPlan* outPlan) {
+                                           struct ncclHierChunkPlan* outPlan) { /* 中文索引·体内调用 ncclCalloc、free。 */
   ncclResult_t ret = ncclSuccess;
   const size_t align = HIER_COLL_CHUNK_ALIGN;
 
@@ -1005,7 +1005,7 @@ fail:
   goto exit;
 }
 
-static void ncclHierCollFreeChunkPlan(struct ncclHierChunkPlan* plan) {
+static void ncclHierCollFreeChunkPlan(struct ncclHierChunkPlan* plan) { /* 中文索引·体内调用 free。 */
   if (plan == nullptr) return;
   free(plan->chunkStart);
   free(plan->chunkBytes);
@@ -1051,7 +1051,7 @@ static inline int ncclHierCollChunkCtx(int c, int numCtx) {
 // remote node for AllGather, every remote rank for AllToAll. It is not the same
 // number for both, and using the node count for AllToAll would quietly collapse
 // it to a single context at small node counts.
-static int ncclHierCollNumCtx(struct ncclRmaProxyState* rmaProxyState, size_t perPeerBytes, int nPeers) {
+static int ncclHierCollNumCtx(struct ncclRmaProxyState* rmaProxyState, size_t perPeerBytes, int nPeers) { /* 中文索引·体内调用 ncclParamHierCeCollNumCtx、ncclParamRmaMultiCtxThreshold。 */
   int numCtx = rmaProxyState->numIntCtx;
   int64_t numCtxOverride = ncclParamHierCeCollNumCtx();
   if (numCtxOverride > 0) {
@@ -1079,7 +1079,7 @@ static int ncclHierCollNumCtx(struct ncclRmaProxyState* rmaProxyState, size_t pe
 // a whole peer to another context. It therefore keeps the two guards the direct
 // and AllToAll paths no longer need -- single context under graph capture,
 // where the narrowing is not paid back, and below the size threshold.
-static int ncclHierCollRingNumCtx(struct ncclRmaProxyState* rmaProxyState, size_t perRankBytes, bool persistent) {
+static int ncclHierCollRingNumCtx(struct ncclRmaProxyState* rmaProxyState, size_t perRankBytes, bool persistent) { /* 中文索引·体内调用 ncclParamHierCeCollNumCtx、ncclHierCollNumCtx。 */
   // One peer per direction, so pass the provisioned count to leave the peer cap
   // a no-op; the override and the opt-in threshold still apply.
   int64_t numCtxOverride = ncclParamHierCeCollNumCtx();
@@ -1100,7 +1100,7 @@ static int ncclHierCollRingNumCtx(struct ncclRmaProxyState* rmaProxyState, size_
 // on the first contexts). Fewer chunks only when the HIER_COLL_CHUNK_ALIGN
 // floor binds. With numCtx == 1 this is the plain chunk width. Deterministic
 // in (perPeerBytes, numCtx), so sender and receiver derive the same chunking.
-static size_t ncclHierCollChunkWidth(size_t perPeerBytes, int numCtx) {
+static size_t ncclHierCollChunkWidth(size_t perPeerBytes, int numCtx) { /* 中文索引·体内调用 alignUp。 */
   size_t maxChunk = HIER_COLL_MAX_CHUNK_SIZE;
   // Peer-major callers pass numCtx == 1, skipping the narrowing so only the
   // HIER_COLL_MAX_CHUNK_SIZE cap applies. The cap may still yield several chunks
@@ -1117,7 +1117,7 @@ static size_t ncclHierCollChunkWidth(size_t perPeerBytes, int numCtx) {
 // Chunk width for the rail-ring path. The half-aware branch balances the two
 // directions once the ring runs on four or more contexts; below that it returns
 // the plain cap.
-static size_t ncclHierCollRingChunkWidth(size_t perRankBytes, size_t cwBytes, size_t ccwBytes, int numCtx) {
+static size_t ncclHierCollRingChunkWidth(size_t perRankBytes, size_t cwBytes, size_t ccwBytes, int numCtx) { /* 中文索引·体内调用 ncclHierCollChunkWidth、alignUp。 */
   size_t maxChunk = ncclHierCollChunkWidth(perRankBytes, numCtx);
   if (numCtx < 4 || perRankBytes < HIER_COLL_AG_RING_HALF_AWARE_THRESHOLD) {
     return maxChunk;
@@ -1134,7 +1134,7 @@ static size_t ncclHierCollRingChunkWidth(size_t perRankBytes, size_t cwBytes, si
 
 // Cross-node rail-sync entry barrier for the hierarchical CE collectives.
 static ncclResult_t ncclRailSync(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
-                                 struct ncclKernelPlan* plan, int ctx, cudaStream_t stream) {
+                                 struct ncclKernelPlan* plan, int ctx, cudaStream_t stream) { /* 中文索引·体内调用 ncclCalloc、ncclRmaProxyPutBuildOp。 */
   ncclResult_t ret = ncclSuccess;
   int localRank = comm->localRank;
   int nNodes = comm->nNodes;
@@ -1234,7 +1234,7 @@ fail:
 // counterclockwise entries when they resolve to the same peer.
 static ncclResult_t ncclProxyBuildWaitPeersRing(struct ncclComm* comm, struct ncclRmaProxyCtx* rmaProxyCtx,
                                                 struct ncclKernelPlan* plan, int npeers, const int* peersIn,
-                                                const int* nsignalsIn, struct ncclRmaProxyDesc** waitDescOut) {
+                                                const int* nsignalsIn, struct ncclRmaProxyDesc** waitDescOut) { /* 中文索引·体内调用 ncclCalloc、ncclRmaProxyWaitBuildDesc。 */
   ncclResult_t ret = ncclSuccess;
 
   int realPeers = 0;
@@ -1314,7 +1314,7 @@ fail:
 //   PutGroupDone                // one memop blocks until all network puts complete
 //   IntraNodeBarrier            // gates user code reading recvbuf
 
-static ncclResult_t ncclHierCeAllGatherDirect(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+static ncclResult_t ncclHierCeAllGatherDirect(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclHierCollNumCtx、ncclRmaProxyPutGroupStartNumOps。 */
   ncclResult_t ret = ncclSuccess;
 
   // Distribute the cross-node rail puts/waits across the NCCL-internal RMA proxy
@@ -1693,7 +1693,7 @@ struct ncclHierCeAllGatherRingIssueState {
 // current round's local CE fanout and completion retirement.
 static ncclResult_t ncclHierCeAllGatherRingIssueRound(struct ncclComm* comm, struct ncclKernelPlan* plan,
                                                       cudaStream_t stream, struct ncclHierCeAllGatherRingIssueState* st,
-                                                      int step, int slot) {
+                                                      int step, int slot) { /* 中文索引·体内调用 ncclRmaProxyPutGroupStartNumOps、ncclRmaProxyPutGroupDoneNumOps。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
   struct ncclDevrWindow* recvWin = plan->ceCollArgs->recvWin;
@@ -1769,7 +1769,7 @@ fail:
 //     CE-scatter arrived halves // local fanout of the current round's newly received sub-chunks via LSA
 //     PutGroupDone              // retire the current round's outbound puts
 //   IntraNodeBarrier            // gates user code reading recvbuf
-static ncclResult_t ncclHierCeAllGatherRing(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+static ncclResult_t ncclHierCeAllGatherRing(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeAllGatherUseMulticast、ncclCudaGraphValid。 */
   ncclResult_t ret = ncclSuccess;
 
   struct ncclRmaProxyState* rmaProxyState = &comm->rmaState.rmaProxyState;
@@ -2209,7 +2209,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclHierCeAllGather(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclHierCeAllGather(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclParamHierCeCollAgRailRingEnable、ncclHierCeAllGatherRing。 */
   size_t perRankBytes = plan->ceCollArgs->nElts * plan->ceCollArgs->eltSize;
   bool useRing = ncclParamHierCeCollAgRailRingEnable() > 0;
   const char* railAlgo = useRing ? "Ring" : "Direct";
@@ -2230,7 +2230,7 @@ ncclResult_t ncclHierCeAllGather(struct ncclComm* comm, struct ncclKernelPlan* p
 //   PutGroupDone                // one memop blocks until outbound puts done
 //   IntraNodeBarrier #2         // all ranks in sync
 
-ncclResult_t ncclHierCeAlltoAll(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclHierCeAlltoAll(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclHierCollNumCtx、ncclRmaProxyPutGroupStartNumOps。 */
   ncclResult_t ret = ncclSuccess;
 
   // Distribute the cross-node rail puts/waits across the NCCL-internal RMA proxy
@@ -2539,7 +2539,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclLaunchCeColl(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclLaunchCeColl(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclProfilerStartCeCollEvent、ncclDevrIsOneLsaTeam。 */
   ncclResult_t ret = ncclSuccess;
   cudaStream_t stream = comm->planner.streams->stream;
   struct ncclCeCollArgs* args = plan->ceCollArgs;
@@ -2590,7 +2590,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t scheduleCeCollTaskToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t scheduleCeCollTaskToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclTypeSize。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   struct ncclTaskColl* task = ncclIntruQueueHead(&planner->collCeTaskQueue);
 

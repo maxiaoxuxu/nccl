@@ -116,7 +116,7 @@ static void *ibverbs_handle = NULL;
  *
  * @return 0 on success, -1 on failure
  */
-static void doca_verbs_wrapper_init_once(int *ret) {
+static void doca_verbs_wrapper_init_once(int *ret) { /* 中文索引·体内调用 dlopen、dlerror。 */
     /* Try to open the IB Verbs library */
     ibverbs_handle = dlopen("libibverbs.so.1", RTLD_NOW);
     if (!ibverbs_handle) {
@@ -173,7 +173,7 @@ static void doca_verbs_wrapper_init_once(int *ret) {
     *ret = 0;
 }
 
-static int init_ibverbs_library(void) {
+static int init_ibverbs_library(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_wrapper_init_once, &ret);
@@ -183,7 +183,7 @@ static int init_ibverbs_library(void) {
 /* *********** Wrapper Implementations *********** */
 
 doca_error_t doca_verbs_wrapper_ibv_get_device_list(int *num_devices,
-                                                    struct ibv_device ***device_list) {
+                                                    struct ibv_device ***device_list) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_get_device_list。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -191,7 +191,7 @@ doca_error_t doca_verbs_wrapper_ibv_get_device_list(int *num_devices,
     return (*device_list != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_free_device_list(struct ibv_device **list) {
+doca_error_t doca_verbs_wrapper_ibv_free_device_list(struct ibv_device **list) { /* 中文索引·体内调用 real_ibv_free_device_list。 */
     if (real_ibv_free_device_list) {
         real_ibv_free_device_list(list);
         return DOCA_SUCCESS;
@@ -200,7 +200,7 @@ doca_error_t doca_verbs_wrapper_ibv_free_device_list(struct ibv_device **list) {
 }
 
 doca_error_t doca_verbs_wrapper_ibv_get_device_name(struct ibv_device *device,
-                                                    const char **device_name) {
+                                                    const char **device_name) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_get_device_name。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -209,7 +209,7 @@ doca_error_t doca_verbs_wrapper_ibv_get_device_name(struct ibv_device *device,
 }
 
 doca_error_t doca_verbs_wrapper_ibv_open_device(struct ibv_device *device,
-                                                struct ibv_context **context) {
+                                                struct ibv_context **context) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_open_device。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -217,7 +217,7 @@ doca_error_t doca_verbs_wrapper_ibv_open_device(struct ibv_device *device,
     return (*context != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_close_device(struct ibv_context *context) {
+doca_error_t doca_verbs_wrapper_ibv_close_device(struct ibv_context *context) { /* 中文索引·体内调用 real_ibv_close_device。 */
     if (real_ibv_close_device) {
         int ret = real_ibv_close_device(context);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -225,7 +225,7 @@ doca_error_t doca_verbs_wrapper_ibv_close_device(struct ibv_context *context) {
     return DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_alloc_pd(struct ibv_context *context, struct ibv_pd **pd) {
+doca_error_t doca_verbs_wrapper_ibv_alloc_pd(struct ibv_context *context, struct ibv_pd **pd) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_alloc_pd。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -233,7 +233,7 @@ doca_error_t doca_verbs_wrapper_ibv_alloc_pd(struct ibv_context *context, struct
     return (*pd != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_dealloc_pd(struct ibv_pd *pd) {
+doca_error_t doca_verbs_wrapper_ibv_dealloc_pd(struct ibv_pd *pd) { /* 中文索引·体内调用 real_ibv_dealloc_pd。 */
     if (real_ibv_dealloc_pd) {
         int ret = real_ibv_dealloc_pd(pd);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -242,7 +242,7 @@ doca_error_t doca_verbs_wrapper_ibv_dealloc_pd(struct ibv_pd *pd) {
 }
 
 doca_error_t doca_verbs_wrapper_ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t length, int access,
-                                           struct ibv_mr **mr) {
+                                           struct ibv_mr **mr) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_reg_mr。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -250,7 +250,7 @@ doca_error_t doca_verbs_wrapper_ibv_reg_mr(struct ibv_pd *pd, void *addr, size_t
     return (*mr != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_dereg_mr(struct ibv_mr *mr) {
+doca_error_t doca_verbs_wrapper_ibv_dereg_mr(struct ibv_mr *mr) { /* 中文索引·体内调用 real_ibv_dereg_mr。 */
     if (real_ibv_dereg_mr) {
         int ret = real_ibv_dereg_mr(mr);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -259,7 +259,7 @@ doca_error_t doca_verbs_wrapper_ibv_dereg_mr(struct ibv_mr *mr) {
 }
 
 doca_error_t doca_verbs_wrapper_ibv_query_device(struct ibv_context *context,
-                                                 struct ibv_device_attr *device_attr) {
+                                                 struct ibv_device_attr *device_attr) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_query_device。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -268,7 +268,7 @@ doca_error_t doca_verbs_wrapper_ibv_query_device(struct ibv_context *context,
 }
 
 doca_error_t doca_verbs_wrapper_ibv_query_port(struct ibv_context *context, uint8_t port_num,
-                                               struct ibv_port_attr *port_attr) {
+                                               struct ibv_port_attr *port_attr) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_query_port。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -277,7 +277,7 @@ doca_error_t doca_verbs_wrapper_ibv_query_port(struct ibv_context *context, uint
 }
 
 doca_error_t doca_verbs_wrapper_ibv_query_gid(struct ibv_context *context, uint8_t port_num,
-                                              int index, union ibv_gid *gid) {
+                                              int index, union ibv_gid *gid) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_query_gid。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -286,7 +286,7 @@ doca_error_t doca_verbs_wrapper_ibv_query_gid(struct ibv_context *context, uint8
 }
 
 doca_error_t doca_verbs_wrapper_ibv_create_ah(struct ibv_pd *pd, struct ibv_ah_attr *attr,
-                                              struct ibv_ah **ah) {
+                                              struct ibv_ah **ah) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_create_ah。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -294,7 +294,7 @@ doca_error_t doca_verbs_wrapper_ibv_create_ah(struct ibv_pd *pd, struct ibv_ah_a
     return (*ah != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_destroy_ah(struct ibv_ah *ah) {
+doca_error_t doca_verbs_wrapper_ibv_destroy_ah(struct ibv_ah *ah) { /* 中文索引·体内调用 real_ibv_destroy_ah。 */
     if (real_ibv_destroy_ah) {
         int ret = real_ibv_destroy_ah(ah);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -304,7 +304,7 @@ doca_error_t doca_verbs_wrapper_ibv_destroy_ah(struct ibv_ah *ah) {
 
 doca_error_t doca_verbs_wrapper_ibv_create_cq(struct ibv_context *context, int cqe,
                                               void *cq_context, struct ibv_comp_channel *channel,
-                                              int comp_vector, struct ibv_cq **cq) {
+                                              int comp_vector, struct ibv_cq **cq) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_create_cq。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -312,7 +312,7 @@ doca_error_t doca_verbs_wrapper_ibv_create_cq(struct ibv_context *context, int c
     return (*cq != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_destroy_cq(struct ibv_cq *cq) {
+doca_error_t doca_verbs_wrapper_ibv_destroy_cq(struct ibv_cq *cq) { /* 中文索引·体内调用 real_ibv_destroy_cq。 */
     if (real_ibv_destroy_cq) {
         int ret = real_ibv_destroy_cq(cq);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -322,7 +322,7 @@ doca_error_t doca_verbs_wrapper_ibv_destroy_cq(struct ibv_cq *cq) {
 
 doca_error_t doca_verbs_wrapper_ibv_create_srq(struct ibv_pd *pd,
                                                struct ibv_srq_init_attr *srq_init_attr,
-                                               struct ibv_srq **srq) {
+                                               struct ibv_srq **srq) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_create_srq。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -330,7 +330,7 @@ doca_error_t doca_verbs_wrapper_ibv_create_srq(struct ibv_pd *pd,
     return (*srq != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_destroy_srq(struct ibv_srq *srq) {
+doca_error_t doca_verbs_wrapper_ibv_destroy_srq(struct ibv_srq *srq) { /* 中文索引·体内调用 real_ibv_destroy_srq。 */
     if (real_ibv_destroy_srq) {
         int ret = real_ibv_destroy_srq(srq);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -340,7 +340,7 @@ doca_error_t doca_verbs_wrapper_ibv_destroy_srq(struct ibv_srq *srq) {
 
 doca_error_t doca_verbs_wrapper_ibv_create_qp(struct ibv_pd *pd,
                                               struct ibv_qp_init_attr *qp_init_attr,
-                                              struct ibv_qp **qp) {
+                                              struct ibv_qp **qp) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_create_qp。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -348,7 +348,7 @@ doca_error_t doca_verbs_wrapper_ibv_create_qp(struct ibv_pd *pd,
     return (*qp != NULL) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
 }
 
-doca_error_t doca_verbs_wrapper_ibv_destroy_qp(struct ibv_qp *qp) {
+doca_error_t doca_verbs_wrapper_ibv_destroy_qp(struct ibv_qp *qp) { /* 中文索引·体内调用 real_ibv_destroy_qp。 */
     if (real_ibv_destroy_qp) {
         int ret = real_ibv_destroy_qp(qp);
         return (ret == 0) ? DOCA_SUCCESS : DOCA_ERROR_DRIVER;
@@ -357,7 +357,7 @@ doca_error_t doca_verbs_wrapper_ibv_destroy_qp(struct ibv_qp *qp) {
 }
 
 doca_error_t doca_verbs_wrapper_ibv_modify_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
-                                              int attr_mask) {
+                                              int attr_mask) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_modify_qp。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }
@@ -366,7 +366,7 @@ doca_error_t doca_verbs_wrapper_ibv_modify_qp(struct ibv_qp *qp, struct ibv_qp_a
 }
 
 doca_error_t doca_verbs_wrapper_ibv_query_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
-                                             int attr_mask, struct ibv_qp_init_attr *init_attr) {
+                                             int attr_mask, struct ibv_qp_init_attr *init_attr) { /* 中文索引·体内调用 init_ibverbs_library、real_ibv_query_qp。 */
     if (init_ibverbs_library() != 0) {
         return DOCA_ERROR_NOT_FOUND;
     }

@@ -120,7 +120,7 @@ NCCL_DEVICE_INLINE static uint64_t hwCounterLoad(uint64_t* ptr) {
 template <ncclGinResourceSharingMode mode>
 NCCL_DEVICE_INLINE static void ringDoorbell(efa_cuda_qp* qp, uint64_t* submitted_count_ptr,
                                             cuda::atomic_ref<uint32_t, ncclGinScope<mode>>& dbrung_ref,
-                                            uint32_t db_rung, uint32_t target) {
+                                            uint32_t db_rung, uint32_t target) { /* 中文索引·体内调用 __cvta_generic_to_global、cuda::atomic_thread_fence。 */
   uint64_t dbAddr = (uint64_t)__cvta_generic_to_global(qp->sq.wq.db);
   asm volatile("st.mmio.relaxed.sys.global.b32 [%0], %1;" : : "l"(dbAddr), "r"(target) : "memory");
   /* Order the doorbell MMIO write. Use acq_rel (MEMBAR.ALL.SYS) instead of
@@ -138,7 +138,7 @@ struct RdmaSgeEncoder {
   uint32_t lkey;
   uint32_t bytes;
 
-  NCCL_DEVICE_INLINE void encode(EfaCudaWrBuilder& wr) {
+  NCCL_DEVICE_INLINE void encode(EfaCudaWrBuilder& wr) { /* 中文索引·体内调用 wr.set_sge、assert。 */
     int ret = wr.set_sge(lkey, addr, bytes);
     assert(ret == 0 && "EFA GDA: failed to encode RDMA SGE");
     (void)ret;
@@ -152,7 +152,7 @@ struct PutValuePayloadEncoder {
 
   NCCL_DEVICE_INLINE PutValuePayloadEncoder(T value) : srcVal(value) {}
 
-  NCCL_DEVICE_INLINE void encode(EfaCudaWrBuilder& wr) {
+  NCCL_DEVICE_INLINE void encode(EfaCudaWrBuilder& wr) { /* 中文索引·体内调用 wr.set_inline_data、assert。 */
     int ret = wr.set_inline_data(&srcVal, sizeof(T));
     assert(ret == 0 && "EFA GDA: failed to encode inline PutValue");
     (void)ret;
@@ -166,7 +166,7 @@ struct PutValuePayloadEncoder {
 
 NCCL_DEVICE_INLINE static void postPutThread(nccl_ofi_gin_gdaki_dev_endpoint_handle* ep, uint16_t ah, uint16_t qpn,
                                              uint32_t qkey, uint64_t dstAddr, uint32_t dstRkey,
-                                             const RdmaSgeEncoder& sge, uint32_t optFlags) {
+                                             const RdmaSgeEncoder& sge, uint32_t optFlags) { /* 中文索引·体内调用 __cvta_generic_to_global、EfaGdaWriteWqeRegs。 */
   efa_cuda_qp* qp = (efa_cuda_qp*)ep->qp;
   const uint32_t slot = qp->sq.wq.pc;
   const uint32_t next = slot + 1u;
@@ -225,7 +225,7 @@ struct PostRdmaOpModeTag {};
 template <ncclGinResourceSharingMode mode, efaGdaRdmaOp op>
 NCCL_DEVICE_INLINE static void postRdmaOpImpl(PostRdmaOpModeTag<true>, nccl_ofi_gin_gdaki_dev_endpoint_handle* ep,
                                               uint16_t ah, uint16_t qpn, uint32_t qkey, uint64_t dstAddr,
-                                              uint32_t dstRkey, const RdmaSgeEncoder& sge, uint32_t optFlags) {
+                                              uint32_t dstRkey, const RdmaSgeEncoder& sge, uint32_t optFlags) { /* 中文索引·体内调用 postPutThread。 */
   static_assert(mode == NCCL_GIN_RESOURCE_SHARING_THREAD, "EFA GDA THREAD tag requires THREAD sharing");
   static_assert(op == EFA_GDA_RDMA_WRITE, "EFA GDA THREAD mode specializes Put only");
   postPutThread(ep, ah, qpn, qkey, dstAddr, dstRkey, sge, optFlags);
@@ -234,7 +234,7 @@ NCCL_DEVICE_INLINE static void postRdmaOpImpl(PostRdmaOpModeTag<true>, nccl_ofi_
 template <ncclGinResourceSharingMode mode, efaGdaRdmaOp op, typename PayloadEncoder>
 NCCL_DEVICE_INLINE static void postRdmaOpImpl(PostRdmaOpModeTag<false>, nccl_ofi_gin_gdaki_dev_endpoint_handle* ep,
                                               uint16_t ah, uint16_t qpn, uint32_t qkey, uint64_t dstAddr,
-                                              uint32_t dstRkey, PayloadEncoder payloadEncoder, uint32_t optFlags) {
+                                              uint32_t dstRkey, PayloadEncoder payloadEncoder, uint32_t optFlags) { /* 中文索引·体内调用 wr.init_rdma_read、wr.init_rdma_write。 */
   efa_cuda_qp* qp = (efa_cuda_qp*)ep->qp;
   uint64_t* submitted_count_ptr = &ep->submitted_count;
   uint64_t* local_cntr_ptr = ep->local_cntr_value;
@@ -451,7 +451,7 @@ NCCL_DEVICE_INLINE static void putImplMode(ncclGinCtx ctx, Coop coop, int peer, 
                                            ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp,
                                            uint64_t signalOpArg, bool hasCounter, ncclGinCounter_t counterId,
                                            bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
-                                           cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) {
+                                           cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     nccl_ofi_gin_gdaki_dev_handle* dev = getDevHandle(ctx);
@@ -721,7 +721,7 @@ NCCL_DEVICE_INLINE static void putImpl(ncclGinCtx ctx, Coop coop, int peer, bool
 template <ncclGinResourceSharingMode mode, typename Coop>
 NCCL_DEVICE_INLINE static void getImplMode(ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t remoteWin,
                                            size_t remoteOff, ncclGinWindow_t localWin, size_t localOff, size_t bytes,
-                                           uint32_t optFlags) {
+                                           uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   coop.sync();
   if (coop.thread_rank() == 0) {
     nccl_ofi_gin_gdaki_dev_handle* dev = getDevHandle(ctx);
@@ -787,7 +787,7 @@ NCCL_DEVICE_INLINE static void putValueImplMode(ncclGinCtx ctx, Coop coop, int p
                                                 size_t dstOff, T srcVal, ncclGinSignalDescriptor signal,
                                                 ncclGinSignalOp_t signalOp, uint64_t signalOpArg, bool hasDescriptor,
                                                 ncclGinDescriptorSmem* descriptor, cuda::thread_scope required,
-                                                cuda::thread_scope given, uint32_t optFlags) {
+                                                cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   static_assert(sizeof(T) <= 8, "PutValue: T must fit in 8 bytes");
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -972,7 +972,7 @@ struct ncclGinApi_Put<NCCL_NET_DEVICE_GIN_EFA_GDA> {
                                       ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp, uint64_t signalOpArg,
                                       bool hasCounter, ncclGinCounter_t counterId, bool hasDescriptor,
                                       ncclGinDescriptorSmem* descriptor, cuda::thread_scope required,
-                                      cuda::thread_scope given, uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      cuda::thread_scope given, uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 nccl::gin::efa_gda::putImpl。 */
     nccl::gin::efa_gda::putImpl(ctx, coop, peer, hasWins, dstWin, dstOff, srcWin, srcOff, bytes, signal, signalOp,
                                 signalOpArg, hasCounter, counterId, hasDescriptor, descriptor, required, given,
                                 optFlags);
@@ -988,7 +988,7 @@ struct ncclGinApi_PutValue<NCCL_NET_DEVICE_GIN_EFA_GDA> {
                                       T srcVal, ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp,
                                       uint64_t signalOpArg, bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
                                       cuda::thread_scope required, cuda::thread_scope given,
-                                      uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 nccl::gin::efa_gda::putValueImpl。 */
     nccl::gin::efa_gda::putValueImpl(ctx, coop, peer, dstWin, dstOff, srcVal, signal, signalOp, signalOpArg,
                                      hasDescriptor, descriptor, required, given, optFlags);
   }
@@ -1001,7 +1001,7 @@ struct ncclGinApi_Get<NCCL_NET_DEVICE_GIN_EFA_GDA> {
   template <typename Coop>
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t remoteWin, size_t remoteOff,
                                       ncclGinWindow_t localWin, size_t localOff, size_t bytes, bool hasDescriptor,
-                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 nccl::gin::efa_gda::getImpl。 */
     (void)hasDescriptor;
     (void)descriptor;
     nccl::gin::efa_gda::getImpl(ctx, coop, peer, remoteWin, remoteOff, localWin, localOff, bytes, optFlags);
@@ -1104,7 +1104,7 @@ struct ncclGinApi_BarrierOptions<NCCL_NET_DEVICE_GIN_EFA_GDA> {
 
 template <>
 struct ncclGinApi_GetSignalPtr<NCCL_NET_DEVICE_GIN_EFA_GDA> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) { /* 中文索引·体内调用 nccl::gin::efa_gda::getDevHandle。 */
     nccl_ofi_gin_gdaki_dev_handle* dev = nccl::gin::efa_gda::getDevHandle(ctx);
     nccl_ofi_gin_gdaki_dev_counter_handle* h = dev->signal_handles[signalId];
     return {(uint64_t*)h->cntr_value, h->cntr_offset};
@@ -1115,7 +1115,7 @@ struct ncclGinApi_GetSignalPtr<NCCL_NET_DEVICE_GIN_EFA_GDA> {
 
 template <>
 struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_EFA_GDA> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 nccl::gin::efa_gda::getDevHandle。 */
     nccl_ofi_gin_gdaki_dev_handle* dev = nccl::gin::efa_gda::getDevHandle(ctx);
     nccl_ofi_gin_gdaki_dev_counter_handle* h = dev->counter_handles[counterId];
     return {(uint64_t*)h->cntr_value, h->cntr_offset};
@@ -1126,7 +1126,7 @@ struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_EFA_GDA> {
 
 template <>
 struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_EFA_GDA> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) { /* 中文索引·体内调用 nccl::gin::efa_gda::getDevHandle、assert。 */
     nccl_ofi_gin_gdaki_dev_handle* dev = nccl::gin::efa_gda::getDevHandle(ctx);
     assert(signal.type == NCCL_GIN_SIGNAL_TYPE_INDEXED && "EFA GDA ResetSignal: only INDEXED signals are supported");
     assert((int)signal.indexedSignal.signalId < dev->nSignals && "EFA GDA ResetSignal: signalId out of range");
@@ -1142,7 +1142,7 @@ struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_EFA_GDA> {
 
 template <>
 struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_EFA_GDA> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 nccl::gin::efa_gda::getDevHandle、assert。 */
     nccl_ofi_gin_gdaki_dev_handle* dev = nccl::gin::efa_gda::getDevHandle(ctx);
     assert((int)counterId < dev->nCounters && "EFA GDA ResetCounter: counterId out of range");
     /* Offset-based reset: snapshot the NIC counter into cntr_offset

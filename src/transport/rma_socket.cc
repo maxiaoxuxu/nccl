@@ -18,7 +18,7 @@
 static int ncclRmaSocketProxyRefCount;
 static std::mutex ncclRmaSocketProxyMutex;
 
-ncclResult_t ncclRmaSocketProxyInit(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction) {
+ncclResult_t ncclRmaSocketProxyInit(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction) { /* 中文索引·体内调用 ncclNetSocketInitDevices。 */
   (void)commId;
   (void)logFunction;
   if (ctx) *ctx = NULL;
@@ -48,14 +48,14 @@ ncclResult_t ncclRmaSocketProxyGetRmaProperties(void* collComm, ncclRmaPropertie
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaSocketProxyGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclRmaSocketProxyGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNetSocket.getProperties。 */
   NCCLCHECK(ncclNetSocket.getProperties(dev, props));
   // props->ptrSupport = NCCL_PTR_HOST | NCCL_PTR_CUDA;
   props->netDeviceType = NCCL_NET_DEVICE_GIN_PROXY;
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaSocketProxyListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) {
+ncclResult_t ncclRmaSocketProxyListen(void* ctx, int dev, void* opaqueHandle, void** listenComm) { /* 中文索引·体内调用 memset、ncclCalloc。 */
   (void)ctx;
   ncclResult_t ret = ncclSuccess;
   struct ncclRmaSocketProxyHandle* handle = (struct ncclRmaSocketProxyHandle*)opaqueHandle;
@@ -74,7 +74,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaSocketProxyCloseListen(void* opaqueListenComm) {
+ncclResult_t ncclRmaSocketProxyCloseListen(void* opaqueListenComm) { /* 中文索引·体内调用 ncclSocketClose、free。 */
   struct ncclSocket* sock = (struct ncclSocket*)opaqueListenComm;
   ncclResult_t ret = ncclSuccess;
   if (sock) {
@@ -103,7 +103,7 @@ static void ncclRmaSocketProxyCtxRemoveActiveOp(struct ncclRmaSocketProxyCtx* ct
   }
 }
 
-static void ncclRmaSocketProxyReleaseRequest(struct ncclRmaSocketProxyRequest* req) {
+static void ncclRmaSocketProxyReleaseRequest(struct ncclRmaSocketProxyRequest* req) { /* 中文索引·体内调用 ncclRmaSocketProxyCtxRemoveActiveOp、memset。 */
   if (req == NULL) return;
   if (req->type != ncclRmaSocketProxyRequestTypeFree && req->ctx) ncclRmaSocketProxyCtxRemoveActiveOp(req->ctx);
   memset(req, 0, sizeof(*req));
@@ -111,7 +111,7 @@ static void ncclRmaSocketProxyReleaseRequest(struct ncclRmaSocketProxyRequest* r
 
 static ncclResult_t ncclRmaSocketProxyGetRequest(struct ncclRmaSocketProxyCtx* ctx, int peer,
                                                  enum ncclRmaSocketProxyRequestType type,
-                                                 struct ncclRmaSocketProxyRequest** reqOut) {
+                                                 struct ncclRmaSocketProxyRequest** reqOut) { /* 中文索引·体内调用 memset、ncclRmaSocketProxyCtxAddActiveOp。 */
   if (ctx == NULL || ctx->collComm == NULL || reqOut == NULL || peer < 0 || peer >= ctx->collComm->nranks ||
       type == ncclRmaSocketProxyRequestTypeFree) {
     WARN("RMA/Socket : invalid request allocation ctx=%p peer=%d type=%d", ctx, peer, type);
@@ -138,7 +138,7 @@ static ncclResult_t ncclRmaSocketProxyGetRequest(struct ncclRmaSocketProxyCtx* c
 static ncclResult_t ncclRmaSocketProxyBuildHeader(struct ncclRmaSocketProxyHeader* header, uint16_t type,
                                                   uint32_t status, uint64_t requestId, uint32_t opFlags, uint64_t mrId,
                                                   uint64_t dstOff, size_t size, uint64_t signalMrId, uint64_t signalOff,
-                                                  uint64_t signalValue, uint32_t signalOp) {
+                                                  uint64_t signalValue, uint32_t signalOp) { /* 中文索引·体内调用 memset。 */
   if (size > INT_MAX) {
     WARN("RMA/Socket : message size %zu exceeds socket API limit", size);
     return ncclInvalidArgument;
@@ -182,7 +182,7 @@ static ncclResult_t ncclRmaSocketProxyAcquireSendTask(struct ncclRmaSocketProxyP
   return ncclSuccess;
 }
 
-static void ncclRmaSocketProxyPopAndCompleteSendTask(struct ncclRmaSocketProxyPeerSender* sender) {
+static void ncclRmaSocketProxyPopAndCompleteSendTask(struct ncclRmaSocketProxyPeerSender* sender) { /* 中文索引·体内调用 memset。 */
   if (sender == NULL || sender->count == 0) return;
   struct ncclRmaSocketProxySendTask* task = &sender->tasks[sender->head];
   if (task->controlMsg.type == ncclRmaSocketProxyMsgTypeIput ||
@@ -197,7 +197,7 @@ static void ncclRmaSocketProxyPopAndCompleteSendTask(struct ncclRmaSocketProxyPe
 ncclResult_t ncclRmaSocketProxyEnqueueRespondGetData(struct ncclRmaSocketProxyPeerSender* sender,
                                                      const struct ncclRmaSocketProxyHeader* requestMsg, uint32_t status,
                                                      void* srcPtr, int srcType,
-                                                     struct ncclRmaSocketProxyMrHandle* srcHandle, size_t size) {
+                                                     struct ncclRmaSocketProxyMrHandle* srcHandle, size_t size) { /* 中文索引·体内调用 ncclRmaSocketProxyAcquireSendTask、memset。 */
   if (sender == NULL || requestMsg == NULL) return ncclInvalidArgument;
 
   struct ncclRmaSocketProxySendTask* task = NULL;
@@ -214,7 +214,7 @@ ncclResult_t ncclRmaSocketProxyEnqueueRespondGetData(struct ncclRmaSocketProxyPe
 }
 
 static ncclResult_t ncclRmaSocketProxyProgressSendTask(struct ncclRmaSocketProxyCollComm* comm, int peer,
-                                                       struct ncclRmaSocketProxySendTask* task) {
+                                                       struct ncclRmaSocketProxySendTask* task) { /* 中文索引·体内调用 ncclSocketProgress、ncclRmaSocketProxyPopAndCompleteSendTask。 */
   struct ncclRmaSocketProxyPeerSender* sender = &comm->peerSender[peer];
   bool closed = false;
 
@@ -281,7 +281,7 @@ static ncclResult_t ncclRmaSocketProxyProgressSendTask(struct ncclRmaSocketProxy
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyProgressComm(struct ncclRmaSocketProxyCollComm* comm) {
+static ncclResult_t ncclRmaSocketProxyProgressComm(struct ncclRmaSocketProxyCollComm* comm) { /* 中文索引·体内调用 ncclRmaSocketProxyProgressPeerRecv、ncclRmaSocketProxyProgressSendTask。 */
   ncclResult_t ret = ncclSuccess;
   if (comm == NULL) return ncclInvalidArgument;
 
@@ -314,7 +314,7 @@ struct ncclRmaSocketProxyPutArgs {
 static ncclResult_t ncclRmaSocketProxyValidatePutArgs(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle,
                                                       size_t size, uint64_t dstOff, void* dstMhandle, uint32_t rank,
                                                       bool hasSignal, uint64_t signalOff, void* signalMhandle,
-                                                      uint32_t signalOp, struct ncclRmaSocketProxyPutArgs* args) {
+                                                      uint32_t signalOp, struct ncclRmaSocketProxyPutArgs* args) { /* 中文索引·体内调用 memset、ncclRmaSocketProxySupportedPtrType。 */
   if (size > 0 && (srcMhandle == NULL || dstMhandle == NULL)) {
     WARN("RMA/Socket : put with data requires src/dst handles srcMhandle=%p dstMhandle=%p", srcMhandle, dstMhandle);
     return ncclInvalidArgument;
@@ -384,7 +384,7 @@ static ncclResult_t ncclRmaSocketProxySubmitPut(void* rmaCtx, int context, uint6
                                                 size_t size, uint64_t dstOff, void* dstMhandle, uint32_t rank,
                                                 bool hasSignal, uint64_t signalOff, void* signalMhandle,
                                                 uint64_t signalValue, uint32_t signalOp, bool isStrongSignal,
-                                                void** request) {
+                                                void** request) { /* 中文索引·体内调用 ncclRmaSocketProxyValidatePutArgs、ncclRmaSocketProxyGetRequest。 */
   /* One proxy CPU thread serializes payload visibility and the signal update. */
   (void)isStrongSignal;
 
@@ -426,7 +426,7 @@ fail:
 
 ncclResult_t ncclRmaSocketProxyIPut(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
                                     uint64_t dstOff, void* dstMhandle, uint32_t rank, uint32_t optFlags,
-                                    void** request) {
+                                    void** request) { /* 中文索引·体内调用 ncclRmaSocketProxySubmitPut。 */
   (void)optFlags;
   return ncclRmaSocketProxySubmitPut(rmaCtx, context, srcOff, srcMhandle, size, dstOff, dstMhandle, rank, false, 0,
                                      NULL, 0, 0, false, request);
@@ -435,7 +435,7 @@ ncclResult_t ncclRmaSocketProxyIPut(void* rmaCtx, int context, uint64_t srcOff, 
 ncclResult_t ncclRmaSocketProxyIPutSignal(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
                                           uint64_t dstOff, void* dstMhandle, uint32_t rank, uint64_t signalOff,
                                           void* signalMhandle, uint64_t signalValue, uint32_t signalOp,
-                                          bool isStrongSignal, uint32_t optFlags, void** request) {
+                                          bool isStrongSignal, uint32_t optFlags, void** request) { /* 中文索引·体内调用 ncclRmaSocketProxySubmitPut。 */
   (void)optFlags;
   return ncclRmaSocketProxySubmitPut(rmaCtx, context, srcOff, srcMhandle, size, dstOff, dstMhandle, rank, true,
                                      signalOff, signalMhandle, signalValue, signalOp, isStrongSignal, request);
@@ -445,7 +445,7 @@ static ncclResult_t ncclRmaSocketProxyValidateGet(void* rmaCtx, int context, uin
                                                   size_t size, uint64_t localOff, void* localMhandle, uint32_t rank,
                                                   struct ncclRmaSocketProxyCtx** ctx,
                                                   struct ncclRmaSocketProxyMrHandle** remoteHandle,
-                                                  struct ncclRmaSocketProxyMrHandle** localHandle) {
+                                                  struct ncclRmaSocketProxyMrHandle** localHandle) { /* 中文索引·体内调用 ncclRmaSocketProxySupportedPtrType、ncclRmaSocketProxyValidateRange。 */
   if (rmaCtx == NULL) {
     WARN("RMA/Socket : get called with NULL rmaCtx");
     return ncclInvalidArgument;
@@ -490,7 +490,7 @@ static ncclResult_t ncclRmaSocketProxyValidateGet(void* rmaCtx, int context, uin
 
 ncclResult_t ncclRmaSocketProxyIGet(void* rmaCtx, int context, uint64_t remoteOff, void* remoteMhandle, size_t size,
                                     uint64_t localOff, void* localMhandle, uint32_t rank, uint32_t optFlags,
-                                    void** request) {
+                                    void** request) { /* 中文索引·体内调用 ncclRmaSocketProxyValidateGet、ncclRmaSocketProxyGetRequest。 */
   (void)optFlags;
   if (request == NULL) {
     WARN("RMA/Socket : get called with NULL request");
@@ -550,7 +550,7 @@ ncclResult_t ncclRmaSocketProxyIFlush(void* rmaCtx, int context, void* mhandle, 
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaSocketProxyTest(void* collComm, void* request, int* done) {
+ncclResult_t ncclRmaSocketProxyTest(void* collComm, void* request, int* done) { /* 中文索引·体内调用 ncclRmaSocketProxyProgressComm、ncclRmaSocketProxyReleaseRequest。 */
   ncclResult_t ret = ncclSuccess;
   bool complete = false;
   if (done == NULL) {
@@ -600,7 +600,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclRmaSocketProxyProgress(void* rmaCtx) {
+ncclResult_t ncclRmaSocketProxyProgress(void* rmaCtx) { /* 中文索引·体内调用 ncclRmaSocketProxyProgressComm。 */
   if (rmaCtx == NULL) return ncclSuccess;
   struct ncclRmaSocketProxyCtx* ctx = (struct ncclRmaSocketProxyCtx*)rmaCtx;
   return ncclRmaSocketProxyProgressComm(ctx[0].collComm);

@@ -11,7 +11,7 @@
 
 static ncclGin_v15_t* ncclGin_v15;
 
-ncclGin_t* getNcclGin_v15(void* lib) {
+ncclGin_t* getNcclGin_v15(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclGin_v15 = (ncclGin_v15_t*)dlsym(lib, "ncclGinPlugin_v15");
   if (ncclGin_v15) {
     INFO(NCCL_INIT | NCCL_NET, "GIN/Plugin: Loaded gin plugin %s (v15)", ncclGin_v15->name);

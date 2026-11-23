@@ -184,7 +184,7 @@ NCCL_DEVICE_INLINE ncclCoopTile<nThreads> ncclCoopCoalesced(ncclCoopTile<nThread
 
 #ifdef __CUDACC__
 template <int nThreads, typename T>
-NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopTile<nThreads>, T value, int root, bool entrySync = true) {
+NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopTile<nThreads>, T value, int root, bool entrySync = true) { /* 中文索引·体内调用 __shfl_sync。 */
   constexpr int n = (sizeof(T) + 4 - 1) / 4;
   union {
     uint32_t u[n];
@@ -196,7 +196,7 @@ NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopTile<nThreads>, T value, int root, bo
   return v;
 }
 template <typename T>
-NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopLanes coop, T value, int root, bool entrySync = true) {
+NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopLanes coop, T value, int root, bool entrySync = true) { /* 中文索引·体内调用 __ffs、__fns。 */
   uint32_t m = coop.lmask;
   uint32_t r = root == 0 ? __ffs(m) - 1 : __fns(m, 0, 1 + root);
   constexpr int n = (sizeof(T) + 4 - 1) / 4;
@@ -216,7 +216,7 @@ NCCL_DEVICE_INLINE ulong2* ncclCoopBcast_WarpSpan_stash() {
 }
 
 template <typename T>
-NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopWarpSpan coop, T value, int root, bool entrySync = true) {
+NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopWarpSpan coop, T value, int root, bool entrySync = true) { /* 中文索引·体内调用 ncclCoopBcast_WarpSpan_stash、coop.sync。 */
   static_assert(sizeof(T) <= sizeof(ncclCoopBcast_WarpSpan_stash()[0]), "Required");
   if (entrySync) coop.sync();
   if (coop.thread_rank() == root) *(T*)&ncclCoopBcast_WarpSpan_stash()[coop.id] = value;
@@ -230,7 +230,7 @@ NCCL_DEVICE_INLINE ulong2* ncclCoopBcast_Cta_stash() {
 }
 
 template <typename T>
-NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopCta coop, T value, int root, bool entrySync = true) {
+NCCL_DEVICE_INLINE T ncclCoopBcast(ncclCoopCta coop, T value, int root, bool entrySync = true) { /* 中文索引·体内调用 ncclCoopBcast_Cta_stash、coop.sync。 */
   static_assert(sizeof(T) <= sizeof(*ncclCoopBcast_Cta_stash()), "Required");
   if (entrySync) coop.sync();
   if (coop.thread_rank() == root) *(T*)ncclCoopBcast_Cta_stash() = value;

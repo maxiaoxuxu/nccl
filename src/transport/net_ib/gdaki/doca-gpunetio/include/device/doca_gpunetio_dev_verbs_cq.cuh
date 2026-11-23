@@ -55,7 +55,7 @@ __device__ static __forceinline__ struct doca_gpu_dev_verbs_cq *doca_gpu_dev_ver
 
 template <enum doca_gpu_dev_verbs_qp_type qp_type = DOCA_GPUNETIO_VERBS_QP_SQ>
 __device__ static __forceinline__ struct doca_gpu_dev_verbs_cq *doca_gpu_dev_verbs_qp_get_cq(
-    struct doca_gpu_dev_verbs_qp *qp) {
+    struct doca_gpu_dev_verbs_qp *qp) { /* 中文索引·体内调用 doca_gpu_dev_verbs_qp_get_cq_sq。 */
     static_assert(qp_type == DOCA_GPUNETIO_VERBS_QP_SQ,
                   "only SQ CQ polling is currently supported");
     return doca_gpu_dev_verbs_qp_get_cq_sq(qp);
@@ -83,7 +83,7 @@ __device__ static __forceinline__ uint32_t doca_gpu_dev_verbs_cqe_idx_inc_mask(u
  * @return
  */
 __device__ static __forceinline__ void doca_gpu_dev_verbs_cq_print_cqe_err(
-    struct doca_gpunetio_ib_mlx5_cqe64 *cqe64) {
+    struct doca_gpunetio_ib_mlx5_cqe64 *cqe64) { /* 中文索引·体内调用 printf、doca_gpu_dev_verbs_bswap16。 */
     struct doca_gpunetio_ib_mlx5_err_cqe_ex *err_cqe =
         (struct doca_gpunetio_ib_mlx5_err_cqe_ex *)cqe64;
 
@@ -110,7 +110,7 @@ __device__ static __forceinline__ void doca_gpu_dev_verbs_cq_print_cqe_err(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_one_cq_device_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_load_relaxed_sys_global。 */
     uint8_t *cqe = (uint8_t *)doca_gpu_dev_verbs_load_const((uintptr_t *)&cq->cqe_daddr);
     const uint32_t cqe_num = doca_gpu_dev_verbs_load_const(&cq->cqe_num);
     const uint64_t cqe_rsvd = doca_gpu_dev_verbs_load_const(&cq->cqe_rsvd);
@@ -171,7 +171,7 @@ __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_one_cq_device
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_device_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     int status =
         doca_priv_gpu_dev_verbs_poll_one_cq_device_at<resource_sharing_mode>(cq, cons_index);
     if (status == 0) {
@@ -195,7 +195,7 @@ __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_device_at(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_host_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     int status = 0;
     uint64_t cqe_ci = doca_gpu_dev_verbs_load_relaxed<resource_sharing_mode>(&cq->cqe_ci);
     if (cons_index >= cqe_ci) status = EBUSY;
@@ -218,7 +218,7 @@ __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_host_at(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_cq_one_collapsed_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index, uint64_t *new_cqe_ci) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index, uint64_t *new_cqe_ci) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_load_relaxed_sys_global。 */
     struct doca_gpunetio_ib_mlx5_cqe64 *cqe64 =
         (struct doca_gpunetio_ib_mlx5_cqe64 *)doca_gpu_dev_verbs_load_const(
             (uintptr_t *)&cq->cqe_daddr);
@@ -265,7 +265,7 @@ __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_cq_one_collap
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_collapsed_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     uint64_t new_cqe_ci = 0;
     int status = doca_priv_gpu_dev_verbs_poll_cq_one_collapsed_at<resource_sharing_mode>(
         cq, cons_index, &new_cqe_ci);
@@ -291,7 +291,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
           enum doca_gpu_dev_verbs_qp_type qp_type = DOCA_GPUNETIO_VERBS_QP_SQ,
           enum doca_gpu_dev_verbs_cq_type cq_type = DOCA_GPUNETIO_VERBS_CQ_UNKNOWN>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_at(
-    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const。 */
     struct doca_gpu_dev_verbs_cq *cq = doca_gpu_dev_verbs_qp_get_cq<qp_type>(qp);
     enum doca_gpu_dev_verbs_cq_type mode = cq_type;
     if (cq_type == DOCA_GPUNETIO_VERBS_CQ_UNKNOWN) {
@@ -321,7 +321,7 @@ __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_one_cq_at(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_cq_device_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_load_relaxed_sys_global。 */
     struct doca_gpunetio_ib_mlx5_cqe64 *cqe =
         (struct doca_gpunetio_ib_mlx5_cqe64 *)doca_gpu_dev_verbs_load_const(
             (uintptr_t *)&cq->cqe_daddr);
@@ -380,7 +380,7 @@ __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_cq_device_at(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq_device_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     int status = doca_priv_gpu_dev_verbs_poll_cq_device_at<resource_sharing_mode>(cq, cons_index);
     if (status == 0) {
         doca_gpu_dev_verbs_fence_acquire_nvidia_nic();
@@ -402,7 +402,7 @@ __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq_device_at(
 template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq_host_at(
-    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_cq *cq, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_relaxed_sys_global、doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     uint64_t cqe_ci;
     do {
         cqe_ci = doca_gpu_dev_verbs_load_relaxed_sys_global((uint64_t *)&cq->cqe_ci);
@@ -425,7 +425,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU,
           enum doca_gpu_dev_verbs_qp_type qp_type = DOCA_GPUNETIO_VERBS_QP_SQ>
 __device__ static __forceinline__ int doca_priv_gpu_dev_verbs_poll_cq_collapsed_at(
-    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index, uint64_t *new_cqe_ci) {
+    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index, uint64_t *new_cqe_ci) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const、doca_gpu_dev_verbs_load_relaxed_sys_global。 */
     struct doca_gpu_dev_verbs_cq *cq = doca_gpu_dev_verbs_qp_get_cq<qp_type>(qp);
     struct doca_gpunetio_ib_mlx5_cqe64 *cqe64 =
         (struct doca_gpunetio_ib_mlx5_cqe64 *)doca_gpu_dev_verbs_load_const(
@@ -490,7 +490,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
               DOCA_GPUNETIO_VERBS_RESOURCE_SHARING_MODE_GPU,
           enum doca_gpu_dev_verbs_qp_type qp_type = DOCA_GPUNETIO_VERBS_QP_SQ>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq_collapsed_at(
-    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_fence_acquire_nvidia_nic。 */
     uint64_t new_cqe_ci = 0;
     int status = doca_priv_gpu_dev_verbs_poll_cq_collapsed_at<resource_sharing_mode, qp_type>(
         qp, cons_index, &new_cqe_ci);
@@ -507,7 +507,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode =
           enum doca_gpu_dev_verbs_qp_type qp_type = DOCA_GPUNETIO_VERBS_QP_SQ,
           enum doca_gpu_dev_verbs_cq_type cq_type = DOCA_GPUNETIO_VERBS_CQ_UNKNOWN>
 __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq_at(
-    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) {
+    struct doca_gpu_dev_verbs_qp *qp, uint64_t cons_index) { /* 中文索引·体内调用 doca_gpu_dev_verbs_load_const。 */
     struct doca_gpu_dev_verbs_cq *cq = doca_gpu_dev_verbs_qp_get_cq<qp_type>(qp);
     enum doca_gpu_dev_verbs_cq_type mode = cq_type;
     if (cq_type == DOCA_GPUNETIO_VERBS_CQ_UNKNOWN) {
@@ -558,7 +558,7 @@ __device__ static __forceinline__ int doca_gpu_dev_verbs_poll_cq(struct doca_gpu
  */
 template <bool is_overrun>
 __device__ static __forceinline__ uint32_t
-doca_gpu_dev_verbs_cq_update_dbrec(struct doca_gpu_dev_verbs_cq *cq, uint32_t cqe_num) {
+doca_gpu_dev_verbs_cq_update_dbrec(struct doca_gpu_dev_verbs_cq *cq, uint32_t cqe_num) { /* 中文索引·体内调用 doca_gpu_dev_verbs_bswap32。 */
     uint32_t cqe_ci = DOCA_GPUNETIO_VOLATILE(cq->cqe_ci);
 
     cqe_ci = (cqe_ci + cqe_num) & DOCA_GPUNETIO_VERBS_CQE_CI_MASK;

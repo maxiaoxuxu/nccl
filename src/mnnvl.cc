@@ -11,7 +11,7 @@
 #include "cudawrap.h"
 
 // Determine if MNNVL support is available
-ncclResult_t ncclMnnvlCheck(struct ncclComm* comm) {
+ncclResult_t ncclMnnvlCheck(struct ncclComm* comm) { /* 中文索引·体内调用 ncclCuMemEnable、ncclCalloc。 */
   // MNNVL requires cuMem to be enabled
   if (!ncclCuMemEnable()) return ncclSuccess;
 

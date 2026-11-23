@@ -40,7 +40,7 @@ static void postTuningSetChunkSteps(struct ncclTaskColl* task) {
 }
 
 static ncclResult_t fillCollTaskFromRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo,
-                                        struct ncclTaskColl* task) {
+                                        struct ncclTaskColl* task) { /* 中文索引·体内调用 memset、ncclTypeSize。 */
   const struct ncclRawTaskColl* raw = &tInfo->raw->coll;
 
   memset(task, 0, sizeof(*task));
@@ -87,7 +87,7 @@ static ncclResult_t fillCollTaskFromRaw(struct ncclComm* comm, struct ncclTaskTu
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneSymFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) {
+static ncclResult_t postTuneSymFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) { /* 中文索引·体内调用 ncclMemoryPoolFree。 */
   if (tInfo->raw != nullptr) {
     ncclMemoryPoolFree(&comm->memPool_ncclRawTask, tInfo->raw);
     tInfo->raw = nullptr;
@@ -95,7 +95,7 @@ static ncclResult_t postTuneSymFreeTuningInfoRaw(struct ncclComm* comm, struct n
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneP2pChannelBase(struct ncclComm* comm, int peer, bool isSendNotRecv, uint8_t* baseOut) {
+static ncclResult_t postTuneP2pChannelBase(struct ncclComm* comm, int peer, bool isSendNotRecv, uint8_t* baseOut) { /* 中文索引·体内调用 ncclP2pChannelBaseForRound。 */
   int round = 0;
   while (peer != (isSendNotRecv ? comm->p2pSchedule[round].sendRank : comm->p2pSchedule[round].recvRank)) {
     round += 1;
@@ -105,7 +105,7 @@ static ncclResult_t postTuneP2pChannelBase(struct ncclComm* comm, int peer, bool
 }
 
 static ncclResult_t postTuneP2pRecordPreconnect(struct ncclComm* comm, int peer, bool isSendNotRecv,
-                                                bool* needPreconnect) {
+                                                bool* needPreconnect) { /* 中文索引·体内调用 postTuneP2pChannelBase、ncclP2pChannelForPart。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   uint8_t base;
 
@@ -144,7 +144,7 @@ static ncclResult_t postTuneP2pRecordPreconnect(struct ncclComm* comm, int peer,
 }
 
 static ncclResult_t fillP2pTaskFromRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo,
-                                       struct ncclTaskP2p* task) {
+                                       struct ncclTaskP2p* task) { /* 中文索引·体内调用 ncclProfilerCurrentEventMask。 */
   struct ncclRawTaskSendRecv* raw = &tInfo->raw->sendRecv;
 
   if (raw->peer < 0 || raw->peer >= comm->nRanks) return ncclInvalidArgument;
@@ -173,7 +173,7 @@ static ncclResult_t fillP2pTaskFromRaw(struct ncclComm* comm, struct ncclTaskTun
 }
 
 static ncclResult_t postTuneP2pRegisterBuffer(struct ncclComm* comm, struct ncclTaskP2p* task, bool isSendNotRecv,
-                                              int protocol) {
+                                              int protocol) { /* 中文索引·体内调用 postTuneP2pChannelBase、ncclP2pChannelForPart。 */
   constexpr int connIndex = 1;
   struct ncclKernelPlanner* planner = &comm->planner;
   int peer = task->root;
@@ -217,7 +217,7 @@ static ncclResult_t postTuneP2pRegisterBuffer(struct ncclComm* comm, struct nccl
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneTasksDebug(struct ncclComm* comm) {
+static ncclResult_t postTuneTasksDebug(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   while (!ncclIntruQueueEmpty(&comm->argsInfoQueue)) {
     struct ncclArgsInfo* argsInfo = ncclIntruQueueDequeue(&comm->argsInfoQueue);
     ncclResult_t ret = ncclArgsGlobalCheck(argsInfo);
@@ -228,12 +228,12 @@ static ncclResult_t postTuneTasksDebug(struct ncclComm* comm) {
 }
 
 static ncclResult_t postTuneSymTasksLazyInit(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* symTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* symTaskQueue) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclSymkInitOnce。 */
   if (ncclIntruQueueEmpty(symTaskQueue)) return ncclSuccess;
   return ncclSymkInitOnce(comm);
 }
 
-static ncclResult_t postTuneRmaFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) {
+static ncclResult_t postTuneRmaFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) { /* 中文索引·体内调用 ncclMemoryPoolFree。 */
   if (tInfo->raw != nullptr) {
     ncclMemoryPoolFree(&comm->memPool_ncclRawTask, tInfo->raw);
     tInfo->raw = nullptr;
@@ -241,7 +241,7 @@ static ncclResult_t postTuneRmaFreeTuningInfoRaw(struct ncclComm* comm, struct n
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneRmaTaskAppend(struct ncclComm* comm, const struct ncclRawTaskRma* raw) {
+static ncclResult_t postTuneRmaTaskAppend(struct ncclComm* comm, const struct ncclRawTaskRma* raw) { /* 中文索引·体内调用 ncclCudaDriverVersion、ncclRmaInitialized。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   ncclFunc_t func = raw->func;
@@ -486,7 +486,7 @@ static ncclResult_t postTuneRmaTaskAppend(struct ncclComm* comm, const struct nc
 }
 
 static ncclResult_t postTuneRmaTasks(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* rmaTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* rmaTaskQueue) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   while (!ncclIntruQueueEmpty(rmaTaskQueue)) {
     struct ncclTaskTuningInfo* tInfo = ncclIntruQueueDequeue(rmaTaskQueue);
     NCCLCHECK(postTuneRmaTaskAppend(comm, &tInfo->raw->rma));
@@ -496,14 +496,14 @@ static ncclResult_t postTuneRmaTasks(
 }
 
 static ncclResult_t postTuneCeTasksLazyInit(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* ceTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* ceTaskQueue) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclCeInit。 */
   if (ncclIntruQueueEmpty(ceTaskQueue)) return ncclSuccess;
   if (comm->ceColl.initialized) return ncclSuccess;
   return ncclCeInit(comm);
 }
 
 static ncclResult_t postTuneSymTasks(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* symTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* symTaskQueue) { /* 中文索引·体内调用 postTuneSymTasksLazyInit、postTuneTasksDebug。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   NCCLCHECK(postTuneSymTasksLazyInit(comm, symTaskQueue));
@@ -540,7 +540,7 @@ static ncclResult_t postTuneSymTasks(
 }
 
 static ncclResult_t applyTuningToCollTask(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo,
-                                          struct ncclTaskColl* task) {
+                                          struct ncclTaskColl* task) { /* 中文索引·体内调用 fillCollTaskFromRaw、ncclDevFuncId。 */
   NCCLCHECK(fillCollTaskFromRaw(comm, tInfo, task));
   if (!tInfo->tuningOut.valid) return ncclInternalError;
 
@@ -574,7 +574,7 @@ static ncclResult_t applyTuningToCollTask(struct ncclComm* comm, struct ncclTask
 
 static ncclResult_t postTuneLegacyRegisterCollBuffers(struct ncclComm* comm, struct ncclTaskColl* task,
                                                       void* regBufSend[NCCL_MAX_LOCAL_RANKS],
-                                                      void* regBufRecv[NCCL_MAX_LOCAL_RANKS], bool* regNeedConnect) {
+                                                      void* regBufRecv[NCCL_MAX_LOCAL_RANKS], bool* regNeedConnect) { /* 中文索引·体内调用 ncclRegisterCollBuffers。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   *regNeedConnect = true;
@@ -585,7 +585,7 @@ static ncclResult_t postTuneLegacyRegisterCollBuffers(struct ncclComm* comm, str
 static ncclResult_t postTuneLegacyRegisterNvlsCollBuffers(struct ncclComm* comm, struct ncclTaskColl* task,
                                                           void* regBufSend[NCCL_MAX_LOCAL_RANKS],
                                                           void* regBufRecv[NCCL_MAX_LOCAL_RANKS],
-                                                          bool* regNeedConnect) {
+                                                          bool* regNeedConnect) { /* 中文索引·体内调用 ncclRegisterCollNvlsBuffers。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   *regNeedConnect = true;
@@ -597,7 +597,7 @@ static ncclResult_t postTuneLegacyRegisterNvlsCollBuffers(struct ncclComm* comm,
 static ncclResult_t postTuneLegacyEnqueueCollWork(
   struct ncclComm* comm, struct ncclKernelPlanner* planner, struct ncclTaskColl* task,
   void* regBufSend[NCCL_MAX_LOCAL_RANKS], void* regBufRecv[NCCL_MAX_LOCAL_RANKS],
-  struct ncclIntruQueue<struct ncclWorkList, &ncclWorkList::next>* workQueue) {
+  struct ncclIntruQueue<struct ncclWorkList, &ncclWorkList::next>* workQueue) { /* 中文索引·体内调用 ncclProfilerPluginLoaded、memcpy。 */
   struct ncclDevWorkColl devWork = {};
   struct ncclWorkList* workNode = nullptr;
 
@@ -657,7 +657,7 @@ static ncclResult_t postTuneLegacyRecordAlgoNeedConnect(struct ncclComm* comm, i
 }
 
 static ncclResult_t postTuneLegacyTasks(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* legacyTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* legacyTaskQueue) { /* 中文索引·体内调用 memset、ncclIntruQueueHead。 */
   bool needConnect = false;
   bool algoNeedConnect[NCCL_NUM_ALGORITHMS];
   struct ncclKernelPlanner* planner = &comm->planner;
@@ -714,7 +714,7 @@ static ncclResult_t postTuneLegacyTasks(
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneAllGatherVEnsureRingConnected(struct ncclComm* comm) {
+static ncclResult_t postTuneAllGatherVEnsureRingConnected(struct ncclComm* comm) { /* 中文索引·体内调用 memset、ncclCollPreconnect。 */
   bool algoNeedConnect[NCCL_NUM_ALGORITHMS];
 
   if (!comm->runtimeConn || comm->initAlgoChannels[NCCL_ALGO_RING]) return ncclSuccess;
@@ -727,7 +727,7 @@ static ncclResult_t postTuneAllGatherVEnsureRingConnected(struct ncclComm* comm)
 }
 
 static ncclResult_t postTuneAllGatherVEnqueueBroadcastTask(struct ncclComm* comm, struct ncclRawTaskAllGatherV* agv,
-                                                           int root) {
+                                                           int root) { /* 中文索引·体内调用 memset、ncclFuncTrafficPerByte。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   struct ncclTaskColl* task =
     ncclMemoryPoolAlloc<struct ncclTaskColl>(&comm->memPool_ncclTaskColl, &comm->memPermanent);
@@ -776,7 +776,7 @@ static ncclResult_t postTuneAllGatherVEnqueueBroadcastTask(struct ncclComm* comm
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneAllGatherVEnqueueBcastTasks(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) {
+static ncclResult_t postTuneAllGatherVEnqueueBcastTasks(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) { /* 中文索引·体内调用 postTuneAllGatherVEnsureRingConnected、postTuneAllGatherVEnqueueBroadcastTask。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   struct ncclRawTaskAllGatherV* agv = &tInfo->raw->allGatherV;
   int nRoots = 0;
@@ -839,7 +839,7 @@ cleanup:
 
 static ncclResult_t postTuneAllGatherVTasks(
   struct ncclComm* comm,
-  struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* allgathervTaskQueue) {
+  struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* allgathervTaskQueue) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   while (!ncclIntruQueueEmpty(allgathervTaskQueue)) {
     struct ncclTaskTuningInfo* tInfo = ncclIntruQueueDequeue(allgathervTaskQueue);
     NCCLCHECK(postTuneAllGatherVEnqueueBcastTasks(comm, tInfo));
@@ -848,7 +848,7 @@ static ncclResult_t postTuneAllGatherVTasks(
 }
 
 static ncclResult_t postTuneP2pTasks(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* p2pTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* p2pTaskQueue) { /* 中文索引·体内调用 ncclIntruQueueHead、postTuneP2pRecordPreconnect。 */
   bool needPreconnect = false;
   struct ncclKernelPlanner* planner = &comm->planner;
 
@@ -882,7 +882,7 @@ static ncclResult_t postTuneP2pTasks(
   return ncclSuccess;
 }
 
-static ncclResult_t postTuneCeFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) {
+static ncclResult_t postTuneCeFreeTuningInfoRaw(struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo) { /* 中文索引·体内调用 ncclMemoryPoolFree。 */
   if (tInfo->raw != nullptr) {
     ncclMemoryPoolFree(&comm->memPool_ncclRawTask, tInfo->raw);
     tInfo->raw = nullptr;
@@ -891,7 +891,7 @@ static ncclResult_t postTuneCeFreeTuningInfoRaw(struct ncclComm* comm, struct nc
 }
 
 static ncclResult_t postTuneCeCollTaskAppend(struct ncclComm* comm, const struct ncclRawTaskColl* raw,
-                                             struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) {
+                                             struct ncclDevrWindow* sendWin, struct ncclDevrWindow* recvWin) { /* 中文索引·体内调用 ncclTypeSize、ncclFuncTrafficPerByte。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   struct ncclTaskColl* t = ncclMemoryPoolAlloc<struct ncclTaskColl>(&comm->memPool_ncclTaskColl, &comm->memPermanent);
@@ -928,7 +928,7 @@ static ncclResult_t postTuneCeCollTaskAppend(struct ncclComm* comm, const struct
  * Materialize tuned copy-engine collectives into CE scheduler inputs.
  */
 static ncclResult_t postTuneCeTasks(
-  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* ceTaskQueue) {
+  struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* ceTaskQueue) { /* 中文索引·体内调用 postTuneCeTasksLazyInit、ncclIntruQueueEmpty。 */
   NCCLCHECK(postTuneCeTasksLazyInit(comm, ceTaskQueue));
 
   while (!ncclIntruQueueEmpty(ceTaskQueue)) {
@@ -946,14 +946,14 @@ static ncclResult_t postTuneCeTasks(
 }
 
 static void postTuningAccumulateTime(struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* queue,
-                                     float* totalTimeUs) {
+                                     float* totalTimeUs) { /* 中文索引·体内调用 ncclIntruQueueHead。 */
   for (struct ncclTaskTuningInfo* tInfo = ncclIntruQueueHead(queue); tInfo != nullptr; tInfo = tInfo->next) {
     if (tInfo->tuningOut.valid) *totalTimeUs += tInfo->tuningOut.timeUs;
   }
 }
 
 static ncclResult_t postTuningSimulation(struct ncclComm* comm, struct ncclClassifiedTaskQueues* ctq,
-                                         ncclSimInfo_t* simInfo) {
+                                         ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 postTuningAccumulateTime。 */
   float totalTimeUs = 0.0f;
 
   (void)comm;
@@ -967,7 +967,7 @@ static ncclResult_t postTuningSimulation(struct ncclComm* comm, struct ncclClass
   return ncclSuccess;
 }
 
-ncclResult_t ncclTaskPostTuning(struct ncclComm* comm, struct ncclClassifiedTaskQueues* ctq, ncclSimInfo_t* simInfo) {
+ncclResult_t ncclTaskPostTuning(struct ncclComm* comm, struct ncclClassifiedTaskQueues* ctq, ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 postTuningSimulation、postTuneSymTasks。 */
   if (comm == nullptr || ctq == nullptr) return ncclInvalidArgument;
   if (simInfo != nullptr) {
     NCCLCHECK(postTuningSimulation(comm, ctq, simInfo));

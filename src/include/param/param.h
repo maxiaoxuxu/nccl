@@ -71,7 +71,7 @@ struct ncclParam : public ncclParamInterface {
   ncclParam(const char* key, T defVal, ncclParamParser<T> parser = {}, const char* typeStr = "",
             uint64_t flags = NCCL_PARAM_FLAG_NONE, const char* desc = "")
     : info({ncclParamTypeIdOf<T>(), flags, typeStr, key, desc}), defaultValue(defVal), value(defVal),
-      parser(std::move(parser)) {
+      parser(std::move(parser)) { /* 中文索引·体内调用 ncclParamRegistry::add。 */
     if (!this->parser) {
       this->parser = ncclParamDefault<T>();
     }
@@ -90,7 +90,7 @@ struct ncclParam : public ncclParamInterface {
   }
 
   // C API accessor of raw parameter value
-  ncclResult_t getRawData(void* out, int maxLen, int* len) override {
+  ncclResult_t getRawData(void* out, int maxLen, int* len) override { /* 中文索引·体内调用 ensureLoaded、std::memcpy。 */
     if (!out || !len || maxLen <= 0) return ncclInvalidArgument;
     auto lock = ensureLoaded();
     if (static_cast<int>(sizeof(T)) > maxLen) {
@@ -107,7 +107,7 @@ struct ncclParam : public ncclParamInterface {
     return parser.toString(value);
   }
 
-  std::string dump() override {
+  std::string dump() override { /* 中文索引·体内调用 ensureLoaded、parser.toString。 */
     auto lock = ensureLoaded();
     bool sensitive = info.flags & NCCL_PARAM_FLAG_SENSITIVE;
     std::string currentStr = parser.toString(value);
@@ -131,7 +131,7 @@ struct ncclParam : public ncclParamInterface {
 private:
   // Core function to make sure value is loaded, check against all conditions including
   // NCCL_NO_CACHE
-  std::unique_lock<std::mutex> ensureLoaded() {
+  std::unique_lock<std::mutex> ensureLoaded() { /* 中文索引·体内调用 loaded.load、ncclParamIsCacheDisabled。 */
     if (NCCL_PARAM_COMPILER_EXPECT(loaded.load(std::memory_order_relaxed), true)) {
       if ((info.flags & NCCL_PARAM_FLAG_CACHED) &&
           NCCL_PARAM_COMPILER_EXPECT(!ncclParamIsCacheDisabled(info.key), true)) {
@@ -153,7 +153,7 @@ private:
   }
 
   // Load value from environment variable via EnvPlugin chain
-  void loadValue() {
+  void loadValue() { /* 中文索引·体内调用 ncclParamEnvPluginGet、parser.resolve。 */
     // Special params with NO_ENVPLUGIN_INIT flag do not try init EnvPlugin
     bool tryEnvPluginInit = !(info.flags & NCCL_PARAM_FLAG_NO_ENVPLUGIN_INIT);
     const char* envPluginValue = ncclParamEnvPluginGet(info.key, tryEnvPluginInit);
@@ -178,7 +178,7 @@ private:
 // ============================================================================
 
 template <>
-inline const char* ncclParam<const char*>::operator()() {
+inline const char* ncclParam<const char*>::operator()() { /* 中文索引·体内调用 ensureLoaded、tlsCstrCopy.c_str。 */
   auto lock = ensureLoaded();
   if (value == nullptr) return nullptr;
   static thread_local std::string tlsCstrCopy;
@@ -187,7 +187,7 @@ inline const char* ncclParam<const char*>::operator()() {
 }
 
 template <>
-inline void ncclParam<const char*>::loadValue() {
+inline void ncclParam<const char*>::loadValue() { /* 中文索引·体内调用 ncclParamEnvPluginGet、cstrData.c_str。 */
   // Special params with NO_ENVPLUGIN_INIT flag do not try init EnvPlugin
   bool tryEnvPluginInit = !(info.flags & NCCL_PARAM_FLAG_NO_ENVPLUGIN_INIT);
   const char* envPluginValue = ncclParamEnvPluginGet(info.key, tryEnvPluginInit);
@@ -208,7 +208,7 @@ inline void ncclParam<const char*>::loadValue() {
 }
 
 template <>
-inline ncclResult_t ncclParam<const char*>::getRawData(void* out, int maxLen, int* len) {
+inline ncclResult_t ncclParam<const char*>::getRawData(void* out, int maxLen, int* len) { /* 中文索引·体内调用 ensureLoaded、cstrData.size。 */
   if (!out || !len || maxLen <= 0) return ncclInvalidArgument;
   auto lock = ensureLoaded();
   int sz = static_cast<int>(cstrData.size()) + 1;

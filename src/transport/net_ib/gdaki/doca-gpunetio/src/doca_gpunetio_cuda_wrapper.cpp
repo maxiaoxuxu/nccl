@@ -61,7 +61,7 @@ cuDevicePrimaryCtxRelease_t p_cuDevicePrimaryCtxRelease = nullptr;
 static void *cuda_handle = nullptr;
 
 /* Helper function to get function pointer from libcuda */
-static void *get_cuda_symbol(const char *symbol_name) {
+static void *get_cuda_symbol(const char *symbol_name) { /* 中文索引·体内调用 dlsym、dlerror。 */
     void *symbol = dlsym(cuda_handle, symbol_name);
     if (!symbol) {
         DOCA_LOG(LOG_ERR, "Failed to get symbol %s: %s\n", symbol_name, dlerror());
@@ -70,7 +70,7 @@ static void *get_cuda_symbol(const char *symbol_name) {
     return symbol;
 }
 
-static void doca_gpunetio_cuda_wrapper_init(int *ret) {
+static void doca_gpunetio_cuda_wrapper_init(int *ret) { /* 中文索引·体内调用 dlopen、dlerror。 */
     /* Open libcuda.so */
     cuda_handle = dlopen("libcuda.so.1", RTLD_NOW);
     if (!cuda_handle) {
@@ -108,7 +108,7 @@ static void doca_gpunetio_cuda_wrapper_init(int *ret) {
     *ret = 0;
 }
 
-static int init_cuda_wrapper(void) {
+static int init_cuda_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_gpunetio_cuda_wrapper_init, &ret);
@@ -117,14 +117,14 @@ static int init_cuda_wrapper(void) {
 
 /* Wrapper function implementations */
 CUresult doca_gpu_cuda_wrapper_cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib,
-                                                    CUdevice dev) {
+                                                    CUdevice dev) { /* 中文索引·体内调用 init_cuda_wrapper、p_cuDeviceGetAttribute。 */
     if (init_cuda_wrapper() != 0) return CUDA_ERROR_NOT_INITIALIZED;
     return p_cuDeviceGetAttribute(pi, attrib, dev);
 }
 
 CUresult doca_gpu_cuda_wrapper_cuPointerSetAttribute(const void *value,
                                                      CUpointer_attribute attribute,
-                                                     CUdeviceptr ptr) {
+                                                     CUdeviceptr ptr) { /* 中文索引·体内调用 init_cuda_wrapper、p_cuPointerSetAttribute。 */
     if (init_cuda_wrapper() != 0) return CUDA_ERROR_NOT_INITIALIZED;
     return p_cuPointerSetAttribute(value, attribute, ptr);
 }
@@ -132,7 +132,7 @@ CUresult doca_gpu_cuda_wrapper_cuPointerSetAttribute(const void *value,
 CUresult doca_gpu_cuda_wrapper_cuMemGetHandleForAddressRange(int *pHandle, CUdeviceptr dptr,
                                                              size_t size,
                                                              CUmemRangeHandleType handleType,
-                                                             unsigned long long flags) {
+                                                             unsigned long long flags) { /* 中文索引·体内调用 init_cuda_wrapper、p_cuMemGetHandleForAddressRange。 */
     if (init_cuda_wrapper() != 0) return CUDA_ERROR_NOT_INITIALIZED;
     return p_cuMemGetHandleForAddressRange(pHandle, dptr, size, handleType, flags);
 }

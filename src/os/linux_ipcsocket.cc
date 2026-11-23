@@ -25,7 +25,7 @@ NCCL_PARAM(IpcUseAbstractSocket, "IPC_USE_ABSTRACT_SOCKET", 1);
 /*
  * Create a Unix Domain Socket
  */
-ncclResult_t ncclIpcSocketInit(ncclIpcSocket* handle, int rank, uint64_t hash, volatile uint32_t* abortFlag) {
+ncclResult_t ncclIpcSocketInit(ncclIpcSocket* handle, int rank, uint64_t hash, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 socket、strerror。 */
   int fd = NCCL_INVALID_SOCKET;
   struct sockaddr_un cliaddr;
   char temp[NCCL_IPC_SOCKNAME_LEN] = "";
@@ -93,7 +93,7 @@ ncclResult_t ncclIpcSocketGetFd(struct ncclIpcSocket* handle, ncclIpcFd* fd) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) {
+ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) { /* 中文索引·体内调用 ncclParamIpcUseAbstractSocket、unlink。 */
   if (handle == NULL) {
     return ncclInternalError;
   }
@@ -109,7 +109,7 @@ ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIpcSocketRecvMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd* recvFd) {
+ncclResult_t ncclIpcSocketRecvMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd* recvFd) { /* 中文索引·体内调用 recvmsg、memmove。 */
   struct msghdr msg = {0, 0, 0, 0, 0, 0, 0};
   struct iovec iov[1];
 
@@ -169,7 +169,7 @@ ncclResult_t ncclIpcSocketRecvFd(ncclIpcSocket* handle, ncclIpcFd* recvFd) {
 }
 
 ncclResult_t ncclIpcSocketSendMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd sendFd, int rank,
-                                  uint64_t hash) {
+                                  uint64_t hash) { /* 中文索引·体内调用 memset、snprintf。 */
   struct msghdr msg = {0, 0, 0, 0, 0, 0, 0};
   struct iovec iov[1];
   char temp[NCCL_IPC_SOCKNAME_LEN];

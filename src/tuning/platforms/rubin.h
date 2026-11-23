@@ -100,7 +100,7 @@ static void ncclTuningRubinTuningConstants(ncclTunerConstants_t* constants) {
   constants->hwLatencies[NCCL_HW_NET][NCCL_ALGO_NVLS_TREE][NCCL_PROTO_SIMPLE] = 34.37;
 }
 
-static void ncclTuningRubinPreInit(struct ncclComm* comm) {
+static void ncclTuningRubinPreInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningRubinTuningConstants。 */
   ncclTuningRubinTuningConstants(&comm->tuningContext.tuningConstants);
   if (comm->nNodes == 1 && comm->nRanks >= 64)
     comm->tuningContext.tuningConstants.hwLatencies[NCCL_HW_NVLINK][NCCL_ALGO_RING][NCCL_PROTO_SIMPLE] += 13;

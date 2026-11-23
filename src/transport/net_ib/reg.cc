@@ -8,10 +8,10 @@
 #include "common.h"
 
 ncclResult_t ncclIbRegMrDmaBufInternal2(ncclIbNetCommDevBase* base, void* data, size_t size, int type, uint64_t offset,
-                                        int fd, uint64_t mrFlags, ibv_mr** mhandle) {
+                                        int fd, uint64_t mrFlags, ibv_mr** mhandle) { /* 中文索引·体内调用 sysconf、ncclRealloc。 */
   static thread_local uintptr_t pageSize = 0;
   if (pageSize == 0) pageSize = sysconf(_SC_PAGESIZE);
-  struct ncclIbMrCache* cache = &ncclIbDevs[base->ibDevN].mrCache;
+  /* 中文图解·qp｜按物理 IB 设备查 MR 缓存，先将地址及长度换为覆盖的页区间。 */ struct ncclIbMrCache* cache = &ncclIbDevs[base->ibDevN].mrCache;
   uintptr_t addr = (uintptr_t)data & -pageSize;
   size_t pages = ((uintptr_t)data + size - addr + pageSize - 1) / pageSize;
   std::lock_guard<std::mutex> lock(ncclIbDevs[base->ibDevN].mutex);
@@ -60,7 +60,7 @@ ncclResult_t ncclIbRegMrDmaBufInternal2(ncclIbNetCommDevBase* base, void* data, 
     } else if ((addr >= cache->slots[slot].addr) &&
                ((addr - cache->slots[slot].addr) / pageSize + pages) <= cache->slots[slot].pages) {
       cache->slots[slot].refs += 1;
-      *mhandle = cache->slots[slot].mr;
+      /* 中文图解·qp｜缓存覆盖请求时复用 MR 并增加引用计数，发送 chunk 或增加 QP 都无须逐块注册。 */ *mhandle = cache->slots[slot].mr;
       return ncclSuccess;
     }
   }
@@ -69,7 +69,7 @@ ncclResult_t ncclIbRegMrDmaBufInternal2(ncclIbNetCommDevBase* base, void* data, 
 
 /* DMA-BUF support */
 ncclResult_t ncclIbRegMrDmaBufInternal(void* comm, void* data, size_t size, int type, uint64_t offset, int fd,
-                                       uint64_t mrFlags, void** mhandle) {
+                                       uint64_t mrFlags, void** mhandle) { /* 中文索引·体内调用 malloc、ncclIbGetNetCommDevBase。 */
   ncclResult_t ret = ncclSuccess;
   if (size == 0) {
     WARN("NET/IB: Invalid memory registration size %zu, expected > 0", size);
@@ -99,7 +99,7 @@ ncclResult_t ncclIbRegMr(void* comm, void* data, size_t size, int type, void** m
   return ncclIbRegMrDmaBufInternal(comm, data, size, type, 0ULL, -1, 0, mhandle);
 }
 
-ncclResult_t ncclIbDeregMrInternal(ncclIbNetCommDevBase* base, ibv_mr* mhandle) {
+ncclResult_t ncclIbDeregMrInternal(ncclIbNetCommDevBase* base, ibv_mr* mhandle) { /* 中文索引·体内调用 memmove、free。 */
   struct ncclIbMrCache* cache = &ncclIbDevs[base->ibDevN].mrCache;
   std::lock_guard<std::mutex> lock(ncclIbDevs[base->ibDevN].mutex);
   for (int i = 0; i < cache->population; i++) {
@@ -120,7 +120,7 @@ ncclResult_t ncclIbDeregMrInternal(ncclIbNetCommDevBase* base, ibv_mr* mhandle) 
   return ncclInternalError;
 }
 
-ncclResult_t ncclIbDeregMr(void* comm, void* mhandle) {
+ncclResult_t ncclIbDeregMr(void* comm, void* mhandle) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase、ncclIbDeregMrInternal。 */
   if (mhandle == NULL) return ncclSuccess;
 
   struct ncclIbMrHandle* mhandleWrapper = (struct ncclIbMrHandle*)mhandle;

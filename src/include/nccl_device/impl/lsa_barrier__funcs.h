@@ -15,7 +15,7 @@ template <typename Coop>
 NCCL_DEVICE_INLINE ncclLsaBarrierSession<Coop>::ncclLsaBarrierSession(Coop coop, ncclDevComm const& comm, ncclTeam team,
                                                                       ncclLsaBarrierHandle handle, uint32_t index,
                                                                       bool multimem, ncclMultimemHandle mmHandle)
-  : ncclLsaBarrierSession_internal<Coop>{coop,     comm,       team, handle, (int)index,
+  : ncclLsaBarrierSession_internal<Coop>{ /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer。 */coop,     comm,       team, handle, (int)index,
 #if CUDART_VERSION >= 12060
                                          multimem,
 #else // WAR for an issue with ptxas in CTK < 12.6
@@ -36,7 +36,7 @@ NCCL_DEVICE_INLINE ncclLsaBarrierSession<Coop>::ncclLsaBarrierSession(Coop coop,
 
 #ifdef __CUDACC__
 template <typename Coop>
-NCCL_DEVICE_INLINE ncclLsaBarrierSession<Coop>::~ncclLsaBarrierSession() {
+NCCL_DEVICE_INLINE ncclLsaBarrierSession<Coop>::~ncclLsaBarrierSession() { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、this->coop.thread_rank。 */
   uint32_t* state = (uint32_t*)ncclGetResourceBufferLocalPointer(this->comm, this->handle.bufHandle);
   if (this->coop.thread_rank() == 0) {
 #if __CUDA_ARCH__ == 1200 && CUDART_VERSION < 13000
@@ -52,7 +52,7 @@ NCCL_DEVICE_INLINE ncclLsaBarrierSession<Coop>::~ncclLsaBarrierSession() {
 
 #ifdef __CUDACC__
 template <typename Coop>
-NCCL_DEVICE_INLINE void ncclLsaBarrierSession<Coop>::arrive(Coop, cuda::memory_order order) {
+NCCL_DEVICE_INLINE void ncclLsaBarrierSession<Coop>::arrive(Coop, cuda::memory_order order) { /* 中文索引·体内调用 this->coop.sync、this->coop.thread_rank。 */
   this->coop.sync();
   if (this->multimem) {
 #if __CUDA_ARCH__ >= 900

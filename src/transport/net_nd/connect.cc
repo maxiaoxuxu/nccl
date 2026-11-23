@@ -12,7 +12,7 @@
 #include "socket.h"
 
 // Compute an overflow-safe deadline for the complete connection handshake.
-static ULONGLONG ncclNdConnectionDeadline(void) {
+static ULONGLONG ncclNdConnectionDeadline(void) { /* 中文索引·体内调用 GetTickCount64。 */
   int64_t timeoutSeconds = NCCL_ND_CONNECT_TIMEOUT_SECONDS;
   const ULONGLONG now = GetTickCount64();
   const ULONGLONG maxSeconds = (ULLONG_MAX - now) / 1000;
@@ -25,7 +25,7 @@ static bool ncclNdConnectionExpired(ULONGLONG deadlineMs) {
 }
 
 // Initialize the fixed protocol preamble advertised to a peer.
-void ncclNdInitProtocolHeader(struct ncclNdProtocolHeader* header) {
+void ncclNdInitProtocolHeader(struct ncclNdProtocolHeader* header) { /* 中文索引·体内调用 memset。 */
   memset(header, 0, sizeof(*header));
   header->magic = NCCL_ND_PROTOCOL_MAGIC;
   header->version = NCCL_ND_PROTOCOL_VERSION;
@@ -50,7 +50,7 @@ ncclResult_t ncclNdValidateProtocolHeader(const struct ncclNdProtocolHeader* hea
 }
 
 // Validate peer metadata shape and remote addresses before installing it.
-ncclResult_t ncclNdValidateConnectionMetadata(const struct ncclNdConnectionMetadata* metadata, int expectedDevices) {
+ncclResult_t ncclNdValidateConnectionMetadata(const struct ncclNdConnectionMetadata* metadata, int expectedDevices) { /* 中文索引·体内调用 ncclNdConnectionOptions、memchr。 */
   if (metadata == NULL || expectedDevices <= 0 || expectedDevices > NCCL_ND_MAX_DEVS_PER_NIC ||
       metadata->ndevs != (uint32_t)expectedDevices || metadata->options != ncclNdConnectionOptions() ||
       memchr(metadata->devName, '\0', sizeof(metadata->devName)) == NULL) {
@@ -92,7 +92,7 @@ ncclResult_t ncclNdValidateConnectionSetup(const struct ncclNdConnectionSetup* s
 }
 
 // Resolve a selected physical or virtual device into its physical rails.
-static ncclResult_t ncclNdSetVProps(int dev, ncclNetVDeviceProps_t* props) {
+static ncclResult_t ncclNdSetVProps(int dev, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 memset。 */
   memset(props, 0, sizeof(*props));
   if (dev < 0 || dev >= ncclNNdDevs + ncclNMergedNdDevs) return ncclInvalidArgument;
   if (dev >= ncclNNdDevs) {
@@ -106,7 +106,7 @@ static ncclResult_t ncclNdSetVProps(int dev, ncclNetVDeviceProps_t* props) {
 
 // Detach and destroy a partially initialized sender connection.
 static ncclResult_t ncclNdAbortConnect(struct ncclNdHandle* handle, struct ncclNdSendComm* comm, ncclResult_t result,
-                                       bool timedOut = false) {
+                                       bool timedOut = false) { /* 中文索引·体内调用 ncclNdStatsConnectionFailed、ncclNdCloseSend。 */
   handle->sendComm = NULL;
   ncclNdStatsConnectionFailed(&comm->base, timedOut);
   uint64_t commId = comm->base.commId;
@@ -120,7 +120,7 @@ static ncclResult_t ncclNdAbortConnect(struct ncclNdHandle* handle, struct ncclN
 
 // Detach and destroy a partially initialized receiver connection.
 static ncclResult_t ncclNdAbortAccept(struct ncclNdListenComm* listenComm, struct ncclNdRecvComm* comm,
-                                      ncclResult_t result, bool timedOut = false) {
+                                      ncclResult_t result, bool timedOut = false) { /* 中文索引·体内调用 ncclNdStatsConnectionFailed、ncclNdCloseRecv。 */
   listenComm->pendingRecvComm = NULL;
   ncclNdStatsConnectionFailed(&comm->base, timedOut);
   uint64_t commId = comm->base.commId;
@@ -133,7 +133,7 @@ static ncclResult_t ncclNdAbortAccept(struct ncclNdListenComm* listenComm, struc
 }
 
 // Bind and start the asynchronous connect operation for one QP.
-static ncclResult_t ncclNdStartConnectQp(struct ncclNdSendComm* comm, int qpIndex) {
+static ncclResult_t ncclNdStartConnectQp(struct ncclNdSendComm* comm, int qpIndex) { /* 中文索引·体内调用 wrap_nd_connector_bind、wrap_nd_prepare_overlapped。 */
   if (qpIndex < 0 || qpIndex >= comm->base.nqps) return ncclInternalError;
   struct ncclNdQp* qp = &comm->base.qps[qpIndex];
   int devIndex = qp->devIndex;
@@ -154,7 +154,7 @@ static ncclResult_t ncclNdStartConnectQp(struct ncclNdSendComm* comm, int qpInde
 }
 
 // Arm asynchronous provider-error notification for a completion queue.
-static ncclResult_t ncclNdArmCqErrorNotification(struct ncclNdNetCommDevBase* devBase) {
+static ncclResult_t ncclNdArmCqErrorNotification(struct ncclNdNetCommDevBase* devBase) { /* 中文索引·体内调用 wrap_nd_prepare_overlapped、wrap_nd_notify。 */
   NCCLCHECK(wrap_nd_prepare_overlapped(&devBase->cqErrorOv));
   NCCLCHECK(wrap_nd_notify(devBase->cq, ND_CQ_NOTIFY_ERRORS, &devBase->cqErrorOv));
   devBase->cqErrorArmed = true;
@@ -162,7 +162,7 @@ static ncclResult_t ncclNdArmCqErrorNotification(struct ncclNdNetCommDevBase* de
 }
 
 // Cancel notifications and release one completion queue.
-static ncclResult_t ncclNdReleaseCq(struct ncclNdNetCommDevBase* devBase) {
+static ncclResult_t ncclNdReleaseCq(struct ncclNdNetCommDevBase* devBase) { /* 中文索引·体内调用 wrap_nd_cq_cancel_notifications、wrap_nd_release。 */
   ncclResult_t result = ncclSuccess;
   if (devBase->cq != NULL) {
     if (devBase->cqErrorArmed) NCCLCHECKIGNORE(wrap_nd_cq_cancel_notifications(devBase->cq), result);
@@ -177,7 +177,7 @@ static ncclResult_t ncclNdReleaseCq(struct ncclNdNetCommDevBase* devBase) {
 }
 
 // Create the TCP bootstrap listener and one ND listener per physical rail.
-ncclResult_t ncclNdListen(void*, int dev, void* opaqueHandle, void** listenComm) {
+ncclResult_t ncclNdListen(void*, int dev, void* opaqueHandle, void** listenComm) { /* 中文索引·体内调用 memset、ncclCalloc。 */
   ncclResult_t result = ncclSuccess;
   struct ncclNdHandle* handle = (struct ncclNdHandle*)opaqueHandle;
   if (handle == NULL || listenComm == NULL) return ncclInvalidArgument;
@@ -244,7 +244,7 @@ fail_alloc:
 }
 
 // Advance the non-blocking sender handshake and publish a completed communicator.
-ncclResult_t ncclNdConnect(void*, int dev, void* opaqueHandle, void** sendComm, ncclNetDeviceHandle_t** sendDevComm) {
+ncclResult_t ncclNdConnect(void*, int dev, void* opaqueHandle, void** sendComm, ncclNetDeviceHandle_t** sendDevComm) { /* 中文索引·体内调用 ncclCalloc、InitializeSRWLock。 */
   if (opaqueHandle == NULL || sendComm == NULL || sendDevComm == NULL) return ncclInvalidArgument;
   struct ncclNdHandle* handle = (struct ncclNdHandle*)opaqueHandle;
   struct ncclNdSendComm* sComm = handle->sendComm;
@@ -582,7 +582,7 @@ fail:
 }
 
 // Advance the non-blocking receiver handshake and publish a completed communicator.
-ncclResult_t ncclNdAccept(void* listenComm, void** recvComm, ncclNetDeviceHandle_t** recvDevComm) {
+ncclResult_t ncclNdAccept(void* listenComm, void** recvComm, ncclNetDeviceHandle_t** recvDevComm) { /* 中文索引·体内调用 ncclCalloc、InitializeSRWLock。 */
   if (listenComm == NULL || recvComm == NULL || recvDevComm == NULL) return ncclInvalidArgument;
   struct ncclNdListenComm* lComm = (struct ncclNdListenComm*)listenComm;
   struct ncclNdRecvComm* rComm = lComm->pendingRecvComm;
@@ -927,7 +927,7 @@ fail:
 }
 
 // Release request-owned buffers and mark every request-pool slot unused.
-static void ncclNdDiscardRequests(struct ncclNdNetCommBase* base) {
+static void ncclNdDiscardRequests(struct ncclNdNetCommBase* base) { /* 中文索引·体内调用 free、ncclNdStatsRemoveResource。 */
   ncclNdScopedSrwLock lock(&base->reqLock);
   for (int i = 0; i < NET_ND_MAX_REQUESTS; i++) {
     struct ncclNdRequest* req = &base->reqs[i];
@@ -943,7 +943,7 @@ static void ncclNdDiscardRequests(struct ncclNdNetCommBase* base) {
 }
 
 // Stop progress and release a send communicator in dependency order.
-ncclResult_t ncclNdCloseSend(void* sendComm) {
+ncclResult_t ncclNdCloseSend(void* sendComm) { /* 中文索引·体内调用 ncclNdNotifyPeerClosing、ncclNdStatsConnectionFailed。 */
   struct ncclNdSendComm* sComm = (struct ncclNdSendComm*)sendComm;
   if (!sComm) return ncclSuccess;
   ncclResult_t result = ncclSuccess;
@@ -1019,7 +1019,7 @@ ncclResult_t ncclNdCloseSend(void* sendComm) {
 }
 
 // Stop progress and release a receive communicator in dependency order.
-ncclResult_t ncclNdCloseRecv(void* recvComm) {
+ncclResult_t ncclNdCloseRecv(void* recvComm) { /* 中文索引·体内调用 ncclNdNotifyPeerClosing、ncclNdStatsConnectionFailed。 */
   struct ncclNdRecvComm* rComm = (struct ncclNdRecvComm*)recvComm;
   if (!rComm) return ncclSuccess;
   ncclResult_t result = ncclSuccess;
@@ -1095,7 +1095,7 @@ ncclResult_t ncclNdCloseRecv(void* recvComm) {
 }
 
 // Release a listener and any receiver whose accept is still pending.
-ncclResult_t ncclNdCloseListen(void* listenComm) {
+ncclResult_t ncclNdCloseListen(void* listenComm) { /* 中文索引·体内调用 ncclNdCloseRecv、wrap_nd_release。 */
   struct ncclNdListenComm* lComm = (struct ncclNdListenComm*)listenComm;
   if (!lComm) return ncclSuccess;
   ncclResult_t result = ncclSuccess;

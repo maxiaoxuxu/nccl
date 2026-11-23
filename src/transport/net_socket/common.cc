@@ -19,7 +19,7 @@ struct ncclNetSocketDev ncclNetSocketDevs[MAX_IFS];
 
 static std::mutex ncclNetSocketDevicesMutex;
 
-static ncclResult_t ncclNetSocketGetPciPath(char* devName, char** pciPath) {
+static ncclResult_t ncclNetSocketGetPciPath(char* devName, char** pciPath) { /* 中文索引·体内调用 snprintf、ncclOsRealpath。 */
   char devicePath[PATH_MAX];
   snprintf(devicePath, PATH_MAX, "/sys/class/net/%s/device", devName);
   // May return NULL if the file doesn't exist.
@@ -27,7 +27,7 @@ static ncclResult_t ncclNetSocketGetPciPath(char* devName, char** pciPath) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetSocketInitDevices(const char* logPrefix) {
+ncclResult_t ncclNetSocketInitDevices(const char* logPrefix) { /* 中文索引·体内调用 ncclFindInterfaces、strcpy。 */
   std::lock_guard<std::mutex> lock(ncclNetSocketDevicesMutex);
   ncclResult_t ret = ncclSuccess;
   if (ncclNetIfs != -1) return ncclSuccess;
@@ -60,7 +60,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclNetSocketGetSpeed(char* devName, int* speed) {
+ncclResult_t ncclNetSocketGetSpeed(char* devName, int* speed) { /* 中文索引·体内调用 malloc、GetAdaptersAddresses。 */
   ncclResult_t ret = ncclSuccess;
   *speed = 0;
 
@@ -136,7 +136,7 @@ ncclResult_t ncclNetSocketGetSpeed(char* devName, int* speed) {
 }
 
 ncclResult_t ncclNetSocketCreateListener(const char* logPrefix, int dev, struct ncclSocket* sock,
-                                         union ncclSocketAddress* connectAddr, uint64_t* magic) {
+                                         union ncclSocketAddress* connectAddr, uint64_t* magic) { /* 中文索引·体内调用 ncclSocketDefaultMagic、ncclSocketInit。 */
   if (dev < 0 || dev >= ncclNetIfs) {
     WARN("%s : invalid listen device dev=%d ncclNetIfs=%d", logPrefix, dev, ncclNetIfs);
     return ncclInternalError;

@@ -24,7 +24,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T>
-  __device__ void getWorkRange(int block, uint16_t& workLo, size_t& indexLo, uint16_t& workHi, size_t& indexHi) {
+  __device__ void getWorkRange(int block, uint16_t& workLo, size_t& indexLo, uint16_t& workHi, size_t& indexHi) { /* 中文索引·体内调用 divUp。 */
     constexpr int EltPerCell = NCCL_SYM_KERNEL_CELL_SIZE / sizeof(T);
     uint32_t fracLo, fracHi;
 
@@ -48,7 +48,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T>
-  __device__ void getWorkRangeFused(int blockIdx, int w, int& block, int& nBlocks, size_t& indexLo, size_t& indexHi) {
+  __device__ void getWorkRangeFused(int blockIdx, int w, int& block, int& nBlocks, size_t& indexLo, size_t& indexHi) { /* 中文索引·体内调用 divUp。 */
     constexpr int EltPerCell = NCCL_SYM_KERNEL_CELL_SIZE / sizeof(T);
     struct ncclSymkDevWork const& dw = devWork[w];
     uint32_t fracLo, fracHi;
@@ -68,7 +68,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T, typename Fn>
-  __device__ void forEachWork(Fn const& fn) {
+  __device__ void forEachWork(Fn const& fn) { /* 中文索引·体内调用 fn。 */
     uint16_t workLo, workHi;
     size_t indexLo, indexHi;
 
@@ -98,7 +98,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T, typename Fn>
-  __device__ void forEachWorkWithRoot(Fn const& fn) {
+  __device__ void forEachWorkWithRoot(Fn const& fn) { /* 中文索引·体内调用 fn。 */
     uint16_t workLo, workHi;
     size_t indexLo, indexHi;
 
@@ -128,7 +128,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T, typename Fn>
-  __device__ void singleWork(Fn const& fn) {
+  __device__ void singleWork(Fn const& fn) { /* 中文索引·体内调用 fn。 */
     uint16_t w;
     size_t indexLo, indexHi;
 
@@ -141,7 +141,7 @@ struct ncclSymkWorkArgsHandler {
   }
 
   template <typename T, typename Fn>
-  __device__ void forEachWorkNoFusion(Fn const& fn) {
+  __device__ void forEachWorkNoFusion(Fn const& fn) { /* 中文索引·体内调用 fn。 */
     uint16_t workLo, workHi;
     size_t indexLo, indexHi;
 

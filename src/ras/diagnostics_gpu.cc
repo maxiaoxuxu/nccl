@@ -31,7 +31,7 @@ struct rasDiagnosticsGpuModelData {
 };
 
 static ncclResult_t rasDiagnosticsGpuModelFillLocalData(const struct rasDiagnosticsCommSnapshot* comm,
-                                                        void* checkData) {
+                                                        void* checkData) { /* 中文索引·体内调用 ncclNvmlDeviceGetCount、ncclNvmlDeviceGetHandleByIndex。 */
   struct rasDiagnosticsGpuModelData* gpuData = (struct rasDiagnosticsGpuModelData*)checkData;
 
   unsigned int nDev = 0;
@@ -55,7 +55,7 @@ static ncclResult_t rasDiagnosticsGpuModelFillLocalData(const struct rasDiagnost
 }
 
 ncclResult_t rasDiagnosticsGpuModelCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                                struct rasDiagnosticsLocalData* data) {
+                                                struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsGpuModelData),
                                               rasDiagnosticsGpuModelFillLocalData, data));
   return ncclSuccess;
@@ -66,7 +66,7 @@ static const struct rasDiagnosticsGpuModelData* rasDiagnosticsGpuModelDataFromRe
 }
 
 ncclResult_t rasDiagnosticsGpuModelSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsGpuModelData));
@@ -193,7 +193,7 @@ static const void* rasDiagnosticsVersionDataFromRecord(const char* record) {
 // format converts a check-specific value to text and returns whether it was collected successfully.
 static ncclResult_t rasDiagnosticsVersionSummarize(const struct rasDiagnosticsReporter* reporter, const char* data,
                                                    int nData, const char* checkLabel, size_t dataSize,
-                                                   bool (*format)(const void* data, char* buf, size_t bufLen)) {
+                                                   bool (*format)(const void* data, char* buf, size_t bufLen)) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(dataSize);
@@ -283,7 +283,7 @@ struct rasDiagnosticsCudaDriverVersionData {
   uint32_t version;
 };
 
-static bool rasDiagnosticsCudaDriverVersionFormat(const void* data, char* buf, size_t bufLen) {
+static bool rasDiagnosticsCudaDriverVersionFormat(const void* data, char* buf, size_t bufLen) { /* 中文索引·体内调用 snprintf。 */
   uint32_t version = ((const struct rasDiagnosticsCudaDriverVersionData*)data)->version;
   if (version == RAS_DIAG_CUDA_DRIVER_VERSION_UNKNOWN) snprintf(buf, bufLen, "unavailable");
   else if (version == 0) snprintf(buf, bufLen, "no driver installed");
@@ -292,7 +292,7 @@ static bool rasDiagnosticsCudaDriverVersionFormat(const void* data, char* buf, s
 }
 
 static ncclResult_t rasDiagnosticsCudaDriverVersionFillLocalData(const struct rasDiagnosticsCommSnapshot* comm,
-                                                                 void* checkData) {
+                                                                 void* checkData) { /* 中文索引·体内调用 ncclCudaDriverVersion。 */
   struct rasDiagnosticsCudaDriverVersionData* versionData = (struct rasDiagnosticsCudaDriverVersionData*)checkData;
   int version = 0;
 
@@ -305,14 +305,14 @@ static ncclResult_t rasDiagnosticsCudaDriverVersionFillLocalData(const struct ra
 }
 
 ncclResult_t rasDiagnosticsCudaDriverVersionCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                                         struct rasDiagnosticsLocalData* data) {
+                                                         struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsCudaDriverVersionData),
                                               rasDiagnosticsCudaDriverVersionFillLocalData, data));
   return ncclSuccess;
 }
 
 ncclResult_t rasDiagnosticsCudaDriverVersionSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsVersionSummarize。 */
   (void)ctx;
   return rasDiagnosticsVersionSummarize(reporter, data, nData, "CUDA driver version",
                                         sizeof(struct rasDiagnosticsCudaDriverVersionData),
@@ -324,7 +324,7 @@ struct rasDiagnosticsNvidiaDriverVersionData {
   char version[NVML_SYSTEM_DRIVER_VERSION_BUFFER_SIZE];
 };
 
-static bool rasDiagnosticsNvidiaDriverVersionFormat(const void* data, char* buf, size_t bufLen) {
+static bool rasDiagnosticsNvidiaDriverVersionFormat(const void* data, char* buf, size_t bufLen) { /* 中文索引·体内调用 snprintf。 */
   const struct rasDiagnosticsNvidiaDriverVersionData* versionData =
     (const struct rasDiagnosticsNvidiaDriverVersionData*)data;
   if (versionData->version[0] == '\0') snprintf(buf, bufLen, "unavailable via NVML");
@@ -333,7 +333,7 @@ static bool rasDiagnosticsNvidiaDriverVersionFormat(const void* data, char* buf,
 }
 
 static ncclResult_t rasDiagnosticsNvidiaDriverVersionFillLocalData(const struct rasDiagnosticsCommSnapshot* comm,
-                                                                   void* checkData) {
+                                                                   void* checkData) { /* 中文索引·体内调用 memset、ncclNvmlSystemGetDriverVersion。 */
   struct rasDiagnosticsNvidiaDriverVersionData* versionData = (struct rasDiagnosticsNvidiaDriverVersionData*)checkData;
 
   (void)comm;
@@ -345,14 +345,14 @@ static ncclResult_t rasDiagnosticsNvidiaDriverVersionFillLocalData(const struct 
 }
 
 ncclResult_t rasDiagnosticsNvidiaDriverVersionCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                                           struct rasDiagnosticsLocalData* data) {
+                                                           struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsNvidiaDriverVersionData),
                                               rasDiagnosticsNvidiaDriverVersionFillLocalData, data));
   return ncclSuccess;
 }
 
 ncclResult_t rasDiagnosticsNvidiaDriverVersionSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsVersionSummarize。 */
   (void)ctx;
   return rasDiagnosticsVersionSummarize(reporter, data, nData, "NVIDIA graphics driver version",
                                         sizeof(struct rasDiagnosticsNvidiaDriverVersionData),
@@ -376,7 +376,7 @@ struct rasDiagnosticsEccData {
 
 // Reads one volatile ECC counter. Returns true only if NVML answered.
 static bool rasDiagnosticsEccReadCounter(nvmlDevice_t device, nvmlMemoryErrorType_t errorType,
-                                         nvmlMemoryLocation_t location, uint64_t* out) {
+                                         nvmlMemoryLocation_t location, uint64_t* out) { /* 中文索引·体内调用 ncclNvmlDeviceGetMemoryErrorCounter。 */
   unsigned long long value = 0;
   if (ncclNvmlDeviceGetMemoryErrorCounter(device, errorType, NVML_VOLATILE_ECC, location, &value) != ncclSuccess)
     return false;
@@ -384,7 +384,7 @@ static bool rasDiagnosticsEccReadCounter(nvmlDevice_t device, nvmlMemoryErrorTyp
   return true;
 }
 
-static ncclResult_t rasDiagnosticsEccFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) {
+static ncclResult_t rasDiagnosticsEccFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) { /* 中文索引·体内调用 ncclNvmlDeviceGetHandleByIndex、rasDiagnosticsEccReadCounter。 */
   struct rasDiagnosticsEccData* eccData = (struct rasDiagnosticsEccData*)checkData;
 
   eccData->correctedSram = 0;
@@ -413,7 +413,7 @@ static ncclResult_t rasDiagnosticsEccFillLocalData(const struct rasDiagnosticsCo
 }
 
 ncclResult_t rasDiagnosticsEccCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                           struct rasDiagnosticsLocalData* data) {
+                                           struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsEccData), rasDiagnosticsEccFillLocalData,
                                               data));
   return ncclSuccess;
@@ -424,7 +424,7 @@ static const struct rasDiagnosticsEccData* rasDiagnosticsEccDataFromRecord(const
 }
 
 ncclResult_t rasDiagnosticsEccSummarize(const struct rasDiagnosticsContext* ctx,
-                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                        const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclParamDiagnosticsEccThreshold。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsEccData));
@@ -548,7 +548,7 @@ struct rasDiagnosticsNvLinkData {
   uint32_t maxSpeedMBps;
 };
 
-static ncclResult_t rasDiagnosticsNvLinkFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) {
+static ncclResult_t rasDiagnosticsNvLinkFillLocalData(const struct rasDiagnosticsCommSnapshot* comm, void* checkData) { /* 中文索引·体内调用 ncclNvmlDeviceGetHandleByIndex、ncclNvmlDeviceGetFieldValues。 */
   struct rasDiagnosticsNvLinkData* nvlData = (struct rasDiagnosticsNvLinkData*)checkData;
   nvmlFieldValue_t linkCount = {};
   unsigned int nUnreadable = 0;
@@ -592,7 +592,7 @@ static ncclResult_t rasDiagnosticsNvLinkFillLocalData(const struct rasDiagnostic
 }
 
 ncclResult_t rasDiagnosticsNvLinkCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                              struct rasDiagnosticsLocalData* data) {
+                                              struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsCollectLocalRecords。 */
   NCCLCHECK(rasDiagnosticsCollectLocalRecords(ctx, sizeof(struct rasDiagnosticsNvLinkData),
                                               rasDiagnosticsNvLinkFillLocalData, data));
   return ncclSuccess;
@@ -603,7 +603,7 @@ static const struct rasDiagnosticsNvLinkData* rasDiagnosticsNvLinkDataFromRecord
 }
 
 ncclResult_t rasDiagnosticsNvLinkSummarize(const struct rasDiagnosticsContext* ctx,
-                                           const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+                                           const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsNvLinkData));

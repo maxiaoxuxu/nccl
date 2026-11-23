@@ -16,7 +16,7 @@ static ncclTuner_t ncclTuner;
 
 static ncclResult_t ncclTuner_getCollInfo(void* context, ncclFunc_t collType, size_t nBytes, int numPipeOps,
                                           float** collCostTable, int numAlgo, int numProto,
-                                          int regBuff __attribute__((unused)), int* nChannels) {
+                                          int regBuff __attribute__((unused)), int* nChannels) { /* 中文索引·体内调用 ncclTuner_v3->getCollInfo。 */
   NCCLCHECK(ncclTuner_v3->getCollInfo(context, collType, nBytes, numPipeOps, collCostTable, numAlgo, numProto,
                                       nChannels));
   return ncclSuccess;
@@ -28,7 +28,7 @@ static ncclResult_t ncclTuner_finalize(void* ctx) {
 
 static ncclResult_t ncclTuner_init(void** context, uint64_t commId, size_t nRanks, size_t nNodes,
                                    ncclDebugLogger_t logfn, ncclNvlDomainInfo_v5_t* nvlDomainInfo,
-                                   ncclTunerConstants_t* /*constants*/) {
+                                   ncclTunerConstants_t* /*constants*/) { /* 中文索引·体内调用 ncclTuner_v3->init。 */
   NCCLCHECK(ncclTuner_v3->init(nRanks, nNodes, logfn, context));
   ncclTuner.getCollInfo = ncclTuner_getCollInfo;
   ncclTuner.getChunkSize = NULL;
@@ -36,7 +36,7 @@ static ncclResult_t ncclTuner_init(void** context, uint64_t commId, size_t nRank
   return ncclSuccess;
 }
 
-ncclTuner_t* getNcclTuner_v3(void* lib) {
+ncclTuner_t* getNcclTuner_v3(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclTuner_v3 = (ncclTuner_v3_t*)ncclOsDlsym(lib, "ncclTunerPlugin_v3");
   if (ncclTuner_v3) {
     ncclTuner.name = ncclTuner_v3->name;

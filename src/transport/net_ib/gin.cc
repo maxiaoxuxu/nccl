@@ -15,7 +15,7 @@ const int NCCL_GIN_IB_ALLGATHER_TAG = 0xa0;
 const int NCCL_GIN_IB_ALLTOALL_TAG = 0xa1;
 
 // Check GDR support for GIN. This is run at init, so we don't know yet whether the GPU will support DMA-BUF.
-static ncclResult_t ncclGinIbGdrSupport(bool* gdrSupport, bool gdaki) {
+static ncclResult_t ncclGinIbGdrSupport(bool* gdrSupport, bool gdaki) { /* 中文索引·体内调用 ncclIbPeerMemSupport、ncclIbGdrSupport。 */
   *gdrSupport = true;
   bool peerMemSupport = gdaki ? ncclIbPeerMemSupport() == ncclSuccess : // GDAKI does not support nv_peer_mem.
                                 ncclIbGdrSupport() == ncclSuccess;
@@ -29,7 +29,7 @@ static ncclResult_t ncclGinIbGdrSupport(bool* gdrSupport, bool gdaki) {
 }
 
 // Check the current GPU supports GDR for GIN. This is run during connect().
-static ncclResult_t ncclGinIbGdrGpuSupport(bool gdaki) {
+static ncclResult_t ncclGinIbGdrGpuSupport(bool gdaki) { /* 中文索引·体内调用 ncclIbPeerMemSupport、ncclIbGdrSupport。 */
   bool peerMemSupport = gdaki ? ncclIbPeerMemSupport() == ncclSuccess : // GDAKI does not support nv_peer_mem.
                                 ncclIbGdrSupport() == ncclSuccess;
   if (peerMemSupport) return ncclSuccess;
@@ -52,7 +52,7 @@ static std::mutex ncclGinIbGdakiLockMutex;
 static int ncclGinIbGdakiNDevs = -1;
 int ncclGinIbGdakiDevIndexes[MAX_IB_DEVS];
 
-ncclResult_t ncclGinIbGdakiInitOnce() {
+ncclResult_t ncclGinIbGdakiInitOnce() { /* 中文索引·体内调用 ncclParamGinType。 */
   std::lock_guard<std::mutex> lock(ncclGinIbGdakiLockMutex);
   if (ncclGinIbGdakiNDevs == -1) {
     int ndevs = 0;
@@ -88,7 +88,7 @@ static bool ncclNetIbDevIsMlx5(int dev) {
 
 // Initlialize GDAKI or PROXY backend. ginType can force a particular backend.
 // If provided, overwrite ginIb with the backend (generic ginIb case).
-ncclResult_t ncclGinIbInitType(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction, int type) {
+ncclResult_t ncclGinIbInitType(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction, int type) { /* 中文索引·体内调用 ncclIbInitDevices、ncclGinIbGdakiInitOnce。 */
   NCCLCHECK(ncclIbInitDevices(logFunction, nullptr));
   if (ncclNIbDevs == 0) return ncclInternalError; // Caught in plugin init code, not propagated to user.
 
@@ -117,7 +117,7 @@ static inline bool ncclGinIbAborted(volatile uint32_t* abortFlag) {
   return abortFlag && COMPILER_ATOMIC_LOAD(abortFlag, std::memory_order_acquire) != 0;
 }
 
-static ncclResult_t ncclGinIbAllGather(struct ncclGinIbCollComm* cComm, void* srcBuf, void* recvBuf, size_t len) {
+static ncclResult_t ncclGinIbAllGather(struct ncclGinIbCollComm* cComm, void* srcBuf, void* recvBuf, size_t len) { /* 中文索引·体内调用 ncclNetIb.regMr、memcpy。 */
   ncclResult_t status = ncclSuccess;
   void *rMhandle = NULL, *sMhandle = NULL;
   void *srequest = NULL, *rrequest = NULL;
@@ -192,7 +192,7 @@ out:
   return status;
 }
 
-static ncclResult_t ncclGinIbAllToAll(struct ncclGinIbCollComm* cComm, void* src_buf, void* recv_buf, size_t len) {
+static ncclResult_t ncclGinIbAllToAll(struct ncclGinIbCollComm* cComm, void* src_buf, void* recv_buf, size_t len) { /* 中文索引·体内调用 ncclIbMalloc、cComm->allGather。 */
   ncclResult_t status = ncclSuccess;
 
   void* tmp_buf = nullptr;
@@ -210,7 +210,7 @@ out:
   return status;
 }
 
-ncclResult_t ncclGinIbP2PBarrier(struct ncclGinIbCollComm* cComm) {
+ncclResult_t ncclGinIbP2PBarrier(struct ncclGinIbCollComm* cComm) { /* 中文索引·体内调用 ncclIbMalloc、ncclGinIbAllGather。 */
   // TODO: move allocation to init or use zero-byte allgather
   int* dummy;
   NCCLCHECK(ncclIbMalloc((void**)&dummy, cComm->nranks * sizeof(int)));
@@ -220,7 +220,7 @@ ncclResult_t ncclGinIbP2PBarrier(struct ncclGinIbCollComm* cComm) {
 }
 
 ncclResult_t ncclGinIbConnect(void* ctx, void* handles[], int nranks, int rank, void* listenComm, void** collComm,
-                              volatile uint32_t* abortFlag) {
+                              volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclIbMalloc、ncclIbConnectImpl。 */
   struct ncclIbListenComm* lComm = (struct ncclIbListenComm*)listenComm;
   struct ncclGinIbCollComm* cCommArray = nullptr;
   ncclResult_t ret = ncclSuccess;
@@ -271,7 +271,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclGinIbCloseColl(void* collComm) {
+ncclResult_t ncclGinIbCloseColl(void* collComm) { /* 中文索引·体内调用 ncclNetIb.closeRecv、ncclNetIb.closeSend。 */
   struct ncclGinIbCollComm* cCommArray = (struct ncclGinIbCollComm*)collComm;
   if (!cCommArray) return ncclSuccess;
 
@@ -311,7 +311,7 @@ ncclResult_t ncclGinIbGdakiGetGinProperties(ncclGinProperties_t* ginProps) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinIbGdakiGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclGinIbGdakiGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclIbGetPhysProperties。 */
   std::lock_guard<std::mutex> lock(ncclGinIbGdakiLockMutex);
   if (dev >= ncclGinIbGdakiNDevs) {
     WARN("NET/IB : Requested properties for GIN GDAKI NIC %d, only %d GIN GDAKI NICs have been created", dev,
@@ -330,7 +330,7 @@ ncclResult_t ncclGinIbGdakiListen(void* ctx, int dev, void* opaqueHandle, void**
   return ncclNetIb.listen(ctx, ncclGinIbGdakiDevIndexes[dev], opaqueHandle, listenComm);
 }
 
-static ncclResult_t ncclGinIbGdakiValidateDeviceSupport(struct ncclGinIbCollComm* cComm) {
+static ncclResult_t ncclGinIbGdakiValidateDeviceSupport(struct ncclGinIbCollComm* cComm) { /* 中文索引·体内调用 ncclGinIbGdrGpuSupport、ncclGinGdakiCheckDeviceSupport。 */
   ncclResult_t status = ncclSuccess;
   int* rankSupported = nullptr;
   int localSupported = 1;
@@ -356,7 +356,7 @@ out:
 }
 
 ncclResult_t ncclGinIbGdakiConnect(void* ctx, void* handles[], int nranks, int rank, void* listenComm, void** collComm,
-                                   volatile uint32_t* abortFlag) {
+                                   volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclGinIbConnect、ncclGinIbGdakiValidateDeviceSupport。 */
   NCCLCHECK(ncclGinIbConnect(ctx, handles, nranks, rank, listenComm, collComm, abortFlag));
 
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)*collComm;
@@ -366,7 +366,7 @@ ncclResult_t ncclGinIbGdakiConnect(void* ctx, void* handles[], int nranks, int r
 }
 
 ncclResult_t ncclGinIbGdakiCreateContext(void* collComm, ncclGinConfig_t* config, void** ginCtx,
-                                         ncclNetDeviceHandle_t** devHandle) {
+                                         ncclNetDeviceHandle_t** devHandle) { /* 中文索引·体内调用 ncclParamGinIbTc、ncclParamIbTc。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
 
   if (cComm->gdakiUnsupported) return ncclInvalidUsage;
@@ -428,20 +428,20 @@ ncclResult_t ncclRmaIbProxyInit(void** ctx, uint64_t commId, ncclDebugLogger_t l
   return ncclGinIbInitType(ctx, commId, logFunction, NCCL_GIN_TYPE_PROXY);
 }
 
-ncclResult_t ncclRmaIbProxyGetRmaProperties(void* collComm, ncclRmaProperties_t* rmaProps) {
+ncclResult_t ncclRmaIbProxyGetRmaProperties(void* collComm, ncclRmaProperties_t* rmaProps) { /* 中文索引·体内调用 ncclNetIbDevIsMlx5。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   rmaProps->flushesAllPutsOnAnySignal = ncclNetIbDevIsMlx5(cComm->dev);
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaIbProxyGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclRmaIbProxyGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNetIb.getProperties。 */
   NCCLCHECK(ncclNetIb.getProperties(dev, props));
   props->netDeviceType = NCCL_NET_DEVICE_GIN_PROXY;
   return ncclSuccess;
 }
 
 ncclResult_t ncclRmaIbProxyConnect(void* ctx, void* handles[], int nranks, int rank, void* listenComm, void** collComm,
-                                   volatile uint32_t* abortFlag) {
+                                   volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclGinIbGdrGpuSupport、ncclGinIbConnect。 */
   // Check the current GPU supports GDR
   NCCLCHECK(ncclGinIbGdrGpuSupport(/*gdaki*/ false));
 
@@ -472,7 +472,7 @@ struct ncclRmaIbProxyCtx {
 };
 
 // Ring the doorbell for the pending chain, if any.
-static ncclResult_t ncclRmaIbProxyPostBatch(struct ncclRmaIbProxyCtx* ctx) {
+static ncclResult_t ncclRmaIbProxyPostBatch(struct ncclRmaIbProxyCtx* ctx) { /* 中文索引·体内调用 wrap_ibv_post_send。 */
   struct ncclRmaIbProxyWrBatch* batch = &ctx->batch;
   if (batch->nWrs == 0) return ncclSuccess;  // no wrs to post
 
@@ -491,7 +491,7 @@ static ncclResult_t ncclRmaIbProxyPostBatch(struct ncclRmaIbProxyCtx* ctx) {
 
 // allocate a slot (memset to 0)
 static ncclResult_t ncclRmaIbProxyReserveWrs(struct ncclRmaIbProxyCtx* ctx, struct ibv_qp* qp, int nWrs,
-                                             struct ibv_send_wr** wrs, struct ibv_sge** sges) {
+                                             struct ibv_send_wr** wrs, struct ibv_sge** sges) { /* 中文索引·体内调用 ncclRmaIbProxyPostBatch、memset。 */
   struct ncclRmaIbProxyWrBatch* batch = &ctx->batch;
   if (batch->nWrs && (batch->qp != qp || batch->nWrs + nWrs > ctx->wrBatchsize)) {
     NCCLCHECK(ncclRmaIbProxyPostBatch(ctx));
@@ -505,7 +505,7 @@ static ncclResult_t ncclRmaIbProxyReserveWrs(struct ncclRmaIbProxyCtx* ctx, stru
 }
 
 // fill the slot (link the wrs)
-static ncclResult_t ncclRmaIbProxyCommitWrs(struct ncclRmaIbProxyCtx* ctx, int nWrs, bool aggregate) {
+static ncclResult_t ncclRmaIbProxyCommitWrs(struct ncclRmaIbProxyCtx* ctx, int nWrs, bool aggregate) { /* 中文索引·体内调用 ncclRmaIbProxyPostBatch。 */
   struct ncclRmaIbProxyWrBatch* batch = &ctx->batch;
   for (int i = 0; i < nWrs; i++) {
     batch->wrs[batch->nWrs + i].next = batch->wrs + batch->nWrs + i + 1;
@@ -519,7 +519,7 @@ static ncclResult_t ncclRmaIbProxyCommitWrs(struct ncclRmaIbProxyCtx* ctx, int n
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaIbProxyCreateContext(void* collComm, ncclRmaConfig_t* config, void** rmaCtx) {
+ncclResult_t ncclRmaIbProxyCreateContext(void* collComm, ncclRmaConfig_t* config, void** rmaCtx) { /* 中文索引·体内调用 ncclIbSetTrafficClass、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   // Make sure all QP we create use the provided traffic class.
@@ -604,7 +604,7 @@ end:
   return ret;
 }
 
-ncclResult_t ncclRmaIbProxyDestroyContext(void* rmaCtx) {
+ncclResult_t ncclRmaIbProxyDestroyContext(void* rmaCtx) { /* 中文索引·体内调用 ncclRmaIbProxyPostBatch、ncclNetIb.closeRecv。 */
   struct ncclRmaIbProxyCtx* gc = (struct ncclRmaIbProxyCtx*)rmaCtx;
   int nContexts = gc[0].nContexts;
   int nranks = gc[0].nranks;
@@ -630,7 +630,7 @@ ncclResult_t ncclRmaIbProxyDestroyContext(void* rmaCtx) {
 }
 
 ncclResult_t ncclRmaIbProxyRegMrSymDmaBuf(void* collComm, void* data, size_t size, int type, uint64_t offset, int fd,
-                                          uint64_t mr_flags, void** mhandle) {
+                                          uint64_t mr_flags, void** mhandle) { /* 中文索引·体内调用 ncclCalloc、ncclIbRegMrDmaBufInternal。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   struct ncclRmaIbProxyMrHandle* rmaMrHandle = NULL;
@@ -665,7 +665,7 @@ ncclResult_t ncclRmaIbProxyRegMrSym(void* collComm, void* data, size_t size, int
   return ncclRmaIbProxyRegMrSymDmaBuf(collComm, data, size, type, 0, -1, mr_flags, mhandle);
 }
 
-ncclResult_t ncclRmaIbProxyDeregMrSym(void* collComm, void* mhandle) {
+ncclResult_t ncclRmaIbProxyDeregMrSym(void* collComm, void* mhandle) { /* 中文索引·体内调用 ncclNetIb.deregMr、free。 */
   struct ncclGinIbCollComm* cComm = (struct ncclGinIbCollComm*)collComm;
   struct ncclRmaIbProxyMrHandle* rmaMrHandle = (struct ncclRmaIbProxyMrHandle*)mhandle;
 
@@ -701,7 +701,7 @@ static ncclResult_t ncclRmaIbProxyGetRecvComm(struct ncclRmaIbProxyCtx* rmaProxy
 }
 
 ncclResult_t ncclRmaIbProxyIPut(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
-                                uint64_t dstOff, void* dstMhandle, uint32_t rank, uint32_t optFlags, void** request) {
+                                uint64_t dstOff, void* dstMhandle, uint32_t rank, uint32_t optFlags, void** request) { /* 中文索引·体内调用 ncclRmaIbProxyGetSendComm、ncclIbGetRequest。 */
   struct ncclRmaIbProxyCtx* rmaProxyCtx = &((struct ncclRmaIbProxyCtx*)rmaCtx)[context];
 
   struct ncclRmaIbProxyMrHandle* srcMrHandle = (struct ncclRmaIbProxyMrHandle*)srcMhandle;
@@ -754,7 +754,7 @@ ncclResult_t ncclRmaIbProxyIPut(void* rmaCtx, int context, uint64_t srcOff, void
 
 ncclResult_t ncclRmaIbProxyIGet(void* rmaCtx, int context, uint64_t remoteOffset, void* remoteMhandle, size_t size,
                                 uint64_t localOffset, void* localMhandle, uint32_t rank, uint32_t optFlags,
-                                void** request) {
+                                void** request) { /* 中文索引·体内调用 ncclRmaIbProxyGetSendComm、ncclIbGetRequest。 */
   struct ncclRmaIbProxyCtx* rmaProxyCtx = &((struct ncclRmaIbProxyCtx*)rmaCtx)[context];
 
   struct ncclRmaIbProxyMrHandle* remoteMrHandle = (struct ncclRmaIbProxyMrHandle*)remoteMhandle;
@@ -805,7 +805,7 @@ ncclResult_t ncclRmaIbProxyIGet(void* rmaCtx, int context, uint64_t remoteOffset
 ncclResult_t ncclRmaIbProxyIPutSignal(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
                                       uint64_t dstOff, void* dstMhandle, uint32_t rank, uint64_t signalOff,
                                       void* signalMhandle, uint64_t signalValue, uint32_t signalOp, bool isStrongSignal,
-                                      uint32_t optFlags, void** request) {
+                                      uint32_t optFlags, void** request) { /* 中文索引·体内调用 ncclRmaIbProxyGetSendComm、ncclIbGetRequest。 */
   (void)isStrongSignal;
   if (signalOp != NCCL_NET_SIGNAL_OP_INC && signalOp != NCCL_NET_SIGNAL_OP_ADD) {
     WARN("ncclRmaIbProxyIPutSignal: Unsupported signalOp %u", signalOp);
@@ -888,7 +888,7 @@ ncclResult_t ncclRmaIbProxyIPutSignal(void* rmaCtx, int context, uint64_t srcOff
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaIbProxyTest(void* collComm, void* request, int* done) {
+ncclResult_t ncclRmaIbProxyTest(void* collComm, void* request, int* done) { /* 中文索引·体内调用 ncclRmaIbProxyPostBatch、ncclIbFreeRequest。 */
   struct ncclIbRequest* req = (struct ncclIbRequest*)request;
   struct ncclRmaIbProxyCtx* rmaProxyCtx = (struct ncclRmaIbProxyCtx*)req->rmaProxyCtx;
   int rank = req->iput.rank;
@@ -959,7 +959,7 @@ ncclResult_t ncclRmaIbProxyTest(void* collComm, void* request, int* done) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaIbProxyIFlush(void* rmaCtx, int context, void* mhandle, uint32_t rank, void** request) {
+ncclResult_t ncclRmaIbProxyIFlush(void* rmaCtx, int context, void* mhandle, uint32_t rank, void** request) { /* 中文索引·体内调用 ncclRmaIbProxyGetRecvComm、ncclRmaIbProxyPostBatch。 */
   struct ncclRmaIbProxyCtx* rmaProxyCtx = &((struct ncclRmaIbProxyCtx*)rmaCtx)[context];
   struct ncclRmaIbProxyMrHandle* rmaMrHandle = (struct ncclRmaIbProxyMrHandle*)mhandle;
   struct ncclIbRecvComm* comm;

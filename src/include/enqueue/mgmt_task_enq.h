@@ -35,7 +35,7 @@ struct ncclAsyncJob {
   int destroyFlag;
   bool isThreadMain;
 
-  ~ncclAsyncJob() {
+  ~ncclAsyncJob() { /* 中文索引·体内调用 thread.joinable、ncclThreadJoin。 */
     if (thread.joinable()) {
       (void)ncclThreadJoin(thread);
     }

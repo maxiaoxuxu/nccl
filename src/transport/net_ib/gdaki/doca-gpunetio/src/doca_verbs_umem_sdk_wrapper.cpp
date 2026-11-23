@@ -66,7 +66,7 @@ static doca_verbs_umem_get_address_t p_doca_verbs_umem_get_address = nullptr;
 static void *common_handle = nullptr;
 static void *gpunetio_handle = nullptr;
 
-static void doca_verbs_sdk_wrapper_init(int *ret) {
+static void doca_verbs_sdk_wrapper_init(int *ret) { /* 中文索引·体内调用 getenv、memset。 */
     const char *doca_sdk_lib_path = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
     char libcommon_versioned_path[doca_sdk_path_length];
     char libcommon_path[doca_sdk_path_length];
@@ -166,14 +166,14 @@ exit_error:
     return;
 }
 
-static int init_verbs_sdk_wrapper(void) {
+static int init_verbs_sdk_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_sdk_wrapper_init, &ret);
     return ret;
 }
 
-static int get_sdk_wrapper_env_var(void) {
+static int get_sdk_wrapper_env_var(void) { /* 中文索引·体内调用 getenv、strcmp。 */
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
     if (!val) return -1;
@@ -187,7 +187,7 @@ static int get_sdk_wrapper_env_var(void) {
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_create(doca_dev_t *net_dev, doca_gpu_t *gpu,
                                                             void *address, size_t size,
                                                             uint32_t access_flags, int dmabuf_fd,
-                                                            size_t dmabuf_offset, void **umem) {
+                                                            size_t dmabuf_offset, void **umem) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err = DOCA_SUCCESS;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -242,7 +242,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_create(doca_dev_t *net_dev,
     return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_destroy(void *umem) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_destroy(void *umem) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -259,7 +259,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_destroy(void *umem) {
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_id(void *umem, uint32_t *umem_id) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_id(void *umem, uint32_t *umem_id) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -276,7 +276,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_id(void *umem, uint32_t
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_size(void *umem, size_t *umem_size) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_size(void *umem, size_t *umem_size) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -293,7 +293,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_size(void *umem, size_t
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_address(void *umem, void **umem_address) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_umem_get_address(void *umem, void **umem_address) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {

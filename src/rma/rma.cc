@@ -21,7 +21,7 @@ bool ncclRmaProxyEnabled(struct ncclComm* comm) {
          !ncclParamRMADisable();
 }
 
-bool ncclRmaInitialized(struct ncclComm* comm) {
+bool ncclRmaInitialized(struct ncclComm* comm) { /* 中文索引·体内调用 ncclRmaProxyEnabled。 */
   // Host RMA not supported -> not initialized.
   if (!comm->hostRmaSupport) return false;
   // CE is set up for every RMA-capable comm at the first window registration -> not initialized.
@@ -40,7 +40,7 @@ static bool isLsaAccessible(struct ncclComm* comm, int rank) {
   return false;
 }
 
-ncclResult_t ncclRmaWaitSignal(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaWaitSignal(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 cudaEventRecord、cudaStreamWaitEvent。 */
   ncclResult_t ret = ncclSuccess;
 
   // If we have both proxy and CE tasks, execute them in parallel
@@ -73,7 +73,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaPut(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaPut(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 cudaEventRecord、cudaStreamWaitEvent。 */
   ncclResult_t ret = ncclSuccess;
 
   // If we have both proxy and CE tasks, execute them in parallel
@@ -106,7 +106,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclLaunchRma(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclLaunchRma(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclRmaPut、ncclRmaWaitSignal。 */
   ncclResult_t ret = ncclSuccess;
   cudaStream_t stream = comm->planner.streams->stream;
 
@@ -138,7 +138,7 @@ static inline bool isRmaPutOrSignal(ncclFunc_t func) {
 // Then seek opportunities to batch tasks, batching checked for consecutive operations targeting the same context
 // - ncclFuncWaitSignal does not perform further batching as the API can already batch waitSignal from multiple peers
 // - Consecutive put/signal operation can be batched into the same plan
-ncclResult_t scheduleRmaTasksToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t scheduleRmaTasksToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   ncclResult_t ret = ncclSuccess;
   int* peersProxy = nullptr;
   int* nsignalsProxy = nullptr;

@@ -13,7 +13,7 @@
 #include <cassert>
 
 #ifdef __CUDACC__
-NCCL_DEVICE_INLINE uint64_t ncclFlowLLLoad(ncclLLFifoLine* src, uint32_t flag, uint32_t* abortFlag) {
+NCCL_DEVICE_INLINE uint64_t ncclFlowLLLoad(ncclLLFifoLine* src, uint32_t flag, uint32_t* abortFlag) { /* 中文索引·体内调用 nccl::utility::testAbort。 */
   uint32_t data1, flag1, data2, flag2;
   uint32_t spins = 0;
   do {
@@ -32,7 +32,7 @@ NCCL_DEVICE_INLINE void ncclFlowLLStore(ncclLLFifoLine* dst, uint64_t data, uint
                : "memory");
 }
 
-NCCL_DEVICE_INLINE bool ncclFlowLLNeedsCleanup(uint32_t flag, int nSlices) {
+NCCL_DEVICE_INLINE bool ncclFlowLLNeedsCleanup(uint32_t flag, int nSlices) { /* 中文索引·体内调用 uint32_t。 */
 #ifdef TEST_LL_CLEANUP
   uint32_t const flagMask = NCCL_LL_FLAG_MAX - 1;
 #else
@@ -67,7 +67,7 @@ struct ncclFlowLLDataLoader {
     T elt[EltPerLine];
   };
 
-  NCCL_DEVICE_INLINE void begin(T* src, int nElts, int misalign4) {
+  NCCL_DEVICE_INLINE void begin(T* src, int nElts, int misalign4) { /* 中文索引·体内调用 ncclFlowLLLoadData。 */
     if NCCL_IF_CONSTEXPR (sizeof(T) < 4) {
       if (misalign4 == 0) {
         // This may over-read at the end of the source buffer, but we don't cross the alignment boundary, hence we also
@@ -114,7 +114,7 @@ template <bool Send, bool DirectSend, bool Recv, bool DirectRecv, typename T, ty
           typename RedOp>
 NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::process(
   bool sendDirect, bool recvDirect, ncclSymPtr<T> /*input*/, ncclSymPtr<T> /*output*/, SrcLambda srcLambda, int nSrc,
-  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolLL>) {
+  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolLL>) { /* 中文索引·体内调用 assert、nccl::utility::divUp。 */
   static_assert(!DirectSend && !DirectRecv, "LL Flow does not support direct operations");
   assert(!sendDirect && !recvDirect);
   static_assert(SlicesPerChunk == 1, "LL Flow processes one FIFO slice per call");

@@ -12,7 +12,7 @@
 #include "../tuning_int.h"
 #include "pipeline_model.h"
 
-static float computeNVLSMaxBusBw(struct ncclComm* comm, ncclFunc_t func, int algo, int proto) {
+static float computeNVLSMaxBusBw(struct ncclComm* comm, ncclFunc_t func, int algo, int proto) { /* 中文索引·体内调用 ncclTuningGetCompCapIndex、ncclTuningProtoBW。 */
   const struct ncclTopoGraph* graph = &comm->graphs[algo];
   int compCapIndex = ncclTuningGetCompCapIndex(comm);
 
@@ -45,7 +45,7 @@ static int getNVLSSteps(int coll) {
 
 static ncclResult_t ncclTuningPipelineNvlsGetAlgoStep(struct ncclComm* comm, int proto, int algo, ncclFunc_t func,
                                                       /*output*/ struct ncclTuningPipelineStep* intra,
-                                                      struct ncclTuningPipelineStep* inter) {
+                                                      struct ncclTuningPipelineStep* inter) { /* 中文索引·体内调用 getNVLSSteps、ncclTuningGetCompCapIndex。 */
   int nSteps = getNVLSSteps(func);
 
   const struct ncclTopoGraph* graph = &comm->graphs[algo];
@@ -65,7 +65,7 @@ static ncclResult_t ncclTuningPipelineNvlsGetAlgoStep(struct ncclComm* comm, int
 
 static ncclResult_t ncclTuningPipelineNvlsTreeGetAlgoStep(struct ncclComm* comm, int proto, int algo, ncclFunc_t func,
                                                           /*output*/ struct ncclTuningPipelineStep* intra,
-                                                          struct ncclTuningPipelineStep* inter) {
+                                                          struct ncclTuningPipelineStep* inter) { /* 中文索引·体内调用 getNVLSSteps、ncclTuningGetCompCapIndex。 */
   int nStepsNVLS = getNVLSSteps(func);
 
   const struct ncclTopoGraph* graph = &comm->graphs[algo];
@@ -107,7 +107,7 @@ static int ncclTuningPipelineNVLSTreeIsValid(struct ncclTuningInput_t* const inp
 
 static inline ncclResult_t ncclTuningPipelineNVLSComputePipeline(struct ncclTuningInput_t* const inputs,
                                                                  struct ncclTuningResult_t* tuning,
-                                                                 struct ncclTuningPipeline* pipeline /*output*/) {
+                                                                 struct ncclTuningPipeline* pipeline /*output*/) { /* 中文索引·体内调用 ncclTuningPreComputePipeline。 */
   NCCLCHECK(ncclTuningPreComputePipeline(inputs, tuning, pipeline));
 
   // Counts the number of slices transferred through a link.
@@ -118,7 +118,7 @@ static inline ncclResult_t ncclTuningPipelineNVLSComputePipeline(struct ncclTuni
 }
 
 ncclResult_t ncclTuningPipelineNvlsModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                             struct ncclTuningModelState* internal) {
+                                             struct ncclTuningModelState* internal) { /* 中文索引·体内调用 memset、ncclTuningExpandId。 */
   if (internal == nullptr) return ncclInvalidArgument;
 
   if (!comm->nvlsSupport) {
@@ -178,7 +178,7 @@ ncclResult_t ncclTuningPipelineNvlsModelInit(struct ncclComm* comm, int id, int 
 }
 
 ncclResult_t ncclTuningPipelineNvlsTreeModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                                 struct ncclTuningModelState* internal) {
+                                                 struct ncclTuningModelState* internal) { /* 中文索引·体内调用 memset、ncclTuningExpandId。 */
   if (internal == nullptr) return ncclInvalidArgument;
 
   if (!comm->nvlsSupport) {

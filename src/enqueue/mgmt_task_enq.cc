@@ -9,7 +9,7 @@
 #include "debug.h"
 
 ncclResult_t ncclMgmtTaskEnqueue(struct ncclAsyncJob* task, ncclResult_t (*func)(struct ncclAsyncJob*),
-                                 void (*destructor)(void*), ncclComm_t comm) {
+                                 void (*destructor)(void*), ncclComm_t comm) { /* 中文索引·体内调用 ncclGroupCommJoin、ncclIntruQueueEnqueue。 */
   ncclResult_t ret = ncclSuccess;
 
   task->destroyFlag = comm->destroyFlag;

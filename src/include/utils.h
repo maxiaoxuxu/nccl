@@ -68,7 +68,7 @@ inline uint64_t clockNano() {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 }
 
-inline void clockRealtime(struct timespec* ts) {
+inline void clockRealtime(struct timespec* ts) { /* 中文索引·体内调用 system_clock::now、secs.time_since_epoch。 */
   using namespace std::chrono;
   auto now = system_clock::now();
   auto secs = time_point_cast<seconds>(now);
@@ -77,7 +77,7 @@ inline void clockRealtime(struct timespec* ts) {
 }
 
 /* get any bytes of random data from system RNG, return ncclSuccess (0) if it succeeds. */
-inline ncclResult_t getRandomData(void* buffer, size_t bytes) {
+inline ncclResult_t getRandomData(void* buffer, size_t bytes) { /* 中文索引·体内调用 rd、e.what。 */
   if (bytes > 0) {
     if (buffer == NULL) {
       WARN("getRandomData: buffer is NULL");
@@ -265,7 +265,7 @@ inline void ncclMemoryStackConstruct(struct ncclMemoryStack* me) {
   me->topFrame.below = nullptr;
 }
 
-inline void* ncclMemoryStack::allocate(struct ncclMemoryStack* me, size_t size, size_t align) {
+inline void* ncclMemoryStack::allocate(struct ncclMemoryStack* me, size_t size, size_t align) { /* 中文索引·体内调用 uintptr_t、allocateSpilled。 */
   uintptr_t o = (me->topFrame.bumper + align - 1) & ~(uintptr_t(align) - 1);
   void* obj;
   if (COMPILER_EXPECT(o + size <= me->topFrame.end, true)) {
@@ -277,21 +277,21 @@ inline void* ncclMemoryStack::allocate(struct ncclMemoryStack* me, size_t size, 
   return obj;
 }
 
-inline void* ncclMemoryStackAlloc(struct ncclMemoryStack* me, size_t size, size_t align) {
+inline void* ncclMemoryStackAlloc(struct ncclMemoryStack* me, size_t size, size_t align) { /* 中文索引·体内调用 ncclMemoryStack::allocate、memset。 */
   void* obj = ncclMemoryStack::allocate(me, size, align);
   memset(obj, 0, size);
   return obj;
 }
 
 template <typename T>
-inline T* ncclMemoryStackAlloc(struct ncclMemoryStack* me, size_t n) {
+inline T* ncclMemoryStackAlloc(struct ncclMemoryStack* me, size_t n) { /* 中文索引·体内调用 ncclMemoryStack::allocate、memset。 */
   void* obj = ncclMemoryStack::allocate(me, n * sizeof(T), alignof(T));
   memset(obj, 0, n * sizeof(T));
   return (T*)obj;
 }
 
 template <typename Header, typename Element>
-inline Header* ncclMemoryStackAllocInlineArray(struct ncclMemoryStack* me, size_t nElt) {
+inline Header* ncclMemoryStackAllocInlineArray(struct ncclMemoryStack* me, size_t nElt) { /* 中文索引·体内调用 ncclMemoryStack::allocate、memset。 */
   size_t size = sizeof(Header);
   size = (size + alignof(Element) - 1) & -alignof(Element);
   size += nElt * sizeof(Element);
@@ -301,7 +301,7 @@ inline Header* ncclMemoryStackAllocInlineArray(struct ncclMemoryStack* me, size_
   return (Header*)obj;
 }
 
-inline void ncclMemoryStackPush(struct ncclMemoryStack* me) {
+inline void ncclMemoryStackPush(struct ncclMemoryStack* me) { /* 中文索引·体内调用 ncclMemoryStack::allocate。 */
   using Frame = ncclMemoryStack::Frame;
   Frame tmp = me->topFrame;
   Frame* snapshot = (Frame*)ncclMemoryStack::allocate(me, sizeof(Frame), alignof(Frame));
@@ -310,7 +310,7 @@ inline void ncclMemoryStackPush(struct ncclMemoryStack* me) {
   me->topFrame.below = snapshot;
 }
 
-inline void ncclMemoryStackPop(struct ncclMemoryStack* me) {
+inline void ncclMemoryStackPop(struct ncclMemoryStack* me) { /* 中文索引·体内调用 free。 */
   ncclMemoryStack::Unhunk* un = me->topFrame.unhunks;
   while (un != nullptr) {
     free(un->obj);
@@ -334,7 +334,7 @@ inline void ncclMemoryPoolConstruct(struct ncclMemoryPool* me) {
 }
 
 template <typename T>
-inline T* ncclMemoryPoolAlloc(struct ncclMemoryPool* me, struct ncclMemoryStack* backing) {
+inline T* ncclMemoryPoolAlloc(struct ncclMemoryPool* me, struct ncclMemoryStack* backing) { /* 中文索引·体内调用 ncclMemoryStack::allocate、memset。 */
   using Cell = ncclMemoryPool::Cell;
   Cell* cell;
   if (COMPILER_EXPECT(me->head != nullptr, true)) {
@@ -417,7 +417,7 @@ inline void ncclIntruQueueEnqueueFront(ncclIntruQueue<T, next>* me, T* x) {
 // Insert x before the first element for which less(element, x) is false; a queue built
 // solely from such inserts stays sorted by less.
 template <typename T, T* T::* next>
-inline void ncclIntruQueueInsertSorted(ncclIntruQueue<T, next>* me, T* x, bool (*less)(T*, T*)) {
+inline void ncclIntruQueueInsertSorted(ncclIntruQueue<T, next>* me, T* x, bool (*less)(T*, T*)) { /* 中文索引·体内调用 less。 */
   T* prev = nullptr;
   T* cur = me->head;
   while (cur && less(cur, x)) {
@@ -455,7 +455,7 @@ inline T* ncclIntruQueueDequeue(ncclIntruQueue<T, next>* me) {
 }
 
 template <typename T, T* T::* next>
-inline T* ncclIntruQueueDelete(ncclIntruQueue<T, next>* me, T* x, bool (*cmp)(T*, T*)) {
+inline T* ncclIntruQueueDelete(ncclIntruQueue<T, next>* me, T* x, bool (*cmp)(T*, T*)) { /* 中文索引·体内调用 cmp。 */
   T* prev = nullptr;
   T* cur = me->head;
   bool found = false;
@@ -521,7 +521,7 @@ bool ncclIntruQueueMpscEmpty(struct ncclIntruQueueMpsc<T, next>* me) {
 }
 
 template <typename T, T* T::* next>
-bool ncclIntruQueueMpscEnqueue(ncclIntruQueueMpsc<T, next>* me, T* x) {
+bool ncclIntruQueueMpscEnqueue(ncclIntruQueueMpsc<T, next>* me, T* x) { /* 中文索引·体内调用 std::atomic_thread_fence、waiting->cond.notify_all。 */
   COMPILER_ATOMIC_STORE(&(x->*next), static_cast<T*>(nullptr), std::memory_order_relaxed);
   uintptr_t utail = COMPILER_ATOMIC_EXCHANGE(&me->tail, reinterpret_cast<uintptr_t>(x), std::memory_order_acq_rel);
   T* prev = reinterpret_cast<T*>(utail);
@@ -542,7 +542,7 @@ bool ncclIntruQueueMpscEnqueue(ncclIntruQueueMpsc<T, next>* me, T* x) {
 }
 
 template <typename T, T* T::* next>
-T* ncclIntruQueueMpscDequeueAll(ncclIntruQueueMpsc<T, next>* me, bool waitSome) {
+T* ncclIntruQueueMpscDequeueAll(ncclIntruQueueMpsc<T, next>* me, bool waitSome) { /* 中文索引·体内调用 clockNano、waitSignal->cond.wait。 */
   T* head = COMPILER_ATOMIC_LOAD(&me->head, std::memory_order_relaxed);
   if (head == nullptr) {
     if (!waitSome) return nullptr;
@@ -587,7 +587,7 @@ T* ncclIntruQueueMpscDequeueAll(ncclIntruQueueMpsc<T, next>* me, bool waitSome) 
 }
 
 template <typename T, T* T::* next>
-T* ncclIntruQueueMpscAbandon(ncclIntruQueueMpsc<T, next>* me) {
+T* ncclIntruQueueMpscAbandon(ncclIntruQueueMpsc<T, next>* me) { /* 中文索引·体内调用 uintptr_t、std::this_thread::yield。 */
   uintptr_t expected = 0x0;
   if (COMPILER_ATOMIC_COMPARE_EXCHANGE(&me->tail, &expected, /*desired=*/uintptr_t(0x2), std::memory_order_relaxed,
                                        std::memory_order_relaxed)) {
@@ -698,7 +698,7 @@ struct ncclIntruAddressMap {
 // Note: Map auto-cleans when last entry is removed, so this is only needed
 // if abandoning a non-empty map to avoid leaking the bucket table.
 template <typename Obj, typename Key, Key Obj::* keyField, Obj* Obj::* nextField>
-static inline void ncclIntruAddressMapDestruct(struct ncclIntruAddressMap<Obj, Key, keyField, nextField>* map) {
+static inline void ncclIntruAddressMapDestruct(struct ncclIntruAddressMap<Obj, Key, keyField, nextField>* map) { /* 中文索引·体内调用 free。 */
   if (map->base.table != nullptr) {
     free(map->base.table);
     map->base.table = nullptr;
@@ -720,7 +720,7 @@ ncclResult_t ncclIntruAddressMapRemove_untyped(struct ncclIntruAddressMap_untype
 // Typed template implementations (type-erasing wrappers)
 template <typename Obj, typename Key, Key Obj::* keyField, Obj* Obj::* nextField>
 static inline ncclResult_t ncclIntruAddressMapInsert(struct ncclIntruAddressMap<Obj, Key, keyField, nextField>* map,
-                                                     Key key, Obj* object) {
+                                                     Key key, Obj* object) { /* 中文索引·体内调用 ncclIntruAddressMapInsert_untyped。 */
   Obj dummy;
   // Using offsetof macro would be better except it won't work with non-C types,
   // like those that involve inheritance.
@@ -732,7 +732,7 @@ static inline ncclResult_t ncclIntruAddressMapInsert(struct ncclIntruAddressMap<
 
 template <typename Obj, typename Key, Key Obj::* keyField, Obj* Obj::* nextField>
 static inline ncclResult_t ncclIntruAddressMapFind(struct ncclIntruAddressMap<Obj, Key, keyField, nextField>* map,
-                                                   Key key, Obj** object) {
+                                                   Key key, Obj** object) { /* 中文索引·体内调用 ncclIntruAddressMapFind_untyped。 */
   Obj dummy;
   int keyFieldOffset = (char*)&(dummy.*keyField) - (char*)&dummy;
   int nextFieldOffset = (char*)&(dummy.*nextField) - (char*)&dummy;
@@ -745,7 +745,7 @@ static inline ncclResult_t ncclIntruAddressMapFind(struct ncclIntruAddressMap<Ob
 
 template <typename Obj, typename Key, Key Obj::* keyField, Obj* Obj::* nextField>
 static inline ncclResult_t ncclIntruAddressMapRemove(struct ncclIntruAddressMap<Obj, Key, keyField, nextField>* map,
-                                                     Key key) {
+                                                     Key key) { /* 中文索引·体内调用 ncclIntruAddressMapRemove_untyped。 */
   Obj dummy;
   int keyFieldOffset = (char*)&(dummy.*keyField) - (char*)&dummy;
   int nextFieldOffset = (char*)&(dummy.*nextField) - (char*)&dummy;
@@ -753,7 +753,7 @@ static inline ncclResult_t ncclIntruAddressMapRemove(struct ncclIntruAddressMap<
                                            reinterpret_cast<uintptr_t>(key));
 }
 
-inline ncclResult_t ncclThreadJoin(std::thread& thread) {
+inline ncclResult_t ncclThreadJoin(std::thread& thread) { /* 中文索引·体内调用 thread.join、e.what。 */
   try {
     thread.join();
     return ncclSuccess;

@@ -23,7 +23,7 @@ ncclResult_t ncclRegLocalIsValid(struct ncclReg* reg, bool* isValid) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclRegister(struct ncclComm* comm, void* data, size_t size, bool isGraph, void** handle) {
+ncclResult_t ncclRegister(struct ncclComm* comm, void* data, size_t size, bool isGraph, void** handle) { /* 中文索引·体内调用 CommCheck、CudaPtrCheck。 */
   NCCLCHECK(CommCheck(comm, "ncclCommRegister", "comm"));
 
   *handle = NULL;
@@ -94,7 +94,7 @@ exit:
   return ncclSuccess;
 }
 
-static ncclResult_t regCleanup(struct ncclComm* comm, struct ncclReg* reg) {
+static ncclResult_t regCleanup(struct ncclComm* comm, struct ncclReg* reg) { /* 中文索引·体内调用 ncclNetDeregBuffer、free。 */
   if (reg->state & NET_REG_COMPLETE) {
     struct ncclRegNetHandles* netHandle = reg->netHandleHead;
     struct ncclRegNetHandles* netHandlePrev;
@@ -135,7 +135,7 @@ static ncclResult_t regCleanup(struct ncclComm* comm, struct ncclReg* reg) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclRegCleanup(struct ncclComm* comm) {
+ncclResult_t ncclRegCleanup(struct ncclComm* comm) { /* 中文索引·体内调用 regCleanup、free。 */
   struct ncclRegCache* cache = &comm->regCache;
   for (int i = 0; i < cache->population; i++) {
     struct ncclReg* reg = cache->slots[i];
@@ -149,7 +149,7 @@ ncclResult_t ncclRegCleanup(struct ncclComm* comm) {
 }
 
 NCCL_API(ncclResult_t, ncclCommRegister, const ncclComm_t comm, void* buff, size_t size, void** handle);
-ncclResult_t ncclCommRegister(const ncclComm_t comm, void* buff, size_t size, void** handle) {
+ncclResult_t ncclCommRegister(const ncclComm_t comm, void* buff, size_t size, void** handle) { /* 中文索引·体内调用 PtrCheck、ncclParamLocalRegister。 */
   NCCLCHECK(PtrCheck(handle, "ncclCommRegister", "handle"));
 
   if (!ncclParamLocalRegister() || ncclP2pUsesMemcpy()) {
@@ -162,7 +162,7 @@ ncclResult_t ncclCommRegister(const ncclComm_t comm, void* buff, size_t size, vo
   return ncclSuccess;
 }
 
-ncclResult_t ncclCommGraphRegister(const ncclComm_t comm, void* buff, size_t size, void** handle) {
+ncclResult_t ncclCommGraphRegister(const ncclComm_t comm, void* buff, size_t size, void** handle) { /* 中文索引·体内调用 PtrCheck、ncclP2pUsesMemcpy。 */
   NCCLCHECK(PtrCheck(handle, "ncclCommGraphRegister", "handle"));
 
   if (ncclP2pUsesMemcpy()) {
@@ -175,7 +175,7 @@ ncclResult_t ncclCommGraphRegister(const ncclComm_t comm, void* buff, size_t siz
   return ncclSuccess;
 }
 
-static ncclResult_t commDeregister(struct ncclComm* comm, bool isGraph, struct ncclReg* reg) {
+static ncclResult_t commDeregister(struct ncclComm* comm, bool isGraph, struct ncclReg* reg) { /* 中文索引·体内调用 CommCheck、cudaGetDevice。 */
   NCCLCHECK(CommCheck(comm, "ncclCommRegister", "comm"));
   struct ncclRegCache* cache = &comm->regCache;
   int slot;

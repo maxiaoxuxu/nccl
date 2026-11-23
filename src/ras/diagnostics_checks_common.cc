@@ -23,7 +23,7 @@
 
 // Matches a known verbs plugin name (InfiniBand or RoCE) exactly or followed by a delimiter, rejecting
 // prefix-sharing names. Only these plugins name their devices the way sysfs does.
-static bool rasDiagnosticsNetPluginSupported(const char* name) {
+static bool rasDiagnosticsNetPluginSupported(const char* name) { /* 中文索引·体内调用 strlen、strncmp。 */
   static const char* const kPluginNames[] = {"IB", "IBext", "SPCX", "NCCL RDMA Plugin"};
   if (name == nullptr) return false;
   for (const char* plugin : kPluginNames) {
@@ -33,7 +33,7 @@ static bool rasDiagnosticsNetPluginSupported(const char* name) {
   return false;
 }
 
-void rasDiagnosticsCommSnapshotInit(struct rasDiagnosticsCommSnapshot* snapshot, const struct ncclComm* comm) {
+void rasDiagnosticsCommSnapshotInit(struct rasDiagnosticsCommSnapshot* snapshot, const struct ncclComm* comm) { /* 中文索引·体内调用 rasDiagnosticsNetPluginSupported。 */
   snapshot->rank.commId.commHash = comm->commHash;
   snapshot->rank.commId.hostHash = comm->peerInfo[0].hostHash;
   snapshot->rank.commId.pidHash = comm->peerInfo[0].pidHash;
@@ -56,7 +56,7 @@ int rasDiagnosticsCommIdCompare(const struct rasCommId* id1, const struct rasCom
   return (id1->pidHash < id2->pidHash ? -1 : (id1->pidHash > id2->pidHash ? 1 : 0));
 }
 
-bool rasDiagnosticsCommMatchesContext(const struct rasDiagnosticsContext* ctx, const struct ncclComm* comm) {
+bool rasDiagnosticsCommMatchesContext(const struct rasDiagnosticsContext* ctx, const struct ncclComm* comm) { /* 中文索引·体内调用 rasDiagnosticsCommIdCompare。 */
   struct rasCommId commId;
 
   if (!ctx->hasCommFilter) return true;
@@ -74,7 +74,7 @@ size_t rasDiagnosticsLocalRecordStride(size_t checkDataSize) {
 }
 
 static ncclResult_t rasDiagnosticsFillLocalRecord(char* record, const struct rasDiagnosticsCommSnapshot* snapshot,
-                                                  rasDiagnosticsFillLocalDataFn fillCheckData) {
+                                                  rasDiagnosticsFillLocalDataFn fillCheckData) { /* 中文索引·体内调用 memcpy、fillCheckData。 */
   memcpy(record, &snapshot->rank, sizeof(snapshot->rank));
 
   NCCLCHECK(fillCheckData(snapshot, record + sizeof(struct rasDiagnosticsRankHeader)));
@@ -94,7 +94,7 @@ static void rasDiagnosticsNetApplyLiveSpeed(struct rasDiagnosticsCommSnapshot* s
 }
 
 ncclResult_t rasDiagnosticsCollectCommSnapshots(const struct rasDiagnosticsContext* ctx, bool collectNetDevices,
-                                                struct rasDiagnosticsCommSnapshot** snapshots, int* nSnapshots) {
+                                                struct rasDiagnosticsCommSnapshot** snapshots, int* nSnapshots) { /* 中文索引·体内调用 rasDiagnosticsCommMatchesContext、ncclCalloc。 */
   ncclUniquePtr<struct rasDiagnosticsCommSnapshot> result;
 
   *snapshots = nullptr;
@@ -127,7 +127,7 @@ ncclResult_t rasDiagnosticsCollectCommSnapshots(const struct rasDiagnosticsConte
   return ncclSuccess;
 }
 
-void rasDiagnosticsFreeCommSnapshots(struct rasDiagnosticsCommSnapshot* snapshots, int nSnapshots) {
+void rasDiagnosticsFreeCommSnapshots(struct rasDiagnosticsCommSnapshot* snapshots, int nSnapshots) { /* 中文索引·体内调用 free。 */
   if (snapshots == nullptr) return;
   for (int i = 0; i < nSnapshots; i++) {
     free(snapshots[i].netProps);
@@ -137,7 +137,7 @@ void rasDiagnosticsFreeCommSnapshots(struct rasDiagnosticsCommSnapshot* snapshot
 
 ncclResult_t rasDiagnosticsCollectLocalRecords(const struct rasDiagnosticsContext* ctx, size_t checkDataSize,
                                                rasDiagnosticsFillLocalDataFn fillCheckData,
-                                               struct rasDiagnosticsLocalData* data) {
+                                               struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 memset、rasDiagnosticsLocalRecordStride。 */
   ncclResult_t ret = ncclSuccess;
   struct rasDiagnosticsCommSnapshot* snapshotData = nullptr;
   ncclUniquePtr<char> records;
@@ -198,7 +198,7 @@ const struct rasDiagnosticsRankHeader* rasDiagnosticsRankHeaderFromRecord(const 
 }
 
 // Orders records by comm, then rank; depends only on the rank header, so all checks share it.
-int rasDiagnosticsRankHeaderCompare(const void* p1, const void* p2) {
+int rasDiagnosticsRankHeaderCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 rasDiagnosticsCommIdCompare。 */
   const struct rasDiagnosticsRankHeader* r1 = (const struct rasDiagnosticsRankHeader*)p1;
   const struct rasDiagnosticsRankHeader* r2 = (const struct rasDiagnosticsRankHeader*)p2;
   int cmp = rasDiagnosticsCommIdCompare(&r1->commId, &r2->commId);
@@ -207,7 +207,7 @@ int rasDiagnosticsRankHeaderCompare(const void* p1, const void* p2) {
   return (r1->commRank < r2->commRank ? -1 : (r1->commRank > r2->commRank ? 1 : 0));
 }
 
-void rasDiagnosticsFormatRankSet(char* buf, size_t bufLen, const int* ranks, int nStored, int nTotal) {
+void rasDiagnosticsFormatRankSet(char* buf, size_t bufLen, const int* ranks, int nStored, int nTotal) { /* 中文索引·体内调用 snprintf。 */
   int show = nStored < RAS_DIAG_RANK_SET_MAX ? nStored : RAS_DIAG_RANK_SET_MAX;
   int pos = snprintf(buf, bufLen, "{");
 
@@ -221,7 +221,7 @@ void rasDiagnosticsFormatRankSet(char* buf, size_t bufLen, const int* ranks, int
 }
 
 ncclResult_t rasDiagnosticsReport(const struct rasDiagnosticsReporter* reporter, const char* tag, const char* fmt,
-                                  ...) {
+                                  ...) { /* 中文索引·体内调用 snprintf、va_start。 */
   char line[1024];
   int pos = snprintf(line, sizeof(line), "%s", tag);
   if (pos < 0 || (size_t)pos >= sizeof(line)) {
@@ -237,7 +237,7 @@ ncclResult_t rasDiagnosticsReport(const struct rasDiagnosticsReporter* reporter,
 }
 
 ncclResult_t rasDiagnosticsReportIncomplete(const struct rasDiagnosticsReporter* reporter, const char* checkName,
-                                            const struct rasDiagnosticsRankHeader* rank, int gatheredRanks) {
+                                            const struct rasDiagnosticsRankHeader* rank, int gatheredRanks) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO,
                               "%s: diagnostics incomplete, gathered %d/%d ranks in comm 0x%lx/0x%lx/0x%lx", checkName,
                               gatheredRanks, rank->commNRanks, rank->commId.commHash, rank->commId.hostHash,
@@ -245,7 +245,7 @@ ncclResult_t rasDiagnosticsReportIncomplete(const struct rasDiagnosticsReporter*
 }
 
 ncclResult_t rasDiagnosticsReportTopologyNotReady(const struct rasDiagnosticsReporter* reporter, const char* checkName,
-                                                  const struct rasDiagnosticsRankHeader* rank, int unavailableRanks) {
+                                                  const struct rasDiagnosticsRankHeader* rank, int unavailableRanks) { /* 中文索引·体内调用 rasDiagnosticsReport。 */
   return rasDiagnosticsReport(reporter, RAS_DIAG_TAG_INFO,
                               "%s: incomplete for comm 0x%lx: topology-dependent data was unavailable for %d of %d "
                               "ranks",

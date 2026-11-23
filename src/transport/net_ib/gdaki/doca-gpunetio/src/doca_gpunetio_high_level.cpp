@@ -57,7 +57,7 @@
 #define RCV_WQE_SIZE (MAX_RECEIVE_SEGS * 16)
 
 #define RQ_MIN_WQE_NUM (WQEBB_SIZE / RCV_WQE_SIZE)
-static size_t priv_get_page_size() {
+static size_t priv_get_page_size() { /* 中文索引·体内调用 sysconf。 */
     auto ret = sysconf(_SC_PAGESIZE);
     if (ret == -1) return 4096;  // 4KB, default Linux page size
 
@@ -84,7 +84,7 @@ static enum doca_gpu_dev_verbs_cq_type resolve_cq_type(
                                       : DOCA_GPUNETIO_VERBS_CQ_64B;
 }
 
-static doca_error_t validate_cq_type(const struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr) {
+static doca_error_t validate_cq_type(const struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr) { /* 中文索引·体内调用 cq_type_is_collapsed。 */
     switch (qp_init_attr->cq_type) {
         case DOCA_GPUNETIO_VERBS_CQ_UNKNOWN:
         case DOCA_GPUNETIO_VERBS_CQ_64B:
@@ -105,7 +105,7 @@ static doca_error_t validate_cq_type(const struct doca_gpu_verbs_qp_init_attr_hl
 }
 
 static doca_error_t validate_rq_attr(const struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr,
-                                     uint32_t *rq_nwqe_out) {
+                                     uint32_t *rq_nwqe_out) { /* 中文索引·体内调用 doca_internal_utils_next_power_of_two、doca_gpu_gdrcopy_is_supported。 */
     *rq_nwqe_out = 0;
     if (qp_init_attr->rq_nwqe == 0) return DOCA_SUCCESS;
 
@@ -138,7 +138,7 @@ static doca_error_t validate_rq_attr(const struct doca_gpu_verbs_qp_init_attr_hl
 }
 
 static doca_error_t create_uar(doca_dev_t *net_dev, enum doca_gpu_dev_verbs_nic_handler nic_handler,
-                               bool prefer_nc_uar, doca_verbs_uar_t **external_uar) {
+                               bool prefer_nc_uar, doca_verbs_uar_t **external_uar) { /* 中文索引·体内调用 doca_verbs_uar_create、uar_type_to_str。 */
     doca_error_t status = DOCA_SUCCESS;
     enum doca_verbs_uar_allocation_type uar_type =
         DOCA_VERBS_UAR_ALLOCATION_TYPE_NONCACHE_DEDICATED;
@@ -192,7 +192,7 @@ out:
 
 static doca_error_t create_gpu_umem(doca_gpu_t *gpu_dev, doca_dev_t *net_dev,
                                     enum doca_gpu_verbs_mem_reg_type mreg_type, size_t umem_sz,
-                                    void *umem_ptr, doca_verbs_umem_t **umem) {
+                                    void *umem_ptr, doca_verbs_umem_t **umem) { /* 中文索引·体内调用 doca_gpu_get_dmabuf_fd、doca_verbs_umem_create。 */
     doca_error_t status;
     int dmabuf_fd = DOCA_VERBS_DMABUF_INVALID_FD;
 
@@ -256,7 +256,7 @@ destroy_resources:
     return status;
 }
 
-static uint32_t calc_cq_external_umem_size(uint32_t queue_size, uint32_t dbr_size) {
+static uint32_t calc_cq_external_umem_size(uint32_t queue_size, uint32_t dbr_size) { /* 中文索引·体内调用 align_up_uint32、priv_get_page_size。 */
     uint32_t cqe_buf_size = 0;
 
     if (queue_size != 0)
@@ -276,7 +276,7 @@ static void mlx5_init_cqes(struct doca_gpunetio_ib_mlx5_cqe64 *cqes, uint32_t nb
 static doca_error_t create_umem_hl(doca_gpu_t *gpu_dev, doca_dev_t *net_dev,
                                    enum doca_gpu_verbs_mem_reg_type mreg_type, size_t size,
                                    bool is_host_mem, enum doca_gpu_mem_type mem_type,
-                                   struct doca_gpu_verbs_umem_hl **out_umem) {
+                                   struct doca_gpu_verbs_umem_hl **out_umem) { /* 中文索引·体内调用 calloc、posix_memalign。 */
     doca_error_t status = DOCA_SUCCESS;
     struct doca_gpu_verbs_umem_hl *umem_hl = NULL;
     enum doca_gpu_verbs_mem_reg_type reg_type = mreg_type;
@@ -338,7 +338,7 @@ static doca_error_t create_umem_hl(doca_gpu_t *gpu_dev, doca_dev_t *net_dev,
     return DOCA_SUCCESS;
 }
 
-static void destroy_umem_hl(doca_gpu_t *gpu_dev, struct doca_gpu_verbs_umem_hl *umem_hl) {
+static void destroy_umem_hl(doca_gpu_t *gpu_dev, struct doca_gpu_verbs_umem_hl *umem_hl) { /* 中文索引·体内调用 doca_verbs_umem_destroy、free。 */
     if (umem_hl == NULL) return;
 
     if (umem_hl->umem != NULL) {
@@ -385,7 +385,7 @@ static doca_error_t create_cq(doca_gpu_t *gpu_dev, doca_dev_t *net_dev, struct i
                               bool enable_umem_cpu, doca_verbs_comp_channel_t *comp_channel,
                               doca_verbs_cq_t **verbs_cq,
                               struct doca_gpu_verbs_umem_hl *shared_cq_umem = NULL,
-                              struct doca_gpu_verbs_umem_hl *shared_cq_dbr_umem = NULL) {
+                              struct doca_gpu_verbs_umem_hl *shared_cq_dbr_umem = NULL) { /* 中文索引·体内调用 doca_verbs_cq_attr_create、align_up_uint32。 */
     doca_error_t status = DOCA_SUCCESS, tmp_status = DOCA_SUCCESS;
     cudaError_t status_cuda = cudaSuccess;
     doca_verbs_cq_attr_t *verbs_cq_attr = NULL;
@@ -633,7 +633,7 @@ static doca_error_t create_host_cq(doca_gpu_t *gpu_dev, doca_dev_t *net_dev, uin
                                    void **umem_cpu_ptr, doca_verbs_umem_t **host_umem,
                                    doca_verbs_cq_t **verbs_cq,
                                    struct doca_gpu_verbs_umem_hl *shared_cq_umem = NULL,
-                                   struct doca_gpu_verbs_umem_hl *shared_cq_dbr_umem = NULL) {
+                                   struct doca_gpu_verbs_umem_hl *shared_cq_dbr_umem = NULL) { /* 中文索引·体内调用 calc_cq_external_umem_size、doca_verbs_cq_attr_create。 */
     doca_error_t status = DOCA_SUCCESS;
     doca_error_t tmp_status = DOCA_SUCCESS;
     doca_verbs_cq_attr_t *verbs_cq_attr = nullptr;
@@ -796,7 +796,7 @@ destroy_resources:
     return status;
 }
 
-static uint32_t calc_qp_external_umem_size(uint32_t sq_nwqes, uint32_t rq_nwqes) {
+static uint32_t calc_qp_external_umem_size(uint32_t sq_nwqes, uint32_t rq_nwqes) { /* 中文索引·体内调用 align_up_uint32、priv_get_page_size。 */
     uint32_t ring_size = (uint32_t)(sq_nwqes * sizeof(struct doca_gpu_dev_verbs_wqe));
     ring_size += align_up_uint32(rq_nwqes * RCV_WQE_SIZE, WQEBB_SIZE);
 
@@ -813,7 +813,7 @@ static doca_error_t create_qp(
     enum doca_verbs_qp_ordering_semantic ordering_semantic, bool enable_umem_cpu,
     doca_verbs_qp_t **verbs_qp, enum doca_gpu_dev_verbs_nic_handler *out_nic_handler,
     struct doca_gpu_verbs_umem_hl *shared_sq_umem = NULL,
-    struct doca_gpu_verbs_umem_hl *shared_sq_dbr_umem = NULL) {
+    struct doca_gpu_verbs_umem_hl *shared_sq_dbr_umem = NULL) { /* 中文索引·体内调用 align_up_uint32、priv_get_page_size。 */
     doca_error_t status = DOCA_SUCCESS, tmp_status = DOCA_SUCCESS;
     doca_verbs_qp_init_attr_t *qp_init_attr = nullptr;
     doca_verbs_qp_t *new_qp = nullptr;
@@ -1143,7 +1143,7 @@ destroy_resources:
     return status;
 }
 
-static doca_error_t doca_gpu_verbs_destroy_qp_hl_internal(struct doca_gpu_verbs_qp_hl *qp) {
+static doca_error_t doca_gpu_verbs_destroy_qp_hl_internal(struct doca_gpu_verbs_qp_hl *qp) { /* 中文索引·体内调用 doca_gpu_verbs_unexport_qp、doca_verbs_qp_destroy。 */
     doca_error_t status;
 
     if (qp == nullptr) return DOCA_ERROR_INVALID_VALUE;
@@ -1228,7 +1228,7 @@ static doca_error_t doca_gpu_verbs_destroy_qp_hl_internal(struct doca_gpu_verbs_
 }
 
 doca_error_t doca_gpu_verbs_create_qp_hl(struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr,
-                                         struct doca_gpu_verbs_qp_hl **qp) {
+                                         struct doca_gpu_verbs_qp_hl **qp) { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、validate_cq_type。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (qp_init_attr == nullptr || qp == nullptr) {
@@ -1381,7 +1381,7 @@ exit_error:
     return status;
 }
 
-doca_error_t doca_gpu_verbs_destroy_qp_hl(struct doca_gpu_verbs_qp_hl *qp) {
+doca_error_t doca_gpu_verbs_destroy_qp_hl(struct doca_gpu_verbs_qp_hl *qp) { /* 中文索引·体内调用 doca_gpu_verbs_destroy_qp_hl_internal、free。 */
     if (qp == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     if (qp->qp_gverbs != nullptr && qp->qp_gverbs->monitored_by) {
@@ -1398,7 +1398,7 @@ doca_error_t doca_gpu_verbs_destroy_qp_hl(struct doca_gpu_verbs_qp_hl *qp) {
 }
 
 doca_error_t doca_gpu_verbs_create_qp_group_hl(struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr,
-                                               struct doca_gpu_verbs_qp_group_hl **qpg) {
+                                               struct doca_gpu_verbs_qp_group_hl **qpg) { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、validate_cq_type。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (qp_init_attr == nullptr || qpg == nullptr) {
@@ -1621,7 +1621,7 @@ static bool qp_hl_is_monitored(const struct doca_gpu_verbs_qp_hl *qp) {
     return qp->qp_gverbs != nullptr && qp->qp_gverbs->monitored_by;
 }
 
-doca_error_t doca_gpu_verbs_destroy_qp_group_hl(struct doca_gpu_verbs_qp_group_hl *qpg) {
+doca_error_t doca_gpu_verbs_destroy_qp_group_hl(struct doca_gpu_verbs_qp_group_hl *qpg) { /* 中文索引·体内调用 qp_hl_is_monitored、doca_gpu_verbs_destroy_qp_hl_internal。 */
     if (qpg == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     if (qp_hl_is_monitored(&qpg->qp_main) || qp_hl_is_monitored(&qpg->qp_companion)) {
@@ -1644,7 +1644,7 @@ doca_error_t doca_gpu_verbs_destroy_qp_group_hl(struct doca_gpu_verbs_qp_group_h
 
 doca_error_t doca_gpu_verbs_qp_flat_list_create_hl(struct doca_gpu_verbs_qp_hl **qp_list,
                                                    uint32_t num_elems,
-                                                   struct doca_gpu_dev_verbs_qp **qp_gpu) {
+                                                   struct doca_gpu_dev_verbs_qp **qp_gpu) { /* 中文索引·体内调用 cudaMalloc、cudaMemcpy。 */
     doca_error_t status = DOCA_SUCCESS;
     cudaError_t error;
     struct doca_gpu_dev_verbs_qp *qp_gpu_;
@@ -1671,7 +1671,7 @@ exit_error:
     return status;
 }
 
-doca_error_t doca_gpu_verbs_qp_flat_list_destroy_hl(struct doca_gpu_dev_verbs_qp *qp_gpu) {
+doca_error_t doca_gpu_verbs_qp_flat_list_destroy_hl(struct doca_gpu_dev_verbs_qp *qp_gpu) { /* 中文索引·体内调用 cudaFree。 */
     if (qp_gpu == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     DOCA_VERBS_CUDA_CALL_CLEAR_ERROR(cudaFree(qp_gpu));
@@ -1680,7 +1680,7 @@ doca_error_t doca_gpu_verbs_qp_flat_list_destroy_hl(struct doca_gpu_dev_verbs_qp
 
 doca_error_t doca_gpu_verbs_create_qp_list_hl(struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr,
                                               uint32_t num_qps,
-                                              struct doca_gpu_verbs_qp_list_hl **qp_list) {
+                                              struct doca_gpu_verbs_qp_list_hl **qp_list) { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、validate_cq_type。 */
     doca_error_t status = DOCA_SUCCESS;
     struct doca_gpu_verbs_qp_list_hl *list = NULL;
     struct doca_gpu_verbs_umem_hl *cq_umem = NULL, *cq_dbr_umem = NULL;
@@ -1928,7 +1928,7 @@ exit_error:
     return status;
 }
 
-doca_error_t doca_gpu_verbs_destroy_qp_list_hl(struct doca_gpu_verbs_qp_list_hl *qp_list) {
+doca_error_t doca_gpu_verbs_destroy_qp_list_hl(struct doca_gpu_verbs_qp_list_hl *qp_list) { /* 中文索引·体内调用 qp_hl_is_monitored、doca_gpu_verbs_destroy_qp_hl_internal。 */
     if (qp_list == NULL) return DOCA_ERROR_INVALID_VALUE;
 
     for (uint32_t i = 0; i < qp_list->num_qps; i++) {
@@ -1967,7 +1967,7 @@ doca_error_t doca_gpu_verbs_destroy_qp_list_hl(struct doca_gpu_verbs_qp_list_hl 
 
 doca_error_t doca_gpu_verbs_create_qp_group_list_hl(
     struct doca_gpu_verbs_qp_init_attr_hl *qp_init_attr, uint32_t num_qp_groups,
-    struct doca_gpu_verbs_qp_group_list_hl **qpg_list) {
+    struct doca_gpu_verbs_qp_group_list_hl **qpg_list) { /* 中文索引·体内调用 doca_gpu_gdrcopy_is_supported、validate_cq_type。 */
     doca_error_t status = DOCA_SUCCESS;
     struct doca_gpu_verbs_qp_group_list_hl *list = NULL;
     struct doca_gpu_verbs_umem_hl *cq_umem = NULL, *cq_dbr_umem = NULL;
@@ -2277,7 +2277,7 @@ exit_error:
 }
 
 doca_error_t doca_gpu_verbs_destroy_qp_group_list_hl(
-    struct doca_gpu_verbs_qp_group_list_hl *qpg_list) {
+    struct doca_gpu_verbs_qp_group_list_hl *qpg_list) { /* 中文索引·体内调用 qp_hl_is_monitored、doca_gpu_verbs_destroy_qp_hl_internal。 */
     if (qpg_list == NULL) return DOCA_ERROR_INVALID_VALUE;
 
     for (uint32_t i = 0; i < qpg_list->num_qp_groups; i++) {

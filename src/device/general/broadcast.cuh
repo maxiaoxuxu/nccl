@@ -10,7 +10,7 @@
 #include "genk.cuh"
 
 template <ncclFlowProtocol Protocol, bool EnableProfiler>
-__device__ __forceinline__ void ncclGenkRun_Broadcast_Ring_Flow(ncclGenkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclGenkRun_Broadcast_Ring_Flow(ncclGenkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclTeamWorld、ncclFlowGetSignalWarpsPerPart。 */
   using ProtocolTraits = ncclGenkProtocolTraits<Protocol>;
   ncclGenkArgsHandler handler{args};
   ncclDevComm const& comm = handler.comm;

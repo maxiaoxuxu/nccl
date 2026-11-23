@@ -43,7 +43,7 @@ static int ncclNdAddressRank(const union ncclSocketAddress* addr) {
 }
 
 // Compare an ND address with a Windows interface address, including IPv6 scope.
-static bool ncclNdSameAddress(const SOCKADDR_INET* lhs, const union ncclSocketAddress* rhs) {
+static bool ncclNdSameAddress(const SOCKADDR_INET* lhs, const union ncclSocketAddress* rhs) { /* 中文索引·体内调用 memcmp。 */
   if (lhs->si_family != rhs->sa.sa_family) return false;
   if (lhs->si_family == AF_INET) {
     return lhs->Ipv4.sin_addr.s_addr == rhs->sin.sin_addr.s_addr;
@@ -56,7 +56,7 @@ static bool ncclNdSameAddress(const SOCKADDR_INET* lhs, const union ncclSocketAd
 }
 
 // Resolve an ND address to its Windows interface row.
-static bool ncclNdGetInterfaceRow(const union ncclSocketAddress* addr, MIB_IF_ROW2* ifRow) {
+static bool ncclNdGetInterfaceRow(const union ncclSocketAddress* addr, MIB_IF_ROW2* ifRow) { /* 中文索引·体内调用 GetUnicastIpAddressTable、ncclNdSameAddress。 */
   MIB_UNICASTIPADDRESS_TABLE* table = NULL;
   if (GetUnicastIpAddressTable(addr->sa.sa_family, &table) != NO_ERROR || table == NULL) return false;
 
@@ -74,7 +74,7 @@ static bool ncclNdGetInterfaceRow(const union ncclSocketAddress* addr, MIB_IF_RO
 }
 
 // Read a network interface GUID from the Windows device registry.
-static bool ncclNdReadNetCfgInstanceId(HDEVINFO deviceSet, SP_DEVINFO_DATA* device, char* value, DWORD valueBytes) {
+static bool ncclNdReadNetCfgInstanceId(HDEVINFO deviceSet, SP_DEVINFO_DATA* device, char* value, DWORD valueBytes) { /* 中文索引·体内调用 SetupDiOpenDevRegKey、RegQueryValueExA。 */
   HKEY key = SetupDiOpenDevRegKey(deviceSet, device, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ);
   if (key == INVALID_HANDLE_VALUE) return false;
   DWORD type = 0;
@@ -88,7 +88,7 @@ static bool ncclNdReadNetCfgInstanceId(HDEVINFO deviceSet, SP_DEVINFO_DATA* devi
 
 // Return a slash-prefixed PCI bus ID path so NCCL's topology loader can use
 // the same bus-id leaf convention on Windows that it uses for Linux sysfs.
-static bool ncclNdGetPciPath(const GUID* interfaceGuid, char* pciPath, size_t pciPathBytes) {
+static bool ncclNdGetPciPath(const GUID* interfaceGuid, char* pciPath, size_t pciPathBytes) { /* 中文索引·体内调用 StringFromGUID2、WideCharToMultiByte。 */
   WCHAR wideGuid[64];
   char guid[64];
   if (StringFromGUID2(*interfaceGuid, wideGuid, (int)(sizeof(wideGuid) / sizeof(wideGuid[0]))) == 0 ||
@@ -131,7 +131,7 @@ static bool ncclNdGetPciPath(const GUID* interfaceGuid, char* pciPath, size_t pc
 
 // Collect link speed, interface identity, and PCI topology for an ND address.
 static bool ncclNdGetWindowsProperties(const union ncclSocketAddress* addr, int* speed, char* pciPath,
-                                       size_t pciPathBytes, char* alias, size_t aliasBytes, UINT64* interfaceLuid) {
+                                       size_t pciPathBytes, char* alias, size_t aliasBytes, UINT64* interfaceLuid) { /* 中文索引·体内调用 ncclNdGetInterfaceRow、WideCharToMultiByte。 */
   MIB_IF_ROW2 ifRow = {};
   if (!ncclNdGetInterfaceRow(addr, &ifRow)) return false;
   if (interfaceLuid != NULL) *interfaceLuid = ifRow.InterfaceLuid.Value;
@@ -156,7 +156,7 @@ static bool ncclNdGetWindowsProperties(const union ncclSocketAddress* addr, int*
 }
 
 // Cache a device link transition and record newly observed failures.
-void ncclNdRecordDeviceInterfaceChange(int devIndex, bool healthy) {
+void ncclNdRecordDeviceInterfaceChange(int devIndex, bool healthy) { /* 中文索引·体内调用 InterlockedExchange、InterlockedExchange64。 */
   if (devIndex < 0 || devIndex >= ncclNNdDevs) return;
   struct ncclNdDev* dev = &ncclNdDevs[devIndex];
   LONG newState = healthy ? 1 : -1;
@@ -173,7 +173,7 @@ void ncclNdRecordDeviceInterfaceChange(int devIndex, bool healthy) {
 }
 
 // Apply a Windows interface transition to each matching physical ND device.
-void ncclNdRecordInterfaceChange(UINT64 interfaceLuid, bool healthy) {
+void ncclNdRecordInterfaceChange(UINT64 interfaceLuid, bool healthy) { /* 中文索引·体内调用 ncclNdRecordDeviceInterfaceChange。 */
   for (int i = 0; i < ncclNNdDevs; i++) {
     if (ncclNdDevs[i].interfaceLuid != 0 && ncclNdDevs[i].interfaceLuid == interfaceLuid)
       ncclNdRecordDeviceInterfaceChange(i, healthy);
@@ -181,7 +181,7 @@ void ncclNdRecordInterfaceChange(UINT64 interfaceLuid, bool healthy) {
 }
 
 // Translate a Windows interface notification into an ND health update.
-static VOID CALLBACK ncclNdInterfaceChangeCallback(PVOID, PMIB_IPINTERFACE_ROW row, MIB_NOTIFICATION_TYPE type) {
+static VOID CALLBACK ncclNdInterfaceChangeCallback(PVOID, PMIB_IPINTERFACE_ROW row, MIB_NOTIFICATION_TYPE type) { /* 中文索引·体内调用 GetIfEntry2、ncclNdRecordInterfaceChange。 */
   if (row == NULL) return;
   bool healthy = false;
   if (type != MibDeleteInstance) {
@@ -194,7 +194,7 @@ static VOID CALLBACK ncclNdInterfaceChangeCallback(PVOID, PMIB_IPINTERFACE_ROW r
 }
 
 // Subscribe once to asynchronous Windows interface changes.
-static ncclResult_t ncclNdStartInterfaceMonitor() {
+static ncclResult_t ncclNdStartInterfaceMonitor() { /* 中文索引·体内调用 NotifyIpInterfaceChange。 */
   if (ncclNdInterfaceNotification != NULL) return ncclSuccess;
   DWORD status =
     NotifyIpInterfaceChange(AF_UNSPEC, ncclNdInterfaceChangeCallback, NULL, FALSE, &ncclNdInterfaceNotification);
@@ -208,7 +208,7 @@ static ncclResult_t ncclNdStartInterfaceMonitor() {
 }
 
 // Cancel the process-wide Windows interface subscription.
-static void ncclNdStopInterfaceMonitor() {
+static void ncclNdStopInterfaceMonitor() { /* 中文索引·体内调用 CancelMibChangeNotify2。 */
   if (ncclNdInterfaceNotification == NULL) return;
   DWORD status = CancelMibChangeNotify2(ncclNdInterfaceNotification);
   if (status != NO_ERROR) WARN("NET/ND : Could not cancel Windows interface monitoring cleanly: %lu", status);
@@ -221,7 +221,7 @@ bool ncclNdInterfaceMonitorActive() {
 }
 
 // Revalidate provider and Windows link state, using a short-lived cache.
-ncclResult_t ncclNdCheckAdapterHealth(int dev, bool* healthy) {
+ncclResult_t ncclNdCheckAdapterHealth(int dev, bool* healthy) { /* 中文索引·体内调用 GetTickCount64、InterlockedCompareExchange。 */
   if (healthy == NULL || dev < 0 || dev >= ncclNNdDevs) return ncclInvalidArgument;
   *healthy = false;
   struct ncclNdDev* ndDev = &ncclNdDevs[dev];
@@ -263,7 +263,7 @@ ncclResult_t ncclNdCheckAdapterHealth(int dev, bool* healthy) {
 }
 
 // Unwind partially initialized global state in reverse ownership order.
-static ncclResult_t ncclNdCleanupInitFailure(ncclResult_t failure) {
+static ncclResult_t ncclNdCleanupInitFailure(ncclResult_t failure) { /* 中文索引·体内调用 ncclNdStopInterfaceMonitor、ncclNdFinalizeMrCache。 */
   ncclNdStopInterfaceMonitor();
   for (int i = 0; i < ncclNNdDevs; i++) {
     struct ncclNdDev* dev = &ncclNdDevs[i];
@@ -282,7 +282,7 @@ static ncclResult_t ncclNdCleanupInitFailure(ncclResult_t failure) {
 }
 
 // Discover and initialize physical ND adapters on the first transport reference.
-static ncclResult_t ncclNdInitDevices() {
+static ncclResult_t ncclNdInitDevices() { /* 中文索引·体内调用 netRefCount.load、netRefCount.fetch_add。 */
   ncclResult_t ret = ncclSuccess;
 
   std::lock_guard<std::mutex> lock(ncclNdMutex);
@@ -527,7 +527,7 @@ static ncclResult_t ncclNdInitDevices() {
 }
 
 // Retain shared device state and allocate one plugin context.
-ncclResult_t ncclNdInit(void** ctx, uint64_t, ncclNetCommConfig_t*, ncclDebugLogger_t, ncclProfilerCallback_t) {
+ncclResult_t ncclNdInit(void** ctx, uint64_t, ncclNetCommConfig_t*, ncclDebugLogger_t, ncclProfilerCallback_t) { /* 中文索引·体内调用 ncclNdInitDevices、ncclCalloc。 */
   NCCLCHECK(ncclNdInitDevices());
 
   ncclNetCommConfig_t* netCommConfig = nullptr;
@@ -549,7 +549,7 @@ ncclResult_t ncclNdDevices(int* ndev) {
 }
 
 // Build NCCL properties for one physical or multi-adapter virtual device.
-ncclResult_t ncclNdGetProperties(int dev, ncclNetProperties_t* props) {
+ncclResult_t ncclNdGetProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 memset、ncclNdGetGpuDirectSupport。 */
   struct ncclNdDev* ndDev;
   struct ncclNdMergedDev* mDev;
 
@@ -624,7 +624,7 @@ ncclResult_t ncclNdGetProperties(int dev, ncclNetProperties_t* props) {
 }
 
 // Validate and create one virtual device from unique physical rails.
-static ncclResult_t ncclNdMakeVDeviceInternal(int* d, ncclNetVDeviceProps_t* props) {
+static ncclResult_t ncclNdMakeVDeviceInternal(int* d, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 strlen、strncat。 */
   if (d == NULL || props == NULL || props->ndevs <= 0 || props->ndevs > NCCL_ND_MAX_DEVS_PER_NIC) {
     WARN("NET/ND : Invalid virtual device size %d (max %d)", props ? props->ndevs : -1, NCCL_ND_MAX_DEVS_PER_NIC);
     return ncclInvalidUsage;
@@ -689,7 +689,7 @@ ncclResult_t ncclNdSetNetAttr(void*, ncclNetAttr_t*) {
 }
 
 // Release process-wide ND state after the final plugin reference.
-ncclResult_t ncclNdFinalizeDevices(void) {
+ncclResult_t ncclNdFinalizeDevices(void) { /* 中文索引·体内调用 netRefCount.load、netRefCount.store。 */
   std::lock_guard<std::mutex> lock(ncclNdMutex);
 
   // Keep global devices alive while another plugin context still references them.

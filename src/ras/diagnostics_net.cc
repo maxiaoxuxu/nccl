@@ -40,7 +40,7 @@ static const char* const kRasDiagNetPhysStates[] = {
 #define RAS_DIAG_NET_PORT_ACTIVE 4
 #define RAS_DIAG_NET_PHYS_LINKUP 5
 
-static void rasDiagnosticsNetFormatProps(char* buffer, size_t size, const struct rasDiagnosticsNetDeviceData* netData) {
+static void rasDiagnosticsNetFormatProps(char* buffer, size_t size, const struct rasDiagnosticsNetDeviceData* netData) { /* 中文索引·体内调用 snprintf。 */
   snprintf(buffer, size, "net device type=%s, speed=%d Mbps, link layer=%s%s, state=%s/%s",
            RAS_DIAG_NET_STR(kRasDiagNetDeviceTypes, netData->netDeviceType), netData->speed,
            RAS_DIAG_NET_STR(kRasDiagNetLinkLayers, netData->linkLayer), netData->dataDirect ? ", Data Direct" : "",
@@ -49,7 +49,7 @@ static void rasDiagnosticsNetFormatProps(char* buffer, size_t size, const struct
 }
 
 // Only single-port devices resolve (to port 1): the plugin's port number does not index sysfs.
-static bool rasDiagnosticsNetHasOnePort(const char* base) {
+static bool rasDiagnosticsNetHasOnePort(const char* base) { /* 中文索引·体内调用 snprintf、access。 */
   char path[PATH_MAX];
 
   // access(): the sysfs reader logs every attribute it fails to open.
@@ -60,7 +60,7 @@ static bool rasDiagnosticsNetHasOnePort(const char* base) {
 }
 
 // Best effort: unreadable attributes stay 0.
-void rasDiagnosticsNetReadPortAttrs(struct rasDiagnosticsNetDeviceData* netData, const char* sysfsRoot) {
+void rasDiagnosticsNetReadPortAttrs(struct rasDiagnosticsNetDeviceData* netData, const char* sysfsRoot) { /* 中文索引·体内调用 strchr、snprintf。 */
   // Bounded by the record's name length, so appending a port cannot truncate.
   char base[64 + RAS_DIAG_NET_DEVICE_NAME_LEN];
   char path[PATH_MAX];
@@ -92,7 +92,7 @@ void rasDiagnosticsNetReadPortAttrs(struct rasDiagnosticsNetDeviceData* netData,
 }
 
 static bool rasDiagnosticsNetDeviceSeen(const char* records, size_t recordStride, int count, const char* name,
-                                        int port) {
+                                        int port) { /* 中文索引·体内调用 strcmp。 */
   for (int i = 0; i < count; i++) {
     const struct rasDiagnosticsNetDeviceData* record =
       (const struct rasDiagnosticsNetDeviceData*)(records + (size_t)i * recordStride);
@@ -104,7 +104,7 @@ static bool rasDiagnosticsNetDeviceSeen(const char* records, size_t recordStride
 
 // Expands the NET devices the plugin exposes into wire records, merged devices becoming their members.
 int rasDiagnosticsNetDevicePrepare(const struct ncclTopoNetPropertiesSnapshot* netProps, int nNetProps,
-                                   uint64_t hostHash, char* out, size_t outStride, int capacity) {
+                                   uint64_t hostHash, char* out, size_t outStride, int capacity) { /* 中文索引·体内调用 rasDiagnosticsNetDeviceSeen、memset。 */
   int count = 0;
   for (int dev = 0; dev < nNetProps; dev++) {
     const struct ncclTopoNetPropertiesSnapshot* props = netProps + dev;
@@ -141,7 +141,7 @@ int rasDiagnosticsNetDevicePrepare(const struct ncclTopoNetPropertiesSnapshot* n
 }
 
 static ncclResult_t rasDiagnosticsNetDeviceFillLocalRecords(
-  const struct rasDiagnosticsCommSnapshot* comm, char* records, size_t recordStride, int maxRecords, int* nRecords) {
+  const struct rasDiagnosticsCommSnapshot* comm, char* records, size_t recordStride, int maxRecords, int* nRecords) { /* 中文索引·体内调用 rasDiagnosticsNetDevicePrepare、rasDiagnosticsNetReadPortAttrs。 */
   char* checkData = records + sizeof(struct rasDiagnosticsRankHeader);
 
   *nRecords = 0;
@@ -178,7 +178,7 @@ static ncclResult_t rasDiagnosticsNetDeviceFillLocalRecords(
 }
 
 ncclResult_t rasDiagnosticsNetDeviceCollectLocal(const struct rasDiagnosticsContext* ctx,
-                                                 struct rasDiagnosticsLocalData* data) {
+                                                 struct rasDiagnosticsLocalData* data) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、memset。 */
   ncclResult_t ret = ncclSuccess;
   ncclUniquePtr<char> records;
   struct rasDiagnosticsCommSnapshot* comms = nullptr;
@@ -226,7 +226,7 @@ static const struct rasDiagnosticsNetDeviceData* rasDiagnosticsNetDataFromRecord
 }
 
 // Sort key for the pass by node: communicator, node, device name, port, rank.
-static int rasDiagnosticsNetNodeCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsNetNodeCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 rasDiagnosticsNetDataFromRecord、rasDiagnosticsCommIdCompare。 */
   const struct rasDiagnosticsRankHeader* r1 = (const struct rasDiagnosticsRankHeader*)p1;
   const struct rasDiagnosticsRankHeader* r2 = (const struct rasDiagnosticsRankHeader*)p2;
   const struct rasDiagnosticsNetDeviceData* d1 = rasDiagnosticsNetDataFromRecord((const char*)p1);
@@ -242,7 +242,7 @@ static int rasDiagnosticsNetNodeCompare(const void* p1, const void* p2) {
 
 // Sort key for the pass by device, within one communicator: device name, port, node, rank. Markers
 // (empty name) sort first.
-static int rasDiagnosticsNetDeviceCompare(const void* p1, const void* p2) {
+static int rasDiagnosticsNetDeviceCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 rasDiagnosticsNetDataFromRecord、strcmp。 */
   const struct rasDiagnosticsRankHeader* r1 = (const struct rasDiagnosticsRankHeader*)p1;
   const struct rasDiagnosticsRankHeader* r2 = (const struct rasDiagnosticsRankHeader*)p2;
   const struct rasDiagnosticsNetDeviceData* d1 = rasDiagnosticsNetDataFromRecord((const char*)p1);
@@ -261,7 +261,7 @@ static bool rasDiagnosticsNetDataEqual(const struct rasDiagnosticsNetDeviceData*
 }
 
 ncclResult_t rasDiagnosticsNetDeviceSummarize(
-  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) {
+  const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData) { /* 中文索引·体内调用 rasDiagnosticsLocalRecordStride、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* records = nullptr;
   const size_t recordStride = rasDiagnosticsLocalRecordStride(sizeof(struct rasDiagnosticsNetDeviceData));

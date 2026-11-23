@@ -39,7 +39,7 @@
 
 static thread_local char ncclDlErrorBuf[256] = {0};
 
-static void saveDlError() {
+static void saveDlError() { /* 中文索引·体内调用 dlerror、snprintf。 */
   const char* err = dlerror();
   if (err) {
     snprintf(ncclDlErrorBuf, sizeof(ncclDlErrorBuf), "%s", err);
@@ -48,7 +48,7 @@ static void saveDlError() {
   }
 }
 
-ncclOsLibraryHandle ncclOsDlopen(const char* filename) {
+ncclOsLibraryHandle ncclOsDlopen(const char* filename) { /* 中文索引·体内调用 dlopen、saveDlError。 */
   ncclOsLibraryHandle handle = dlopen(filename, RTLD_NOW | RTLD_LOCAL);
   if (handle == NULL) {
     saveDlError();
@@ -56,7 +56,7 @@ ncclOsLibraryHandle ncclOsDlopen(const char* filename) {
   return handle;
 }
 
-void* ncclOsDlsym(ncclOsLibraryHandle handle, const char* symbol) {
+void* ncclOsDlsym(ncclOsLibraryHandle handle, const char* symbol) { /* 中文索引·体内调用 dlsym、saveDlError。 */
   void* ptr = dlsym(handle, symbol);
   if (ptr == NULL) {
     saveDlError();
@@ -68,7 +68,7 @@ const char* ncclOsDlerror() {
   return ncclDlErrorBuf;
 }
 
-ncclOsLibraryHandle ncclOsDlopen(const char* path, int mode) {
+ncclOsLibraryHandle ncclOsDlopen(const char* path, int mode) { /* 中文索引·体内调用 dlopen、saveDlError。 */
   ncclOsLibraryHandle handle = dlopen(path, (mode == NCCL_OS_DL_NOW) ? RTLD_NOW : RTLD_LAZY);
   if (handle == NULL) saveDlError();
   return handle;
@@ -122,7 +122,7 @@ char* ncclOsRealpath(const char* path, char* resolved_path) {
 // The default Linux stack size (8MB) is safe.
 #define SAFE_STACK_SIZE (8192 * 1024)
 
-static ncclResult_t setCpuStackSize() {
+static ncclResult_t setCpuStackSize() { /* 中文索引·体内调用 pthread_attr_init、pthread_attr_getstacksize。 */
   // Query the stack size used for newly launched threads.
   pthread_attr_t attr;
   size_t stackSize;
@@ -153,14 +153,14 @@ static ncclResult_t setCpuStackSize() {
 
 extern int ncclParamSetCpuStackSize();
 
-ncclResult_t ncclOsInitialize() {
+ncclResult_t ncclOsInitialize() { /* 中文索引·体内调用 ncclParamSetCpuStackSize、setCpuStackSize。 */
   if (ncclParamSetCpuStackSize() != 0) {
     NCCLCHECK(setCpuStackSize());
   }
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSetFilesLimit() {
+ncclResult_t ncclOsSetFilesLimit() { /* 中文索引·体内调用 getrlimit、setrlimit。 */
   struct rlimit filesLimit;
   SYSCHECK(getrlimit(RLIMIT_NOFILE, &filesLimit), "getrlimit");
   filesLimit.rlim_cur = filesLimit.rlim_max;
@@ -179,7 +179,7 @@ bool ncclOsSocketIsValid(struct ncclSocket* sock) {
 extern int ncclParamPollTimeOut();
 extern int ncclParamRetryTimeOut();
 
-void ncclOsPollSocket(int socketDescriptor, int op) {
+void ncclOsPollSocket(int socketDescriptor, int op) { /* 中文索引·体内调用 memset、poll。 */
   struct pollfd pfd;
   memset(&pfd, 0, sizeof(struct pollfd));
   pfd.fd = socketDescriptor;
@@ -189,7 +189,7 @@ void ncclOsPollSocket(int socketDescriptor, int op) {
 
 extern long int ncclParamRetryCnt();
 
-ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 accept、ncclOsSocketIsValid。 */
   socklen_t socklen = sizeof(union ncclSocketAddress);
   sock->socketDescriptor = accept(sock->acceptSocketDescriptor, (struct sockaddr*)&sock->addr, &socklen);
   if (ncclOsSocketIsValid(sock)) {
@@ -214,7 +214,7 @@ ncclResult_t ncclOsSocketTryAccept(struct ncclSocket* sock) {
 extern int ncclParamSocketMaxRecvBuff();
 extern int ncclParamSocketMaxSendBuff();
 
-ncclResult_t ncclOsSocketSetFlags(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketSetFlags(struct ncclSocket* sock) { /* 中文索引·体内调用 ncclOsSocketIsValid、fcntl。 */
   ncclResult_t ret = ncclSuccess;
   const int one = 1;
   int flags;
@@ -248,7 +248,7 @@ fail:
   goto exit;
 }
 
-void ncclOsSocketResetAccept(struct ncclSocket* sock) {
+void ncclOsSocketResetAccept(struct ncclSocket* sock) { /* 中文索引·体内调用 close。 */
   // Close the accepted peer and return to listening for another connection (see socketFinalizeAccept logging).
   (void)close(sock->socketDescriptor);
   sock->socketDescriptor = NCCL_INVALID_SOCKET;
@@ -256,7 +256,7 @@ void ncclOsSocketResetAccept(struct ncclSocket* sock) {
   sock->finalizeCounter = 0;
 }
 
-ncclResult_t ncclOsSocketResetFd(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketResetFd(struct ncclSocket* sock) { /* 中文索引·体内调用 socket、ncclOsSocketIsValid。 */
   ncclResult_t ret = ncclSuccess;
   int socketDescriptor = NCCL_INVALID_SOCKET;
   SYSCHECKGOTO(socketDescriptor = socket(sock->addr.sa.sa_family, SOCK_STREAM, 0), "socket", ret, cleanup);
@@ -278,7 +278,7 @@ cleanup:
   goto exit;
 }
 
-static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, const char funcName[]) {
+static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, const char funcName[]) { /* 中文索引·体内调用 ncclParamRetryCnt、ncclSocketToString。 */
   char line[SOCKET_NAME_MAXLEN + 1];
   if (errCode == 0) {
     sock->state = ncclSocketStateConnected;
@@ -309,13 +309,13 @@ static ncclResult_t socketConnectCheck(struct ncclSocket* sock, int errCode, con
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketStartConnect(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketStartConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 connect、socketConnectCheck。 */
   /* blocking/non-blocking connect() is determined by asyncFlag. */
   int ret = connect(sock->socketDescriptor, &sock->addr.sa, sock->salen);
   return socketConnectCheck(sock, (ret == -1) ? errno : 0, __func__);
 }
 
-ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) {
+ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) { /* 中文索引·体内调用 memset、poll。 */
   struct pollfd pfd;
   int timeout = 1, ret;
   socklen_t rlen = sizeof(int);
@@ -339,7 +339,7 @@ ncclResult_t ncclOsSocketPollConnect(struct ncclSocket* sock) {
 }
 
 ncclResult_t ncclOsSocketProgressOpt(int op, struct ncclSocket* sock, void* ptr, int size, int* offset, int block,
-                                     int* closed) {
+                                     int* closed) { /* 中文索引·体内调用 recv、send。 */
   int bytes = 0;
   *closed = 0;
   char* data = (char*)ptr;
@@ -381,7 +381,7 @@ ncclResult_t ncclOsSocketProgressOpt(int op, struct ncclSocket* sock, void* ptr,
 }
 
 ncclResult_t ncclOsFindInterfaces(const char* prefixList, char* names, union ncclSocketAddress* addrs, int sock_family,
-                                  int maxIfNameSize, int maxIfs, int* found) {
+                                  int maxIfNameSize, int maxIfs, int* found) { /* 中文索引·体内调用 parseStringList、getifaddrs。 */
 #ifdef ENABLE_TRACE
   char line[SOCKET_NAME_MAXLEN + 1];
 #endif
@@ -491,7 +491,7 @@ static bool matchSubnet(struct ifaddrs local_if, union ncclSocketAddress* remote
 }
 
 ncclResult_t ncclFindInterfaceMatchSubnet(char* ifName, union ncclSocketAddress* localAddr,
-                                          union ncclSocketAddress* remoteAddr, int ifNameMaxSize, int* found) {
+                                          union ncclSocketAddress* remoteAddr, int ifNameMaxSize, int* found) { /* 中文索引·体内调用 getifaddrs、matchSubnet。 */
 #ifdef ENABLE_TRACE
   char line[SOCKET_NAME_MAXLEN + 1];
   char line_a[SOCKET_NAME_MAXLEN + 1];
@@ -527,7 +527,7 @@ ncclResult_t ncclFindInterfaceMatchSubnet(char* ifName, union ncclSocketAddress*
   return ncclSuccess;
 }
 
-ncclResult_t ncclSocketClose(struct ncclSocket* sock, bool wait) {
+ncclResult_t ncclSocketClose(struct ncclSocket* sock, bool wait) { /* 中文索引·体内调用 ncclOsSocketIsValid、ncclSocketProgress。 */
   if (sock != NULL) {
     if (sock->state > ncclSocketStateNone && sock->state < ncclSocketStateNum && ncclOsSocketIsValid(sock)) {
       if (wait) {
@@ -555,7 +555,7 @@ ncclResult_t ncclSocketClose(struct ncclSocket* sock, bool wait) {
   return ncclSuccess;
 }
 
-void ncclOsSetMutexCondShared(std::mutex& mutex, std::condition_variable& cond, int* initialized) {
+void ncclOsSetMutexCondShared(std::mutex& mutex, std::condition_variable& cond, int* initialized) { /* 中文索引·体内调用 pthread_mutexattr_init、pthread_mutexattr_setpshared。 */
   if (initialized != NULL && *initialized) return;
   pthread_mutexattr_t mutexAttr;
   pthread_mutexattr_init(&mutexAttr);
@@ -573,7 +573,7 @@ void ncclOsSetMutexCondShared(std::mutex& mutex, std::condition_variable& cond, 
   if (initialized != NULL) *initialized = 1;
 }
 
-void ncclOsUnsetMutexCondShared(std::mutex& mutex, std::condition_variable& cond, int* initialized) {
+void ncclOsUnsetMutexCondShared(std::mutex& mutex, std::condition_variable& cond, int* initialized) { /* 中文索引·体内调用 pthread_cond_destroy、cond.native_handle。 */
   if (initialized != NULL && *initialized == 0) return;
   pthread_cond_destroy(cond.native_handle());
   pthread_mutex_destroy(mutex.native_handle());
@@ -602,7 +602,7 @@ ncclAffinity ncclOsCpuAnd(const ncclAffinity& a, const ncclAffinity& b) {
   return result;
 }
 
-ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) {
+ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) { /* 中文索引·体内调用 sched_getaffinity、strerror。 */
   int result = sched_getaffinity(0, sizeof(ncclAffinity), affinity);
   if (result == -1) {
     WARN("sched_getaffinity failed with error: %s", strerror(errno));
@@ -611,7 +611,7 @@ ncclResult_t ncclOsGetAffinity(ncclAffinity* affinity) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSetAffinity(const ncclAffinity& affinity) {
+ncclResult_t ncclOsSetAffinity(const ncclAffinity& affinity) { /* 中文索引·体内调用 sched_setaffinity、strerror。 */
   int result = sched_setaffinity(0, sizeof(ncclAffinity), &affinity);
   if (result == -1) {
     WARN("sched_setaffinity failed with error: %s", strerror(errno));
@@ -624,7 +624,7 @@ int ncclOsGetCpu() {
   return sched_getcpu();
 }
 
-ncclResult_t ncclOsNvmlOpen(ncclOsLibraryHandle* handle) {
+ncclResult_t ncclOsNvmlOpen(ncclOsLibraryHandle* handle) { /* 中文索引·体内调用 ncclOsDlopen、ncclOsDlerror。 */
   *handle = nullptr;
 
   *handle = ncclOsDlopen("libnvidia-ml.so.1");
@@ -645,7 +645,7 @@ static void memcpylower(char* dst, const char* src, const size_t size) {
   for (size_t i = 0; i < size; i++) dst[i] = tolower(src[i]);
 }
 
-ncclResult_t ncclOsGetPciPath(const char* busId, char** path) {
+ncclResult_t ncclOsGetPciPath(const char* busId, char** path) { /* 中文索引·体内调用 memcpylower、realpath。 */
   char busPath[] = "/sys/class/pci_bus/0000:00/../../0000:00:00.0";
   memcpylower(busPath + sizeof("/sys/class/pci_bus/") - 1, busId, BUSID_REDUCED_SIZE - 1);
   memcpylower(busPath + sizeof("/sys/class/pci_bus/0000:00/../../") - 1, busId, BUSID_SIZE - 1);
@@ -657,7 +657,7 @@ ncclResult_t ncclOsGetPciPath(const char* busId, char** path) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, char* strValue, int maxLen) {
+ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, char* strValue, int maxLen) { /* 中文索引·体内调用 snprintf、fopen。 */
   char filePath[PATH_MAX];
   snprintf(filePath, sizeof(filePath), "%s/%s", path, fileName);
   int offset = 0;
@@ -678,7 +678,7 @@ ncclResult_t ncclOsTopoGetStrFromSys(const char* path, const char* fileName, cha
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass, size_t maxLen) {
+ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass, size_t maxLen) { /* 中文索引·体内调用 ncclOsGetPciPath、ncclOsTopoGetStrFromSys。 */
   char* path = NULL;
   NOWARN(ncclOsGetPciPath(busId, &path), NCCL_GRAPH);
   if (path == NULL) {
@@ -690,7 +690,7 @@ ncclResult_t ncclOsGetPciDeviceClassByBusId(const char* busId, char* deviceClass
   return ret;
 }
 
-ncclResult_t ncclOsGetBcmLinks(const char* busId, int* nlinks, char** peers) {
+ncclResult_t ncclOsGetBcmLinks(const char* busId, int* nlinks, char** peers) { /* 中文索引·体内调用 memcpylower、opendir。 */
   ncclResult_t ret = ncclSuccess;
   *nlinks = 0;
   *peers = NULL;
@@ -723,7 +723,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, size_t maxLen, int* cpuOffset) {
+ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, size_t maxLen, int* cpuOffset) { /* 中文索引·体内调用 snprintf、fopen。 */
   *cpuOffset = 0;
   char filePath[PATH_MAX];
   snprintf(filePath, sizeof(filePath), "/sys/devices/system/node/node%u/cpumap", numaId);
@@ -754,7 +754,7 @@ ncclResult_t ncclOsGetNumaNodeAffinity(unsigned int numaId, char* affinityStr, s
 #include <stdlib.h>
 
 void ncclOsShmHandleInit(ncclShmDescriptor shmDesc, char* shmPath, size_t shmSize, size_t realShmSize, char* hptr,
-                         void* dptr, bool create, struct ncclShmHandleInternal* handle) {
+                         void* dptr, bool create, struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 strlen、malloc。 */
   handle->shmDesc = shmDesc;
   handle->shmPtr = hptr;
   handle->devShmPtr = dptr;
@@ -773,7 +773,7 @@ void ncclOsShmHandleInit(ncclShmDescriptor shmDesc, char* shmPath, size_t shmSiz
 }
 
 ncclResult_t ncclOsShmOpen(char* shmPath, size_t shmPathSize, size_t shmSize, void** shmPtr, void** devShmPtr,
-                           int refcount, struct ncclShmHandleInternal** handle) {
+                           int refcount, struct ncclShmHandleInternal** handle) { /* 中文索引·体内调用 calloc、snprintf。 */
   int fd = -1;
   char* hptr = NULL;
   void* dptr = NULL;
@@ -872,7 +872,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) {
+ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 close、unlink。 */
   ncclResult_t ret = ncclSuccess;
   if (handle) {
     if (handle->shmDesc >= 0) {
@@ -899,7 +899,7 @@ ncclResult_t ncclOsShmClose(struct ncclShmHandleInternal* handle) {
   return ret;
 }
 
-ncclResult_t ncclOsShmUnlink(struct ncclShmHandleInternal* handle) {
+ncclResult_t ncclOsShmUnlink(struct ncclShmHandleInternal* handle) { /* 中文索引·体内调用 unlink、strerror。 */
   ncclResult_t ret = ncclSuccess;
   if (handle) {
     if (handle->shmPath != NULL && handle->refcount != NULL && *handle->refcount > 0) {

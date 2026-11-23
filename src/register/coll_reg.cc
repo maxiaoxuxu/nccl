@@ -11,7 +11,7 @@
 #include "register_inline.h"
 #include "graph/topo.h"
 
-static ncclResult_t isMloPartBufRdmaCapable(struct ncclComm* comm, const void* ptr, bool* isRdmaCapable) {
+static ncclResult_t isMloPartBufRdmaCapable(struct ncclComm* comm, const void* ptr, bool* isRdmaCapable) { /* 中文索引·体内调用 cuMemRetainAllocationHandle、cuMemGetAllocationPropertiesFromHandle。 */
   if (!comm->hasMloPart) {
     *isRdmaCapable = true;
   } else {
@@ -62,7 +62,7 @@ static ncclResult_t registerCheckP2PConnection(struct ncclComm* comm, struct ncc
 ncclResult_t ncclRegisterCollNvlsBuffers(
   struct ncclComm* comm, struct ncclTaskColl* info, void* outRegBufSend[NCCL_MAX_LOCAL_RANKS],
   void* outRegBufRecv[NCCL_MAX_LOCAL_RANKS],
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, bool* regNeedConnect) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, bool* regNeedConnect) { /* 中文索引·体内调用 ncclParamLocalRegister、ncclParamGraphRegister。 */
   ncclResult_t result = ncclSuccess;
 
   info->regBufType = NCCL_REGULAR_BUFFER;
@@ -149,7 +149,7 @@ exit:
 ncclResult_t ncclRegisterCollBuffers(
   struct ncclComm* comm, struct ncclTaskColl* info, void* outRegBufSend[NCCL_MAX_LOCAL_RANKS],
   void* outRegBufRecv[NCCL_MAX_LOCAL_RANKS],
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, bool* regNeedConnect) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, bool* regNeedConnect) { /* 中文索引·体内调用 ncclParamLocalRegister、ncclParamGraphRegister。 */
   ncclResult_t result = ncclSuccess;
 
   info->regBufType = NCCL_REGULAR_BUFFER;

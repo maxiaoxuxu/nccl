@@ -47,7 +47,7 @@ static struct rasLinkConn* rasLinkConnFind(const struct rasLink* link, const str
 ///////////////////////////////////////////////
 
 // Allocates a new entry in the rasConnections list.
-ncclResult_t getNewConnEntry(struct rasConnection** pConn) {
+ncclResult_t getNewConnEntry(struct rasConnection** pConn) { /* 中文索引·体内调用 ncclCalloc、ncclIntruQueueConstruct。 */
   struct rasConnection* conn;
 
   NCCLCHECK(ncclCalloc(&conn, 1));
@@ -69,7 +69,7 @@ ncclResult_t getNewConnEntry(struct rasConnection** pConn) {
 }
 
 // Frees an entry from the rasConns list.
-static void freeConnEntry(struct rasConnection* conn) {
+static void freeConnEntry(struct rasConnection* conn) { /* 中文索引·体内调用 free。 */
   if (conn == nullptr) return;
 
   if (conn == rasConnsHead) rasConnsHead = rasConnsHead->next;
@@ -80,7 +80,7 @@ static void freeConnEntry(struct rasConnection* conn) {
 }
 
 // Creates a new RAS network connection to a remote peer address.
-ncclResult_t rasConnCreate(const union ncclSocketAddress* addr, struct rasConnection** pConn) {
+ncclResult_t rasConnCreate(const union ncclSocketAddress* addr, struct rasConnection** pConn) { /* 中文索引·体内调用 rasConnFind、getNewConnEntry。 */
   ncclResult_t ret = ncclSuccess;
   struct rasConnection* conn;
 
@@ -109,7 +109,7 @@ exit:
 }
 
 // Opens a connection to a remote peer.
-static void rasConnOpen(struct rasConnection* conn) {
+static void rasConnOpen(struct rasConnection* conn) { /* 中文索引·体内调用 getNewSockEntry、ncclSocketInit。 */
   ncclResult_t ret; // Not used.
   struct rasSocket* sock = nullptr;
   bool closeSocketOnFail = false;
@@ -148,7 +148,7 @@ fail:
 }
 
 // Sends an initial RAS message to the peer after connecting to it.
-static ncclResult_t rasConnPrepare(struct rasConnection* conn) {
+static ncclResult_t rasConnPrepare(struct rasConnection* conn) { /* 中文索引·体内调用 rasMsgLength、rasMsgAlloc。 */
   struct rasMsg* msg = nullptr;
   int msgLen = rasMsgLength(RAS_MSG_CONNINIT);
 
@@ -169,7 +169,7 @@ static ncclResult_t rasConnPrepare(struct rasConnection* conn) {
 }
 
 // Searches through rasConns for a connection with a provided address.
-struct rasConnection* rasConnFind(const union ncclSocketAddress* addr) {
+struct rasConnection* rasConnFind(const union ncclSocketAddress* addr) { /* 中文索引·体内调用 memcmp。 */
   for (struct rasConnection* conn = rasConnsHead; conn; conn = conn->next) {
     if (memcmp(&conn->addr, addr, sizeof(conn->addr)) == 0) return conn;
   }
@@ -182,7 +182,7 @@ struct rasConnection* rasConnFind(const union ncclSocketAddress* addr) {
 // exist or needs to be re-established (due to having just been terminated), we handle that here.
 // This is also where we declare peers as dead, etc.
 // Invoked from the main RAS event loop.
-void rasConnsHandleTimeouts(int64_t now, int64_t* nextWakeup) {
+void rasConnsHandleTimeouts(int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 ncclSocketReady、ncclSocketToString。 */
   for (struct rasConnection* conn = rasConnsHead; conn;) {
     struct rasConnection* connNext = conn->next;
     if (conn->sock) {
@@ -325,7 +325,7 @@ void rasConnsHandleTimeouts(int64_t now, int64_t* nextWakeup) {
 
 // Checks if we have a connection to a given peer and if so, terminates it.  The connection is removed from the
 // RAS links, though fallbacks are initiated if necessary.  Typically called just before declaring a peer dead.
-void rasConnDisconnect(const union ncclSocketAddress* addr) {
+void rasConnDisconnect(const union ncclSocketAddress* addr) { /* 中文索引·体内调用 rasConnFind、rasLinkAddFallback。 */
   struct rasConnection* conn = rasConnFind(addr);
   if (conn) {
     (void)rasLinkAddFallback(&rasNextLink, conn);
@@ -338,7 +338,7 @@ void rasConnDisconnect(const union ncclSocketAddress* addr) {
 }
 
 // Terminates a connection and frees the rasConns entry.
-static void rasConnTerminate(struct rasConnection* conn) {
+static void rasConnTerminate(struct rasConnection* conn) { /* 中文索引·体内调用 rasSocketTerminate、rasCollsPurgeConn。 */
   // Make sure there are no lingering rasSockets pointing to it.
   for (struct rasSocket* sock = rasSocketsHead; sock;) {
     struct rasSocket* sockNext = sock->next;
@@ -364,7 +364,7 @@ static void rasConnTerminate(struct rasConnection* conn) {
 
 // Accepts a new RAS network socket connection.  The socket is not usable until after the handshake, as a
 // corresponding rasConnection can't be established without knowing the peer's address.
-ncclResult_t rasNetAcceptNewSocket() {
+ncclResult_t rasNetAcceptNewSocket() { /* 中文索引·体内调用 getNewSockEntry、ncclSocketInit。 */
   ncclResult_t ret = ncclSuccess;
   struct rasSocket* sock = nullptr;
   int ready;
@@ -398,7 +398,7 @@ fail:
 }
 
 // Allocates a new entry in the rasSockets list.
-static ncclResult_t getNewSockEntry(struct rasSocket** pSock) {
+static ncclResult_t getNewSockEntry(struct rasSocket** pSock) { /* 中文索引·体内调用 ncclCalloc、clockNano。 */
   struct rasSocket* sock;
 
   NCCLCHECK(ncclCalloc(&sock, 1));
@@ -419,7 +419,7 @@ static ncclResult_t getNewSockEntry(struct rasSocket** pSock) {
 }
 
 // Frees an entry from the rasSockets list.
-static void freeSockEntry(struct rasSocket* sock) {
+static void freeSockEntry(struct rasSocket* sock) { /* 中文索引·体内调用 free。 */
   if (sock == nullptr) return;
 
   if (sock == rasSocketsHead) rasSocketsHead = rasSocketsHead->next;
@@ -430,7 +430,7 @@ static void freeSockEntry(struct rasSocket* sock) {
 }
 
 // Invoked from the main RAS event loop to handle RAS socket timeouts.
-void rasSocksHandleTimeouts(int64_t now, int64_t* nextWakeup) {
+void rasSocksHandleTimeouts(int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 snprintf、rasClientsNotifyEvent。 */
   for (struct rasSocket* sock = rasSocketsHead; sock;) {
     struct rasSocket* sockNext = sock->next;
 
@@ -502,7 +502,7 @@ void rasSocksHandleTimeouts(int64_t now, int64_t* nextWakeup) {
 // for them and change their state to TERMINATING, so that we can still receive data that may be in the buffers.
 // Once we get an EOF when receiving data, we finalize the termination.
 // For not fully established sockets, we can terminate immediately as there's no useful data to extract.
-void rasSocketTerminate(struct rasSocket* sock, bool finalize, uint64_t startRetryOffset, bool retry) {
+void rasSocketTerminate(struct rasSocket* sock, bool finalize, uint64_t startRetryOffset, bool retry) { /* 中文索引·体内调用 clockNano、rasLinkConnFind。 */
   if (sock->status == RAS_SOCK_CLOSED) {
     // Should never happen.
     INFO(NCCL_RAS, "RAS socket in closed state passed for termination -- internal error?");
@@ -580,7 +580,7 @@ void rasSocketTerminate(struct rasSocket* sock, bool finalize, uint64_t startRet
 }
 
 // Handles a ready socket FD from the main event loop.
-void rasSockEventLoop(struct rasSocket* sock, int pollIdx) {
+void rasSockEventLoop(struct rasSocket* sock, int pollIdx) { /* 中文索引·体内调用 ncclSocketReady、ncclSocketToString。 */
   if (sock->status == RAS_SOCK_CONNECTING) {
     int ready;
     // Socket is not yet fully established. Continue the OS or NCCL-level handshake.
@@ -714,7 +714,7 @@ void rasSockEventLoop(struct rasSocket* sock, int pollIdx) {
 ////////////////////////////////////////////////////////////////
 
 // Invoked from the main RAS event loop to handle RAS network timeouts.
-void rasNetHandleTimeouts(int64_t now, int64_t* nextWakeup) {
+void rasNetHandleTimeouts(int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 rasLinkHandleNetTimeouts、ncclIntruQueueEmpty。 */
   // A connection can belong to multiple links but, when it comes to various timeouts, we want to handle each
   // connection just once.  We solve that with a simple flag within a connection.  This also allows us to distinguish
   // connections that are part of a link from those that are not.
@@ -734,7 +734,7 @@ void rasNetHandleTimeouts(int64_t now, int64_t* nextWakeup) {
 }
 
 // Checks for and handles timeouts at the link level; primarily the keep-alives for link connections.
-static ncclResult_t rasLinkHandleNetTimeouts(struct rasLink* link, int64_t now, int64_t* nextWakeup) {
+static ncclResult_t rasLinkHandleNetTimeouts(struct rasLink* link, int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 rasConnHandleNetTimeouts、ncclSocketToString。 */
   for (struct rasLinkConn* linkConn = link->conns; linkConn; linkConn = linkConn->next) {
     if (linkConn->conn) {
       if (!linkConn->conn->linkFlag) {
@@ -763,7 +763,7 @@ static ncclResult_t rasLinkHandleNetTimeouts(struct rasLink* link, int64_t now, 
 }
 
 // Handles the sending of keep-alive messages and related timeouts for connections that are part of the RAS links.
-static void rasConnHandleNetTimeouts(struct rasConnection* conn, int64_t now, int64_t* nextWakeup) {
+static void rasConnHandleNetTimeouts(struct rasConnection* conn, int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 ncclIntruQueueEmpty、rasConnSendKeepAlive。 */
   if (conn->sock) {
     if (conn->sock->status == RAS_SOCK_READY) {
       // Send a regular keep-alive message if we haven't sent anything in a while and we don't have anything queued.
@@ -821,7 +821,7 @@ static void rasConnHandleNetTimeouts(struct rasConnection* conn, int64_t now, in
 }
 
 // Sends a keep-alive message to a peer on the RAS network.
-static void rasConnSendKeepAlive(struct rasConnection* conn, bool nack) {
+static void rasConnSendKeepAlive(struct rasConnection* conn, bool nack) { /* 中文索引·体内调用 rasMsgLength、rasMsgAlloc。 */
   struct rasMsg* msg = nullptr;
   int msgLen = rasMsgLength(RAS_MSG_KEEPALIVE);
   if (rasMsgAlloc(&msg, msgLen) == ncclSuccess) {
@@ -845,7 +845,7 @@ static void rasConnSendKeepAlive(struct rasConnection* conn, bool nack) {
 }
 
 // Handles incoming keep-alive messages.
-ncclResult_t rasMsgHandleKeepAlive(const struct rasMsg* msg, struct rasSocket* sock) {
+ncclResult_t rasMsgHandleKeepAlive(const struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、clockRealtime。 */
   struct timespec currentTime;
   int64_t travelTime;
   int peerIdx;
@@ -919,7 +919,7 @@ ncclResult_t rasMsgHandleKeepAlive(const struct rasMsg* msg, struct rasSocket* s
 // External connections are generally ignored by this whole process: in particular, we don't add fallbacks for
 // timing out external connections.  However, we will use an active external connection if it would be a better
 // option than whatever we can come up with.
-ncclResult_t rasLinkAddFallback(struct rasLink* link, const struct rasConnection* conn) {
+ncclResult_t rasLinkAddFallback(struct rasLink* link, const struct rasConnection* conn) { /* 中文索引·体内调用 ncclSocketToString、rasLinkCalculatePeer。 */
   ncclResult_t ret = ncclSuccess;
   struct rasLinkConn* foundLinkConn = nullptr;
   struct rasLinkConn* firstExtLinkConn = nullptr;
@@ -1032,7 +1032,7 @@ exit:
 
 // Invoked when we receive a message over a connection that was just activated or was experiencing delays.
 // Cleans up the fallbacks, timers, etc, as appropriate.
-static void rasConnResume(struct rasConnection* conn) {
+static void rasConnResume(struct rasConnection* conn) { /* 中文索引·体内调用 ncclSocketToString、ncclIntruQueueEmpty。 */
   if (conn->sock && conn->sock->status == RAS_SOCK_READY) {
     INFO(NCCL_RAS, "RAS %s connection with %s (sendQ %sempty, experiencingDelays %d, startRetryTime %.2fs)",
          (conn->experiencingDelays && conn->startRetryTime == 0 ? "recovered" : "established"),
@@ -1062,7 +1062,7 @@ static void rasConnResume(struct rasConnection* conn) {
 
 // Checks if the primary connection is fully established and if so, purges the fallbacks (as they are no longer
 // needed).
-static void rasLinkSanitizeFallbacks(struct rasLink* link) {
+static void rasLinkSanitizeFallbacks(struct rasLink* link) { /* 中文索引·体内调用 ncclSocketToString、free。 */
   if (link->conns && link->conns->conn) {
     struct rasConnection* conn = link->conns->conn;
     if (conn->sock && conn->sock->status == RAS_SOCK_READY && !conn->experiencingDelays) {
@@ -1094,7 +1094,7 @@ static void rasLinkSanitizeFallbacks(struct rasLink* link) {
 // may need to be sync'ed to the other one as well.  They used to be a single function that could do it all but the
 // logic was extremely difficult to follow then.
 static ncclResult_t rasLinkConnAdd(struct rasLink* link, struct rasConnection* conn, int peerIdx, bool pretend,
-                                   int* pLinkIdx, struct rasLinkConn** pLinkConn, bool insert) {
+                                   int* pLinkIdx, struct rasLinkConn** pLinkConn, bool insert) { /* 中文索引·体内调用 rasLinkConnFind、ncclSocketToString。 */
   ncclResult_t ret = ncclSuccess;
   struct rasLinkConn* oldLinkConn = nullptr;
   struct rasLinkConn* linkConnPrev = nullptr;
@@ -1247,7 +1247,7 @@ exit:
 // Note: there is some code duplication between this function and rasLinkConnAdd so changes to one of them
 // may need to be sync'ed to the other one as well.  They used to be a single function that could do it all but the
 // logic was extremely difficult to follow then.
-static ncclResult_t rasLinkConnAddExternal(struct rasLink* link, struct rasConnection* conn, int peerIdx) {
+static ncclResult_t rasLinkConnAddExternal(struct rasLink* link, struct rasConnection* conn, int peerIdx) { /* 中文索引·体内调用 rasLinkConnFind、ncclSocketToString。 */
   ncclResult_t ret = ncclSuccess;
   struct rasLinkConn* oldLinkConn = nullptr;
   struct rasLinkConn* linkConnPrev = nullptr;
@@ -1385,7 +1385,7 @@ exit:
 // Updates an existing entry in a RAS network link, if any.
 // Basically an easy-to-use variant of rasLinkConnAdd.
 // For this function, conn cannot be a nullptr and peerIdx cannot be -1.
-ncclResult_t rasLinkConnUpdate(struct rasLink* link, struct rasConnection* conn, int peerIdx) {
+ncclResult_t rasLinkConnUpdate(struct rasLink* link, struct rasConnection* conn, int peerIdx) { /* 中文索引·体内调用 ncclSocketToString、rasLinkConnAdd。 */
   ncclResult_t ret = ncclSuccess;
 
   if (conn == nullptr || peerIdx == -1) {
@@ -1405,7 +1405,7 @@ exit:
 // Attempts to drop a connection from a link.
 // If the optional external argument is true, it will drop a connection only if its external flag is set
 // (otherwise the flag is ignored and a connection is always dropped if found).
-static void rasLinkConnDrop(struct rasLink* link, const struct rasConnection* conn, bool external) {
+static void rasLinkConnDrop(struct rasLink* link, const struct rasConnection* conn, bool external) { /* 中文索引·体内调用 ncclSocketToString、free。 */
   struct rasLinkConn* linkConnPrev = nullptr;
   int i = 0;
   for (struct rasLinkConn* linkConn = link->conns; linkConn; linkConnPrev = linkConn, linkConn = linkConn->next, i++) {
@@ -1459,7 +1459,7 @@ static struct rasLinkConn* rasLinkConnFind(const struct rasLink* link, const str
 }
 
 // Invoked during RAS termination to release all the allocated resources.
-void rasNetTerminate() {
+void rasNetTerminate() { /* 中文索引·体内调用 free、rasConnTerminate。 */
   for (struct rasLinkConn* linkConn = rasNextLink.conns; linkConn;) {
     struct rasLinkConn* linkConnNext = linkConn->next;
     free(linkConn);

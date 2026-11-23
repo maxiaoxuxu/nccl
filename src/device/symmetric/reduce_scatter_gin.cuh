@@ -4,7 +4,7 @@
 #include "data_ops.cuh"
 
 template <bool EnableProfiler, template <typename> typename Red, typename T, bool multimem>
-static __device__ void rsAlgoHier(ncclSymkDevWorkArgs const* args, BoolTag<multimem> multimemTag) {
+static __device__ void rsAlgoHier(ncclSymkDevWorkArgs const* args, BoolTag<multimem> multimemTag) { /* 中文索引·体内调用 ncclTeamWorld、ncclTeamRail。 */
   ncclCoopCta cta;
   ncclSymkArgsHandler handler{args};
   ncclTeam world = ncclTeamWorld(handler.comm);

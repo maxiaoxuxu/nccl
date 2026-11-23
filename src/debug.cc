@@ -125,7 +125,7 @@ DEFINE_NCCL_PARAM(ncclParamDebugFile, const char*, NCCL_DEBUG_FILE, nullptr,
 
 typedef const char* (*ncclGetEnvFunc_t)(const char*);
 
-static ncclResult_t getHostNameForLog(char* hostname, int maxlen, const char delim) {
+static ncclResult_t getHostNameForLog(char* hostname, int maxlen, const char delim) { /* 中文索引·体内调用 getHostName。 */
   ncclResult_t ret = getHostName(hostname, maxlen, delim);
   if (ret != ncclSuccess) return ret;
 
@@ -157,7 +157,7 @@ static uint32_t ncclDebugLevelToMask(ncclDebugLogLevel level) {
 }
 
 // This function must be called with ncclDebugLock locked!
-static void ncclDebugInit() {
+static void ncclDebugInit() { /* 中文索引·体内调用 fclose、ncclDebugLevelToMask。 */
   uint32_t tempNcclDebugLevelMask = 0;
   if (COMPILER_ATOMIC_LOAD(&ncclDebugLevelMask, std::memory_order_relaxed) == NCCL_DEBUG_LEVEL_MASK_RESET_TRIGGERED &&
       ncclDebugFile != stdout) {
@@ -282,7 +282,7 @@ static void ncclDebugInit() {
 
 // Internal logging helper used by the INFO, WARN, ATTN and TRACE macros.
 static void ncclDebugLogV(ncclDebugLogLevel level, unsigned long flags, const char* file, const char* func, int line,
-                          const char* fmt, va_list vargs) {
+                          const char* fmt, va_list vargs) { /* 中文索引·体内调用 va_copy、vsnprintf。 */
   if (ncclDebugNoWarn != 0 && level == NCCL_LOG_WARN) {
     level = NCCL_LOG_INFO;
     flags = ncclDebugNoWarn;
@@ -418,7 +418,7 @@ static void ncclDebugLogV(ncclDebugLogLevel level, unsigned long flags, const ch
 
 // Internal only Common logging function used by the INFO, WARN, ATTN and TRACE macros
 void ncclDebugLogInternal(ncclDebugLogLevel level, unsigned long flags, const char* file, const char* func, int line,
-                          const char* fmt, ...) {
+                          const char* fmt, ...) { /* 中文索引·体内调用 va_start、ncclDebugLogV。 */
   va_list vargs;
   va_start(vargs, fmt);
   ncclDebugLogV(level, flags, file, func, line, fmt, vargs);
@@ -428,7 +428,7 @@ void ncclDebugLogInternal(ncclDebugLogLevel level, unsigned long flags, const ch
 /* Exported ABI logging function exported to the dynamically loadable Net
  * transport modules so they can share the debugging mechanisms and output files
  */
-void ncclDebugLog(ncclDebugLogLevel level, unsigned long flags, const char* filefunc, int line, const char* fmt, ...) {
+void ncclDebugLog(ncclDebugLogLevel level, unsigned long flags, const char* filefunc, int line, const char* fmt, ...) { /* 中文索引·体内调用 va_start、ncclDebugLogV。 */
   va_list vargs;
   va_start(vargs, fmt);
   const char* file = nullptr;
@@ -470,7 +470,7 @@ extern "C"
 #endif
   void ncclResetDebugInit();
 
-extern "C" void ncclResetDebugInit() {
+extern "C" void ncclResetDebugInit() { /* 中文索引·体内调用 ncclResetDebugInitInternal。 */
   // This is now deprecated as part of the NCCL API. It will be removed
   // from the API in the future. It is still available as an
   // exported symbol.
@@ -481,7 +481,7 @@ DEFINE_NCCL_PARAM(ncclParamSetThreadName, bool, NCCL_SET_THREAD_NAME, false,
                   NCCL_PARAM_FLAG_PUBLISHED | NCCL_PARAM_FLAG_CACHED, NCCL_PARAM_DEFAULT,
                   "Allow NCCL to give meaningful names to NCCL CPU threads via pthread_setname_np");
 
-void ncclSetThreadName(std::thread& thread, const char* fmt, ...) {
+void ncclSetThreadName(std::thread& thread, const char* fmt, ...) { /* 中文索引·体内调用 ncclParamSetThreadName、va_start。 */
   // pthread_setname_np is nonstandard GNU extension
   // needs the following feature test macro
 #ifdef _GNU_SOURCE

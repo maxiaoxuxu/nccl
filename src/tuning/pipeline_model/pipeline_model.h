@@ -48,7 +48,7 @@ struct ncclTuningPipelineStep {
 };
 
 inline ncclResult_t ncclTuningPipelineComputeSliceSize(
-  struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning, struct ncclTuningPipeline* pipeline) {
+  struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* tuning, struct ncclTuningPipeline* pipeline) { /* 中文索引·体内调用 ncclTypeSize、ncclGetChunkSteps。 */
   int protocol = tuning->proto;
   size_t elementSize = ncclTypeSize(inputs->datatype);
 
@@ -72,7 +72,7 @@ inline ncclResult_t ncclTuningPipelineComputeSliceSize(
 
 inline ncclResult_t ncclTuningPipelineComputeChunkSize(struct ncclTuningInput_t* const inputs,
                                                        struct ncclTuningResult_t* tuning,
-                                                       struct ncclTuningPipeline* pipeline /*output*/) {
+                                                       struct ncclTuningPipeline* pipeline /*output*/) { /* 中文索引·体内调用 ncclGetChunkSteps、ncclSizePerChannel。 */
   struct ncclComm* comm = inputs->comm;
   int protocol = tuning->proto;
   int chunkSteps = inputs->chunkSteps;
@@ -87,7 +87,7 @@ inline ncclResult_t ncclTuningPipelineComputeChunkSize(struct ncclTuningInput_t*
 
 inline ncclResult_t ncclTuningPreComputePipeline(struct ncclTuningInput_t* const inputs,
                                                  struct ncclTuningResult_t* tuning,
-                                                 struct ncclTuningPipeline* pipeline /*output*/) {
+                                                 struct ncclTuningPipeline* pipeline /*output*/) { /* 中文索引·体内调用 ncclTuningPipelineComputeChunkSize、ncclTuningPipelineComputeSliceSize。 */
   NCCLCHECK(ncclTuningPipelineComputeChunkSize(inputs, tuning, pipeline));
   NCCLCHECK(ncclTuningPipelineComputeSliceSize(inputs, tuning, pipeline));
 

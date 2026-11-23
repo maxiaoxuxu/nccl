@@ -15,7 +15,7 @@ static ncclTuner_t ncclTuner;
 
 static ncclResult_t ncclTuner_init(void** context, uint64_t commId, size_t nRanks, size_t nNodes,
                                    ncclDebugLogger_t logfn, ncclNvlDomainInfo_v5_t* nvlDomainInfo,
-                                   ncclTunerConstants_t* constants) {
+                                   ncclTunerConstants_t* constants) { /* 中文索引·体内调用 ncclTunerConstants_v7_to_v5、ncclTuner_v6->init。 */
   ncclTunerConstants_v6_t constants_v6;
   ncclTunerConstants_v7_to_v5(&constants_v6, constants);
   NCCLCHECK(ncclTuner_v6->init(context, commId, nRanks, nNodes, logfn, nvlDomainInfo, &constants_v6));
@@ -26,7 +26,7 @@ static ncclResult_t ncclTuner_init(void** context, uint64_t commId, size_t nRank
   return ncclSuccess;
 }
 
-ncclTuner_t* getNcclTuner_v6(void* lib) {
+ncclTuner_t* getNcclTuner_v6(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclTuner_v6 = (ncclTuner_v6_t*)dlsym(lib, "ncclTunerPlugin_v6");
   if (ncclTuner_v6) {
     ncclTuner.init = ncclTuner_init;

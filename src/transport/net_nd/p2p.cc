@@ -95,7 +95,7 @@ static inline uint64_t ncclNdCompletionValue(uint64_t id, size_t size) {
 }
 
 // Check whether the peer acknowledged a completed send generation.
-static bool ncclNdSendWasAcknowledged(struct ncclNdRequest* req) {
+static bool ncclNdSendWasAcknowledged(struct ncclNdRequest* req) { /* 中文索引·体内调用 std::atomic_thread_fence、ncclNdCompletionValue。 */
   if (req->type != NCCL_NET_ND_REQ_SEND) return false;
   volatile uint64_t* acknowledgement =
     &req->base->remCompletionRecords.acknowledgements[req->send.slot][req->send.index];
@@ -105,7 +105,7 @@ static bool ncclNdSendWasAcknowledged(struct ncclNdRequest* req) {
 }
 
 // Select inline posting when the payload fits the QP limit.
-static inline ULONG ncclNdInlineWriteFlag(struct ncclNdNetCommBase* base, struct ncclNdQp* qp, ULONG size) {
+static inline ULONG ncclNdInlineWriteFlag(struct ncclNdNetCommBase* base, struct ncclNdQp* qp, ULONG size) { /* 中文索引·体内调用 base->stats->inlineWrites.fetch_add。 */
   if (size == 0 || qp->inlineDataSize == 0 || size > qp->inlineDataSize) return 0;
   if (base->stats != NULL) base->stats->inlineWrites.fetch_add(1, std::memory_order_relaxed);
   return ND_OP_FLAG_INLINE;
@@ -113,7 +113,7 @@ static inline ULONG ncclNdInlineWriteFlag(struct ncclNdNetCommBase* base, struct
 
 // Prefer the least-loaded QP while rotating the starting point so equally
 // loaded QPs and adapters continue to receive traffic fairly.
-static int ncclNdSelectQp(struct ncclNdNetCommBase* base) {
+static int ncclNdSelectQp(struct ncclNdNetCommBase* base) { /* 中文索引·体内调用 InterlockedCompareExchange、InterlockedCompareExchange64。 */
   if (base->nqps <= 0) return -1;
   int start = base->qpIndex;
   int selected = -1;
@@ -139,7 +139,7 @@ static int ncclNdSelectQp(struct ncclNdNetCommBase* base) {
 }
 
 // Compute an overflow-safe deadline for data-path progress.
-static ULONGLONG ncclNdDataDeadline(void) {
+static ULONGLONG ncclNdDataDeadline(void) { /* 中文索引·体内调用 GetTickCount64。 */
   int64_t timeoutSeconds = NCCL_ND_DATA_TIMEOUT_SECONDS;
   ULONGLONG now = GetTickCount64();
   ULONGLONG maxSeconds = (ULLONG_MAX - now) / 1000;
@@ -154,7 +154,7 @@ enum ncclNdDataFailureKind {
 
 // Publish the first fatal data-path error and flush every QP.
 static ncclResult_t ncclNdFailDataPath(struct ncclNdNetCommBase* base, ncclResult_t error, const char* reason,
-                                       enum ncclNdDataFailureKind kind = ncclNdDataFailureOther) {
+                                       enum ncclNdDataFailureKind kind = ncclNdDataFailureOther) { /* 中文索引·体内调用 ncclNdSetFatalError、stats->dataTimeouts.fetch_add。 */
   bool first = false;
   ncclResult_t sticky = ncclNdSetFatalError(base, error, &first);
   if (first) {
@@ -175,7 +175,7 @@ static ncclResult_t ncclNdFailDataPath(struct ncclNdNetCommBase* base, ncclResul
 }
 
 // Retire one failed rail or fail the communicator when failover is unavailable.
-ncclResult_t ncclNdHandleRailFailure(struct ncclNdNetCommBase* base, int devIndex, const char* reason) {
+ncclResult_t ncclNdHandleRailFailure(struct ncclNdNetCommBase* base, int devIndex, const char* reason) { /* 中文索引·体内调用 InterlockedCompareExchange、ncclParamNdResiliencyPortFailover。 */
   if (base == NULL || devIndex < 0 || devIndex >= base->ndevs) return ncclInvalidArgument;
   LONG bit = 1L << devIndex;
   LONG failedMask = InterlockedCompareExchange(&base->failedDevicesMask, 0, 0);
@@ -199,7 +199,7 @@ ncclResult_t ncclNdHandleRailFailure(struct ncclNdNetCommBase* base, int devInde
 }
 
 // Poll link generations, provider errors, and adapter health.
-static ncclResult_t ncclNdCheckProvider(struct ncclNdNetCommBase* base, bool force = false) {
+static ncclResult_t ncclNdCheckProvider(struct ncclNdNetCommBase* base, bool force = false) { /* 中文索引·体内调用 GetTickCount64、InterlockedCompareExchange64。 */
   const ULONGLONG providerCheckIntervalMs = NCCL_ND_PROVIDER_CHECK_INTERVAL_MS;
   const ULONGLONG linkCheckIntervalMs = NCCL_ND_LINK_CHECK_INTERVAL_MS;
   ULONGLONG now = GetTickCount64();
@@ -265,7 +265,7 @@ static ncclResult_t ncclNdCheckProvider(struct ncclNdNetCommBase* base, bool for
 
 // The TCP socket remains connected after metadata exchange. A non-consuming
 // peek makes graceful close/reset visible even when no ND completion arrives.
-static ncclResult_t ncclNdCheckPeer(struct ncclNdNetCommBase* base, bool passive = false) {
+static ncclResult_t ncclNdCheckPeer(struct ncclNdNetCommBase* base, bool passive = false) { /* 中文索引·体内调用 InterlockedCompareExchange、ncclNdFailDataPath。 */
   if (InterlockedCompareExchange(&base->peerClosing, 0, 0) != 0) {
     return passive ?
              ncclSuccess :
@@ -320,7 +320,7 @@ static ncclResult_t ncclNdCheckPeer(struct ncclNdNetCommBase* base, bool passive
 }
 
 // Send the best-effort orderly-shutdown marker to the peer.
-void ncclNdNotifyPeerClosing(struct ncclNdNetCommBase* base) {
+void ncclNdNotifyPeerClosing(struct ncclNdNetCommBase* base) { /* 中文索引·体内调用 send。 */
   struct ncclSocket* sock =
     base->isSend ? &((struct ncclNdSendComm*)base)->sock : &((struct ncclNdRecvComm*)base)->sock;
   if (sock->state != ncclSocketStateReady || sock->socketDescriptor == NCCL_INVALID_SOCKET) return;
@@ -333,7 +333,7 @@ void ncclNdNotifyPeerClosing(struct ncclNdNetCommBase* base) {
 }
 
 // Translate one request stage into ordered ND writes on a selected QP.
-static ncclResult_t ncclNdPostRequestOnQp(struct ncclNdRequest* req, int qpIndex, HRESULT* postStatus) {
+static ncclResult_t ncclNdPostRequestOnQp(struct ncclNdRequest* req, int qpIndex, HRESULT* postStatus) { /* 中文索引·体内调用 ncclNdGetCtsSlot、wrap_nd_get_local_token。 */
   struct ncclNdNetCommBase* base = req->base;
   if (postStatus != NULL) *postStatus = ND_SUCCESS;
   if (qpIndex < 0 || qpIndex >= base->nqps) return ncclInternalError;
@@ -415,7 +415,7 @@ static ncclResult_t ncclNdPostRequestOnQp(struct ncclNdRequest* req, int qpIndex
 }
 
 // Post a request and retry retryable failures on a surviving rail.
-static ncclResult_t ncclNdPostRequestWithFailover(struct ncclNdRequest* req) {
+static ncclResult_t ncclNdPostRequestWithFailover(struct ncclNdRequest* req) { /* 中文索引·体内调用 ncclNdSelectQp、req->base->stats->failoverFailures.fetch_add。 */
   while (true) {
     int qpIndex = ncclNdSelectQp(req->base);
     if (qpIndex < 0) {
@@ -445,7 +445,7 @@ static ncclResult_t ncclNdPostRequestWithFailover(struct ncclNdRequest* req) {
 
 // Publish a tagged receive group and return its asynchronous request.
 ncclResult_t ncclNdIrecv(void* recvComm, int n, void** data, size_t* sizes, int* tags, void** mhandles, void** phandles,
-                         void** request) {
+                         void** request) { /* 中文索引·体内调用 ncclNdGetFatalError、ncclNdCheckProvider。 */
   struct ncclNdRecvComm* rComm = (struct ncclNdRecvComm*)recvComm;
   struct ncclNdNetCommBase* base = &rComm->base;
   ncclNdScopedSrwLock progressLock(&base->progressLock);
@@ -539,7 +539,7 @@ ncclResult_t ncclNdIrecv(void* recvComm, int n, void** data, size_t* sizes, int*
 
 // Match a published receive and post its tagged send.
 ncclResult_t ncclNdIsend(void* sendComm, void* data, size_t size, int tag, void* mhandle, void* phandle,
-                         void** request) {
+                         void** request) { /* 中文索引·体内调用 ncclNdGetFatalError、ncclNdCheckProvider。 */
   struct ncclNdSendComm* sComm = (struct ncclNdSendComm*)sendComm;
   struct ncclNdNetCommBase* base = &sComm->base;
   ncclNdScopedSrwLock progressLock(&base->progressLock);
@@ -652,7 +652,7 @@ ncclResult_t ncclNdIsend(void* sendComm, void* data, size_t size, int tag, void*
 }
 
 // Flush received GPUDirect writes into CUDA-visible memory.
-ncclResult_t ncclNdIflush(void* recvComm, int n, void** data, int* sizes, void** mhandles, void** request) {
+ncclResult_t ncclNdIflush(void* recvComm, int n, void** data, int* sizes, void** mhandles, void** request) { /* 中文索引·体内调用 ncclNdGetFatalError、ncclNdCheckProvider。 */
   struct ncclNdRecvComm* rComm = (struct ncclNdRecvComm*)recvComm;
   struct ncclNdNetCommBase* base = &rComm->base;
   ncclNdScopedSrwLock progressLock(&base->progressLock);
@@ -689,7 +689,7 @@ fail:
 }
 
 // Progress shared CQs and report completion for one asynchronous request.
-ncclResult_t ncclNdTest(void* request, int* done, int* sizes) {
+ncclResult_t ncclNdTest(void* request, int* done, int* sizes) { /* 中文索引·体内调用 ncclNdGetFatalError、ncclNdCheckProvider。 */
   struct ncclNdRequest* req = (struct ncclNdRequest*)request;
   *done = 0;
 

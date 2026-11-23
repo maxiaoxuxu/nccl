@@ -15,7 +15,7 @@
 
 extern int64_t ncclParamElasticBufferRegister();
 
-ncclResult_t ncclDevrPopulateSegmentSizes(struct ncclDevrMemory* mem, int numSegments) {
+ncclResult_t ncclDevrPopulateSegmentSizes(struct ncclDevrMemory* mem, int numSegments) { /* 中文索引·体内调用 cuMemGetAddressRange。 */
   ncclResult_t ret = ncclSuccess;
 
   // If our caller does not have a VA (for instance, in ncclDevrCommCreateInternal),
@@ -42,7 +42,7 @@ exit:
 }
 
 ncclResult_t ncclDevrCheckRegistrationSupport(void* userPtr, size_t userSize, struct ncclComm* comm,
-                                              bool hasSysmemSegment, int winFlags) {
+                                              bool hasSysmemSegment, int winFlags) { /* 中文索引·体内调用 ncclParamElasticBufferRegister、ncclDevrWinRegEnabled。 */
   ncclResult_t ret = ncclSuccess;
   if (hasSysmemSegment) {
     if (!ncclParamElasticBufferRegister()) {
@@ -73,7 +73,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclDevrValidateHandleLocationType(CUmemGenericAllocationHandle memHandle, int segment) {
+ncclResult_t ncclDevrValidateHandleLocationType(CUmemGenericAllocationHandle memHandle, int segment) { /* 中文索引·体内调用 cuMemGetAllocationPropertiesFromHandle。 */
   ncclResult_t ret = ncclSuccess;
   CUmemAllocationProp prop;
   CUCHECKGOTO(cuMemGetAllocationPropertiesFromHandle(&prop, memHandle), ret, exit);
@@ -88,7 +88,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclDevrVerifySegmentLayouts(struct ncclDevrMemory* mem, struct ncclComm* comm) {
+ncclResult_t ncclDevrVerifySegmentLayouts(struct ncclDevrMemory* mem, struct ncclComm* comm) { /* 中文索引·体内调用 ncclCalloc、memcpy。 */
   if (!mem->globalHasSysmemSegment) return ncclSuccess;
 
   ncclResult_t ret = ncclSuccess;
@@ -128,7 +128,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclDevrBuildGinSegmentInfos(struct ncclDevrMemory* mem) {
+ncclResult_t ncclDevrBuildGinSegmentInfos(struct ncclDevrMemory* mem) { /* 中文索引·体内调用 ncclCalloc、cuMemGetAllocationPropertiesFromHandle。 */
   ncclResult_t ret = ncclSuccess;
   bool deviceOnlySegments = !mem->globalHasSysmemSegment;
 
@@ -154,7 +154,7 @@ exit:
 // Segment windows need their own shadow-pool allocation because they're variable in size.
 ncclResult_t ncclDevrAllocAndPopulateSegmentWindows(struct ncclDevrState* devr, struct ncclDevrMemory* mem,
                                                     cudaStream_t stream,
-                                                    struct ncclSegmentWindow** outSegmentWindowsDev) {
+                                                    struct ncclSegmentWindow** outSegmentWindowsDev) { /* 中文索引·体内调用 ncclShadowPoolAlloc、cudaMemcpyAsync。 */
   ncclResult_t ret = ncclSuccess;
   if (!devr->ginEnabled) {
     WARN("GIN: ncclDevrAllocAndPopulateSegmentWindows called but GIN is not enabled");

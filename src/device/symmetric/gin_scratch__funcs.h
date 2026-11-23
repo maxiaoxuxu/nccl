@@ -25,7 +25,7 @@ NCCL_DEVICE_INLINE ncclGinOutboxSession<Coop, ginBackendMask>::ncclGinOutboxSess
 
 #ifdef __CUDACC__
 template <typename Coop, unsigned ginBackendMask>
-NCCL_DEVICE_INLINE ncclGinOutboxSession<Coop, ginBackendMask>::~ncclGinOutboxSession() {
+NCCL_DEVICE_INLINE ncclGinOutboxSession<Coop, ginBackendMask>::~ncclGinOutboxSession() { /* 中文索引·体内调用 this->coop.thread_rank、this->getStatePtr。 */
   if (this->coop.thread_rank() == 0) {
     this->getStatePtr()->unpadded = this->state;
   }
@@ -37,7 +37,7 @@ NCCL_DEVICE_INLINE ncclGinOutboxSession<Coop, ginBackendMask>::~ncclGinOutboxSes
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
 NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::apportion(
-  Coop, SubCoop subcoop, bool subcoopIsNonTrivial, int nBufs_log2_next, bool deferSync) {
+  Coop, SubCoop subcoop, bool subcoopIsNonTrivial, int nBufs_log2_next, bool deferSync) { /* 中文索引·体内调用 subcoop.thread_rank、subcoop.size。 */
   int nBufs_log2_cur = this->state.nBufs_log2;
   if (nBufs_log2_cur != nBufs_log2_next) {
     if (subcoopIsNonTrivial) {
@@ -58,7 +58,7 @@ NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::apportion(
 
 #ifdef __CUDACC__
 template <typename Coop, unsigned ginBackendMask>
-NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::apportionRequests(Coop coop, int nReqs_log2_next) {
+NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::apportionRequests(Coop coop, int nReqs_log2_next) { /* 中文索引·体内调用 coop.sync。 */
   if (this->state.nBufs_log2 != nReqs_log2_next) {
     coop.sync();
     this->state.nBufs_log2 = nReqs_log2_next;
@@ -70,7 +70,7 @@ NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::apportionReq
 #ifdef __CUDACC__
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
-NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::waitBufs(SubCoop subcoop, int i0, int n) {
+NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::waitBufs(SubCoop subcoop, int i0, int n) { /* 中文索引·体内调用 subcoop.thread_rank、subcoop.size。 */
   NVCC_PRAGMA_UNROLL_DISABLED
   for (int i = subcoop.thread_rank(); i < n; i += subcoop.size()) {
     uint32_t id = this->state.cursor + i0 + i;
@@ -84,7 +84,7 @@ NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::waitBufs(Sub
 #ifdef __CUDACC__
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
-NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::waitRecentRequests(SubCoop subcoop) {
+NCCL_DEVICE_INLINE void ncclGinOutboxSession<Coop, ginBackendMask>::waitRecentRequests(SubCoop subcoop) { /* 中文索引·体内调用 subcoop.thread_rank、subcoop.size。 */
   int nReqs = min((int)this->state.cursor, 1 << this->state.nBufs_log2);
   uint32_t id0 = this->state.cursor - nReqs;
   NVCC_PRAGMA_UNROLL_DISABLED
@@ -151,7 +151,7 @@ NCCL_DEVICE_INLINE ncclGinInboxA2ASession<Coop, ginBackendMask>::ncclGinInboxA2A
 
 #ifdef __CUDACC__
 template <typename Coop, unsigned ginBackendMask>
-NCCL_DEVICE_INLINE ncclGinInboxA2ASession<Coop, ginBackendMask>::~ncclGinInboxA2ASession() {
+NCCL_DEVICE_INLINE ncclGinInboxA2ASession<Coop, ginBackendMask>::~ncclGinInboxA2ASession() { /* 中文索引·体内调用 this->coop.thread_rank、this->getStatePtr。 */
   if (this->coop.thread_rank() == 0) {
     this->getStatePtr()->unpadded = this->state;
   }
@@ -163,7 +163,7 @@ NCCL_DEVICE_INLINE ncclGinInboxA2ASession<Coop, ginBackendMask>::~ncclGinInboxA2
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
 NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::apportion(
-  Coop coop, SubCoop subcoop, bool subcoopIsNonTrivial, int nBufs_log2_next) {
+  Coop coop, SubCoop subcoop, bool subcoopIsNonTrivial, int nBufs_log2_next) { /* 中文索引·体内调用 idivmodFast32、subcoop.thread_rank。 */
   int nBufs_log2_cur = this->state.nBufs_log2_plus_1 - 1;
   if (nBufs_log2_cur != nBufs_log2_next) {
     if (subcoopIsNonTrivial) {
@@ -233,7 +233,7 @@ template <typename SubCoop, typename GetPtr, typename GetEltCount, typename GetC
 NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::postSends(SubCoop subcoop, int step0, int nSteps,
                                                                                 GetPtr getPtr, GetEltCount getEltCount,
                                                                                 GetCompletion getCompletion,
-                                                                                AfterPost afterPost) {
+                                                                                AfterPost afterPost) { /* 中文索引·体内调用 subcoop.thread_rank、subcoop.size。 */
   NVCC_PRAGMA_UNROLL_DISABLED
   for (int i = subcoop.thread_rank(); i < nSteps; i += subcoop.size()) {
     int step = step0 + i;
@@ -256,7 +256,7 @@ NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::postSends(
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
 NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::waitRecvs(SubCoop subcoop, int step0,
-                                                                                int nSteps) {
+                                                                                int nSteps) { /* 中文索引·体内调用 subcoop.thread_rank、subcoop.size。 */
   NVCC_PRAGMA_UNROLL_DISABLED
   for (int i = subcoop.thread_rank(); i < nSteps; i += subcoop.size()) {
     this->waitR2R(this->state.monoStep + step0 + i);
@@ -268,7 +268,7 @@ NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::waitRecvs(
 template <typename Coop, unsigned ginBackendMask>
 template <typename SubCoop>
 NCCL_DEVICE_INLINE void ncclGinInboxA2ASession<Coop, ginBackendMask>::finishRecvs(SubCoop subcoop, int step0,
-                                                                                  int nSteps) {
+                                                                                  int nSteps) { /* 中文索引·体内调用 imodFast32、subcoop.thread_rank。 */
   int nBufs_log2 = this->state.nBufs_log2_plus_1 - 1;
   int nBufs_mod_nPeers = imodFast32(1 << nBufs_log2, this->nPeers, this->handle.nPeers_rcp32);
   NVCC_PRAGMA_UNROLL_DISABLED

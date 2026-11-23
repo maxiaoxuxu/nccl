@@ -68,7 +68,7 @@ static void rasNewPeerNotify(const struct rasPeerInfo* peer);
 
 // Handles RAS_ADD_RANKS notification -- adds new ranks to the internal list of all RAS peers, reconfigures RAS
 // network connections, and notifies the peers.
-ncclResult_t rasLocalHandleAddRanks(struct rasRankInit* ranks, int nranks) {
+ncclResult_t rasLocalHandleAddRanks(struct rasRankInit* ranks, int nranks) { /* 中文索引·体内调用 rasRanksConvertToPeers、rasPeersUpdate。 */
   ncclResult_t ret = ncclSuccess;
 
   INFO(NCCL_RAS, "RAS handling local addRanks request (old nRasPeers %d)", nRasPeers);
@@ -102,7 +102,7 @@ fail:
 // elements by the address/cudaDev, and merges elements with duplicate addresses (in case of multiple CUDA devices per
 // process).  In the process we also calculate how large the merged rasPeers array will need to be.
 static ncclResult_t rasRanksConvertToPeers(struct rasRankInit* ranks, int nranks, struct rasPeerInfo** rankPeers,
-                                           int* nRankPeers, int* newNRasPeers) {
+                                           int* nRankPeers, int* newNRasPeers) { /* 中文索引·体内调用 memset、qsort。 */
   ncclResult_t ret = ncclSuccess;
   int peerIdx, rankPeerIdx;
 
@@ -194,7 +194,7 @@ fail:
 // Updates the rasPeers array with the new data.  The new data gets updated in the process as well: any data that
 // wasn't actually new is purged, so as to minimize the amount of data we forward to our peers.
 // On a successful return, nRankPeers contains the number of entries that were updated.
-static ncclResult_t rasPeersUpdate(struct rasPeerInfo* rankPeers, int* nRankPeers, int newNRasPeers) {
+static ncclResult_t rasPeersUpdate(struct rasPeerInfo* rankPeers, int* nRankPeers, int newNRasPeers) { /* 中文索引·体内调用 ncclSocketsCompare、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   int rankPeerIdxDst;
   int rankPeerIdx, peerIdx;
@@ -409,7 +409,7 @@ fail:
 
 // Searches through rasPeers given the peer address.  Returns the index of the found entry in the rasPeers
 // array or -1 if not found.
-int rasPeerFind(const union ncclSocketAddress* addr) {
+int rasPeerFind(const union ncclSocketAddress* addr) { /* 中文索引·体内调用 bsearch。 */
   struct rasPeerInfo* peer =
     (struct rasPeerInfo*)bsearch(addr, rasPeers, nRasPeers, sizeof(*rasPeers), rasAddrPeerInfoCompare);
   return (peer ? peer - rasPeers : -1);
@@ -428,7 +428,7 @@ int rasPeerFind(const union ncclSocketAddress* addr) {
 // Reconfigures the RAS network to accommodate the newly added peers, by modifying the links and establishing new
 // connections as needed.
 static ncclResult_t rasNetUpdatePeers(const struct rasPeerInfo* newPeers, int nNewPeers, bool updateDeadPeers,
-                                      struct rasRankInit* ranks, int nranks, struct rasConnection* fromConn) {
+                                      struct rasRankInit* ranks, int nranks, struct rasConnection* fromConn) { /* 中文索引·体内调用 rasLinkPropagateUpdate、rasLinkReinitConns。 */
   ncclResult_t ret = ncclSuccess;
 
   // Do we actually have anything to do?
@@ -453,7 +453,7 @@ fail:
 // for the explanation of the function arguments.
 static ncclResult_t rasLinkPropagateUpdate(struct rasLink* link, const struct rasPeerInfo* newPeers, int nNewPeers,
                                            bool updateDeadPeers, struct rasRankInit* ranks, int nranks,
-                                           struct rasConnection* fromConn) {
+                                           struct rasConnection* fromConn) { /* 中文索引·体内调用 rasConnPropagateUpdate。 */
   for (struct rasLinkConn* linkConn = link->conns; linkConn; linkConn = linkConn->next) {
     // Note that we don't send the update via the connection that we received this notification from in the first
     // place (while it wouldn't loop indefinitely, it would add a needless extra exchange).
@@ -469,7 +469,7 @@ static ncclResult_t rasLinkPropagateUpdate(struct rasLink* link, const struct ra
 // Sends a peers update down a particular connection.  See rasNetUpdatePeers for the explanation of the function
 // arguments.
 static ncclResult_t rasConnPropagateUpdate(struct rasConnection* conn, const struct rasPeerInfo* newPeers,
-                                           int nNewPeers, bool updateDeadPeers, struct rasRankInit* ranks, int nranks) {
+                                           int nNewPeers, bool updateDeadPeers, struct rasRankInit* ranks, int nranks) { /* 中文索引·体内调用 bsearch、rasConnSendPeersUpdate。 */
   if (conn->sock && conn->sock->status == RAS_SOCK_READY) {
     // If we have the rank info, check if the peer on the other side of this connection has participated in the new
     // communicator.
@@ -491,7 +491,7 @@ static ncclResult_t rasConnPropagateUpdate(struct rasConnection* conn, const str
 // Sends a RAS_MSG_PEERSUPDATE message, which can include both the rasPeers (preferably only the newly added peers
 // rather than the complete rasPeers array, to save on the network bandwidth) and rasDeadPeers (sent in its entirety
 // if at all, as it's assumed to be a lot smaller than rasPeers).
-ncclResult_t rasConnSendPeersUpdate(struct rasConnection* conn, const struct rasPeerInfo* peers, int nPeers) {
+ncclResult_t rasConnSendPeersUpdate(struct rasConnection* conn, const struct rasPeerInfo* peers, int nPeers) { /* 中文索引·体内调用 rasMsgLength、rasMsgAlloc。 */
   struct rasMsg* msg = nullptr;
   int msgLen;
   int deadPeersOffset = 0;
@@ -540,7 +540,7 @@ exit:
 // rasPeers and rasDeadPeers arrays.  If the checksums of the resulting arrays don't match those from the message,
 // sends its own RAS_MSG_PEERSUPDATE back to the source, to ensure a sync.
 // Subsequently propagates the update to its own peers.
-ncclResult_t rasMsgHandlePeersUpdate(struct rasMsg* msg, struct rasSocket* sock) {
+ncclResult_t rasMsgHandlePeersUpdate(struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、memcpy。 */
   ncclResult_t ret = ncclSuccess;
   struct rasMsg* newMsg = nullptr;
   int newMsgLen = 0;
@@ -691,7 +691,7 @@ fail:
 // is no connection, we create one.  If a connection exists but is experiencing delays then we add a fallback and
 // the process repeats.
 // External conns are dropped from the links as well (they will be re-created via keepAlive messages as needed).
-static ncclResult_t rasLinkReinitConns(struct rasLink* link) {
+static ncclResult_t rasLinkReinitConns(struct rasLink* link) { /* 中文索引·体内调用 free、memset。 */
   struct rasLinkConn* linkConn;
   int newPeerIdx = myPeerIdx;
 
@@ -754,7 +754,7 @@ static ncclResult_t rasLinkReinitConns(struct rasLink* link) {
 // are on the same node as the previous fallback (unless it's the same node that we're running on or we have strong
 // indications that the node is up).  We do that to avoid having to excessively wait iterating through, say, 8
 // processes when a whole node might be down.
-int rasLinkCalculatePeer(const struct rasLink* link, int peerIdx, bool isFallback) {
+int rasLinkCalculatePeer(const struct rasLink* link, int peerIdx, bool isFallback) { /* 中文索引·体内调用 ncclSocketsSameNode、rasPeerIsDead。 */
   int newPeerIdx = (peerIdx + link->direction + nRasPeers) % nRasPeers;
   do {
     if (isFallback && !ncclSocketsSameNode(&rasPeers[peerIdx].addr, &rasNetListeningSocket.addr)) {
@@ -804,7 +804,7 @@ int rasLinkCalculatePeer(const struct rasLink* link, int peerIdx, bool isFallbac
 
 // Marks a peer as dead in the local rasDeadPeers array.  Any propagation, reconfiguration, etc., needs to be
 // handled outside of this function.
-ncclResult_t rasPeerDeclareDead(const union ncclSocketAddress* addr) {
+ncclResult_t rasPeerDeclareDead(const union ncclSocketAddress* addr) { /* 中文索引·体内调用 rasPeerIsDead、getNewDeadEntry。 */
   union ncclSocketAddress* deadAddr;
 
   if (!rasPeerIsDead(addr)) {
@@ -827,7 +827,7 @@ ncclResult_t rasPeerDeclareDead(const union ncclSocketAddress* addr) {
 
 // Formats a peer description from a rasPeerInfo struct (format: "Process <pid> on node <host> managing GPU[s]
 // <gpus>").
-const char* rasPeerInfoToString(const struct rasPeerInfo* peer, char* buf, size_t size) {
+const char* rasPeerInfoToString(const struct rasPeerInfo* peer, char* buf, size_t size) { /* 中文索引·体内调用 ncclSocketToHost、snprintf。 */
   char hostBuf[SOCKET_NAME_MAXLEN + 1];
   char gpuBuf[1024];
 
@@ -849,7 +849,7 @@ static void rasNewPeerNotify(const struct rasPeerInfo* peer) {
 // Any propagation needs to be handled outside of this function, though it *does* disconnect any connections
 // with the newly dead peers.
 // On return, nUpdatePeers contains the number of newly added dead entries.
-static ncclResult_t rasDeadPeersUpdate(union ncclSocketAddress* updatePeers, int* nUpdatePeers) {
+static ncclResult_t rasDeadPeersUpdate(union ncclSocketAddress* updatePeers, int* nUpdatePeers) { /* 中文索引·体内调用 ncclCalloc、memmove。 */
   static union ncclSocketAddress* newPeers = nullptr;
   static union ncclSocketAddress* oldPeers;
 
@@ -907,7 +907,7 @@ static ncclResult_t rasDeadPeersUpdate(union ncclSocketAddress* updatePeers, int
 }
 
 // Returns the index of the first available entry in the rasDeadPeers array, enlarging the array if necessary.
-static ncclResult_t getNewDeadEntry(union ncclSocketAddress** pAddr) {
+static ncclResult_t getNewDeadEntry(union ncclSocketAddress** pAddr) { /* 中文索引·体内调用 ncclRealloc。 */
   if (nRasDeadPeers == rasDeadPeersSize) {
     NCCLCHECK(ncclRealloc(&rasDeadPeers, rasDeadPeersSize, rasDeadPeersSize + RAS_INCREMENT));
     rasDeadPeersSize += RAS_INCREMENT;
@@ -928,7 +928,7 @@ bool rasPeerIsDead(const union ncclSocketAddress* addr) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Searching callback for struct rasRankInit.  Compares the ncclSocketAddress key against a rasRankInit element.
-static int rasAddrRankInitCompare(const void* k, const void* e) {
+static int rasAddrRankInitCompare(const void* k, const void* e) { /* 中文索引·体内调用 ncclSocketsCompare。 */
   const union ncclSocketAddress* key = (const union ncclSocketAddress*)k;
   const struct rasRankInit* elem = (const struct rasRankInit*)e;
 
@@ -936,7 +936,7 @@ static int rasAddrRankInitCompare(const void* k, const void* e) {
 }
 
 // Searching callback for struct rasPeerInfo.  Compares the ncclSocketAddress key against a rasPeerInfo element.
-static int rasAddrPeerInfoCompare(const void* k, const void* e) {
+static int rasAddrPeerInfoCompare(const void* k, const void* e) { /* 中文索引·体内调用 ncclSocketsCompare。 */
   const union ncclSocketAddress* key = (const union ncclSocketAddress*)k;
   const struct rasPeerInfo* elem = (const struct rasPeerInfo*)e;
 
@@ -944,7 +944,7 @@ static int rasAddrPeerInfoCompare(const void* k, const void* e) {
 }
 
 // Sorting callback for struct rasRankInit. addr is the primary key; cudaDev is secondary.
-static int rasRanksCompare(const void* e1, const void* e2) {
+static int rasRanksCompare(const void* e1, const void* e2) { /* 中文索引·体内调用 ncclSocketsCompare、ncclSocketToString。 */
   const struct rasRankInit* r1 = (const struct rasRankInit*)e1;
   const struct rasRankInit* r2 = (const struct rasRankInit*)e2;
   int cmp = ncclSocketsCompare(&r1->addr, &r2->addr);
@@ -971,7 +971,7 @@ static int rasRanksCompare(const void* e1, const void* e2) {
 // Sorting callback for ncclSocketAddress.  We want to sort by the address family (IPv4 first), then the address,
 // then port.  Unfortunately, that's not the order of how they are laid out in memory, so one big memcmp won't do.
 // memcmp is still useful though for individual elements in the network byte order.
-int ncclSocketsCompare(const void* p1, const void* p2) {
+int ncclSocketsCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 memcmp。 */
   const union ncclSocketAddress* a1 = (const union ncclSocketAddress*)p1;
   const union ncclSocketAddress* a2 = (const union ncclSocketAddress*)p2;
   // AF_INET (2) is less than AF_INET6 (10).
@@ -1004,7 +1004,7 @@ int ncclSocketsCompare(const void* p1, const void* p2) {
 }
 
 // Returns true if two socket addresses are from the same node (actually, the same network interface on one node).
-bool ncclSocketsSameNode(const union ncclSocketAddress* a1, const union ncclSocketAddress* a2) {
+bool ncclSocketsSameNode(const union ncclSocketAddress* a1, const union ncclSocketAddress* a2) { /* 中文索引·体内调用 memcmp。 */
   // AF_INET (2) is less than AF_INET6 (10).
   int family = a1->sa.sa_family;
   if (family != a2->sa.sa_family) return false;
@@ -1019,7 +1019,7 @@ bool ncclSocketsSameNode(const union ncclSocketAddress* a1, const union ncclSock
 }
 
 // Debug output routine: dumps the rasPeers array.
-static void rasPeersDump() {
+static void rasPeersDump() { /* 中文索引·体内调用 rasPeerDump。 */
   for (int p = 0; p < nRasPeers; p++) {
     const struct rasPeerInfo* peer = rasPeers + p;
     INFO(NCCL_RAS, "RAS peer %d: %s%s", p, rasPeerDump(peer, rasLine, sizeof(rasLine)),
@@ -1029,7 +1029,7 @@ static void rasPeersDump() {
 }
 
 // Debug output routine: dumps the rasDeadPeers array.
-static void rasDeadPeersDump() {
+static void rasDeadPeersDump() { /* 中文索引·体内调用 rasPeerFind、rasPeerDump。 */
   for (int p = 0; p < nRasDeadPeers; p++) {
     int deadPeerIdx = rasPeerFind(rasDeadPeers + p);
     INFO(NCCL_RAS, "RAS dead peer %d: %s", p,
@@ -1040,7 +1040,7 @@ static void rasDeadPeersDump() {
 }
 
 // Debug output routine: dumps part of an individual element from the rasPeers array.
-static char* rasPeerDump(const struct rasPeerInfo* peer, char* result, size_t nres) {
+static char* rasPeerDump(const struct rasPeerInfo* peer, char* result, size_t nres) { /* 中文索引·体内调用 snprintf、ncclSocketToString。 */
   char line[SOCKET_NAME_MAXLEN + 1], line2[1024];
   snprintf(result, nres, "socket %s, pid %d, GPU%s %s", ncclSocketToString(&peer->addr, line), peer->pid,
            (COMPILER_POPCOUNT64(peer->cudaDevs) > 1 ? "s" : ""),
@@ -1050,7 +1050,7 @@ static char* rasPeerDump(const struct rasPeerInfo* peer, char* result, size_t nr
 
 // Formats a peer description by looking up the address in the global peers array.
 // Returns the formatted peer description, or just the address if the peer is not found.
-const char* rasPeerToString(const union ncclSocketAddress* addr, char* buf, size_t size) {
+const char* rasPeerToString(const union ncclSocketAddress* addr, char* buf, size_t size) { /* 中文索引·体内调用 rasPeerFind、rasPeerInfoToString。 */
   char hostBuf[SOCKET_NAME_MAXLEN + 1];
   int peerIdx = rasPeerFind(addr);
   if (peerIdx >= 0) {
@@ -1063,7 +1063,7 @@ const char* rasPeerToString(const union ncclSocketAddress* addr, char* buf, size
 }
 
 // Invoked during RAS termination to release all the allocated resources.
-void rasPeersTerminate() {
+void rasPeersTerminate() { /* 中文索引·体内调用 free。 */
   free(rasPeers);
   rasPeers = nullptr;
   nRasPeers = 0;

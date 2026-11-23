@@ -21,12 +21,12 @@ static ncclResult_t ncclRma_v14_getRmaProperties(void* collComm, ncclRmaProperti
 }
 
 static ncclResult_t ncclRma_v14_connect(void* ctx, void* handles[], int nranks, int rank, void* listenComm,
-                                        void** collComm, volatile uint32_t* abortFlag) {
+                                        void** collComm, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclRma_v14->connect。 */
   (void)abortFlag;
   return ncclRma_v14->connect(ctx, handles, nranks, rank, listenComm, collComm);
 }
 
-static ncclResult_t ncclRma_v14_createContext(void* collComm, ncclRmaConfig_v17_t* config, void** rmaCtx) {
+static ncclResult_t ncclRma_v14_createContext(void* collComm, ncclRmaConfig_v17_t* config, void** rmaCtx) { /* 中文索引·体内调用 memset、ncclRma_v14->createContext。 */
   ncclRmaConfig_v14_t config_v14;
   memset(&config_v14, 0, sizeof(config_v14));
   config_v14.nContexts = config->nContexts;
@@ -37,7 +37,7 @@ static ncclResult_t ncclRma_v14_createContext(void* collComm, ncclRmaConfig_v17_
 
 static ncclResult_t ncclRma_v14_iput(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
                                      uint64_t dstOff, void* dstMhandle, uint32_t rank, uint32_t optFlags,
-                                     void** request) {
+                                     void** request) { /* 中文索引·体内调用 ncclRma_v14->iput。 */
   (void)optFlags;
   return ncclRma_v14->iput(rmaCtx, context, srcOff, srcMhandle, size, dstOff, dstMhandle, rank, request);
 }
@@ -46,7 +46,7 @@ static ncclResult_t ncclRma_v14_iput(void* rmaCtx, int context, uint64_t srcOff,
 static ncclResult_t ncclRma_v14_iputSignal(void* rmaCtx, int context, uint64_t srcOff, void* srcMhandle, size_t size,
                                            uint64_t dstOff, void* dstMhandle, uint32_t rank, uint64_t signalOff,
                                            void* signalMhandle, uint64_t signalValue, uint32_t signalOp,
-                                           bool isStrongSignal, uint32_t optFlags, void** request) {
+                                           bool isStrongSignal, uint32_t optFlags, void** request) { /* 中文索引·体内调用 ncclRma_v14->iputSignal。 */
   (void)optFlags;
   return ncclRma_v14->iputSignal(rmaCtx, context, srcOff, srcMhandle, size, dstOff, dstMhandle, rank, signalOff,
                                  signalMhandle, signalValue, signalOp, isStrongSignal, request);
@@ -54,12 +54,12 @@ static ncclResult_t ncclRma_v14_iputSignal(void* rmaCtx, int context, uint64_t s
 
 static ncclResult_t ncclRma_v14_iget(void* rmaCtx, int context, uint64_t remoteOff, void* remoteMhandle, size_t size,
                                      uint64_t localOff, void* localMhandle, uint32_t rank, uint32_t optFlags,
-                                     void** request) {
+                                     void** request) { /* 中文索引·体内调用 ncclRma_v14->iget。 */
   (void)optFlags;
   return ncclRma_v14->iget(rmaCtx, context, remoteOff, remoteMhandle, size, localOff, localMhandle, rank, request);
 }
 
-ncclRma_t* getNcclRma_v14(void* lib) {
+ncclRma_t* getNcclRma_v14(void* lib) { /* 中文索引·体内调用 dlsym。 */
   ncclRma_v14 = (ncclRma_v14_t*)dlsym(lib, "ncclRmaPlugin_v14");
   if (ncclRma_v14) {
     INFO(NCCL_INIT | NCCL_NET, "RMA/Plugin: Loaded rma plugin %s (v14)", ncclRma_v14->name);

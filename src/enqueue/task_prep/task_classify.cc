@@ -12,7 +12,7 @@
 #include "register_inline.h"
 
 static ncclResult_t classifyFillSendRecvTuningInput(struct ncclComm* comm, struct ncclRawTaskSendRecv* raw,
-                                                    ncclTuningInput_t* in) {
+                                                    ncclTuningInput_t* in) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   struct ncclReg* regBuf;
   bool isValid;
 
@@ -35,7 +35,7 @@ static ncclResult_t classifyFillSendRecvTuningInput(struct ncclComm* comm, struc
 static ncclResult_t classifyEnqueueP2pTask(
   struct ncclComm* comm, struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* p2pTaskQueue,
   ncclFunc_t func, ncclFunc_t collAPI, void* buff, size_t count, ncclDataType_t datatype, int peer, cudaStream_t stream,
-  cudaEvent_t launchCompletionEvent, int maxCTAs) {
+  cudaEvent_t launchCompletionEvent, int maxCTAs) { /* 中文索引·体内调用 ncclTypeSize、classifyFillSendRecvTuningInput。 */
   struct ncclRawTask* raw = ncclMemoryPoolAlloc<struct ncclRawTask>(&comm->memPool_ncclRawTask, &comm->memPermanent);
   raw->kind = ncclTaskKindSendRecv;
   raw->sendRecv.func = func;
@@ -60,7 +60,7 @@ static ncclResult_t classifyEnqueueP2pTask(
 
 static ncclResult_t classifyCollToP2pTasks(
   struct ncclComm* comm, struct ncclTaskTuningInfo* tInfo,
-  struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* p2pTaskQueue) {
+  struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* p2pTaskQueue) { /* 中文索引·体内调用 ncclTypeSize、ncclCollConfigGetLaunchCompletionEvent。 */
   struct ncclRawTaskColl* coll = &tInfo->raw->coll;
   ncclFunc_t collAPI = coll->func;
   size_t elemSize = ncclTypeSize(coll->datatype);
@@ -127,7 +127,7 @@ static bool taskUsesAllGatherV(struct ncclTaskTuningInfo* tInfo) {
 }
 
 ncclResult_t ncclTaskClassification(struct ncclComm* comm, struct ncclTaskTuningInfoQueue* tiq,
-                                    struct ncclClassifiedTaskQueues* ctq) {
+                                    struct ncclClassifiedTaskQueues* ctq) { /* 中文索引·体内调用 ncclIntruQueueConstruct、ncclIntruQueueEmpty。 */
   struct ncclTaskTuningInfo* tInfo;
   struct ncclIntruQueue<struct ncclTaskTuningInfo, &ncclTaskTuningInfo::next>* outQueue;
 

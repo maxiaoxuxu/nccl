@@ -15,7 +15,7 @@
 #include "rma/rma_ce.h"
 #include "ce_coll.h"
 
-ncclResult_t ncclRmaCeInit(struct ncclComm* comm) {
+ncclResult_t ncclRmaCeInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclDevrInitOnce、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   uint64_t* signalsDevBase = nullptr;
   uint64_t* ackInitHost = nullptr;
@@ -101,7 +101,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaCeFinalize(struct ncclComm* comm) {
+ncclResult_t ncclRmaCeFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   ncclResult_t ret = ncclSuccess;
 
   // Clean up rmaCeInitTaskQueue
@@ -158,7 +158,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t ncclRmaCePutLaunchPersist(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+static ncclResult_t ncclRmaCePutLaunchPersist(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclCeInitBatchOpsParams、ncclIntruQueueHead。 */
   ncclResult_t ret = ncclSuccess;
   int nRmaTasksCe = plan->rmaArgs->nRmaTasksCe;
 
@@ -248,7 +248,7 @@ fail:
 }
 
 static ncclResult_t ncclRmaCePutLaunchNonPersist(struct ncclComm* comm, struct ncclKernelPlan* plan,
-                                                 cudaStream_t stream) {
+                                                 cudaStream_t stream) { /* 中文索引·体内调用 ncclCalloc、ncclCeInitBatchOpsParams。 */
   ncclResult_t ret = ncclSuccess;
   int nRmaTasksCe = plan->rmaArgs->nRmaTasksCe;
 
@@ -424,7 +424,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclRmaCePutLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaCePutLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclRmaCePutLaunchPersist、ncclRmaCePutLaunchNonPersist。 */
   if (!comm->rmaState.rmaCeState.initialized) {
     WARN("RMA CE is not initialized");
     return ncclInternalError;
@@ -436,7 +436,7 @@ ncclResult_t ncclRmaCePutLaunch(struct ncclComm* comm, struct ncclKernelPlan* pl
   return ncclRmaCePutLaunchNonPersist(comm, plan, stream);
 }
 
-ncclResult_t ncclRmaCeWaitLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) {
+ncclResult_t ncclRmaCeWaitLaunch(struct ncclComm* comm, struct ncclKernelPlan* plan, cudaStream_t stream) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclIntruQueueDequeue。 */
   ncclResult_t ret = ncclSuccess;
   CUstreamBatchMemOpParams* batchParams = nullptr;
   struct ncclCeBatchOpsParams ceParams = {};

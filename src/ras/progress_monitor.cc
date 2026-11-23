@@ -68,7 +68,7 @@ static int progressCounterMonitorStaleThresholdMs() {
 }
 
 // Return the warning rate-limit interval, or zero when warnings are disabled.
-static uint64_t progressCounterMonitorWarnIntervalNs() {
+static uint64_t progressCounterMonitorWarnIntervalNs() { /* 中文索引·体内调用 ncclParamProgressCounterMonitorStaleWarnSec。 */
   int64_t warnSec = ncclParamProgressCounterMonitorStaleWarnSec();
   if (warnSec <= 0) return 0;
   return warnSec * 1000000000ULL;
@@ -92,7 +92,7 @@ static bool progressCounterMonitorErrorLogAllowed(struct ncclGpuProgressCounterM
 }
 
 // Periodically copy device progress counters for all communicators registered on one CUDA device.
-static void progressCounterMonitorLoop(struct ncclGpuProgressCounterMonitor* g) {
+static void progressCounterMonitorLoop(struct ncclGpuProgressCounterMonitor* g) { /* 中文索引·体内调用 cudaSetDevice、g->cv.notify_one。 */
   // Bind the shared worker to its CUDA device for its lifetime.
   if (cudaSetDevice(g->cudaDev) != cudaSuccess) {
     WARN("NCCL progress counter monitor: cudaSetDevice(%d) failed; progress-counter mirrors will "
@@ -205,7 +205,7 @@ static void progressCounterMonitorLoop(struct ncclGpuProgressCounterMonitor* g) 
 }
 
 // Restore the caller's CUDA device after monitor setup or teardown.
-static void restoreCudaDevice(struct ncclGpuProgressCounterMonitor* g, int savedDev, bool restore) {
+static void restoreCudaDevice(struct ncclGpuProgressCounterMonitor* g, int savedDev, bool restore) { /* 中文索引·体内调用 cudaSetDevice、progressCounterMonitorErrorLogAllowed。 */
   if (restore) {
     cudaError_t e = cudaSetDevice(savedDev);
     if (e != cudaSuccess && progressCounterMonitorErrorLogAllowed(g)) {
@@ -216,7 +216,7 @@ static void restoreCudaDevice(struct ncclGpuProgressCounterMonitor* g, int saved
 }
 
 // Release a teardown reference and destroy the unused per-device worker when safe.
-static void releaseGpuProgressCounterMonitorDestroyRef(struct ncclGpuProgressCounterMonitor* g) {
+static void releaseGpuProgressCounterMonitorDestroyRef(struct ncclGpuProgressCounterMonitor* g) { /* 中文索引·体内调用 ncclIntruQueueEmpty、g->cv.notify_one。 */
   bool doDelete = false;
   {
     std::lock_guard<std::mutex> globalLock(gpuProgressCounterMonitorsMu);
@@ -246,7 +246,7 @@ static void releaseGpuProgressCounterMonitorDestroyRef(struct ncclGpuProgressCou
 }
 
 // Create and start the shared progress-counter worker for one CUDA device.
-static ncclResult_t createGpuProgressCounterMonitor(int cudaDev, struct ncclGpuProgressCounterMonitor** out) {
+static ncclResult_t createGpuProgressCounterMonitor(int cudaDev, struct ncclGpuProgressCounterMonitor** out) { /* 中文索引·体内调用 cudaGetDevice、ncclIntruQueueConstruct。 */
   ncclResult_t ret = ncclSuccess;
   int savedDev = -1;
   bool restore = (cudaGetDevice(&savedDev) == cudaSuccess);
@@ -316,7 +316,7 @@ fail:
 }
 
 // Register a communicator with its CUDA device's shared progress-counter worker.
-ncclResult_t ncclProgressCounterMonitorInit(struct ncclComm* comm) {
+ncclResult_t ncclProgressCounterMonitorInit(struct ncclComm* comm) { /* 中文索引·体内调用 createGpuProgressCounterMonitor、progressCounterMonitorPollIntervalMs。 */
   ncclResult_t ret = ncclSuccess;
   comm->nextProgressRegistration = nullptr;
   // No device counter storage means counter-monitor registration is disabled.
@@ -354,7 +354,7 @@ static bool progressCounterRegistrationMatches(struct ncclComm* registered, stru
 }
 
 // Unregister a communicator and drain copies before releasing its counter storage.
-ncclResult_t ncclProgressCounterMonitorDestroy(struct ncclComm* comm) {
+ncclResult_t ncclProgressCounterMonitorDestroy(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueDelete、ncclIntruQueueEmpty。 */
   if (comm->cudaDev < 0 || comm->cudaDev >= kRasMaxCudaDevices) return ncclSuccess;
 
   struct ncclGpuProgressCounterMonitor* g = nullptr;

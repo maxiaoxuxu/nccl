@@ -122,7 +122,7 @@ static doca_verbs_ack_cq_events_t p_doca_verbs_ack_cq_events = nullptr;
 static void *common_handle = nullptr;
 static void *verbs_handle = nullptr;
 
-static void doca_verbs_sdk_wrapper_init(int *ret) {
+static void doca_verbs_sdk_wrapper_init(int *ret) { /* 中文索引·体内调用 getenv、memset。 */
     const char *doca_sdk_lib_path = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
     char libcommon_versioned_path[doca_sdk_path_length];
     char libcommon_path[doca_sdk_path_length];
@@ -312,14 +312,14 @@ exit_error:
     return;
 }
 
-static int init_verbs_sdk_wrapper(void) {
+static int init_verbs_sdk_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_sdk_wrapper_init, &ret);
     return ret;
 }
 
-static int get_sdk_wrapper_env_var(void) {
+static int get_sdk_wrapper_env_var(void) { /* 中文索引·体内调用 getenv、strcmp。 */
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
     if (!val) return -1;
@@ -330,7 +330,7 @@ static int get_sdk_wrapper_env_var(void) {
 }
 
 /* Wrapper function implementations */
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_create(void **verbs_cq_attr) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_create(void **verbs_cq_attr) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err = DOCA_SUCCESS;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -359,7 +359,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_create(void **verbs_cq_a
     return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_destroy(void *cq_attr) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_destroy(void *cq_attr) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -377,7 +377,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_destroy(void *cq_attr) {
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_size(void *cq_attr,
-                                                                    uint32_t cq_size) {
+                                                                    uint32_t cq_size) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -395,7 +395,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_size(void *cq_att
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_context(void *cq_attr,
-                                                                       void *cq_context) {
+                                                                       void *cq_context) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -413,7 +413,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_context(void *cq_
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_umem(
-    void *cq_attr, doca_verbs_umem_t *external_umem, uint64_t external_umem_offset) {
+    void *cq_attr, doca_verbs_umem_t *external_umem, uint64_t external_umem_offset) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -443,7 +443,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_umem(
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_dbr_umem(
-    void *cq_attr, doca_verbs_umem_t *external_dbr_umem, uint64_t external_dbr_umem_offset) {
+    void *cq_attr, doca_verbs_umem_t *external_dbr_umem, uint64_t external_dbr_umem_offset) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -480,7 +480,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_dbr_umem(
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_uar(
-    void *cq_attr, doca_verbs_uar_t *external_uar) {
+    void *cq_attr, doca_verbs_uar_t *external_uar) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -503,7 +503,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_external_uar(
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_overrun(
-    void *cq_attr, enum doca_verbs_cq_overrun overrun) {
+    void *cq_attr, enum doca_verbs_cq_overrun overrun) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -521,7 +521,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_overrun(
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_collapsed(void *cq_attr,
-                                                                         uint8_t cc) {
+                                                                         uint8_t cc) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -541,7 +541,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_cq_collapsed(void *c
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_comp_channel(void *cq_attr,
-                                                                         void *compch) {
+                                                                         void *compch) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -561,7 +561,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_comp_channel(void *c
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_st(void *cq_attr,
-                                                               enum doca_verbs_cq_state cq_state) {
+                                                               enum doca_verbs_cq_state cq_state) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -582,7 +582,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_attr_set_st(void *cq_attr,
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_create(doca_dev_t *net_dev,
                                                           doca_verbs_cq_attr_t *cq_attr,
-                                                          void **verbs_cq) {
+                                                          void **verbs_cq) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err = DOCA_SUCCESS;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -627,7 +627,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_create(doca_dev_t *net_dev,
     return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_destroy(void *verbs_cq) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_destroy(void *verbs_cq) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -646,7 +646,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_destroy(void *verbs_cq) {
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_wq(void *verbs_cq, void **cq_buf,
                                                           uint32_t *cq_num_entries,
-                                                          uint8_t *cq_entry_size) {
+                                                          uint8_t *cq_entry_size) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     if (get_sdk_wrapper_env_var() > 0) {
         if (init_verbs_sdk_wrapper() != 0) return DOCA_SDK_WRAPPER_NOT_FOUND;
 
@@ -660,7 +660,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_wq(void *verbs_cq, void *
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_dbr_addr(void *verbs_cq,
                                                                 uint64_t **uar_db_reg,
                                                                 uint32_t **ci_dbr,
-                                                                uint32_t **arm_dbr) {
+                                                                uint32_t **arm_dbr) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     if (get_sdk_wrapper_env_var() > 0) {
         if (init_verbs_sdk_wrapper() != 0) return DOCA_SDK_WRAPPER_NOT_FOUND;
 
@@ -671,7 +671,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_dbr_addr(void *verbs_cq,
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_cqn(const void *verbs_cq, uint32_t *cqn) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_cqn(const void *verbs_cq, uint32_t *cqn) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     if (get_sdk_wrapper_env_var() > 0) {
         if (init_verbs_sdk_wrapper() != 0) return DOCA_SDK_WRAPPER_NOT_FOUND;
 
@@ -682,7 +682,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_get_cqn(const void *verbs_cq,
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_set_cq_context(void *cq, void *cq_context) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_set_cq_context(void *cq, void *cq_context) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -707,7 +707,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_cq_set_cq_context(void *cq, void
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_comp_channel_create(void *sdk_context,
-                                                                    void **compch) {
+                                                                    void **compch) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
     int fd;
     int fd_flags = 0;
@@ -756,7 +756,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_comp_channel_create(void *sdk_co
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_comp_channel_destroy(void *compch) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_comp_channel_destroy(void *compch) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -773,7 +773,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_comp_channel_destroy(void *compc
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_get_cq_event(void *compch, void **cq_context) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_get_cq_event(void *compch, void **cq_context) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
     void *verbs_cq;
 
@@ -793,7 +793,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_get_cq_event(void *compch, void 
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_ack_cq_events(void *verbs_cq,
-                                                              unsigned int nevents) {
+                                                              unsigned int nevents) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     if (get_sdk_wrapper_env_var() > 0) {
         if (init_verbs_sdk_wrapper() != 0) return DOCA_SDK_WRAPPER_NOT_FOUND;
 

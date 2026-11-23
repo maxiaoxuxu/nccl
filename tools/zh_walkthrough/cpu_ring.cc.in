@@ -1,0 +1,119 @@
+// Host harness for the source walkthrough. Replace the two marked sections with verbatim source.
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <vector>
+#include <sys/types.h>
+#define __host__
+#define __device__
+#define __forceinline__ inline
+#define DIVUP(x,y) (((x)+(y)-1)/(y))
+constexpr int NCCL_PROTO_SIMPLE=0, NCCL_PROTO_LL=1, NCCL_PROTO_LL128=2;
+constexpr int WARP_SIZE=32, NCCL_LL128_SHMEM_ELEMS_PER_THREAD=8, NCCL_LL128_LINEELEMS=16, NCCL_LL128_DATAELEMS=15;
+using std::min;
+template<class T,class U> T divUp(T v,U d){return DIVUP(v,d);}
+template<class T,class U> T alignUp(T v,U a){return divUp(v,a)*a;}
+
+/* SOURCE_HELPERS */
+
+struct ncclRing {int prev,next,index;};
+struct {struct {ncclRing ring;} channel; struct {int nRanks;} comm; unsigned channelId;} ncclShmem;
+template<int> struct FanSymmetric {};
+struct Sum {};
+struct Simple {static constexpr int Id=NCCL_PROTO_SIMPLE;};
+struct Event {char op; ssize_t offset; int count;};
+std::vector<Event> trace;
+template<class T,class Op,class Fan,int D,class Proto,int P> struct Primitives {
+  template<class... Args> Primitives(Args...){}
+  void event(char op,ssize_t i,int n){trace.push_back({op,i,std::max(n,0)});}
+  void directSend(ssize_t i,ssize_t,int n){event('S',i,n);}
+  void directRecvReduceDirectSend(ssize_t i,ssize_t,int n){event('A',i,n);}
+  void directRecvReduceCopyDirectSend(ssize_t i,ssize_t,int n,bool){event('F',i,n);}
+  void directRecvCopyDirectSend(ssize_t i,ssize_t,int n){event('C',i,n);}
+  void directRecv(ssize_t i,int n){event('R',i,n);}
+};
+
+/* SOURCE_RING */
+
+void checkRouting(int ranks, size_t count) {
+  ncclDevWorkColl work{};
+  work.cbd.countLo=count;
+  work.cbd.chunkGrainsLo=1;  // Small nominal chunk for multi-loop regression.
+  ncclShmem.channelId=0;
+  ncclShmem.comm.nRanks=ranks;
+  size_t loopSize=ranks*128;
+  std::vector<std::vector<Event>> all;
+  for(int pos=0;pos<ranks;pos++){
+    ncclShmem.channel.ring.index=pos;
+    trace.clear();
+    runRing<float,Sum,Simple>(0,1,&work);
+    all.push_back(trace);
+  }
+  std::vector<std::vector<int>> output(ranks,std::vector<int>(count,0));
+  int perLoop=2*ranks-1;
+  for(size_t loop=0;loop<divUp(count,loopSize);loop++){
+    std::vector<int> incoming(ranks), next(ranks);
+    for(int stage=0;stage<perLoop;stage++){
+      size_t ix=loop*perLoop+stage;
+      for(int pos=0;pos<ranks;pos++){
+        auto e=all[pos].at(ix);
+        int prev=(pos+ranks-1)%ranks;
+        if(stage){
+          auto from=all[prev].at(ix-1);
+          assert(e.count==from.count && e.offset==from.offset);
+        }
+        int bits=incoming[pos];
+        if(e.op=='S')bits=1<<pos;
+        if(e.op=='A'||e.op=='F'){assert(!(bits&(1<<pos)));bits|=1<<pos;}
+        if(e.op=='F'||e.op=='C'||e.op=='R'){
+          assert(bits==(1<<ranks)-1);
+          for(int i=0;i<e.count;i++)output[pos].at(e.offset+i)++;
+        }
+        next[(pos+1)%ranks]=bits;
+      }
+      incoming.swap(next);
+    }
+  }
+  for(auto &out:output) for(int visits:out)assert(visits==1);
+}
+
+int main(){
+  constexpr size_t count=4194303;
+  auto budget=ncclCollTrafficPerChannel(count*4*2,2);
+  auto layout=ncclComputeCollChannelLayout(count,4,2,budget,0,0,2);
+  assert(budget==16777216 && layout.countLo==2097152 && layout.countHi==2097151);
+  ncclDevWorkColl work{};
+  work.channelHi=1; work.cbd.countLo=layout.countLo;work.cbd.countHi=layout.countHi;
+  work.cbd.chunkGrainsLo=work.cbd.chunkGrainsHi=4096;
+  ncclShmem.comm.nRanks=4;ncclShmem.channelId=1;ncclShmem.channel.ring.index=0;
+  runRing<float,Sum,Simple>(0,1,&work);
+  assert(trace.size()==7 && trace[0].offset==3670016 && trace[0].count==524287);
+  int slices=ALLREDUCE_CHUNKSTEPS/ALLREDUCE_SLICESTEPS;
+  int nominal=(4<<20)/NCCL_STEPS/sizeof(float)*ALLREDUCE_SLICESTEPS;
+  int first=ncclSimpleSliceSize(trace[0].count,slices,nominal);
+  assert(first==262144 && trace[0].count-first==262143);
+  assert(ncclElementAlignedDivUp(19,4,4,16)==8);
+  // A partially occupied initial channel, repeated middle channels and a short final cell.
+  auto mixed=ncclComputeCollChannelLayout(53247,4,2,131072,65536,2,6);
+  assert(mixed.nChannels==4 && mixed.nMidChannels==2);
+  work.channelLo=2;work.channelHi=5;work.cbd.countLo=mixed.countLo;
+  work.cbd.countMid=mixed.countMid;work.cbd.countHi=mixed.countHi;
+  const size_t bounds[]={0,8192,24576,40960,53247};
+  for(int channel=2;channel<=5;channel++){
+    size_t total, begin, length, chunk;
+    ncclCollCbdPart(&work,channel,NCCL_PROTO_SIMPLE,4,&total,&begin,&length,&chunk);
+    assert(total==53247 && begin==bounds[channel-2] && begin+length==bounds[channel-1]);
+  }
+  int cases=0;
+  for(int ranks=2;ranks<=8;ranks++)
+    for(size_t n:{0,1,2,19,127,128,129,511,512,513,1025,4103}){checkRouting(ranks,n);cases++;}
+  size_t lo,hi;
+  ncclP2pPartBounds(3,2,10000,&lo,&hi);assert(lo==8192 && hi==10000);
+  for(int n=1;n<=8;n++)for(size_t bytes:{0,1,4095,4096,4097,10000,32769}){
+    size_t prev=0;
+    for(int i=0;i<n;i++){ncclP2pPartBounds(n,i,bytes,&lo,&hi);assert(lo==prev && hi>=lo);prev=hi;}
+    assert(prev==bytes);
+  }
+  std::printf("PASS: two-channel FP32 example, four-channel Lo/Mid/Hi layout, %d Ring routing cases, 56 P2P layouts.\n",cases);
+}

@@ -16,7 +16,7 @@ static constexpr const nvtxPayloadEnum_t NvtxEnumRedSchema[] = {
 NCCL_PARAM(NvtxDisable, "NVTX_DISABLE", 0);
 
 // Must be called before the first call to any reduction operation.
-void initNvtxRegisteredEnums() {
+void initNvtxRegisteredEnums() { /* 中文索引·体内调用 ncclParamNvtxDisable、nvtxPayloadEnumRegister。 */
   // Register schemas and strings
   if (ncclParamNvtxDisable()) {
     return;

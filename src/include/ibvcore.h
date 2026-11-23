@@ -1091,7 +1091,7 @@ static inline struct verbs_context *verbs_get_ctx(struct ibv_context *ctx)
 		vctx->op = ptr; })
 
 static inline struct verbs_device *verbs_get_device(struct ibv_device *dev)
-{
+{ /* 中文索引·体内调用 container_of。 */
 	return (dev->ops.alloc_context) ?
 		NULL : container_of(dev, struct verbs_device, device);
 }
@@ -1121,7 +1121,7 @@ struct ibv_ece {
 static inline int ibv_query_port_ex(struct ibv_context *context,
 				    uint8_t port_num,
 				    struct ibv_port_attr *port_attr)
-{
+{ /* 中文索引·体内调用 verbs_get_ctx_op、vctx->query_port。 */
 	struct verbs_context *vctx = verbs_get_ctx_op(context, query_port);
 
         if (vctx) {

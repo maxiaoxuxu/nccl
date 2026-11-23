@@ -9,7 +9,7 @@
 #include "comm.h"
 
 ncclResult_t ncclTuningTreeModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                     struct ncclTuningModelState* /*internal*/) {
+                                     struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclTuningExpandId、ncclTuningGetCompCapIndex。 */
   ncclResult_t ret = ncclSuccess;
   int algo, proto;
   NCCLCHECK(ncclTuningExpandId(id, &algo, &proto, nullptr, nullptr));
@@ -62,7 +62,7 @@ ncclResult_t ncclTuningTreeModelInit(struct ncclComm* comm, int id, int enabled[
 }
 
 ncclResult_t ncclTuningTreeModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                    struct ncclTuningModelState* /*internal*/) {
+                                    struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 log2i、ncclTuningGetTime。 */
   ncclResult_t ret = ncclSuccess;
   if (inputs->func != ncclFuncAllReduce) {
     tuning->valid = 0;

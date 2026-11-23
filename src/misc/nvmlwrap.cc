@@ -78,7 +78,7 @@ union nvmlCCInfoInternal {
   nvmlSystemConfComputeSettings_t settingV12040;
 };
 
-void ncclNvmlParseCudaVisibleDevices(const char* env, int deviceCount, bool* visible) {
+void ncclNvmlParseCudaVisibleDevices(const char* env, int deviceCount, bool* visible) { /* 中文索引·体内调用 strtol。 */
   for (int a = 0; a < deviceCount; a++) visible[a] = (env == nullptr);
   if (env == nullptr || env[0] == '\0') return;
 
@@ -109,7 +109,7 @@ void ncclNvmlParseCudaVisibleDevices(const char* env, int deviceCount, bool* vis
   }
 }
 
-void ncclNvmlCacheCudaVisibleDevices() {
+void ncclNvmlCacheCudaVisibleDevices() { /* 中文索引·体内调用 ncclNvmlParseCudaVisibleDevices、ncclGetEnv。 */
   bool visible[ncclNvmlMaxDevices];
   ncclNvmlParseCudaVisibleDevices(ncclGetEnv("CUDA_VISIBLE_DEVICES"), ncclNvmlDeviceCount, visible);
   for (int a = 0; a < ncclNvmlDeviceCount; a++) {
@@ -118,7 +118,7 @@ void ncclNvmlCacheCudaVisibleDevices() {
 }
 } // namespace
 
-ncclResult_t ncclNvmlEnsureInitialized() {
+ncclResult_t ncclNvmlEnsureInitialized() { /* 中文索引·体内调用 ncclOsNvmlOpen、ncclOsDlsym。 */
   // Optimization to avoid repeatedly grabbing the lock when we only want to
   // read from the global tables.
   if (threadInitialized) return initResult;
@@ -297,27 +297,27 @@ ncclResult_t ncclNvmlEnsureInitialized() {
     } \
   } while (0)
 
-ncclResult_t ncclNvmlDeviceGetHandleByPciBusId(const char* pciBusId, nvmlDevice_t* device) {
+ncclResult_t ncclNvmlDeviceGetHandleByPciBusId(const char* pciBusId, nvmlDevice_t* device) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLCHECK(nvmlDeviceGetHandleByPciBusId, pciBusId, device);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t* device) {
+ncclResult_t ncclNvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t* device) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   *device = ncclNvmlDevices[index].handle;
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetName(nvmlDevice_t device, char* name, unsigned int length) {
+ncclResult_t ncclNvmlDeviceGetName(nvmlDevice_t device, char* name, unsigned int length) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetName, device, name, length);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlSystemGetDriverVersion(char* version, unsigned int length) {
+ncclResult_t ncclNvmlSystemGetDriverVersion(char* version, unsigned int length) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlSystemGetDriverVersion, version, length);
@@ -326,7 +326,7 @@ ncclResult_t ncclNvmlSystemGetDriverVersion(char* version, unsigned int length) 
 
 ncclResult_t ncclNvmlDeviceGetMemoryErrorCounter(nvmlDevice_t device, nvmlMemoryErrorType_t errorType,
                                                  nvmlEccCounterType_t counterType, nvmlMemoryLocation_t locationType,
-                                                 unsigned long long* count) {
+                                                 unsigned long long* count) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetMemoryErrorCounter, device, errorType, counterType, locationType, count);
@@ -334,7 +334,7 @@ ncclResult_t ncclNvmlDeviceGetMemoryErrorCounter(nvmlDevice_t device, nvmlMemory
 }
 
 // Re-queries NVML on each call, unlike the cached ncclNvmlDeviceCount global.
-ncclResult_t ncclNvmlDeviceGetCount(unsigned int* deviceCount) {
+ncclResult_t ncclNvmlDeviceGetCount(unsigned int* deviceCount) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
 #if NCCL_NVML_DIRECT
@@ -351,7 +351,7 @@ ncclResult_t ncclNvmlDeviceGetCount(unsigned int* deviceCount) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetIndex(nvmlDevice_t device, unsigned* index) {
+ncclResult_t ncclNvmlDeviceGetIndex(nvmlDevice_t device, unsigned* index) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   for (int d = 0; d < ncclNvmlDeviceCount; d++) {
     if (ncclNvmlDevices[d].handle == device) {
@@ -362,14 +362,14 @@ ncclResult_t ncclNvmlDeviceGetIndex(nvmlDevice_t device, unsigned* index) {
   return ncclInvalidArgument;
 }
 
-ncclResult_t ncclNvmlDeviceGetNvLinkState(nvmlDevice_t device, unsigned int link, nvmlEnableState_t* isActive) {
+ncclResult_t ncclNvmlDeviceGetNvLinkState(nvmlDevice_t device, unsigned int link, nvmlEnableState_t* isActive) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetNvLinkState, device, link, isActive);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetNvLinkRemotePciInfo(nvmlDevice_t device, unsigned int link, nvmlPciInfo_t* pci) {
+ncclResult_t ncclNvmlDeviceGetNvLinkRemotePciInfo(nvmlDevice_t device, unsigned int link, nvmlPciInfo_t* pci) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetNvLinkRemotePciInfo, device, link, pci);
@@ -377,7 +377,7 @@ ncclResult_t ncclNvmlDeviceGetNvLinkRemotePciInfo(nvmlDevice_t device, unsigned 
 }
 
 ncclResult_t ncclNvmlDeviceGetNvLinkRemoteDeviceType(nvmlDevice_t device, unsigned int link,
-                                                     nvmlIntNvLinkDeviceType_t* NvLinkDeviceType) {
+                                                     nvmlIntNvLinkDeviceType_t* NvLinkDeviceType) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetNvLinkRemoteDeviceType, device, link, NvLinkDeviceType);
@@ -385,14 +385,14 @@ ncclResult_t ncclNvmlDeviceGetNvLinkRemoteDeviceType(nvmlDevice_t device, unsign
 }
 
 ncclResult_t ncclNvmlDeviceGetNvLinkCapability(nvmlDevice_t device, unsigned int link,
-                                               nvmlNvLinkCapability_t capability, unsigned int* capResult) {
+                                               nvmlNvLinkCapability_t capability, unsigned int* capResult) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetNvLinkCapability, device, link, capability, capResult);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetCudaComputeCapability(nvmlDevice_t device, int* major, int* minor) {
+ncclResult_t ncclNvmlDeviceGetCudaComputeCapability(nvmlDevice_t device, int* major, int* minor) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
 
   for (int d = 0; d < ncclNvmlDeviceCount; d++) {
@@ -406,7 +406,7 @@ ncclResult_t ncclNvmlDeviceGetCudaComputeCapability(nvmlDevice_t device, int* ma
 }
 
 ncclResult_t ncclNvmlDeviceGetP2PStatus(nvmlDevice_t device1, nvmlDevice_t device2, nvmlGpuP2PCapsIndex_t p2pIndex,
-                                        nvmlGpuP2PStatus_t* p2pStatus) {
+                                        nvmlGpuP2PStatus_t* p2pStatus) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
 
   if (p2pIndex == NVML_P2P_CAPS_INDEX_READ || p2pIndex == NVML_P2P_CAPS_INDEX_WRITE) {
@@ -425,7 +425,7 @@ ncclResult_t ncclNvmlDeviceGetP2PStatus(nvmlDevice_t device1, nvmlDevice_t devic
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetFieldValues(nvmlDevice_t device, int valuesCount, nvmlFieldValue_t* values) {
+ncclResult_t ncclNvmlDeviceGetFieldValues(nvmlDevice_t device, int valuesCount, nvmlFieldValue_t* values) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLTRY(nvmlDeviceGetFieldValues, device, valuesCount, values);
@@ -433,7 +433,7 @@ ncclResult_t ncclNvmlDeviceGetFieldValues(nvmlDevice_t device, int valuesCount, 
 }
 
 // MNNVL support
-ncclResult_t ncclNvmlDeviceGetGpuFabricInfoV(nvmlDevice_t device, nvmlGpuFabricInfoV_t* gpuFabricInfo) {
+ncclResult_t ncclNvmlDeviceGetGpuFabricInfoV(nvmlDevice_t device, nvmlGpuFabricInfoV_t* gpuFabricInfo) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   gpuFabricInfo->version = nvmlGpuFabricInfo_v2;
@@ -441,7 +441,7 @@ ncclResult_t ncclNvmlDeviceGetGpuFabricInfoV(nvmlDevice_t device, nvmlGpuFabricI
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetPlatformInfo(nvmlDevice_t device, nvmlPlatformInfo_t* platformInfo) {
+ncclResult_t ncclNvmlDeviceGetPlatformInfo(nvmlDevice_t device, nvmlPlatformInfo_t* platformInfo) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   platformInfo->version = nvmlPlatformInfo_v2;
@@ -449,14 +449,14 @@ ncclResult_t ncclNvmlDeviceGetPlatformInfo(nvmlDevice_t device, nvmlPlatformInfo
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetPciInfo(nvmlDevice_t device, nvmlPciInfo_t* pciInfo) {
+ncclResult_t ncclNvmlDeviceGetPciInfo(nvmlDevice_t device, nvmlPciInfo_t* pciInfo) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLCHECK(nvmlDeviceGetPciInfo_v3, device, pciInfo);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetPciInfoExt(nvmlDevice_t device, nvmlPciInfoExt_t* pciInfoExt) {
+ncclResult_t ncclNvmlDeviceGetPciInfoExt(nvmlDevice_t device, nvmlPciInfoExt_t* pciInfoExt) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   INFO(NCCL_GRAPH, "ncclNvmlDeviceGetPciInfoExt: nvmlPciInfoExt_v1: %u", nvmlPciInfoExt_v1);
@@ -465,28 +465,28 @@ ncclResult_t ncclNvmlDeviceGetPciInfoExt(nvmlDevice_t device, nvmlPciInfoExt_t* 
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetPcieLinkMaxSpeed(nvmlDevice_t device, int* maxSpeed) {
+ncclResult_t ncclNvmlDeviceGetPcieLinkMaxSpeed(nvmlDevice_t device, int* maxSpeed) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLCHECK(nvmlDeviceGetPcieLinkMaxSpeed, device, maxSpeed);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetCurrPcieLinkGeneration(nvmlDevice_t device, unsigned int* currLinkGen) {
+ncclResult_t ncclNvmlDeviceGetCurrPcieLinkGeneration(nvmlDevice_t device, unsigned int* currLinkGen) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLCHECK(nvmlDeviceGetCurrPcieLinkGeneration, device, currLinkGen);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlDeviceGetCurrPcieLinkWidth(nvmlDevice_t device, unsigned int* currLinkWidth) {
+ncclResult_t ncclNvmlDeviceGetCurrPcieLinkWidth(nvmlDevice_t device, unsigned int* currLinkWidth) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   NVMLCHECK(nvmlDeviceGetCurrPcieLinkWidth, device, currLinkWidth);
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvmlGetCCStatus(struct ncclNvmlCCStatus* status) {
+ncclResult_t ncclNvmlGetCCStatus(struct ncclNvmlCCStatus* status) { /* 中文索引·体内调用 ncclNvmlEnsureInitialized。 */
   NCCLCHECK(ncclNvmlEnsureInitialized());
   std::lock_guard<std::mutex> locked(lock);
   nvmlCCInfoInternal ccInfo;

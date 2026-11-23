@@ -29,7 +29,7 @@
 NCCL_PARAM(MemManagerDisable, "DISABLE_MEM_MANAGER", 0);
 
 // Initialize memory manager
-ncclResult_t ncclMemManagerInit(struct ncclComm* comm) {
+ncclResult_t ncclMemManagerInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamMemManagerDisable、ncclCalloc。 */
   if (ncclParamMemManagerDisable()) return ncclSuccess;
   if (comm == nullptr) return ncclInvalidArgument;
 
@@ -60,7 +60,7 @@ ncclResult_t ncclMemManagerInit(struct ncclComm* comm) {
 }
 
 // Destroy memory manager and free all resources
-ncclResult_t ncclMemManagerDestroy(struct ncclComm* comm) {
+ncclResult_t ncclMemManagerDestroy(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamMemManagerDisable、ncclAtomicRefCountDecrement。 */
   if (ncclParamMemManagerDisable()) return ncclSuccess;
   if (comm == nullptr) return ncclInvalidArgument;
   if (comm->memManager == nullptr) return ncclSuccess;
@@ -130,7 +130,7 @@ ncclResult_t ncclMemManagerDestroy(struct ncclComm* comm) {
 static ncclResult_t ncclMemTrackInternal(struct ncclMemManager* manager, void* ptr, size_t size,
                                          CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
                                          ncclMemType_t memType, bool isImportedFromPeer, int ownerRank, int ownerDev,
-                                         void* ownerPtr) {
+                                         void* ownerPtr) { /* 中文索引·体内调用 ncclParamMemManagerDisable、malloc。 */
   if (ncclParamMemManagerDisable()) return ncclSuccess;
   if (manager == nullptr || ptr == nullptr) return ncclInternalError;
   if (!COMPILER_ATOMIC_LOAD(&manager->initialized, std::memory_order_acquire)) {
@@ -223,12 +223,12 @@ ncclResult_t ncclMemTrack(struct ncclMemManager* manager, void* ptr, size_t size
 // Track imported allocation from peer
 ncclResult_t ncclMemTrackImportFromPeer(struct ncclMemManager* manager, void* ptr, size_t size,
                                         CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
-                                        ncclMemType_t memType, int ownerRank, int ownerDev, void* ownerPtr) {
+                                        ncclMemType_t memType, int ownerRank, int ownerDev, void* ownerPtr) { /* 中文索引·体内调用 ncclMemTrackInternal。 */
   return ncclMemTrackInternal(manager, ptr, size, handle, handleType, memType, true, ownerRank, ownerDev, ownerPtr);
 }
 
 // Untrack a dynamic (scratch/offload) allocation
-ncclResult_t ncclMemUntrackDynamic(struct ncclMemManager* manager, void* ptr, struct ncclMemUntrackInfo* info) {
+ncclResult_t ncclMemUntrackDynamic(struct ncclMemManager* manager, void* ptr, struct ncclMemUntrackInfo* info) { /* 中文索引·体内调用 ncclParamMemManagerDisable、ncclCudaHostFree。 */
   if (info != nullptr) {
     info->memType = ncclMemPersist;
     info->dynMemState = ncclDynMemStateActive;
@@ -330,7 +330,7 @@ ncclResult_t ncclMemUntrackDynamic(struct ncclMemManager* manager, void* ptr, st
 }
 
 // Decrement the persistent-memory counter. No linked-list traversal.
-ncclResult_t ncclMemUntrackPersist(struct ncclMemManager* manager, void* ptr, size_t size) {
+ncclResult_t ncclMemUntrackPersist(struct ncclMemManager* manager, void* ptr, size_t size) { /* 中文索引·体内调用 ncclParamMemManagerDisable。 */
   if (ncclParamMemManagerDisable()) return ncclSuccess;
   if (manager == nullptr || ptr == nullptr) return ncclInternalError;
 
@@ -352,7 +352,7 @@ ncclResult_t ncclMemUntrackPersist(struct ncclMemManager* manager, void* ptr, si
 // NOTE: Only for dynamic memory (scratch/offload) that's in the linked list.
 // Persistent memory doesn't need export tracking since it's never suspended.
 // Call this after allocating dynamic memory and the peer imports it.
-ncclResult_t ncclDynMemMarkExportToPeer(struct ncclMemManager* manager, void* ptr, int peerRank) {
+ncclResult_t ncclDynMemMarkExportToPeer(struct ncclMemManager* manager, void* ptr, int peerRank) { /* 中文索引·体内调用 ncclParamMemManagerDisable、ncclRealloc。 */
   if (ncclParamMemManagerDisable()) return ncclSuccess;
   if (manager == nullptr || ptr == nullptr) return ncclInternalError;
   if (!COMPILER_ATOMIC_LOAD(&manager->initialized, std::memory_order_acquire)) {
@@ -415,7 +415,7 @@ ncclResult_t ncclDynMemMarkExportToPeer(struct ncclMemManager* manager, void* pt
  * 1. First pass: Unmap all peer-imported buffers
  * 2. Second pass: Offload local buffers to CPU and suspend physical memory
  */
-ncclResult_t ncclCommMemSuspend(struct ncclComm* comm) {
+ncclResult_t ncclCommMemSuspend(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamMemManagerDisable、cudaDeviceSynchronize。 */
   if (ncclParamMemManagerDisable()) {
     WARN("MemManager: Suspend failed, memory manager is disabled");
     return ncclInvalidUsage;
@@ -547,7 +547,7 @@ fail:
  * 2. Exchange: AllGather new handle info for P2P buffers
  * 3. Second pass: Re-import peer buffers using new handles
  */
-ncclResult_t ncclCommMemResume(struct ncclComm* comm) {
+ncclResult_t ncclCommMemResume(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamMemManagerDisable、cuMemCreate。 */
   if (ncclParamMemManagerDisable()) {
     WARN("MemManager: Resume failed, memory manager is disabled");
     return ncclInvalidUsage;
@@ -954,7 +954,7 @@ static void ncclMemManagerSuspendAsyncJobFree(void* _job) {
   delete (struct ncclMemManagerSuspendAsyncJob*)_job;
 }
 
-static ncclResult_t ncclCommMemSuspendJob(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclCommMemSuspendJob(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclCommMemSuspend。 */
   struct ncclMemManagerSuspendAsyncJob* job = (struct ncclMemManagerSuspendAsyncJob*)job_;
   ncclResult_t ret = ncclSuccess;
 
@@ -976,7 +976,7 @@ static void ncclMemManagerResumeAsyncJobFree(void* _job) {
   delete (struct ncclMemManagerResumeAsyncJob*)_job;
 }
 
-static ncclResult_t ncclCommMemResumeJob(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclCommMemResumeJob(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclCommMemResume。 */
   struct ncclMemManagerResumeAsyncJob* job = (struct ncclMemManagerResumeAsyncJob*)job_;
   ncclResult_t ret = ncclSuccess;
 
@@ -990,7 +990,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommSuspend, ncclComm_t comm, int flags);
-ncclResult_t ncclCommSuspend(ncclComm_t comm, int flags) {
+ncclResult_t ncclCommSuspend(ncclComm_t comm, int flags) { /* 中文索引·体内调用 CommCheck、ncclCommEnsureReady。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "ncclCommSuspend", "comm"));
@@ -1044,7 +1044,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommResume, ncclComm_t comm);
-ncclResult_t ncclCommResume(ncclComm_t comm) {
+ncclResult_t ncclCommResume(ncclComm_t comm) { /* 中文索引·体内调用 CommCheck、ncclCommEnsureReady。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "ncclCommResume", "comm"));
@@ -1094,7 +1094,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclCommMemStats, ncclComm_t comm, ncclCommMemStat_t stat, uint64_t* value);
-ncclResult_t ncclCommMemStats(ncclComm_t comm, ncclCommMemStat_t stat, uint64_t* value) {
+ncclResult_t ncclCommMemStats(ncclComm_t comm, ncclCommMemStat_t stat, uint64_t* value) { /* 中文索引·体内调用 CommCheck、ncclCommEnsureReady。 */
   NCCL_NVTX3_FUNC_RANGE;
 
   NCCLCHECK(CommCheck(comm, "ncclCommMemStats", "comm"));

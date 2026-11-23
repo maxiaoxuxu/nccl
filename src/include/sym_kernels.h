@@ -129,7 +129,7 @@ constexpr __host__ __device__ size_t ncclSymkAlltoAllLLTotalLineCount(int worldR
 // two chunks per peer.
 // The 512-line automatic cap preserves enough independent GPU packing and GIN
 // posting work as payloads grow.
-constexpr __host__ __device__ int ncclSymkAlltoAllLLGinLinesPerWarp(size_t payloadBytes) {
+constexpr __host__ __device__ int ncclSymkAlltoAllLLGinLinesPerWarp(size_t payloadBytes) { /* 中文索引·体内调用 ncclSymkAlltoAllLLLineCount。 */
   int linesPerPeer = ncclSymkAlltoAllLLLineCount(payloadBytes);
   if (payloadBytes <= ncclSymkAlltoAllLLGinSingleChunkMaxPayloadBytes) return linesPerPeer;
 
@@ -153,7 +153,7 @@ constexpr __host__ __device__ size_t ncclSymkAlltoAllLLChunkCount(int peerCount,
 // chunks to reduce put posting. Their chunk counts share one global warp pool.
 constexpr __host__ __device__ int ncclSymkAlltoAllLLUsefulWarpCount(int lsaPeerCount, int ginPeerCount,
                                                                     size_t payloadBytes, int lsaLinesPerWarp,
-                                                                    int ginLinesPerWarp, int warpsPerBlock) {
+                                                                    int ginLinesPerWarp, int warpsPerBlock) { /* 中文索引·体内调用 ncclSymkAlltoAllLLChunkCount。 */
   size_t chunks = ncclSymkAlltoAllLLChunkCount(lsaPeerCount, payloadBytes, lsaLinesPerWarp) +
                   ncclSymkAlltoAllLLChunkCount(ginPeerCount, payloadBytes, ginLinesPerWarp);
   size_t maxWarps = (size_t)ncclSymkMaxBlocks * warpsPerBlock;
@@ -162,7 +162,7 @@ constexpr __host__ __device__ int ncclSymkAlltoAllLLUsefulWarpCount(int lsaPeerC
 
 constexpr __host__ __device__ int ncclSymkAlltoAllLLBlockCount(int lsaPeerCount, int ginPeerCount, size_t payloadBytes,
                                                                int lsaLinesPerWarp, int ginLinesPerWarp,
-                                                               int warpsPerBlock) {
+                                                               int warpsPerBlock) { /* 中文索引·体内调用 ncclSymkAlltoAllLLUsefulWarpCount。 */
   int warps = ncclSymkAlltoAllLLUsefulWarpCount(lsaPeerCount, ginPeerCount, payloadBytes, lsaLinesPerWarp,
                                                 ginLinesPerWarp, warpsPerBlock);
   return (warps + warpsPerBlock - 1) / warpsPerBlock;
@@ -170,7 +170,7 @@ constexpr __host__ __device__ int ncclSymkAlltoAllLLBlockCount(int lsaPeerCount,
 
 constexpr __host__ __device__ int ncclSymkAlltoAllLLSelectedBlockCount(
   int lsaPeerCount, int ginPeerCount, size_t payloadBytes, int lsaLinesPerWarp, int ginLinesPerWarp, int warpsPerBlock,
-  int residentBlockLimit, int resolvedBlockLimit, int userBlockLimit) {
+  int residentBlockLimit, int resolvedBlockLimit, int userBlockLimit) { /* 中文索引·体内调用 ncclSymkAlltoAllLLBlockCount。 */
   int limit = residentBlockLimit > 0 ? residentBlockLimit : 1;
   if (resolvedBlockLimit > 0 && resolvedBlockLimit < limit) limit = resolvedBlockLimit;
   if (userBlockLimit > 0 && userBlockLimit < limit) limit = userBlockLimit;
@@ -194,7 +194,7 @@ constexpr __host__ __device__ size_t ncclSymkAlltoAllLLRequiredSendPlaneBytes(in
 }
 
 constexpr __host__ __device__ size_t ncclSymkAlltoAllLLRequiredScratchBytes(int worldRanks, int lsaRanks,
-                                                                            size_t payloadBytes) {
+                                                                            size_t payloadBytes) { /* 中文索引·体内调用 ncclSymkAlltoAllLLRequiredReceivePlaneBytes、ncclSymkAlltoAllLLRequiredSendPlaneBytes。 */
   return sizeof(ncclSymkAlltoAllLLScratchState) +
          ncclSymkAlltoAllLLReceivePlaneCount * ncclSymkAlltoAllLLRequiredReceivePlaneBytes(worldRanks, payloadBytes) +
          ncclSymkAlltoAllLLSendPlaneCount *
@@ -216,7 +216,7 @@ constexpr __host__ __device__ size_t ncclSymkAlltoAllLLRequiredScratchBudgetByte
 }
 
 constexpr __host__ __device__ bool ncclSymkAlltoAllLLScratchFits(int worldRanks, size_t payloadBytes,
-                                                                 size_t scratchBytes) {
+                                                                 size_t scratchBytes) { /* 中文索引·体内调用 ncclSymkAlltoAllLLRequiredReceivePlaneBytes、ncclSymkAlltoAllLLPlaneCapacityForBudget。 */
   return payloadBytes != 0 && ncclSymkAlltoAllLLRequiredReceivePlaneBytes(worldRanks, payloadBytes) <=
                                 ncclSymkAlltoAllLLPlaneCapacityForBudget(scratchBytes);
 }
@@ -457,7 +457,7 @@ __host__ __device__ uint64_t* ncclSymkGetProfilerCounters(Args const* args) {
 }
 
 template <typename Args>
-__host__ __device__ struct ncclSymkChannelWorkRange* ncclSymkGetWorkRange(Args const* args) {
+__host__ __device__ struct ncclSymkChannelWorkRange* ncclSymkGetWorkRange(Args const* args) { /* 中文索引·体内调用 alignUp。 */
   size_t off = alignUp(sizeof(Args), 16);
   if (args->profilerMode) off += alignUp(args->nMaxChannels * sizeof(uint64_t), 16);
   return (struct ncclSymkChannelWorkRange*)((uint8_t*)args + off);

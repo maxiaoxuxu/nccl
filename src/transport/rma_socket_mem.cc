@@ -27,7 +27,7 @@ ncclResult_t ncclRmaSocketProxyFreeChunkBuffer(void* ptr) {
   return ptr ? ncclCudaHostFree(ptr) : ncclSuccess;
 }
 
-ncclResult_t ncclRmaSocketProxyFreeMr(struct ncclRmaSocketProxyMrHandle* handle) {
+ncclResult_t ncclRmaSocketProxyFreeMr(struct ncclRmaSocketProxyMrHandle* handle) { /* 中文索引·体内调用 ncclGdrCudaUnmapPointer、free。 */
   ncclResult_t ret = ncclSuccess;
   if (handle == NULL) return ncclSuccess;
   if (handle->gdr.mapped && ncclGdrCopy) {
@@ -62,7 +62,7 @@ ncclResult_t ncclRmaSocketProxyGdrPtr(struct ncclRmaSocketProxyMrHandle* handle,
 
 ncclResult_t ncclRmaSocketProxyCopy(void* dst, int dstType, struct ncclRmaSocketProxyMrHandle* dstHandle,
                                     const void* src, int srcType, struct ncclRmaSocketProxyMrHandle* srcHandle,
-                                    size_t size) {
+                                    size_t size) { /* 中文索引·体内调用 memcpy、ncclRmaSocketProxyGdrPtr。 */
   if (size == 0) return ncclSuccess;
   if (dstType == NCCL_PTR_HOST && srcType == NCCL_PTR_HOST) {
     memcpy(dst, src, size);
@@ -93,7 +93,7 @@ ncclResult_t ncclRmaSocketProxyCopy(void* dst, int dstType, struct ncclRmaSocket
 /* plugin API functions */
 
 ncclResult_t ncclRmaSocketProxyRegMrSym(void* collComm, void* data, size_t size, int type, uint64_t mrFlags,
-                                        void** mhandle) {
+                                        void** mhandle) { /* 中文索引·体内调用 ncclRmaSocketProxySupportedPtrType、ncclCalloc。 */
   if (collComm == NULL || mhandle == NULL) {
     WARN("RMA/Socket : invalid regMrSym arguments collComm=%p mhandle=%p", collComm, mhandle);
     return ncclInvalidArgument;
@@ -133,7 +133,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclRmaSocketProxyDeregMrSym(void* collComm, void* mhandle) {
+ncclResult_t ncclRmaSocketProxyDeregMrSym(void* collComm, void* mhandle) { /* 中文索引·体内调用 std::this_thread::yield、ncclRmaSocketProxyFreeMr。 */
   if (collComm == NULL || mhandle == NULL) {
     WARN("RMA/Socket : invalid deregMrSym arguments collComm=%p mhandle=%p", collComm, mhandle);
     return ncclInvalidArgument;

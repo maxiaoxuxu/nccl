@@ -86,7 +86,7 @@ doca_verbs_cq_attr_open::~doca_verbs_cq_attr_open() {}
 
 doca_verbs_cq_open::doca_verbs_cq_open(struct ibv_context *ibv_ctx,
                                        struct doca_verbs_cq_attr_open *cq_attr)
-    : m_ibv_ctx(ibv_ctx) {
+    : m_ibv_ctx(ibv_ctx) { /* 中文索引·体内调用 std::invalid_argument、create。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to create CQ, cq_attr is NULL");
         throw std::invalid_argument("cq_attr is NULL");
@@ -117,7 +117,7 @@ doca_verbs_cq_open::~doca_verbs_cq_open() { static_cast<void>(destroy()); }
 doca_error_t doca_verbs_cq_open::create_cq_obj(uint32_t uar_id, uint32_t log_nb_cqes,
                                                uint64_t db_umem_offset, uint32_t db_umem_id,
                                                uint32_t wq_umem_id, uint64_t cq_umem_offset,
-                                               bool cq_overrun, uint8_t cq_collapsed) noexcept {
+                                               bool cq_overrun, uint8_t cq_collapsed) noexcept { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_query_eqn、doca_verbs_wrapper_mlx5dv_devx_obj_create。 */
     create_cq_in create_in{0};
     create_cq_out create_out{0};
 
@@ -162,7 +162,7 @@ doca_error_t doca_verbs_cq_open::create_cq_obj(uint32_t uar_id, uint32_t log_nb_
     return DOCA_SUCCESS;
 }
 
-void doca_verbs_cq_open::create() {
+void doca_verbs_cq_open::create() { /* 中文索引·体内调用 doca_verbs_query_device、doca_internal_utils_is_power_of_two。 */
     auto status{DOCA_SUCCESS};
 
     /* Query device attr */
@@ -332,7 +332,7 @@ void doca_verbs_cq_open::create() {
     DOCA_LOG(LOG_INFO, "DOCA IB Verbs CQ %p: has been successfully created", this);
 }
 
-doca_error_t doca_verbs_cq_open::destroy() noexcept {
+doca_error_t doca_verbs_cq_open::destroy() noexcept { /* 中文索引·体内调用 doca_verbs_device_attr_free、doca_verbs_wrapper_mlx5dv_devx_obj_destroy。 */
     if (m_verbs_device_attr) {
         auto status = doca_verbs_device_attr_free(m_verbs_device_attr);
         if (status != DOCA_SUCCESS) {
@@ -395,7 +395,7 @@ doca_error_t doca_verbs_cq_open::destroy() noexcept {
  * Public API functions
  *********************************************************************************************************************/
 
-doca_error_t doca_verbs_cq_attr_create(doca_verbs_cq_attr_t **cq_attr) {
+doca_error_t doca_verbs_cq_attr_create(doca_verbs_cq_attr_t **cq_attr) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_cq_attr_create。 */
     doca_verbs_cq_attr_t *attr_ = nullptr;
 
     if (cq_attr == nullptr) {
@@ -447,7 +447,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_cq_attr_destroy(doca_verbs_cq_attr_t *cq_attr) {
+doca_error_t doca_verbs_cq_attr_destroy(doca_verbs_cq_attr_t *cq_attr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_destroy、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (cq_attr == nullptr) {
@@ -481,7 +481,7 @@ exit:
     return status;
 }
 
-doca_error_t doca_verbs_cq_attr_set_cq_size(doca_verbs_cq_attr_t *cq_attr, uint32_t cq_size) {
+doca_error_t doca_verbs_cq_attr_set_cq_size(doca_verbs_cq_attr_t *cq_attr, uint32_t cq_size) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_cq_size。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set_cq_size: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -508,7 +508,7 @@ doca_error_t doca_verbs_cq_attr_set_cq_size(doca_verbs_cq_attr_t *cq_attr, uint3
 }
 
 doca_error_t doca_verbs_cq_attr_set_comp_channel(doca_verbs_cq_attr_t *cq_attr,
-                                                 doca_verbs_comp_channel_t *comp_channel) {
+                                                 doca_verbs_comp_channel_t *comp_channel) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_comp_channel。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set_comp_channel: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -545,7 +545,7 @@ doca_error_t doca_verbs_cq_attr_set_comp_channel(doca_verbs_cq_attr_t *cq_attr,
 }
 
 doca_error_t doca_verbs_cq_attr_set_st(doca_verbs_cq_attr_t *cq_attr,
-                                       enum doca_verbs_cq_state cq_state) {
+                                       enum doca_verbs_cq_state cq_state) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_st。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set_comp_channel: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -575,7 +575,7 @@ doca_error_t doca_verbs_cq_attr_set_st(doca_verbs_cq_attr_t *cq_attr,
 
 doca_error_t doca_verbs_cq_attr_set_external_umem(doca_verbs_cq_attr_t *cq_attr,
                                                   doca_verbs_umem_t *external_umem,
-                                                  uint64_t external_umem_offset) {
+                                                  uint64_t external_umem_offset) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_external_umem。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_umem: parameter cq_attr is NULL.");
         return DOCA_ERROR_INVALID_VALUE;
@@ -609,7 +609,7 @@ doca_error_t doca_verbs_cq_attr_set_external_umem(doca_verbs_cq_attr_t *cq_attr,
 
 doca_error_t doca_verbs_cq_attr_set_external_dbr_umem(doca_verbs_cq_attr_t *cq_attr,
                                                       doca_verbs_umem_t *external_dbr_umem,
-                                                      uint64_t external_dbr_umem_offset) {
+                                                      uint64_t external_dbr_umem_offset) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_external_dbr_umem。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_dbr_umem: parameter cq_attr is NULL.");
         return DOCA_ERROR_INVALID_VALUE;
@@ -644,7 +644,7 @@ doca_error_t doca_verbs_cq_attr_set_external_dbr_umem(doca_verbs_cq_attr_t *cq_a
 }
 
 doca_error_t doca_verbs_cq_attr_set_external_uar(doca_verbs_cq_attr_t *cq_attr,
-                                                 doca_verbs_uar_t *external_uar) {
+                                                 doca_verbs_uar_t *external_uar) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_external_uar。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set external_uar: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -675,7 +675,7 @@ doca_error_t doca_verbs_cq_attr_set_external_uar(doca_verbs_cq_attr_t *cq_attr,
 }
 
 doca_error_t doca_verbs_cq_attr_set_cq_overrun(doca_verbs_cq_attr_t *cq_attr,
-                                               enum doca_verbs_cq_overrun cq_overrun) {
+                                               enum doca_verbs_cq_overrun cq_overrun) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_cq_overrun。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set cq_overrun: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -702,7 +702,7 @@ doca_error_t doca_verbs_cq_attr_set_cq_overrun(doca_verbs_cq_attr_t *cq_attr,
 }
 
 doca_error_t doca_verbs_cq_attr_set_cq_collapsed(doca_verbs_cq_attr_t *cq_attr,
-                                                 uint8_t cq_collapsed) {
+                                                 uint8_t cq_collapsed) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_attr_set_cq_collapsed。 */
     if (cq_attr == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set cq_collapsed: parameter cq_attr is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -734,7 +734,7 @@ doca_error_t doca_verbs_cq_attr_set_cq_collapsed(doca_verbs_cq_attr_t *cq_attr,
 }
 
 doca_error_t doca_verbs_cq_create(doca_dev_t *net_dev, doca_verbs_cq_attr_t *cq_attr,
-                                  doca_verbs_cq_t **cq) {
+                                  doca_verbs_cq_t **cq) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_cq_create。 */
     doca_verbs_cq_t *cq_ = nullptr;
 
     if (cq_attr == nullptr) {
@@ -785,7 +785,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_cq_destroy(doca_verbs_cq_t *cq) {
+doca_error_t doca_verbs_cq_destroy(doca_verbs_cq_t *cq) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_destroy、cq->open->destroy。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (cq == nullptr) {
@@ -826,7 +826,7 @@ exit:
 }
 
 doca_error_t doca_verbs_cq_get_wq(doca_verbs_cq_t *cq, void **cq_buf, uint32_t *cq_num_entries,
-                                  uint8_t *cq_entry_size) {
+                                  uint8_t *cq_entry_size) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_get_wq、cq->open->get_cq_buf。 */
     if (cq == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get cq wq: parameter cq is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -856,7 +856,7 @@ doca_error_t doca_verbs_cq_get_wq(doca_verbs_cq_t *cq, void **cq_buf, uint32_t *
 }
 
 doca_error_t doca_verbs_cq_get_dbr_db_addr(doca_verbs_cq_t *cq, uint64_t **uar_db_reg,
-                                           uint32_t **ci_dbr, uint32_t **arm_dbr) {
+                                           uint32_t **ci_dbr, uint32_t **arm_dbr) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_get_dbr_addr、cq->open->get_cq_uar_db_reg。 */
     if (cq == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get cq dbr_addr: parameter cq is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -885,7 +885,7 @@ doca_error_t doca_verbs_cq_get_dbr_db_addr(doca_verbs_cq_t *cq, uint64_t **uar_d
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_cq_get_cq_num(const doca_verbs_cq_t *cq, uint32_t *cqn) {
+doca_error_t doca_verbs_cq_get_cq_num(const doca_verbs_cq_t *cq, uint32_t *cqn) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_get_cqn、cq->open->get_cqn。 */
     if (cq == nullptr || cqn == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get cq cqn: invalid NULL parameter");
         return DOCA_ERROR_INVALID_VALUE;
@@ -912,7 +912,7 @@ doca_error_t doca_verbs_cq_get_cq_num(const doca_verbs_cq_t *cq, uint32_t *cqn) 
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_cq_set_cq_context(doca_verbs_cq_t *cq, void *cq_context) {
+doca_error_t doca_verbs_cq_set_cq_context(doca_verbs_cq_t *cq, void *cq_context) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_cq_set_cq_context、cq->open->set_cq_context。 */
     if (cq == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to set cq_context: parameter cq is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -943,7 +943,7 @@ doca_error_t doca_verbs_cq_set_cq_context(doca_verbs_cq_t *cq, void *cq_context)
 }
 
 doca_verbs_comp_channel_open::doca_verbs_comp_channel_open(struct ibv_context *ibv_ctx_)
-    : ibv_ctx(ibv_ctx_) {
+    : ibv_ctx(ibv_ctx_) { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_create_event_channel、std::runtime_error。 */
     doca_error_t status = DOCA_SUCCESS;
     int fd_flags = 0;
     int fd_fcntl_status = 0;
@@ -971,7 +971,7 @@ doca_verbs_comp_channel_open::~doca_verbs_comp_channel_open() {
     channel = nullptr;
 }
 
-doca_error_t doca_verbs_comp_channel_open::register_cq(struct doca_verbs_cq_open *cq) {
+doca_error_t doca_verbs_comp_channel_open::register_cq(struct doca_verbs_cq_open *cq) { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_subscribe_devx_event、cq->get_cq_obj。 */
     doca_error_t status;
     uint16_t event_num = MLX5_EVENT_TYPE_CODING_COMPLETION_EVENTS;
 
@@ -985,7 +985,7 @@ doca_error_t doca_verbs_comp_channel_open::register_cq(struct doca_verbs_cq_open
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_verbs_comp_channel_open::get_cq_event(void **cq_context) {
+doca_error_t doca_verbs_comp_channel_open::get_cq_event(void **cq_context) { /* 中文索引·体内调用 doca_verbs_wrapper_mlx5dv_devx_get_event、cq->get_cq_context。 */
     doca_error_t status = DOCA_SUCCESS;
     ssize_t bytes_read = 0;
     struct mlx5dv_devx_async_event_hdr event_hdr {
@@ -1021,7 +1021,7 @@ out:
 }
 
 doca_error_t doca_verbs_comp_channel_create(const doca_dev_t *net_dev,
-                                            doca_verbs_comp_channel_t **verbs_comp_channel) {
+                                            doca_verbs_comp_channel_t **verbs_comp_channel) { /* 中文索引·体内调用 calloc、doca_verbs_sdk_wrapper_comp_channel_create。 */
     doca_verbs_comp_channel_t *compch = nullptr;
 
     if (net_dev == nullptr || verbs_comp_channel == nullptr) {
@@ -1083,7 +1083,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_verbs_comp_channel_destroy(doca_verbs_comp_channel_t *compch) {
+doca_error_t doca_verbs_comp_channel_destroy(doca_verbs_comp_channel_t *compch) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_comp_channel_destroy、memset。 */
     doca_error_t status = DOCA_SUCCESS;
 
     if (compch == nullptr) {
@@ -1118,7 +1118,7 @@ exit:
 }
 
 doca_error_t doca_verbs_get_cq_comp_channel_event(doca_verbs_comp_channel_t *compch,
-                                                  void **cq_context) {
+                                                  void **cq_context) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_get_cq_event、compch->open->get_cq_event。 */
     if (compch == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to get cq comp channel: parameter compch is NULL");
         return DOCA_ERROR_INVALID_VALUE;
@@ -1149,7 +1149,7 @@ doca_error_t doca_verbs_get_cq_comp_channel_event(doca_verbs_comp_channel_t *com
     return compch->open->get_cq_event(cq_context);
 }
 
-doca_error_t doca_verbs_ack_cq_events(doca_verbs_cq_t *verbs_cq, unsigned int nevents) {
+doca_error_t doca_verbs_ack_cq_events(doca_verbs_cq_t *verbs_cq, unsigned int nevents) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_ack_cq_events。 */
     if (verbs_cq == nullptr) {
         DOCA_LOG(LOG_ERR, "Failed to ack cq event: parameter verbs_cq is NULL");
         return DOCA_ERROR_INVALID_VALUE;

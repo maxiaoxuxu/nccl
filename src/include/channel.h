@@ -39,7 +39,7 @@ struct ncclCollChannelLayout ncclComputeCollChannelLayout(size_t count, size_t e
                                                           size_t trafficPerChannel, size_t currentTraffic,
                                                           int channelId, int maxChannels);
 
-inline uint8_t ncclP2pChannelBaseForRound(struct ncclComm* comm, int p2pRound) {
+inline uint8_t ncclP2pChannelBaseForRound(struct ncclComm* comm, int p2pRound) { /* 中文索引·体内调用 divUp、reverseBits。 */
   int base;
   if (comm->nNodes > 1) {
     int localSize = comm->p2pSchedGroupSize;

@@ -35,7 +35,7 @@ ncclResult_t PtrCheck(const void* ptr, const char* opname, const char* ptrname) 
   return ncclSuccess;
 }
 
-ncclResult_t CommCheck(struct ncclComm* comm, const char* opname, const char* ptrname) {
+ncclResult_t CommCheck(struct ncclComm* comm, const char* opname, const char* ptrname) { /* 中文索引·体内调用 PtrCheck。 */
   NCCLCHECK(PtrCheck(comm, opname, ptrname));
   if (comm->startMagic != NCCL_MAGIC || comm->endMagic != NCCL_MAGIC) {
     WARN("Error: corrupted comm object detected");
@@ -44,7 +44,7 @@ ncclResult_t CommCheck(struct ncclComm* comm, const char* opname, const char* pt
   return ncclSuccess;
 }
 
-static ncclResult_t registrationCheck(struct ncclInfo* info) {
+static ncclResult_t registrationCheck(struct ncclInfo* info) { /* 中文索引·体内调用 ncclTypeSize、ncclCalloc。 */
   struct symBufInfo {
     bool isSymRegistered;
     uintptr_t bigOffset;
@@ -187,7 +187,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclArgsGlobalCheck(struct ncclArgsInfo* argsInfo) {
+ncclResult_t ncclArgsGlobalCheck(struct ncclArgsInfo* argsInfo) { /* 中文索引·体内调用 registrationCheck。 */
   struct ncclInfo* info = &argsInfo->info;
   if (info->coll != ncclFuncSend && info->coll != ncclFuncRecv && info->coll != ncclFuncPutSignal &&
       info->coll != ncclFuncSignal && info->coll != ncclFuncWaitSignal) {
@@ -198,7 +198,7 @@ ncclResult_t ncclArgsGlobalCheck(struct ncclArgsInfo* argsInfo) {
   return ncclSuccess;
 }
 
-ncclResult_t ArgsCheck(struct ncclInfo* info) {
+ncclResult_t ArgsCheck(struct ncclInfo* info) { /* 中文索引·体内调用 ncclUserRedOpMangle、CudaPtrCheck。 */
   // First, the easy ones
   if (info->root < 0 || info->root >= info->comm->nRanks) {
     WARN("%s : invalid root %d (root should be in the 0..%d range)", info->opName, info->root, info->comm->nRanks);

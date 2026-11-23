@@ -86,7 +86,7 @@ struct ncclOptionSet {
 
 // assert no two options share the same name.
 template <typename T, size_t N>
-inline void ncclOptionSetAssertUnique(const ncclOptionSet<T, N>& opts) {
+inline void ncclOptionSetAssertUnique(const ncclOptionSet<T, N>& opts) { /* 中文索引·体内调用 std::strcmp。 */
   for (size_t i = 0; i < N - 1; i++) {
     for (size_t j = i + 1; j < N; j++) {
       if (std::strcmp(opts.options[i].name, opts.options[j].name) == 0) {
@@ -110,7 +110,7 @@ ncclOption<T> makeOption(const char* name, T value, const char* desc) {
 
 // makeOptions: Create a fixed-size option set from variadic arguments
 template <typename T, typename... Args>
-auto makeOptions(ncclOption<T> first, Args... rest) -> ncclOptionSet<T, 1 + sizeof...(Args)> {
+auto makeOptions(ncclOption<T> first, Args... rest) -> ncclOptionSet<T, 1 + sizeof...(Args)> { /* 中文索引·体内调用 ncclOptionSetAssertUnique。 */
   ncclOptionSet<T, 1 + sizeof...(Args)> opts{{{first, rest...}}};
   ncclOptionSetAssertUnique(opts);
   return opts;

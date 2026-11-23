@@ -14,7 +14,7 @@
 NCCL_PARAM(ShadowMempoolMaxSize, "SHADOW_MEMPOOL_MAX_SIZE", 1LL << 30);
 
 NCCL_API(ncclResult_t, ncclMemAlloc, void** ptr, size_t size);
-ncclResult_t ncclMemAlloc(void** ptr, size_t size) {
+ncclResult_t ncclMemAlloc(void** ptr, size_t size) { /* 中文索引·体内调用 ncclCudaLibraryInit、cudaGetDevice。 */
   NCCL_NVTX3_FUNC_RANGE;
   ncclResult_t ret = ncclSuccess;
 
@@ -100,7 +100,7 @@ fail:
 }
 
 NCCL_API(ncclResult_t, ncclMemFree, void* ptr);
-ncclResult_t ncclMemFree(void* ptr) {
+ncclResult_t ncclMemFree(void* ptr) { /* 中文索引·体内调用 cudaGetDevice、ncclCudaLibraryInit。 */
   NCCL_NVTX3_FUNC_RANGE;
   ncclResult_t ret = ncclSuccess;
   int saveDevice;
@@ -149,7 +149,7 @@ void ncclSpaceDestruct(struct ncclSpace* a) {
   free(a->cuts);
 }
 
-static void insertSegment(struct ncclSpace* a, int index, int64_t lo, int64_t hi) {
+static void insertSegment(struct ncclSpace* a, int index, int64_t lo, int64_t hi) { /* 中文索引·体内调用 malloc、free。 */
   // Insert space for two cuts in `a->cuts[]` before `index`.
   if (a->count + 2 > a->capacity) {
     a->capacity *= 2;
@@ -196,7 +196,7 @@ static void insertSegment(struct ncclSpace* a, int index, int64_t lo, int64_t hi
   a->count = w;
 }
 
-ncclResult_t ncclSpaceTryAlloc(struct ncclSpace* a, int64_t limit, int64_t size, int align, int64_t* outOffset) {
+ncclResult_t ncclSpaceTryAlloc(struct ncclSpace* a, int64_t limit, int64_t size, int align, int64_t* outOffset) { /* 中文索引·体内调用 alignUp、insertSegment。 */
   // When allocating we try to locate the first empty segment which can hold
   // the allocation and move its lower cut upward.
   int i = a->count % 2; // First empty segment ends at cuts[i]
@@ -221,7 +221,7 @@ ncclResult_t ncclSpaceTryAlloc(struct ncclSpace* a, int64_t limit, int64_t size,
   return ncclInternalError;
 }
 
-ncclResult_t ncclSpaceAlloc(struct ncclSpace* a, int64_t limit, int64_t size, int align, int64_t* outOffset) {
+ncclResult_t ncclSpaceAlloc(struct ncclSpace* a, int64_t limit, int64_t size, int align, int64_t* outOffset) { /* 中文索引·体内调用 ncclSpaceTryAlloc。 */
   ncclResult_t res = ncclSpaceTryAlloc(a, limit, size, align, outOffset);
   if (res != ncclSuccess)
     WARN("Allocation failed. No suitable space found to accommodate size=0x%lx within limit=0x%lx", (long)size,
@@ -229,7 +229,7 @@ ncclResult_t ncclSpaceAlloc(struct ncclSpace* a, int64_t limit, int64_t size, in
   return res;
 }
 
-ncclResult_t ncclSpaceFree(struct ncclSpace* a, int64_t offset, int64_t size) {
+ncclResult_t ncclSpaceFree(struct ncclSpace* a, int64_t offset, int64_t size) { /* 中文索引·体内调用 insertSegment。 */
   if (a->count == 0 || a->cuts[a->count - 1] <= offset) {
     WARN("No allocation found at offset=0x%lx", (long)offset);
     return ncclInternalError;
@@ -283,7 +283,7 @@ void ncclShadowPoolConstruct(struct ncclShadowPool* pool) {
   pool->pages = nullptr;
 }
 
-ncclResult_t ncclShadowPoolDestruct(struct ncclShadowPool* pool, cudaStream_t stream) {
+ncclResult_t ncclShadowPoolDestruct(struct ncclShadowPool* pool, cudaStream_t stream) { /* 中文索引·体内调用 cudaFreeAsync、cudaFree。 */
   if (pool->hbits != 0) {
     if (pool->count != 0) {
       for (int i = 0; i < 1 << pool->hbits; i++) {
@@ -323,14 +323,14 @@ ncclResult_t ncclShadowPoolDestruct(struct ncclShadowPool* pool, cudaStream_t st
   return ncclSuccess;
 }
 
-static void hashInsert(struct ncclShadowPool* pool, struct ncclShadowObject* obj) {
+static void hashInsert(struct ncclShadowPool* pool, struct ncclShadowObject* obj) { /* 中文索引·体内调用 ncclHashPointer。 */
   uint64_t b = ncclHashPointer(pool->hbits, obj->devObj);
   obj->next = pool->table[b];
   pool->table[b] = obj;
 }
 
 ncclResult_t ncclShadowPoolAlloc(struct ncclShadowPool* pool, size_t size, void** outDevObj, void** outHostObj,
-                                 cudaStream_t stream) {
+                                 cudaStream_t stream) { /* 中文索引·体内调用 cudaGetDevice、cudaDeviceGetAttribute。 */
   if (size == 0) {
     if (outDevObj) *outDevObj = nullptr;
     if (outHostObj) *outHostObj = nullptr;
@@ -426,7 +426,7 @@ ncclResult_t ncclShadowPoolAlloc(struct ncclShadowPool* pool, size_t size, void*
   return ncclSuccess;
 }
 
-ncclResult_t ncclShadowPoolFree(struct ncclShadowPool* pool, void* devObj, cudaStream_t stream) {
+ncclResult_t ncclShadowPoolFree(struct ncclShadowPool* pool, void* devObj, cudaStream_t stream) { /* 中文索引·体内调用 ncclHashPointer、uint64_t。 */
   if (devObj == nullptr) return ncclSuccess;
 
   uint64_t b = ncclHashPointer(pool->hbits, devObj);
@@ -457,7 +457,7 @@ ncclResult_t ncclShadowPoolFree(struct ncclShadowPool* pool, void* devObj, cudaS
   return ncclSuccess;
 }
 
-ncclResult_t ncclShadowPoolToHost(struct ncclShadowPool* pool, void* devObj, void** hostObj) {
+ncclResult_t ncclShadowPoolToHost(struct ncclShadowPool* pool, void* devObj, void** hostObj) { /* 中文索引·体内调用 ncclHashPointer。 */
   if (devObj == nullptr) {
     *hostObj = nullptr;
     return ncclSuccess;

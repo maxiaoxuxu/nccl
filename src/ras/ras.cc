@@ -98,7 +98,7 @@ NCCL_PARAM(RasEnable, "RAS_ENABLE", 1);
 // The myRank structure should be passed with the addr element initialized to the IP address of the bootstrap
 // network interface to use.  On a successful return, the address will be updated with the port number of the
 // RAS network listening socket.
-ncclResult_t ncclRasCommInit(struct ncclComm* comm, struct rasRankInit* myRank) {
+ncclResult_t ncclRasCommInit(struct ncclComm* comm, struct rasRankInit* myRank) { /* 中文索引·体内调用 memcpy、htons。 */
   ncclResult_t ret = ncclSuccess;
   if (!rasInitialized) {
     std::lock_guard<std::mutex> lock(rasInitMutex);
@@ -155,7 +155,7 @@ fail:
 }
 
 // Invoked by regular NCCL threads on every comm termination.
-ncclResult_t ncclRasCommFini(const struct ncclComm* comm) {
+ncclResult_t ncclRasCommFini(const struct ncclComm* comm) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement。 */
   if (!rasInitialized) return ncclSuccess;
   {
     std::lock_guard<std::mutex> lock(ncclCommsMutex);
@@ -173,7 +173,7 @@ ncclResult_t ncclRasCommFini(const struct ncclComm* comm) {
 
 // Global destructor.  Notifies the RAS thread to release all the resources
 // and terminate.  Waits for the thread to terminate.
-static void rasTerminate() {
+static void rasTerminate() { /* 中文索引·体内调用 memset、rasLocalNotify。 */
   struct rasNotification msg;
   if (!rasInitialized) return;
   memset(&msg, '\0', sizeof(msg));
@@ -183,7 +183,7 @@ static void rasTerminate() {
 
 // Invoked by regular NCCL threads on every (non-split) comm initialization.  Provides info on all the ranks within
 // the communicator.
-ncclResult_t ncclRasAddRanks(struct rasRankInit* ranks, int nranks) {
+ncclResult_t ncclRasAddRanks(struct rasRankInit* ranks, int nranks) { /* 中文索引·体内调用 memset、rasLocalNotify。 */
   struct rasNotification msg;
   memset(&msg, '\0', sizeof(msg));
   msg.type = RAS_ADD_RANKS;
@@ -194,7 +194,7 @@ ncclResult_t ncclRasAddRanks(struct rasRankInit* ranks, int nranks) {
 }
 
 // Requests the RAS thread to run RAS diagnostics for this communicator.
-ncclResult_t ncclRunRasDiagnostics(struct ncclComm* comm) {
+ncclResult_t ncclRunRasDiagnostics(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamRasEnable、memset。 */
   struct rasNotification msg;
   ncclResult_t ret = ncclSuccess;
 
@@ -221,7 +221,7 @@ ncclResult_t ncclRunRasDiagnostics(struct ncclComm* comm) {
 }
 
 // Internal function running on regular NCCL threads -- asynchronously notifies the RAS thread.
-static ncclResult_t rasLocalNotify(const struct rasNotification* msg) {
+static ncclResult_t rasLocalNotify(const struct rasNotification* msg) { /* 中文索引·体内调用 ncclOsSocketPairWrite。 */
   if (!rasInitialized) return ncclSuccess;
 
   // Take an exclusive lock here to avoid multiplexing between multiple user threads (not sure if it's
@@ -241,7 +241,7 @@ static ncclResult_t rasLocalNotify(const struct rasNotification* msg) {
 /////////////////////////////////////////////////////////////////////////////////
 
 // Handles asynchronous local notifications arriving from regular NCCL threads.
-static ncclResult_t rasLocalHandle(bool* terminate) {
+static ncclResult_t rasLocalHandle(bool* terminate) { /* 中文索引·体内调用 ncclOsSocketPairRead、rasLocalHandleAddRanks。 */
   struct rasNotification msg;
 
   size_t done = 0;
@@ -273,7 +273,7 @@ static ncclResult_t rasLocalHandle(bool* terminate) {
 }
 
 // Cleans up local RAS state, normally in response to a RAS_TERMINATE notification.
-static void rasThreadCleanup() {
+static void rasThreadCleanup() { /* 中文索引·体内调用 rasClientSupportTerminate、rasNetTerminate。 */
   rasClientSupportTerminate();
   rasNetTerminate();
   rasCollectivesTerminate();
@@ -310,7 +310,7 @@ static void rasThreadCleanup() {
 // of the message.
 // Must use rasMsgFree to free.
 // ncclCallocQuiet is limited to rasMsgAlloc/rasMsgRecv: routine and keep-alive traffic otherwise floods ALLOC_HOST.
-ncclResult_t rasMsgAlloc(struct rasMsg** msg, size_t msgLen) {
+ncclResult_t rasMsgAlloc(struct rasMsg** msg, size_t msgLen) { /* 中文索引·体内调用 ncclCallocQuiet。 */
   struct rasMsgMeta* meta = nullptr;
   NCCLCHECK(ncclCallocQuiet((char**)&meta, offsetof(struct rasMsgMeta, msg) + msgLen));
   *msg = &meta->msg;
@@ -320,7 +320,7 @@ ncclResult_t rasMsgAlloc(struct rasMsg** msg, size_t msgLen) {
 
 // To be used only with messages allocated with rasMsgAlloc.  I.e., it should be used for sent messages, not
 // for received ones.
-void rasMsgFree(struct rasMsg* msg) {
+void rasMsgFree(struct rasMsg* msg) { /* 中文索引·体内调用 free。 */
   if (msg) {
     struct rasMsgMeta* meta = (struct rasMsgMeta*)((char*)msg - offsetof(struct rasMsgMeta, msg));
     free(meta);
@@ -328,7 +328,7 @@ void rasMsgFree(struct rasMsg* msg) {
 }
 
 // Enqueues a message for sending down a RAS connection.
-void rasConnEnqueueMsg(struct rasConnection* conn, struct rasMsg* msg, size_t msgLen, bool front) {
+void rasConnEnqueueMsg(struct rasConnection* conn, struct rasMsg* msg, size_t msgLen, bool front) { /* 中文索引·体内调用 clockNano、ncclIntruQueueEnqueueFront。 */
   // Get to the metadata of this message.
   struct rasMsgMeta* meta = (struct rasMsgMeta*)((char*)msg - offsetof(struct rasMsgMeta, msg));
   bool ready = false;
@@ -359,7 +359,7 @@ void rasConnEnqueueMsg(struct rasConnection* conn, struct rasMsg* msg, size_t ms
 }
 
 // Attempts to send the queued RAS messages to another RAS thread.
-ncclResult_t rasConnSendMsg(struct rasConnection* conn, bool* closed, bool* allSent) {
+ncclResult_t rasConnSendMsg(struct rasConnection* conn, bool* closed, bool* allSent) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclSocketProgress。 */
   struct rasMsgMeta* meta;
   *closed = false;
   while ((meta = ncclIntruQueueHead(&conn->sendQ)) != nullptr) {
@@ -390,7 +390,7 @@ ncclResult_t rasConnSendMsg(struct rasConnection* conn, bool* closed, bool* allS
 }
 
 // Attempts to receive a message through a RAS socket.
-ncclResult_t rasMsgRecv(struct rasSocket* sock, struct rasMsg** msg, bool* closed) {
+ncclResult_t rasMsgRecv(struct rasSocket* sock, struct rasMsg** msg, bool* closed) { /* 中文索引·体内调用 ncclSocketProgress、ncclCallocQuiet。 */
   *closed = false;
   if (sock->recvOffset < sizeof(sock->recvLength)) {
     // Receive the length of the message.
@@ -416,7 +416,7 @@ ncclResult_t rasMsgRecv(struct rasSocket* sock, struct rasMsg** msg, bool* close
 //////////////////////////////////////////////////////////////////
 
 // Invoked from the main RAS thread to dispatch incoming messages to the appropriate handler.
-ncclResult_t rasMsgHandle(struct rasMsg* msg, struct rasSocket* sock) {
+ncclResult_t rasMsgHandle(struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 rasMsgHandleConnInit、rasMsgHandleConnInitAck。 */
   if (msg->type == RAS_MSG_CONNINIT) {
     NCCLCHECK(rasMsgHandleConnInit(msg, sock));
   } else if (msg->type == RAS_MSG_CONNINITACK) {
@@ -438,7 +438,7 @@ ncclResult_t rasMsgHandle(struct rasMsg* msg, struct rasSocket* sock) {
 }
 
 // Handles the first message sent over a RAS socket as part of the handshake.
-static ncclResult_t rasMsgHandleConnInit(const struct rasMsg* msg, struct rasSocket* sock) {
+static ncclResult_t rasMsgHandleConnInit(const struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、ncclVersionToString。 */
   ncclResult_t ret = ncclSuccess;
   struct rasConnection* conn = nullptr;
   int peerIdx;
@@ -553,7 +553,7 @@ exit:
 }
 
 // Handles the second message sent over a RAS socket as part of the handshake.
-static ncclResult_t rasMsgHandleConnInitAck(const struct rasMsg* msg, struct rasSocket* sock) {
+static ncclResult_t rasMsgHandleConnInitAck(const struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、memcpy。 */
   INFO(NCCL_RAS, "RAS handling connInitAck from %s (nack %d)", ncclSocketToString(&sock->sock.addr, rasLine),
        msg->connInitAck.nack);
 
@@ -575,7 +575,7 @@ static ncclResult_t rasMsgHandleConnInitAck(const struct rasMsg* msg, struct ras
 }
 
 // Handles the deadPeer broadcast.
-void rasMsgHandleBCDeadPeer(struct rasCollRequest** pReq, size_t* pReqLen, bool* pDone) {
+void rasMsgHandleBCDeadPeer(struct rasCollRequest** pReq, size_t* pReqLen, bool* pDone) { /* 中文索引·体内调用 ncclSocketToString、rasCollDataLength。 */
   INFO(NCCL_RAS, "RAS handling deadPeer (addr %s)", ncclSocketToString(&(*pReq)->deadPeer.addr, rasLine));
 
   *pReqLen = rasCollDataLength(RAS_BC_DEADPEER);
@@ -591,7 +591,7 @@ void rasMsgHandleBCDeadPeer(struct rasCollRequest** pReq, size_t* pReqLen, bool*
 }
 
 // Handles the profilerMask broadcast.
-void rasMsgHandleBCProfilerMask(struct rasCollRequest** pReq, size_t* pReqLen, bool* pDone) {
+void rasMsgHandleBCProfilerMask(struct rasCollRequest** pReq, size_t* pReqLen, bool* pDone) { /* 中文索引·体内调用 rasCollDataLength、ncclProfilerSetRasOverride。 */
   INFO(NCCL_RAS, "RAS handling profilerMask (mask 0x%x)", (*pReq)->profilerMask.eventMask);
   *pReqLen = rasCollDataLength(RAS_BC_PROFILER_MASK);
   ncclProfilerSetRasOverride((*pReq)->profilerMask.eventMask);
@@ -604,7 +604,7 @@ void rasMsgHandleBCProfilerMask(struct rasCollRequest** pReq, size_t* pReqLen, b
 // follow our usual message queuing and polling convention) but, since this can be invoked only for newly opened
 // connections, and the message is tiny, it should be OK.  We can't use the regular path because the socket is
 // about to be terminated.
-static ncclResult_t rasNetSendNack(struct rasSocket* sock) {
+static ncclResult_t rasNetSendNack(struct rasSocket* sock) { /* 中文索引·体内调用 rasMsgLength、ncclSocketToString。 */
   struct rasMsg msg;
   int length = rasMsgLength(RAS_MSG_CONNINITACK);
   bool closed = false;
@@ -630,7 +630,7 @@ static ncclResult_t rasNetSendNack(struct rasSocket* sock) {
 /////////////////////////////////////////////////////////////////
 
 // Main function of the RAS thread.
-static void* rasThreadMain(void*) {
+static void* rasThreadMain(void*) { /* 中文索引·体内调用 rasGetNewPollEntry、ncclSocketGetFd。 */
   ncclResult_t ret = ncclSuccess; // Unused.
   int pfd;
   int rasNetListeningSocketFd;
@@ -734,7 +734,7 @@ exit:
 }
 
 // Returns the index of the first available entry in the rasPfds array, enlarging the array if necessary.
-ncclResult_t rasGetNewPollEntry(int* index) {
+ncclResult_t rasGetNewPollEntry(int* index) { /* 中文索引·体内调用 ncclRealloc、memset。 */
   int i;
   for (i = 0; i < nRasPfds; i++)
     if (rasPfds[i].fd == NCCL_INVALID_SOCKET) break;

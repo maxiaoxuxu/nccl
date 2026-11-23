@@ -20,7 +20,7 @@ static ncclCollNet_v8_t* ncclCollNet_v8;
 #define INDEX_NUMS 2
 static int refCount[INDEX_NUMS];
 
-static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNet_v8->getProperties。 */
   ncclNetProperties_v8_t p8;
   ncclResult_t ans = ncclNet_v8->getProperties(dev, &p8);
   if (ans != ncclSuccess) return ans;
@@ -58,7 +58,7 @@ static ncclResult_t ncclNet_connect(void* ctx __attribute__((unused)), int dev, 
 }
 
 static ncclResult_t ncclNet_isend(void* sendComm, void* data, size_t size, int tag, void* mhandle,
-                                  void* pHandle __attribute__((unused)), void** request) {
+                                  void* pHandle __attribute__((unused)), void** request) { /* 中文索引·体内调用 ncclNet_v8->isend。 */
   int sizeInt;
   if (size > MAX_NET_SIZE) return ncclInternalError;
   sizeInt = (int)size;
@@ -67,7 +67,7 @@ static ncclResult_t ncclNet_isend(void* sendComm, void* data, size_t size, int t
 }
 
 static ncclResult_t ncclNet_irecv(void* recvComm, int n, void** data, size_t* sizes, int* tags, void** mhandles,
-                                  void** pHandles __attribute__((unused)), void** request) {
+                                  void** pHandles __attribute__((unused)), void** request) { /* 中文索引·体内调用 ncclNet_v8->irecv。 */
   int sizesInt[NCCL_PROXY_MAX_SUBS];
   // reset to nullptr if optional receive completion is set
   if (*request == (void*)NCCL_NET_OPTIONAL_RECV_COMPLETION) *request = nullptr;
@@ -84,7 +84,7 @@ static ncclResult_t ncclNet_finalize(void* ctx __attribute__((unused))) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclCollNet_v8->getProperties。 */
   ncclNetProperties_v8_t p8;
   ncclResult_t ans = ncclCollNet_v8->getProperties(dev, &p8);
   if (ans != ncclSuccess) return ans;
@@ -118,7 +118,7 @@ static ncclResult_t ncclCollNet_listen(void* ctx __attribute__((unused)), int de
 
 static ncclResult_t ncclCollNet_iallreduce(void* collComm, void* sendData, void* recvData, size_t count,
                                            ncclDataType_t dataType, ncclRedOp_t redOp, void* sendMhandle,
-                                           void* recvMhandle, void** request) {
+                                           void* recvMhandle, void** request) { /* 中文索引·体内调用 ncclCollNet_v8->iallreduce。 */
   int countInt;
   if (count > MAX_NET_SIZE) return ncclInternalError;
   countInt = (int)count;
@@ -129,7 +129,7 @@ static ncclResult_t ncclCollNet_iallreduce(void* collComm, void* sendData, void*
 
 static ncclResult_t ncclCollNet_iallgather(void* collComm, void* sendData, int nRecvParts, ncclNetSGE_t* recvParts,
                                            size_t bytesPerRank, size_t windowOffset, size_t windowBytes,
-                                           void* sendMhandle, void** request) {
+                                           void* sendMhandle, void** request) { /* 中文索引·体内调用 ncclCollNet_v8->iallgather。 */
   ncclNetSGE_v8_t recvPartsInt;
   if (nRecvParts > 1) return ncclInternalError;
   if (recvParts->size > MAX_COLLNET_SIZE) return ncclInternalError;
@@ -144,7 +144,7 @@ static ncclResult_t ncclCollNet_iallgather(void* collComm, void* sendData, int n
 static ncclResult_t ncclCollNet_ireducescatter(void* collComm, int nSendParts, ncclNetSGE_t* sendParts, void* recvData,
                                                size_t bytesPerRank, size_t windowOffset, size_t windowBytes,
                                                ncclDataType_t dataType, ncclRedOp_t redOp, void* recvMhandle,
-                                               void** request) {
+                                               void** request) { /* 中文索引·体内调用 ncclCollNet_v8->ireducescatter。 */
   ncclNetSGE_v8_t sendPartsInt;
   if (nSendParts > 1) return ncclInternalError;
   if (sendParts->size > MAX_COLLNET_SIZE) return ncclInternalError;
@@ -163,7 +163,7 @@ static ncclResult_t ncclCollNet_finalize(void* ctx __attribute__((unused))) {
 
 static ncclResult_t ncclNet_init(void** ctx __attribute__((unused)), uint64_t commId __attribute__((unused)),
                                  ncclNetCommConfig_t* config __attribute__((unused)), ncclDebugLogger_t logfn,
-                                 ncclProfilerCallback_t proffn) {
+                                 ncclProfilerCallback_t proffn) { /* 中文索引·体内调用 ncclNet_v8->init。 */
   // before ncclNet_v11 the net plugin was initialized only once. With ncclNet_v11 this is no longer the case.
   // The compat layer preserves the ncclNet_v8 behavior using a refCount to track the number of times the plugin
   // is initialized, and avoid initializing it multiple times.
@@ -194,7 +194,7 @@ exit:
   return ncclSuccess;
 }
 
-ncclNet_t* getNcclNet_v8(void* lib) {
+ncclNet_t* getNcclNet_v8(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclNet_v8 = (ncclNet_v8_t*)ncclOsDlsym(lib, "ncclNetPlugin_v8");
   if (ncclNet_v8) {
     ncclNet.name = ncclNet_v8->name;
@@ -206,7 +206,7 @@ ncclNet_t* getNcclNet_v8(void* lib) {
 }
 
 static ncclResult_t ncclCollNet_init(void** ctx __attribute__((unused)), uint64_t commId __attribute__((unused)),
-                                     ncclDebugLogger_t logfn) {
+                                     ncclDebugLogger_t logfn) { /* 中文索引·体内调用 ncclCollNet_v8->init。 */
   // before ncclCollNet_v11 the collnet plugin was initialized only once. With ncclCollNet_v11 this is
   // no longer the case.
   // The compat layer preserves the ncclCollNet_v8 behavior using a refCount to track the number of times the plugin
@@ -235,7 +235,7 @@ exit:
   return ncclSuccess;
 }
 
-ncclCollNet_t* getNcclCollNet_v8(void* lib) {
+ncclCollNet_t* getNcclCollNet_v8(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclCollNet_v8 = (ncclCollNet_v8_t*)ncclOsDlsym(lib, "ncclCollNetPlugin_v8");
   if (ncclCollNet_v8) {
     ncclCollNet.name = ncclCollNet_v8->name;

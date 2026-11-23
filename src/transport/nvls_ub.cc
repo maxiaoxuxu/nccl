@@ -100,7 +100,7 @@ bool ncclNvlsUbEnabled(struct ncclComm* comm) {
   return comm->nvlsResources->ubEnabled;
 }
 
-size_t ncclNvlsUbSize(struct ncclComm* comm) {
+size_t ncclNvlsUbSize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamNvlsUbSize、alignUp。 */
   int64_t request = ncclParamNvlsUbSize();
   size_t maxDeviceMem = 0;
 
@@ -128,7 +128,7 @@ static CUdeviceptr ubMcAddress(const struct ncclMcArenaReg* range, const struct 
 
 // Whether the registered extent satisfies every documented cuMulticastBindAddr
 // precondition.
-static bool ubRegistrationBindable(struct ncclComm* comm, const void* buff, const struct ncclReg* reg) {
+static bool ubRegistrationBindable(struct ncclComm* comm, const void* buff, const struct ncclReg* reg) { /* 中文索引·体内调用 cuPointerGetAttribute、ubRangeAlignment。 */
   const struct ncclMcArena* arena = &comm->nvlsResources->ubArena;
   // ALLOWED_HANDLE_TYPES is a 64-bit bitmask; a narrower local overruns its stack slot.
   unsigned long long handleTypes = 0;
@@ -143,7 +143,7 @@ static bool ubRegistrationBindable(struct ncclComm* comm, const void* buff, cons
   return ncclMcAddrBindable((const void*)reg->begAddr, alignUp(reg->endAddr - reg->begAddr, arena->ucGranularity));
 }
 
-bool ncclNvlsUbEligible(struct ncclComm* comm, const void* buff, struct ncclReg* reg) {
+bool ncclNvlsUbEligible(struct ncclComm* comm, const void* buff, struct ncclReg* reg) { /* 中文索引·体内调用 ubRegistrationBindable。 */
   if (reg->state & NVLS_REG_NO_SUPPORT) return false;
   // A committed range is bound, so it passed at commit time.
   if (reg->state & (NVLS_REG_COMPLETE | NVLS_REG_POSSIBLE)) return true;
@@ -159,7 +159,7 @@ bool ncclNvlsUbEligible(struct ncclComm* comm, const void* buff, struct ncclReg*
 // even when the collective's arguments diverge. outBindSize is the cross-rank minimum of
 // the UC-rounded sizes; alignment is the cross-rank maximum of the per-rank alignments.
 static enum ubAction ubActionFromEligibility(const struct ubEligibility* allEligibility, int localRanks, int role,
-                                             size_t alignment, size_t* outBindSize) {
+                                             size_t alignment, size_t* outBindSize) { /* 中文索引·体内调用 alignDown。 */
   const struct ubSlotEligibility* rank0Slot = &allEligibility[0].slot[role];
   bool allCommitted = true, anyCommitted = false, offsetsAgree = true;
   size_t bindSize = SIZE_MAX;
@@ -194,7 +194,7 @@ static enum ubAction ubActionFromEligibility(const struct ubEligibility* allElig
 // Round one of the protocol: gather what every rank knows per role and settle the plan.
 // Pre-check failures travel as payload, so a rank reaches this gather regardless of its
 // local verdicts. Reuse addresses land in state->mcAddr.
-static ncclResult_t ubEligibilityExchange(struct ncclComm* comm, struct ubRegState* state) {
+static ncclResult_t ubEligibilityExchange(struct ncclComm* comm, struct ubRegState* state) { /* 中文索引·体内调用 alignUp、ubRangeAlignment。 */
   struct ncclNvlsSharedRes* resources = comm->nvlsResources;
   const void* const* buff = state->buff;
   struct ncclReg* const* reg = state->reg;
@@ -260,7 +260,7 @@ static bool ubTriggerReclaim(const struct ubEligibility* allEligibility, int loc
 // rank, chunked over the shmem scratch. The round count is a pure function of the gathered
 // counts. The caller owns *outAllRetired.
 static ncclResult_t ubRetiredExchange(struct ncclComm* comm, const struct ubEligibility* allEligibility,
-                                      int* outEntriesPerRank, struct ncclMcRetiredReg** outAllRetired) {
+                                      int* outEntriesPerRank, struct ncclMcRetiredReg** outAllRetired) { /* 中文索引·体内调用 ncclCalloc、ncclMcArenaRetiredSnapshot。 */
   struct ncclMcArena* arena = &comm->nvlsResources->ubArena;
   int localRanks = comm->localRanks;
   int entriesPerRound = (int)(comm->nvlsResources->nvlsShmem.maxTypeSize / sizeof(struct ncclMcRetiredReg));
@@ -305,7 +305,7 @@ exit:
 }
 
 // Free every range that all ranks have retired. Collective over the local ranks.
-static ncclResult_t ubReclaimRetiredRanges(struct ncclComm* comm, const struct ubEligibility* allEligibility) {
+static ncclResult_t ubReclaimRetiredRanges(struct ncclComm* comm, const struct ubEligibility* allEligibility) { /* 中文索引·体内调用 ncclCalloc、ubRetiredExchange。 */
   struct ncclMcArena* arena = &comm->nvlsResources->ubArena;
   struct ncclMcRetiredReg* allRetired = nullptr;    // every rank's retired list, rank-major
   struct ncclMcRetiredReg* sharedRetired = nullptr; // ranges every rank retired; the driver's slice, rewritten in place
@@ -389,7 +389,7 @@ static enum ubRangeState ubRangeStateFromBinds(struct ncclComm* comm, const stru
 // Round two of the protocol: reserve and bind the ranges the plan calls for, tell every peer
 // how it went, then either commit every range to its ncclReg or dispose of every one back to
 // the arena. Commit addresses land in state->mcAddr.
-static ncclResult_t ubBindNewRanges(struct ncclComm* comm, struct ubRegState* state) {
+static ncclResult_t ubBindNewRanges(struct ncclComm* comm, struct ubRegState* state) { /* 中文索引·体内调用 ncclMcArenaRegister、ncclShmemAllgather。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclNvlsSharedRes* resources = comm->nvlsResources;
   struct ncclMcArena* arena = &resources->ubArena;
@@ -472,7 +472,7 @@ dispose:
 // a rank reaches every gather its peers reach.
 ncclResult_t ncclNvlsUbRegister(struct ncclComm* comm, const void* sendbuff, void* recvbuff, size_t sendbuffSize,
                                 size_t recvbuffSize, struct ncclReg* sendReg, struct ncclReg* recvReg,
-                                int* outRegBufUsed, void** outRegBufSend, void** outRegBufRecv) {
+                                int* outRegBufUsed, void** outRegBufSend, void** outRegBufRecv) { /* 中文索引·体内调用 ncclCalloc、ubEligibilityExchange。 */
   int localRanks = comm->localRanks;
   struct ubRegState state = {{sendbuff, recvbuff}, {sendReg, recvReg}, {sendbuffSize, recvbuffSize}};
   bool anyNewRange = false;
@@ -517,7 +517,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclNvlsUbDeregister(struct ncclComm* comm, struct ncclReg* reg) {
+ncclResult_t ncclNvlsUbDeregister(struct ncclComm* comm, struct ncclReg* reg) { /* 中文索引·体内调用 ncclMcArenaRetireReg。 */
   struct ncclNvlsSharedRes* resources = comm->nvlsResources;
   size_t offset, bindSize;
 

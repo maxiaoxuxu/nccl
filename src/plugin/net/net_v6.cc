@@ -20,7 +20,7 @@ static ncclCollNet_v6_t* ncclCollNet_v6;
 #define INDEX_NUMS 2
 static int refCount[INDEX_NUMS];
 
-static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNet_v6->getProperties。 */
   ncclNetProperties_v6_t p6;
   ncclResult_t ans = ncclNet_v6->getProperties(dev, &p6);
   if (ans != ncclSuccess) return ans;
@@ -67,7 +67,7 @@ static ncclResult_t ncclNet_accept(void* listenComm, void** recvComm, ncclNetDev
 }
 
 static ncclResult_t ncclNet_isend(void* sendComm, void* data, size_t size, int tag, void* mhandle,
-                                  void* pHandle __attribute__((unused)), void** request) {
+                                  void* pHandle __attribute__((unused)), void** request) { /* 中文索引·体内调用 ncclNet_v6->isend。 */
   int sizeInt;
   if (size > MAX_NET_SIZE) return ncclInternalError;
   sizeInt = (int)size;
@@ -76,7 +76,7 @@ static ncclResult_t ncclNet_isend(void* sendComm, void* data, size_t size, int t
 }
 
 static ncclResult_t ncclNet_irecv(void* recvComm, int n, void** data, size_t* sizes, int* tags, void** mhandles,
-                                  void** pHandles __attribute__((unused)), void** request) {
+                                  void** pHandles __attribute__((unused)), void** request) { /* 中文索引·体内调用 ncclNet_v6->irecv。 */
   int sizesInt[NCCL_PROXY_MAX_SUBS];
   // reset to nullptr if optional receive completion is set
   if (*request == (void*)NCCL_NET_OPTIONAL_RECV_COMPLETION) *request = nullptr;
@@ -93,7 +93,7 @@ static ncclResult_t ncclNet_finalize(void* ctx __attribute__((unused))) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclCollNet_v6->getProperties。 */
   ncclNetProperties_v6_t p6;
   ncclResult_t ans = ncclCollNet_v6->getProperties(dev, &p6);
   if (ans != ncclSuccess) return ans;
@@ -132,7 +132,7 @@ static ncclResult_t ncclCollNet_regMr(void* comm, void* data, size_t size, int t
 
 static ncclResult_t ncclCollNet_iallreduce(void* collComm, void* sendData, void* recvData, size_t count,
                                            ncclDataType_t dataType, ncclRedOp_t redOp, void* sendMhandle,
-                                           void* recvMhandle, void** request) {
+                                           void* recvMhandle, void** request) { /* 中文索引·体内调用 ncclCollNet_v6->iallreduce。 */
   int countInt;
   if (count > MAX_NET_SIZE) return ncclInternalError;
   countInt = (int)count;
@@ -148,7 +148,7 @@ static ncclResult_t ncclCollNet_finalize(void* ctx __attribute__((unused))) {
 
 static ncclResult_t ncclNet_init(void** ctx __attribute__((unused)), uint64_t commId __attribute__((unused)),
                                  ncclNetCommConfig_t* config __attribute__((unused)), ncclDebugLogger_t logfn,
-                                 ncclProfilerCallback_t proffn __attribute__((unused))) {
+                                 ncclProfilerCallback_t proffn __attribute__((unused))) { /* 中文索引·体内调用 ncclNet_v6->init。 */
   // before ncclNet_v11 the net plugin was initialized only once. With ncclNet_v11 this is no longer the case.
   // The compat layer preserves the ncclNet_v6 behavior using a refCount to track the number of times the plugin
   // is initialized, and avoid initializing it multiple times.
@@ -179,7 +179,7 @@ exit:
   return ncclSuccess;
 }
 
-ncclNet_t* getNcclNet_v6(void* lib) {
+ncclNet_t* getNcclNet_v6(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclNet_v6 = (ncclNet_v6_t*)ncclOsDlsym(lib, "ncclNetPlugin_v6");
   if (ncclNet_v6) {
     ncclNet.name = ncclNet_v6->name;
@@ -191,7 +191,7 @@ ncclNet_t* getNcclNet_v6(void* lib) {
 }
 
 static ncclResult_t ncclCollNet_init(void** ctx __attribute__((unused)), uint64_t commId __attribute__((unused)),
-                                     ncclDebugLogger_t logfn) {
+                                     ncclDebugLogger_t logfn) { /* 中文索引·体内调用 ncclCollNet_v6->init。 */
   // before ncclCollNet_v11 the collnet plugin was initialized only once. With ncclCollNet_v11 this is
   // no longer the case.
   // The compat layer preserves the ncclCollNet_v6 behavior using a refCount to track the number of times the plugin
@@ -220,7 +220,7 @@ exit:
   return ncclSuccess;
 }
 
-ncclCollNet_t* getNcclCollNet_v6(void* lib) {
+ncclCollNet_t* getNcclCollNet_v6(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclCollNet_v6 = (ncclCollNet_v6_t*)ncclOsDlsym(lib, "ncclCollNetPlugin_v6");
   if (ncclCollNet_v6) {
     ncclCollNet.name = ncclCollNet_v6->name;

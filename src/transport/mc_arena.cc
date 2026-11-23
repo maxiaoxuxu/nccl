@@ -24,7 +24,7 @@ static size_t reserveSize(const struct ncclMcArena* arena, size_t bindSize) {
 }
 
 ncclResult_t ncclMcArenaInit(struct ncclComm* comm, struct ncclMcArena* arena,
-                             const struct ncclMcPartition* partition) {
+                             const struct ncclMcPartition* partition) { /* 中文索引·体内调用 memset、cuMemGetAllocationGranularity。 */
   CUmemAllocationProp prop;
 
   arena->partition = *partition;
@@ -42,14 +42,14 @@ ncclResult_t ncclMcArenaInit(struct ncclComm* comm, struct ncclMcArena* arena,
   return ncclSuccess;
 }
 
-void ncclMcArenaDestroy(struct ncclMcArena* arena) {
+void ncclMcArenaDestroy(struct ncclMcArena* arena) { /* 中文索引·体内调用 ncclIntruQueueEmpty、free。 */
   // Retired ranges are already unbound; releasing the MC group drops anything still bound.
   while (!ncclIntruQueueEmpty(&arena->retiredQueue)) free(ncclIntruQueueDequeue(&arena->retiredQueue));
   ncclSpaceDestruct(&arena->space);
 }
 
 ncclResult_t ncclMcArenaRegister(struct ncclMcArena* arena, int n, const void** buffs, const size_t* sizes,
-                                 struct ncclMcArenaReg** outRegs, enum ncclMcBindStatus* outStatus) {
+                                 struct ncclMcArenaReg** outRegs, enum ncclMcBindStatus* outStatus) { /* 中文索引·体内调用 ncclCalloc、ncclSpaceTryAlloc。 */
   ncclResult_t ret = ncclSuccess;
   bool allBound = true;
   int nReserved = 0; // requests already holding arena space; exactly what the unwind returns
@@ -107,7 +107,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclMcArenaDeregister(struct ncclMcArena* arena, struct ncclMcArenaReg* reg) {
+ncclResult_t ncclMcArenaDeregister(struct ncclMcArena* arena, struct ncclMcArenaReg* reg) { /* 中文索引·体内调用 ncclSpaceFree、reserveSize。 */
   ncclResult_t ret = ncclSuccess;
 
   NCCLCHECKIGNORE(ncclSpaceFree(&arena->space, (int64_t)reg->offset, (int64_t)reserveSize(arena, reg->bindSize)), ret);
@@ -115,7 +115,7 @@ ncclResult_t ncclMcArenaDeregister(struct ncclMcArena* arena, struct ncclMcArena
   return ret;
 }
 
-void ncclMcArenaRetireReg(struct ncclMcArena* arena, struct ncclMcArenaReg* reg) {
+void ncclMcArenaRetireReg(struct ncclMcArena* arena, struct ncclMcArenaReg* reg) { /* 中文索引·体内调用 ncclMcPartitionUnbind、ncclIntruQueueInsertSorted。 */
   ncclResult_t res = ncclSuccess;
 
   // Best effort: an unbind fails routinely when the user freed the backing first, which
@@ -138,7 +138,7 @@ void ncclMcArenaRetiredSnapshot(const struct ncclMcArena* arena, struct ncclMcRe
 }
 
 ncclResult_t ncclMcArenaReclaim(struct ncclMcArena* arena, const struct ncclMcRetiredReg* regs, int count,
-                                size_t* outFreedBytes) {
+                                size_t* outFreedBytes) { /* 中文索引·体内调用 ncclSpaceFree、reserveSize。 */
   struct ncclMcArenaReg* prev = nullptr;                  // queue cursor: node's predecessor
   struct ncclMcArenaReg* node = arena->retiredQueue.head; // queue cursor
   ncclResult_t ret = ncclSuccess;

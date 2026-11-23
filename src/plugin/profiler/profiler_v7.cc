@@ -24,7 +24,7 @@
 
 NCCL_PROFILER_SHIM_BEGIN(7)
 
-static ncclResult_t ncclProfiler_startEvent(void* ctx, void** eHandle, ncclProfilerEventDescr_t* eDescr) {
+static ncclResult_t ncclProfiler_startEvent(void* ctx, void** eHandle, ncclProfilerEventDescr_t* eDescr) { /* 中文索引·体内调用 getActiveProfiler、p->startEvent。 */
   ncclProfilerShim_t* p = getActiveProfiler();
   if (p == nullptr) return ncclInternalError;
   ncclProfilerEventDescr_v7_t eDescr_v7 = {};
@@ -192,7 +192,7 @@ static ncclResult_t ncclProfiler_recordEventState(void* eHandle, ncclProfilerEve
 
 static ncclResult_t ncclProfiler_init(void** ctx, uint64_t commId, int* eActivationMask, const char* commName,
                                       int nNodes, int nRanks, int rank, ncclDebugLogger_t logfn,
-                                      ncclProfilerConfig_t* config __attribute__((unused))) {
+                                      ncclProfilerConfig_t* config __attribute__((unused))) { /* 中文索引·体内调用 getActiveProfiler、p->init。 */
   ncclProfilerShim_t* p = getActiveProfiler();
   if (p == nullptr) return ncclInternalError;
   return p->init(ctx, commId, eActivationMask, commName, nNodes, nRanks, rank, logfn);

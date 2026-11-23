@@ -91,7 +91,7 @@ NCCL_HOST_DEVICE_INLINE ncclSymPtr<T>& ncclSymPtr<T>::operator-=(unsigned long l
 
 #ifdef __CUDACC__
 template <typename T>
-NCCL_DEVICE_INLINE T* ncclSymPtr<T>::localPtr() const {
+NCCL_DEVICE_INLINE T* ncclSymPtr<T>::localPtr() const { /* 中文索引·体内调用 ncclGetLocalPointer。 */
   if (window) {
     return (T*)ncclGetLocalPointer(window, offset);
   } else {

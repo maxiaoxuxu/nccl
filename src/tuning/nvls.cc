@@ -10,7 +10,7 @@
 #include "model.h"
 
 ncclResult_t ncclTuningNvlsModelInit(struct ncclComm* comm, int id, int enabled[NCCL_NUM_FUNCTIONS],
-                                     struct ncclTuningModelState* /*internal*/) {
+                                     struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、memset。 */
   ncclResult_t ret = ncclSuccess;
   if (!ncclNvlsTransportEnabled(comm)) {
     memset(enabled, 0, NCCL_NUM_FUNCTIONS * sizeof(int));
@@ -121,7 +121,7 @@ ncclResult_t ncclTuningNvlsModelInit(struct ncclComm* comm, int id, int enabled[
 }
 
 ncclResult_t ncclTuningNvlsModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                    struct ncclTuningModelState* /*internal*/) {
+                                    struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 log2i、ncclTuningGetTime。 */
   ncclResult_t ret = ncclSuccess;
   float lat = inputs->comm->tuningContext.generalLatencies[inputs->func][tuning->algo][tuning->proto];
   float bw = inputs->comm->tuningContext.generalBandwidths[inputs->func][tuning->algo][tuning->proto];

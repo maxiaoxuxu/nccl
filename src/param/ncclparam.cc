@@ -11,7 +11,7 @@
 #include "cuda_runtime.h"
 #include "nccl.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) { /* 中文索引·体内调用 strcmp、fprintf。 */
   bool longFormat = false;
   bool showAll = false;
   for (int i = 1; i < argc; i++) {

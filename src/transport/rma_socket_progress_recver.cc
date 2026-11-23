@@ -22,7 +22,7 @@ static ncclResult_t ncclRmaSocketProxyFindMr(struct ncclRmaSocketProxyCollComm* 
 }
 
 static ncclResult_t ncclRmaSocketProxyResolveDataTarget(struct ncclRmaSocketProxyCollComm* comm, int peer,
-                                                        struct ncclRmaSocketProxyPeerReceiver* receiver) {
+                                                        struct ncclRmaSocketProxyPeerReceiver* receiver) { /* 中文索引·体内调用 ncclRmaSocketProxyFindMr、ncclRmaSocketProxyValidateRange。 */
   struct ncclRmaSocketProxyHeader* controlMsg = &receiver->controlMsg;
   struct ncclRmaSocketProxyMrHandle* handle = NULL;
   ncclResult_t ret = ncclRmaSocketProxyFindMr(comm, controlMsg->mrId, &handle);
@@ -40,7 +40,7 @@ static ncclResult_t ncclRmaSocketProxyResolveDataTarget(struct ncclRmaSocketProx
 }
 
 static ncclResult_t ncclRmaSocketProxyResolveSignalTarget(struct ncclRmaSocketProxyCollComm* comm, int peer,
-                                                          struct ncclRmaSocketProxyPeerReceiver* receiver) {
+                                                          struct ncclRmaSocketProxyPeerReceiver* receiver) { /* 中文索引·体内调用 ncclRmaSocketProxyFindMr、ncclRmaSocketProxyValidateRange。 */
   struct ncclRmaSocketProxyHeader* controlMsg = &receiver->controlMsg;
   struct ncclRmaSocketProxyMrHandle* handle = NULL;
   ncclResult_t ret = ncclRmaSocketProxyFindMr(comm, controlMsg->signalMrId, &handle);
@@ -66,7 +66,7 @@ static ncclResult_t ncclRmaSocketProxyResolveSignalTarget(struct ncclRmaSocketPr
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyApplySignal(struct ncclRmaSocketProxyPeerReceiver* receiver) {
+static ncclResult_t ncclRmaSocketProxyApplySignal(struct ncclRmaSocketProxyPeerReceiver* receiver) { /* 中文索引·体内调用 ncclRmaSocketProxyGdrPtr、wrap_gdr_copy_from_mapping。 */
   if (!receiver->hasSignal) return ncclSuccess;
   if (receiver->signalType != NCCL_PTR_CUDA || receiver->signalHandle == NULL) {
     WARN("RMA/Socket : invalid iPutSignal target type=%d handle=%p", receiver->signalType, receiver->signalHandle);
@@ -89,7 +89,7 @@ static ncclResult_t ncclRmaSocketProxyApplySignal(struct ncclRmaSocketProxyPeerR
   return ncclSuccess;
 }
 
-static void ncclRmaSocketProxyReleaseRecvMr(struct ncclRmaSocketProxyMrHandle* handle) {
+static void ncclRmaSocketProxyReleaseRecvMr(struct ncclRmaSocketProxyMrHandle* handle) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement。 */
   if (handle == NULL) return;
   if (COMPILER_ATOMIC_LOAD(&handle->recvActiveOps, std::memory_order_relaxed) <= 0) {
     WARN("RMA/Socket : receive MR reference underflow mrId=%lu", handle->mrId);
@@ -98,7 +98,7 @@ static void ncclRmaSocketProxyReleaseRecvMr(struct ncclRmaSocketProxyMrHandle* h
   ncclAtomicRefCountDecrement(&handle->recvActiveOps);
 }
 
-static void ncclRmaSocketProxyResetRecv(struct ncclRmaSocketProxyPeerReceiver* receiver) {
+static void ncclRmaSocketProxyResetRecv(struct ncclRmaSocketProxyPeerReceiver* receiver) { /* 中文索引·体内调用 ncclRmaSocketProxyReleaseRecvMr、memset。 */
   ncclRmaSocketProxyReleaseRecvMr(receiver->dataHandle);
   ncclRmaSocketProxyReleaseRecvMr(receiver->signalHandle);
   receiver->recvState = ncclRmaSocketProxyRecvStateControlMsg;
@@ -119,7 +119,7 @@ static void ncclRmaSocketProxyResetRecv(struct ncclRmaSocketProxyPeerReceiver* r
   receiver->signalHandle = NULL;
 }
 
-static ncclResult_t ncclRmaSocketProxyCompleteRecvPayload(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyCompleteRecvPayload(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclRmaSocketProxyApplySignal、ncclRmaSocketProxyResetRecv。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   if (receiver->controlMsg.type == ncclRmaSocketProxyMsgTypeIput) {
     /* Each gdr_copy_to_mapping() call already fences its write-combined stores. */
@@ -135,7 +135,7 @@ static ncclResult_t ncclRmaSocketProxyCompleteRecvPayload(struct ncclRmaSocketPr
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyStartRecvPut(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyStartRecvPut(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclRmaSocketProxyResolveDataTarget、ncclRmaSocketProxyResolveSignalTarget。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   struct ncclRmaSocketProxyHeader* controlMsg = &receiver->controlMsg;
   if (controlMsg->size > INT_MAX) {
@@ -164,7 +164,7 @@ static ncclResult_t ncclRmaSocketProxyStartRecvPut(struct ncclRmaSocketProxyColl
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyProgressControlAck(struct ncclRmaSocketProxyPeerReceiver* receiver, int peer) {
+static ncclResult_t ncclRmaSocketProxyProgressControlAck(struct ncclRmaSocketProxyPeerReceiver* receiver, int peer) { /* 中文索引·体内调用 ncclSocketProgress。 */
   bool closed = false;
   NCCLCHECK(ncclSocketProgress(NCCL_SOCKET_SEND, &receiver->sock, &receiver->controlAck, sizeof(receiver->controlAck),
                                &receiver->controlAckOffset, &closed));
@@ -178,7 +178,7 @@ static ncclResult_t ncclRmaSocketProxyProgressControlAck(struct ncclRmaSocketPro
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyHandleRespondGetData(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyHandleRespondGetData(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclRmaSocketProxyResolveDataTarget。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   struct ncclRmaSocketProxyHeader* controlMsg = &receiver->controlMsg;
   if (controlMsg->status != ncclSuccess) {
@@ -200,7 +200,7 @@ static ncclResult_t ncclRmaSocketProxyHandleRespondGetData(struct ncclRmaSocketP
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyHandleRequestGetData(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyHandleRequestGetData(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclRmaSocketProxyFindMr、ncclRmaSocketProxyValidateRange。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   struct ncclRmaSocketProxyHeader* requestMsg = &receiver->controlMsg;
   uint32_t status = ncclSuccess;
@@ -232,7 +232,7 @@ static ncclResult_t ncclRmaSocketProxyHandleRequestGetData(struct ncclRmaSocketP
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyProgressRecvControl(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyProgressRecvControl(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclSocketProgress。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   bool closed = false;
   NCCLCHECK(ncclSocketProgress(NCCL_SOCKET_RECV, &receiver->sock, &receiver->controlMsg, sizeof(receiver->controlMsg),
@@ -250,7 +250,7 @@ static ncclResult_t ncclRmaSocketProxyProgressRecvControl(struct ncclRmaSocketPr
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyProgressRecvPayload(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+static ncclResult_t ncclRmaSocketProxyProgressRecvPayload(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclSocketProgress、ncclRmaSocketProxyCopy。 */
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   size_t payloadSize = (size_t)receiver->controlMsg.size;
   if (receiver->recvPayloadOffset < payloadSize) {
@@ -283,7 +283,7 @@ static ncclResult_t ncclRmaSocketProxyProgressRecvPayload(struct ncclRmaSocketPr
   return ncclRmaSocketProxyCompleteRecvPayload(comm, peer);
 }
 
-ncclResult_t ncclRmaSocketProxyProgressPeerRecv(struct ncclRmaSocketProxyCollComm* comm, int peer) {
+ncclResult_t ncclRmaSocketProxyProgressPeerRecv(struct ncclRmaSocketProxyCollComm* comm, int peer) { /* 中文索引·体内调用 ncclRmaSocketProxyProgressRecvControl、ncclRmaSocketProxyStartRecvPut。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclRmaSocketProxyPeerReceiver* receiver = &comm->peerReceiver[peer];
   if (receiver->recvState == ncclRmaSocketProxyRecvStateControlMsg) {

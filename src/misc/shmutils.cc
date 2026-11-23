@@ -13,7 +13,7 @@
 #include "compiler.h"
 
 ncclResult_t ncclShmOpen(char* shmPath, size_t shmPathSize, size_t shmSize, void** shmPtr, void** devShmPtr,
-                         int refcount, ncclShmHandle_t* handle) {
+                         int refcount, ncclShmHandle_t* handle) { /* 中文索引·体内调用 ncclOsShmOpen。 */
   struct ncclShmHandleInternal* internalHandle = NULL;
   ncclResult_t ret = ncclOsShmOpen(shmPath, shmPathSize, shmSize, shmPtr, devShmPtr, refcount, &internalHandle);
   *handle = (ncclShmHandle_t)internalHandle;
@@ -29,7 +29,7 @@ ncclResult_t ncclShmUnlink(ncclShmHandle_t handle) {
 }
 
 ncclResult_t ncclShmemAllgather(struct ncclComm* comm, struct ncclShmemCollBuff* shmem, void* sendbuff, void* recvbuff,
-                                size_t typeSize) {
+                                size_t typeSize) { /* 中文索引·体内调用 memcpy。 */
   ncclResult_t ret = ncclSuccess;
   int nextRound = shmem->round + 1;
   int curIndex = shmem->round % 2;

@@ -11,7 +11,7 @@
 #include "scheduler.h"
 
 ncclResult_t ncclScheduleBcastTasksToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan,
-                                          struct ncclKernelPlanBudget* budget) {
+                                          struct ncclKernelPlanBudget* budget) { /* 中文索引·体内调用 ncclMaxDevWorkBatchBytes、ncclIntruQueueHead。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   int nChannels = comm->nChannels;
   int nRanks = comm->nRanks;

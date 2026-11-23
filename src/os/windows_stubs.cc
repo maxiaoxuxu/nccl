@@ -82,7 +82,7 @@ const char* ncclEnvPluginGetEnv(const char* name) {
 
 /* GIN requirement/create stubs (implemented in gin_barrier.cc and gin_scratch.cc on Linux only) */
 ncclResult_t ncclGinBarrierCreateRequirement(ncclComm_t comm, ncclTeam_t team, int nBarriers,
-                                             ncclGinBarrierHandle_t* outHandle, ncclDevResourceRequirements_t* outReq) {
+                                             ncclGinBarrierHandle_t* outHandle, ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset。 */
   (void)comm;
   (void)team;
   (void)nBarriers;
@@ -92,7 +92,7 @@ ncclResult_t ncclGinBarrierCreateRequirement(ncclComm_t comm, ncclTeam_t team, i
 }
 
 ncclResult_t ncclGinOutboxCreateRequirement(int nBlocks, int size_log2, ncclGinOutboxHandle* outHandle,
-                                            ncclDevResourceRequirements_t* outReq) {
+                                            ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset。 */
   (void)nBlocks;
   (void)size_log2;
   (void)outHandle;
@@ -101,7 +101,7 @@ ncclResult_t ncclGinOutboxCreateRequirement(int nBlocks, int size_log2, ncclGinO
 }
 
 ncclResult_t ncclGinInboxA2ACreateRequirement(ncclTeam peers, int nBlocks, int size_log2,
-                                              ncclGinInboxA2AHandle* outHandle, ncclDevResourceRequirements_t* outReq) {
+                                              ncclGinInboxA2AHandle* outHandle, ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset。 */
   (void)peers;
   (void)nBlocks;
   (void)size_log2;
@@ -355,7 +355,7 @@ ncclResult_t ncclProfilerStopProxyStepEvent(int sub, struct ncclProxyArgs* args,
   return ncclSuccess;
 }
 
-ncclResult_t ncclProfilerStartProxyCtrlEvent(void* profilerContext, struct ncclProfilerEventRef* eHandle) {
+ncclResult_t ncclProfilerStartProxyCtrlEvent(void* profilerContext, struct ncclProfilerEventRef* eHandle) { /* 中文索引·体内调用 memset。 */
   (void)profilerContext;
   if (eHandle) memset(eHandle, 0, sizeof(*eHandle));
   return ncclSuccess;
@@ -440,7 +440,7 @@ ncclResult_t ncclProfilerStopCeCollEvent(struct ncclComm* comm, struct ncclCeCol
 }
 
 ncclResult_t ncclProfilerStartCeSyncEvent(struct ncclComm* comm, struct ncclCeCollArgs* args, cudaStream_t stream,
-                                          struct ncclProfilerEventRef* ceSyncHandle) {
+                                          struct ncclProfilerEventRef* ceSyncHandle) { /* 中文索引·体内调用 memset。 */
   (void)comm;
   (void)args;
   (void)stream;
@@ -458,7 +458,7 @@ ncclResult_t ncclProfilerStopCeSyncEvent(struct ncclComm* comm, struct ncclProfi
 
 ncclResult_t ncclProfilerStartCeBatchEvent(struct ncclComm* comm, struct ncclCeCollArgs* args,
                                            struct ncclCeBatchOpsParams* params, cudaStream_t stream,
-                                           struct ncclProfilerEventRef* ceBatchHandle) {
+                                           struct ncclProfilerEventRef* ceBatchHandle) { /* 中文索引·体内调用 memset。 */
   (void)comm;
   (void)args;
   (void)params;

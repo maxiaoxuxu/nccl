@@ -20,7 +20,7 @@ struct listOfCtx {
 };
 
 template <typename ContainerT>
-ncclResult_t listOfResolve(const void* ctx, const char* input, ContainerT& out) {
+ncclResult_t listOfResolve(const void* ctx, const char* input, ContainerT& out) { /* 中文索引·体内调用 nccl::param::utils::split、nccl::param::utils::trim。 */
   auto* lc = static_cast<const listOfCtx*>(ctx);
   if (input == nullptr || *input == '\0') return ncclInvalidArgument;
   auto tokens = nccl::param::utils::split(input, lc->delimiter);
@@ -39,7 +39,7 @@ bool listOfValidate(const void*, const ContainerT&) {
 }
 
 template <typename ContainerT>
-std::string listOfToString(const void* ctx, const ContainerT& value) {
+std::string listOfToString(const void* ctx, const ContainerT& value) { /* 中文索引·体内调用 s.empty。 */
   auto* lc = static_cast<const listOfCtx*>(ctx);
   std::string s;
   for (const auto& elem : value) {
@@ -56,7 +56,7 @@ std::string listOfToString(const void* ctx, const ContainerT& value) {
 // ncclParamListOf: Parser for delimiter-separated strings into a container.
 // ContainerT must support insert(end(), std::string) and iteration.
 template <typename ContainerT>
-ncclParamParser<ContainerT> ncclParamListOf(char delimiter = ',') {
+ncclParamParser<ContainerT> ncclParamListOf(char delimiter = ',') { /* 中文索引·体内调用 std::string、std::move。 */
   using namespace nccl::param::parser;
   auto ctx = std::make_shared<listOfCtx>(listOfCtx{delimiter});
   std::string d = std::string("Delimiter-separated list (delimiter='") + delimiter + "')";

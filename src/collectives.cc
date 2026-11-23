@@ -129,7 +129,7 @@ const char* ncclProtoToString(int proto) {
 
 static inline ncclResult_t ncclAllGatherConfigImpl(const void* sendbuff, void* recvbuff, size_t sendcount,
                                                    ncclDataType_t datatype, ncclComm_t comm, cudaStream_t stream,
-                                                   const ncclCollConfig_t* config) {
+                                                   const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncAllGather, "AllGather",
                           sendbuff, recvbuff, sendcount, datatype, ncclSum, 0, comm, stream, /* Args */
@@ -142,7 +142,7 @@ static inline ncclResult_t ncclAllGatherConfigImpl(const void* sendbuff, void* r
 NCCL_API(ncclResult_t, ncclAllGather, const void* sendbuff, void* recvbuff, size_t sendcount, ncclDataType_t datatype,
          ncclComm_t comm, cudaStream_t stream);
 ncclResult_t ncclAllGather(const void* sendbuff, void* recvbuff, size_t sendcount, ncclDataType_t datatype,
-                           ncclComm_t comm, cudaStream_t stream) {
+                           ncclComm_t comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclAllGatherConfigImpl。 */
   // Just pass the size of one message and not the total bytes sent/received.
   NVTX3_FUNC_WITH_PARAMS(AllGather, NcclNvtxParamsAllGather,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, sendcount * ncclTypeSize(datatype)));
@@ -152,7 +152,7 @@ ncclResult_t ncclAllGather(const void* sendbuff, void* recvbuff, size_t sendcoun
 NCCL_API(ncclResult_t, ncclAllGatherConfig, const void* sendbuff, void* recvbuff, size_t sendcount,
          ncclDataType_t datatype, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclAllGatherConfig(const void* sendbuff, void* recvbuff, size_t sendcount, ncclDataType_t datatype,
-                                 ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                                 ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclAllGatherConfigImpl。 */
   // Just pass the size of one message and not the total bytes sent/received.
   NVTX3_FUNC_WITH_PARAMS(AllGatherConfig, NcclNvtxParamsAllGather,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, sendcount * ncclTypeSize(datatype)));
@@ -161,7 +161,7 @@ ncclResult_t ncclAllGatherConfig(const void* sendbuff, void* recvbuff, size_t se
 
 static inline ncclResult_t ncclAlltoAllConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                   ncclDataType_t datatype, ncclComm_t comm, cudaStream_t stream,
-                                                  const ncclCollConfig_t* config) {
+                                                  const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncAlltoAll, "AlltoAll",
                           sendbuff, recvbuff, count, datatype, ncclSum, 0, comm, stream, /* Args */
@@ -174,7 +174,7 @@ static inline ncclResult_t ncclAlltoAllConfigImpl(const void* sendbuff, void* re
 NCCL_API(ncclResult_t, ncclAlltoAll, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          ncclComm* comm, cudaStream_t stream);
 ncclResult_t ncclAlltoAll(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, ncclComm* comm,
-                          cudaStream_t stream) {
+                          cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclAlltoAllConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(AlltoAll, NcclNvtxParamsAlltoAll,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype)));
   return ncclAlltoAllConfigImpl(sendbuff, recvbuff, count, datatype, comm, stream, nullptr);
@@ -183,28 +183,28 @@ ncclResult_t ncclAlltoAll(const void* sendbuff, void* recvbuff, size_t count, nc
 NCCL_API(ncclResult_t, ncclAlltoAllConfig, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclAlltoAllConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
-                                ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                                ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclAlltoAllConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(AlltoAllConfig, NcclNvtxParamsAlltoAll,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype)));
   return ncclAlltoAllConfigImpl(sendbuff, recvbuff, count, datatype, comm, stream, config);
 }
 
-static inline ncclResult_t ncclAllReduceConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
+/* 中文图解·host｜AllReduce 共用入口把 sendbuff、recvbuff、count、datatype 和流装进 ncclInfo；count 以用户元素计。 */ static inline ncclResult_t ncclAllReduceConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                    ncclDataType_t datatype, ncclRedOp_t op, ncclComm_t comm,
-                                                   cudaStream_t stream, const ncclCollConfig_t* config) {
+                                                   cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncAllReduce, "AllReduce",
                           sendbuff, recvbuff, count, datatype, op, 0, comm, stream, /* Args */
                           ALLREDUCE_CHUNKSTEPS, ALLREDUCE_SLICESTEPS};
   // clang-format on
   NCCLCHECK(ncclParseCollConfig(config, &info.collConfig));
-  return ncclEnqueueCheck(&info);
+  /* 中文图解·host｜ncclInfo 活在本次调用栈上；排队路径把后续异步执行需要的字段复制到 task。 */ return ncclEnqueueCheck(&info);
 }
 
 NCCL_API(ncclResult_t, ncclAllReduce, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          ncclRedOp_t op, ncclComm* comm, cudaStream_t stream);
 ncclResult_t ncclAllReduce(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, ncclRedOp_t op,
-                           ncclComm* comm, cudaStream_t stream) {
+                           ncclComm* comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclAllReduceConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(AllReduce, NcclNvtxParamsAllReduce,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), op));
   return ncclAllReduceConfigImpl(sendbuff, recvbuff, count, datatype, op, comm, stream, nullptr);
@@ -213,7 +213,7 @@ ncclResult_t ncclAllReduce(const void* sendbuff, void* recvbuff, size_t count, n
 NCCL_API(ncclResult_t, ncclAllReduceConfig, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          ncclRedOp_t op, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclAllReduceConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
-                                 ncclRedOp_t op, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                                 ncclRedOp_t op, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclAllReduceConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(AllReduceConfig, NcclNvtxParamsAllReduce,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), op));
   return ncclAllReduceConfigImpl(sendbuff, recvbuff, count, datatype, op, comm, stream, config);
@@ -221,7 +221,7 @@ ncclResult_t ncclAllReduceConfig(const void* sendbuff, void* recvbuff, size_t co
 
 static inline ncclResult_t ncclBroadcastConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                    ncclDataType_t datatype, int root, ncclComm_t comm,
-                                                   cudaStream_t stream, const ncclCollConfig_t* config) {
+                                                   cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncBroadcast, "Broadcast",
                           sendbuff, recvbuff, count, datatype, ncclSum, root, comm, stream, /* Args */
@@ -234,7 +234,7 @@ static inline ncclResult_t ncclBroadcastConfigImpl(const void* sendbuff, void* r
 NCCL_API(ncclResult_t, ncclBroadcast, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm_t comm, cudaStream_t stream);
 ncclResult_t ncclBroadcast(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                           ncclComm_t comm, cudaStream_t stream) {
+                           ncclComm_t comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclBroadcastConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(Broadcast, NcclNvtxParamsBroadcast,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclBroadcastConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, nullptr);
@@ -243,7 +243,7 @@ ncclResult_t ncclBroadcast(const void* sendbuff, void* recvbuff, size_t count, n
 NCCL_API(ncclResult_t, ncclBroadcastConfig, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclBroadcastConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                                 ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                                 ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclBroadcastConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(BroadcastConfig, NcclNvtxParamsBroadcast,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclBroadcastConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, config);
@@ -258,7 +258,7 @@ ncclResult_t ncclBcast(void* buff, size_t count, ncclDataType_t datatype, int ro
 
 static inline ncclResult_t ncclGatherConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                 ncclDataType_t datatype, int root, ncclComm_t comm, cudaStream_t stream,
-                                                const ncclCollConfig_t* config) {
+                                                const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncGather, "Gather",
                           sendbuff, recvbuff, count, datatype, ncclSum, root, comm, stream, /* Args */
@@ -271,7 +271,7 @@ static inline ncclResult_t ncclGatherConfigImpl(const void* sendbuff, void* recv
 NCCL_API(ncclResult_t, ncclGather, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm* comm, cudaStream_t stream);
 ncclResult_t ncclGather(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                        ncclComm* comm, cudaStream_t stream) {
+                        ncclComm* comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclGatherConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(Gather, NcclNvtxParamsGather,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclGatherConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, nullptr);
@@ -280,7 +280,7 @@ ncclResult_t ncclGather(const void* sendbuff, void* recvbuff, size_t count, nccl
 NCCL_API(ncclResult_t, ncclGatherConfig, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclGatherConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                              ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                              ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclGatherConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(GatherConfig, NcclNvtxParamsGather,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclGatherConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, config);
@@ -288,7 +288,7 @@ ncclResult_t ncclGatherConfig(const void* sendbuff, void* recvbuff, size_t count
 
 static inline ncclResult_t ncclReduceConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                 ncclDataType_t datatype, ncclRedOp_t op, int root, ncclComm_t comm,
-                                                cudaStream_t stream, const ncclCollConfig_t* config) {
+                                                cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncReduce, "Reduce",
                           sendbuff, recvbuff, count, datatype, op, root, comm, stream, /* Args */
@@ -301,7 +301,7 @@ static inline ncclResult_t ncclReduceConfigImpl(const void* sendbuff, void* recv
 NCCL_API(ncclResult_t, ncclReduce, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          ncclRedOp_t op, int root, ncclComm_t comm, cudaStream_t stream);
 ncclResult_t ncclReduce(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, ncclRedOp_t op,
-                        int root, ncclComm_t comm, cudaStream_t stream) {
+                        int root, ncclComm_t comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclReduceConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(Reduce, NcclNvtxParamsReduce,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root, op));
   return ncclReduceConfigImpl(sendbuff, recvbuff, count, datatype, op, root, comm, stream, nullptr);
@@ -311,7 +311,7 @@ NCCL_API(ncclResult_t, ncclReduceConfig, const void* sendbuff, void* recvbuff, s
          ncclRedOp_t op, int root, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclReduceConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
                               ncclRedOp_t op, int root, ncclComm_t comm, cudaStream_t stream,
-                              const ncclCollConfig_t* config) {
+                              const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclReduceConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(ReduceConfig, NcclNvtxParamsReduce,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root, op));
   return ncclReduceConfigImpl(sendbuff, recvbuff, count, datatype, op, root, comm, stream, config);
@@ -319,7 +319,7 @@ ncclResult_t ncclReduceConfig(const void* sendbuff, void* recvbuff, size_t count
 
 static inline ncclResult_t ncclReduceScatterConfigImpl(const void* sendbuff, void* recvbuff, size_t recvcount,
                                                        ncclDataType_t datatype, ncclRedOp_t op, ncclComm_t comm,
-                                                       cudaStream_t stream, const ncclCollConfig_t* config) {
+                                                       cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncReduceScatter, "ReduceScatter",
                           sendbuff, recvbuff, recvcount, datatype, op, 0, comm, stream, /* Args */
@@ -332,7 +332,7 @@ static inline ncclResult_t ncclReduceScatterConfigImpl(const void* sendbuff, voi
 NCCL_API(ncclResult_t, ncclReduceScatter, const void* sendbuff, void* recvbuff, size_t recvcount,
          ncclDataType_t datatype, ncclRedOp_t op, ncclComm* comm, cudaStream_t stream);
 ncclResult_t ncclReduceScatter(const void* sendbuff, void* recvbuff, size_t recvcount, ncclDataType_t datatype,
-                               ncclRedOp_t op, ncclComm* comm, cudaStream_t stream) {
+                               ncclRedOp_t op, ncclComm* comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclReduceScatterConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(ReduceScatter, NcclNvtxParamsReduceScatter,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, recvcount * ncclTypeSize(datatype), op));
   return ncclReduceScatterConfigImpl(sendbuff, recvbuff, recvcount, datatype, op, comm, stream, nullptr);
@@ -342,7 +342,7 @@ NCCL_API(ncclResult_t, ncclReduceScatterConfig, const void* sendbuff, void* recv
          ncclDataType_t datatype, ncclRedOp_t op, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclReduceScatterConfig(const void* sendbuff, void* recvbuff, size_t recvcount, ncclDataType_t datatype,
                                      ncclRedOp_t op, ncclComm_t comm, cudaStream_t stream,
-                                     const ncclCollConfig_t* config) {
+                                     const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclReduceScatterConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(ReduceScatterConfig, NcclNvtxParamsReduceScatter,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, recvcount * ncclTypeSize(datatype), op));
   return ncclReduceScatterConfigImpl(sendbuff, recvbuff, recvcount, datatype, op, comm, stream, config);
@@ -350,7 +350,7 @@ ncclResult_t ncclReduceScatterConfig(const void* sendbuff, void* recvbuff, size_
 
 static inline ncclResult_t ncclScatterConfigImpl(const void* sendbuff, void* recvbuff, size_t count,
                                                  ncclDataType_t datatype, int root, ncclComm_t comm,
-                                                 cudaStream_t stream, const ncclCollConfig_t* config) {
+                                                 cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclParseCollConfig、ncclEnqueueCheck。 */
   // clang-format off
   struct ncclInfo info = {ncclFuncScatter, "Scatter",
                           sendbuff, recvbuff, count, datatype, ncclSum, root, comm, stream, /* Args */
@@ -363,7 +363,7 @@ static inline ncclResult_t ncclScatterConfigImpl(const void* sendbuff, void* rec
 NCCL_API(ncclResult_t, ncclScatter, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm* comm, cudaStream_t stream);
 ncclResult_t ncclScatter(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                         ncclComm* comm, cudaStream_t stream) {
+                         ncclComm* comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclScatterConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(Scatter, NcclNvtxParamsScatter,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclScatterConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, nullptr);
@@ -372,7 +372,7 @@ ncclResult_t ncclScatter(const void* sendbuff, void* recvbuff, size_t count, ncc
 NCCL_API(ncclResult_t, ncclScatterConfig, const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype,
          int root, ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config);
 ncclResult_t ncclScatterConfig(const void* sendbuff, void* recvbuff, size_t count, ncclDataType_t datatype, int root,
-                               ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) {
+                               ncclComm_t comm, cudaStream_t stream, const ncclCollConfig_t* config) { /* 中文索引·体内调用 ncclTypeSize、ncclScatterConfigImpl。 */
   NVTX3_FUNC_WITH_PARAMS(ScatterConfig, NcclNvtxParamsScatter,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), root));
   return ncclScatterConfigImpl(sendbuff, recvbuff, count, datatype, root, comm, stream, config);
@@ -381,7 +381,7 @@ ncclResult_t ncclScatterConfig(const void* sendbuff, void* recvbuff, size_t coun
 NCCL_API(ncclResult_t, ncclSend, const void* sendbuff, size_t count, ncclDataType_t datatype, int peer, ncclComm_t comm,
          cudaStream_t stream);
 ncclResult_t ncclSend(const void* sendbuff, size_t count, ncclDataType_t datatype, int peer, ncclComm_t comm,
-                      cudaStream_t stream) {
+                      cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclEnqueueCheck。 */
   NVTX3_FUNC_WITH_PARAMS(Send, NcclNvtxParamsSendRecv,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), peer));
 
@@ -403,7 +403,7 @@ ncclResult_t ncclSend(const void* sendbuff, size_t count, ncclDataType_t datatyp
 NCCL_API(ncclResult_t, ncclRecv, void* recvbuff, size_t count, ncclDataType_t datatype, int peer, ncclComm_t comm,
          cudaStream_t stream);
 ncclResult_t ncclRecv(void* recvbuff, size_t count, ncclDataType_t datatype, int peer, ncclComm_t comm,
-                      cudaStream_t stream) {
+                      cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclEnqueueCheck。 */
   NVTX3_FUNC_WITH_PARAMS(Recv, NcclNvtxParamsSendRecv,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), peer));
 
@@ -427,7 +427,7 @@ NCCL_API(ncclResult_t, ncclPutSignal, const void* localbuff, size_t count, ncclD
          cudaStream_t stream);
 ncclResult_t ncclPutSignal(const void* localbuff, size_t count, ncclDataType_t datatype, int peer, ncclWindow_t peerWin,
                            size_t peerWinOffset, int sigIdx, int ctx, unsigned int flags, ncclComm_t comm,
-                           cudaStream_t stream) {
+                           cudaStream_t stream) { /* 中文索引·体内调用 ncclTypeSize、ncclEnqueueCheck。 */
   NVTX3_FUNC_WITH_PARAMS(PutSignal, NcclNvtxParamsPut,
                          NVTX3_PAYLOAD(comm ? comm->commHash : 0, count * ncclTypeSize(datatype), peer, ctx));
 
@@ -455,7 +455,7 @@ ncclResult_t ncclPutSignal(const void* localbuff, size_t count, ncclDataType_t d
 
 NCCL_API(ncclResult_t, ncclSignal, int peer, int sigIdx, int ctx, unsigned int flags, ncclComm_t comm,
          cudaStream_t stream);
-ncclResult_t ncclSignal(int peer, int sigIdx, int ctx, unsigned int flags, ncclComm_t comm, cudaStream_t stream) {
+ncclResult_t ncclSignal(int peer, int sigIdx, int ctx, unsigned int flags, ncclComm_t comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclEnqueueCheck。 */
   NVTX3_FUNC_WITH_PARAMS(Signal, NcclNvtxParamsSignal, NVTX3_PAYLOAD(comm ? comm->commHash : 0, peer, ctx));
 
   struct ncclInfo info = {ncclFuncSignal,
@@ -482,7 +482,7 @@ ncclResult_t ncclSignal(int peer, int sigIdx, int ctx, unsigned int flags, ncclC
 
 NCCL_API(ncclResult_t, ncclWaitSignal, int nDesc, ncclWaitSignalDesc_t* signalDescs, ncclComm_t comm,
          cudaStream_t stream);
-ncclResult_t ncclWaitSignal(int nDesc, ncclWaitSignalDesc_t* signalDescs, ncclComm_t comm, cudaStream_t stream) {
+ncclResult_t ncclWaitSignal(int nDesc, ncclWaitSignalDesc_t* signalDescs, ncclComm_t comm, cudaStream_t stream) { /* 中文索引·体内调用 ncclEnqueueCheck。 */
   NVTX3_FUNC_WITH_PARAMS(WaitSignal, NcclNvtxParamsWaitSignal, NVTX3_PAYLOAD(comm ? comm->commHash : 0, nDesc, 0));
 
   struct ncclInfo info = {ncclFuncWaitSignal,

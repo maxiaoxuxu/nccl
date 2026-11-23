@@ -264,7 +264,7 @@ static __device__ __forceinline__ void allreduceDeep(ncclSymkArgsHandler const& 
 template <int UnrollPeers, typename Red, typename T>
 static __device__ __forceinline__ void allreduceEnds(ncclSymkArgsHandler const& handler, int tn, int t, Red red,
                                                      ncclSymPtr<T> input, ncclSymPtr<T> output, size_t nElts,
-                                                     uint32_t nPreElts, size_t nSufElts) {
+                                                     uint32_t nPreElts, size_t nSufElts) { /* 中文索引·体内调用 ncclTeamWorld、inpPacks.peerPtr。 */
   using Acc = typename Red::EltType;
 
   ncclTeam world = ncclTeamWorld(handler.comm);
@@ -332,7 +332,7 @@ static __device__ __forceinline__ void allreduceEnds(ncclSymkArgsHandler const& 
 template <typename Red, typename T, bool EnableTma>
 static __device__ void allreduce(ncclSymkArgsHandler const& handler, int tn, int t, int nBlocks, bool waitNeeded,
                                  ncclLsaBarrierSession<ncclCoopCta>& bar, Red red, ncclSymPtr<T> input,
-                                 ncclSymPtr<T> output, size_t nElts) {
+                                 ncclSymPtr<T> output, size_t nElts) { /* 中文索引·体内调用 nccl::utility::idivRcp32_upto64、nccl::utility::imulRcp32。 */
   int const& nRanks = handler.comm.nRanks;
   int const& nRanks_rcp32 = handler.nRanks_rcp32;
   size_t nBytes = nElts * sizeof(T);
@@ -389,7 +389,7 @@ static __device__ void allreduce(ncclSymkArgsHandler const& handler, int tn, int
 }
 
 template <bool EnableProfiler, template <typename> typename Red, typename T, bool EnableTma>
-__device__ __forceinline__ void ncclSymkRun_AllReduce_RSxLD_AGxST_impl(ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AllReduce_RSxLD_AGxST_impl(ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamTagLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLsaBarrierSession<ncclCoopCta> bar{ncclCoopCta(), handler.comm, ncclTeamTagLsa(), blockIdx.x};
 
@@ -435,7 +435,7 @@ __device__ __forceinline__ void ncclSymkRun_AllReduce_RSxTmaLD_AGxTmaST(ncclSymk
 }
 
 template <typename Red, typename T>
-static __device__ void allreduceMultimem(int tn, int t, Red red, T* input, T* output, size_t nElts) {
+static __device__ void allreduceMultimem(int tn, int t, Red red, T* input, T* output, size_t nElts) { /* 中文索引·体内调用 uintptr_t、multimem_st_global。 */
   uintptr_t inputUptr = reinterpret_cast<uintptr_t>(input);
   uintptr_t outputUptr = reinterpret_cast<uintptr_t>(output);
   size_t nBytes = nElts * sizeof(T);
@@ -484,7 +484,7 @@ static __device__ void allreduceMultimem(int tn, int t, Red red, T* input, T* ou
 }
 
 template <bool EnableProfiler, template <typename> typename Red, typename T>
-__device__ __forceinline__ void ncclSymkRun_AllReduce_RSxLDMC_AGxSTMC(ncclSymkDevWorkArgs const* args) {
+__device__ __forceinline__ void ncclSymkRun_AllReduce_RSxLDMC_AGxSTMC(ncclSymkDevWorkArgs const* args) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamTagLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLsaBarrierSession<ncclCoopCta> bar{ncclCoopCta(), handler.comm, ncclTeamTagLsa(), blockIdx.x, /*multimem=*/true};
 
@@ -512,7 +512,7 @@ __device__ __forceinline__ void ncclSymkRun_AllReduce_RSxLDMC_AGxSTMC(ncclSymkDe
 }
 
 template <bool EnableProfiler, template <typename> typename Red, typename T>
-__device__ __forceinline__ void ncclSymkRun_AllReduce_AGxLL_R_impl(ncclSymkDevWorkArgs const* args, bool multimem) {
+__device__ __forceinline__ void ncclSymkRun_AllReduce_AGxLL_R_impl(ncclSymkDevWorkArgs const* args, bool multimem) { /* 中文索引·体内调用 ncclCoopCta、ncclTeamLsa。 */
   ncclSymkArgsHandler handler{args};
   ncclLLA2ASession<ncclCoopCta> lla2a(ncclCoopCta(), handler.comm, ncclTeamLsa(handler.comm), handler.lsaLLA2A,
                                       blockIdx.x, ncclSymkMaxThreads, multimem, handler.comm.lsaMultimem);

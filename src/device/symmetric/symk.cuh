@@ -78,7 +78,7 @@ static __device__ Int0 flattenIx(Int0 pos, Int1 size, Ints... more) {
 
 template <typename T>
 static __device__ void partitionElts(unsigned nParts, unsigned part, size_t* nElts, ncclSymPtr<T>* inPtr,
-                                     ncclSymPtr<T>* outPtr) {
+                                     ncclSymPtr<T>* outPtr) { /* 中文索引·体内调用 uint32_t。 */
   constexpr int eltPerB16 = 16 / sizeof(T);
   size_t nB16 = (*nElts + eltPerB16 - 1) / eltPerB16;
   size_t beginB16 = part * (nB16 / nParts) + min(part, uint32_t(nB16 % nParts));
@@ -205,7 +205,7 @@ struct ncclSymkGinAccumType<FuncSumPostDiv, __nv_fp8_e5m2> {
 
 #if __CUDA_ARCH__ >= 1000
 static __device__ __forceinline__ void tmaLoadStoreMc(char* dest, char* smem, char* source, size_t size,
-                                                      cuda::barrier<cuda::thread_scope_block>& bar) {
+                                                      cuda::barrier<cuda::thread_scope_block>& bar) { /* 中文索引·体内调用 cuda::device::memcpy_async_tx、cuda::device::barrier_arrive_tx。 */
   cuda::device::memcpy_async_tx((char*)smem, (const char*)source, cuda::aligned_size_t<16>(size), bar);
   cuda::barrier<cuda::thread_scope_block>::arrival_token token = cuda::device::barrier_arrive_tx(bar, 1, size);
   bar.wait(std::move(token));
@@ -218,7 +218,7 @@ static __device__ __forceinline__ void tmaLoadStoreMc(char* dest, char* smem, ch
 // TODO: move this into data_ops.cuh
 template <typename T, bool EnableTma = false>
 static __device__ void bcastMultimem(ncclSymkArgsHandler& handler, int tn, int t, ncclSymPtr<T> input,
-                                     ncclSymPtr<T> output, size_t nElts, uint32_t rank = 0) {
+                                     ncclSymPtr<T> output, size_t nElts, uint32_t rank = 0) { /* 中文索引·体内调用 input.localPtr、output.multimemPtr。 */
   size_t nBytes = nElts * sizeof(T);
   uintptr_t inputUptr = reinterpret_cast<uintptr_t>(input.localPtr());
   uintptr_t outputUptr = reinterpret_cast<uintptr_t>(output.multimemPtr(handler.comm.lsaMultimem));
@@ -309,7 +309,7 @@ extern __shared__ ulong2 ncclSymkSmem[];
 
 static __device__ void ncclSymkSmemPartition_help(int bumper) {}
 template <typename T, typename... More>
-static __device__ void ncclSymkSmemPartition_help(int bumper, T** ptr, int size, More... more) {
+static __device__ void ncclSymkSmemPartition_help(int bumper, T** ptr, int size, More... more) { /* 中文索引·体内调用 __builtin_assume、__isShared。 */
   T* ans = reinterpret_cast<T*>(ncclSymkSmem + bumper);
   __builtin_assume(__isShared(ans)); // Let compiler know this is shared memory (reinterpret_cast obscured as much).
   __builtin_assume_aligned(ans, sizeof(ulong2));
@@ -331,7 +331,7 @@ template <typename T>
 struct ncclLsaPointerGetter {
   void* base;
   uint32_t stride4G;
-  __device__ ncclLsaPointerGetter(ncclSymPtr<T> ptr) {
+  __device__ ncclLsaPointerGetter(ncclSymPtr<T> ptr) { /* 中文索引·体内调用 nccl::utility::loadConst。 */
     base = (char*)nccl::utility::loadConst(&ptr.window->lsaFlatBase);
     base = (char*)base + ptr.offset;
     stride4G = nccl::utility::loadConst(&ptr.window->stride4G);

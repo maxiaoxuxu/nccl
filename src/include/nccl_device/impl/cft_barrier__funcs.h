@@ -32,7 +32,7 @@ NCCL_DEVICE_INLINE ncclCftBarrierSession<Coop>::ncclCftBarrierSession(Coop coop,
 }
 
 template <typename Coop>
-NCCL_DEVICE_INLINE ncclCftBarrierSession<Coop>::~ncclCftBarrierSession() {
+NCCL_DEVICE_INLINE ncclCftBarrierSession<Coop>::~ncclCftBarrierSession() { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、this->coop.thread_rank。 */
   void* state = ncclGetResourceBufferLocalPointer(this->comm, this->handle.bufHandle);
   if (this->coop.thread_rank() == 0) {
     *(uint32_t*)(reinterpret_cast<char (*)[NCCL_CFT_BARRIER_GRAN]>(state) +
@@ -43,7 +43,7 @@ NCCL_DEVICE_INLINE ncclCftBarrierSession<Coop>::~ncclCftBarrierSession() {
 
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclCftBarrierSession<Coop>::arrive(Coop, cuda::memory_order order, ncclMemProxyType producer,
-                                                            ncclMemProxyType consumer) {
+                                                            ncclMemProxyType consumer) { /* 中文索引·体内调用 this->coop.sync、this->coop.thread_rank。 */
   this->coop.sync();
   if (this->coop.thread_rank() == 0) {
     alignas(NCCL_CFT_BARRIER_ALIGN) __shared__ uint32_t payload[ncclCftOpElemGran];
@@ -157,7 +157,7 @@ NCCL_DEVICE_INLINE ncclResult_t ncclCftBarrierSession<Coop>::wait(
 
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclCftBarrierSession<Coop>::sync(Coop coop, cuda::memory_order order,
-                                                          ncclMemProxyType producer, ncclMemProxyType consumer) {
+                                                          ncclMemProxyType producer, ncclMemProxyType consumer) { /* 中文索引·体内调用 this->arrive、this->wait。 */
   this->arrive(coop, order, producer, consumer);
   this->wait(coop, order, producer, consumer);
 }

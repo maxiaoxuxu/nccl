@@ -13,7 +13,7 @@ NCCL_API(ncclResult_t, ncclGinOutboxCreateRequirement, int nBlocks, int size_log
          ncclDevResourceRequirements* outReq);
 
 ncclResult_t ncclGinOutboxCreateRequirement(int nBlocks, int size_log2, ncclGinOutboxHandle* outHandle,
-                                            ncclDevResourceRequirements* outReq) {
+                                            ncclDevResourceRequirements* outReq) { /* 中文索引·体内调用 memset、alignUp。 */
   memset(outReq, 0, sizeof(*outReq));
   size_log2 = std::max<int>(size_log2, /*log2(128)=*/7);
   outHandle->size_log2 = size_log2;
@@ -28,7 +28,7 @@ NCCL_API(ncclResult_t, ncclGinInboxA2ACreateRequirement, ncclTeam peers, int nBl
          ncclGinInboxA2AHandle* outHandle, ncclDevResourceRequirements* outReq);
 
 ncclResult_t ncclGinInboxA2ACreateRequirement(ncclTeam peers, int nBlocks, int size_log2,
-                                              ncclGinInboxA2AHandle* outHandle, ncclDevResourceRequirements* outReq) {
+                                              ncclGinInboxA2AHandle* outHandle, ncclDevResourceRequirements* outReq) { /* 中文索引·体内调用 memset、idivRcp32。 */
   int nPeers = peers.nRanks - 1;
   memset(outReq, 0, sizeof(*outReq));
   outHandle->size_log2 = size_log2;

@@ -15,13 +15,13 @@
 #include "../utility.h"
 
 #ifdef __CUDACC__
-NCCL_DEVICE_INLINE uint64_t ncclLsaFlowLoadSignal(uint64_t* ptr) {
+NCCL_DEVICE_INLINE uint64_t ncclLsaFlowLoadSignal(uint64_t* ptr) { /* 中文索引·体内调用 __cvta_generic_to_global。 */
   uint64_t value;
   asm volatile("ld.volatile.global.u64 %0, [%1];" : "=l"(value) : "l"(__cvta_generic_to_global(ptr)) : "memory");
   return value;
 }
 
-NCCL_DEVICE_INLINE void ncclLsaFlowStoreSignal(uint64_t* ptr, uint64_t value) {
+NCCL_DEVICE_INLINE void ncclLsaFlowStoreSignal(uint64_t* ptr, uint64_t value) { /* 中文索引·体内调用 __cvta_generic_to_global。 */
 #if __CUDA_ARCH__ >= 700
   asm volatile("st.relaxed.sys.global.u64 [%0], %1;" ::"l"(__cvta_generic_to_global(ptr)), "l"(value) : "memory");
 #else
@@ -72,7 +72,7 @@ NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::close() {
 
 // Wait for credit and return the next writable slice in the peer's FIFO.
 template <ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitSend() {
+NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitSend() { /* 中文索引·体内调用 advanceSlice、ncclLsaFlowLoadSignal。 */
   void* const ptr = advanceSlice();
 
   // Wait for credit to send
@@ -87,7 +87,7 @@ NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitSend() {
 // Simple publishes readiness through the tail counter. LL and LL128 carry readiness in their data flags, and their
 // workers have already written directly into the peer's FIFO.
 template <ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::postSend(size_t /*bytes*/) {
+NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::postSend(size_t /*bytes*/) { /* 中文索引·体内调用 ncclLsaFlowFence、ncclLsaFlowStoreSignal。 */
   if (Protocol == ncclFlowProtocolSimple) {
     ncclLsaFlowFence();
     ncclLsaFlowStoreSignal(peerSignal, step);
@@ -102,7 +102,7 @@ NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::advanceStep() {
 
 // Return a pointer to the next local receive slice; call postRecv() after reading.
 template <ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitRecv() {
+NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitRecv() { /* 中文索引·体内调用 advanceSlice、ncclLsaFlowLoadSignal。 */
   void* const ptr = advanceSlice();
 
   // Wait until this slice is ready.
@@ -115,7 +115,7 @@ NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::waitRecv() {
 }
 
 template <ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::advanceSlice() {
+NCCL_DEVICE_INLINE void* ncclLsaFlowConn<Protocol>::advanceSlice() { /* 中文索引·体内调用 advanceStep。 */
   size_t const offset =
     Protocol == ncclFlowProtocolLL ? (llStep % nSlices) * sliceSteps * stepSize : (step % ncclFlowFifoSlots) * stepSize;
   advanceStep();
@@ -129,7 +129,7 @@ NCCL_DEVICE_INLINE uint64_t ncclLsaFlowConn<Protocol>::stepFlag() const {
 
 // Publish accumulated receive progress after half of the FIFO has been consumed.
 template <ncclFlowProtocol Protocol>
-NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::postRecv(bool force) {
+NCCL_DEVICE_INLINE void ncclLsaFlowConn<Protocol>::postRecv(bool force) { /* 中文索引·体内调用 ncclLsaFlowStoreSignal。 */
   uint64_t const value = step + ncclFlowFifoSlots;
   uint64_t const batch = sliceSteps * ((nSlices + 1) / 2);
   if (signalValue == 0 || (value > signalValue && (force || value - signalValue >= batch))) {

@@ -36,7 +36,7 @@ ncclResult_t buildMlx5dvSymbols(struct ncclMlx5dvSymbols* mlx5dvSymbols) {
 // MLX5DV Library versioning
 #define MLX5DV_VERSION "MLX5_1.8"
 
-ncclResult_t buildMlx5dvSymbols(struct ncclMlx5dvSymbols* mlx5dvSymbols) {
+ncclResult_t buildMlx5dvSymbols(struct ncclMlx5dvSymbols* mlx5dvSymbols) { /* 中文索引·体内调用 dlopen、dlclose。 */
   static void* mlx5dvhandle = NULL;
   void* tmp;
   void** cast;

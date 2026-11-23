@@ -149,7 +149,7 @@ ncclSymkKernelMask ncclSymkNonGenkKernelMask() {
   return kernelMask_Symk;
 }
 
-int ncclSymkKernelMaxWarps(ncclSymkKernelId kernelId, int red, ncclDataType_t ty) {
+int ncclSymkKernelMaxWarps(ncclSymkKernelId kernelId, int red, ncclDataType_t ty) { /* 中文索引·体内调用 ncclSymkGetKernelIndex。 */
   int kernelIndex = ncclSymkGetKernelIndex(kernelId, red, ty);
   int maxThreads = kernelIndex < 0 ? 0 : ncclSymkKernelMaxThreads[kernelIndex];
   if (maxThreads <= 0) maxThreads = ncclSymkMaxThreads;
@@ -160,7 +160,7 @@ int ncclSymkKernelMaxWarps(ncclSymkKernelId kernelId, int red, ncclDataType_t ty
 // can be resident. Use the lower occupancy of the normal and instrumented
 // variants because either may be selected after tuning.
 static ncclResult_t ncclSymkKernelMaxResidentCtas(ncclSymkKernelId kernelId, int red, ncclDataType_t ty,
-                                                  int* maxResidentCtas) {
+                                                  int* maxResidentCtas) { /* 中文索引·体内调用 ncclSymkGetKernelIndex、cudaOccupancyMaxActiveBlocksPerMultiprocessor。 */
   *maxResidentCtas = 1;
 #if !defined(NCCL_OS_WINDOWS)
   int kernelIndex = ncclSymkGetKernelIndex(kernelId, red, ty);
@@ -243,7 +243,7 @@ NCCL_PARAM(SymTmaEnable, "SYM_TMA_ENABLE", 1)
 NCCL_PARAM(SymGenkEnable, "SYM_GENK_ENABLE", 0)
 #else
 NCCL_PARAM(SymGenkEnableRequested, "SYM_GENK_ENABLE", 0)
-int64_t ncclParamSymGenkEnable() {
+int64_t ncclParamSymGenkEnable() { /* 中文索引·体内调用 ncclParamSymGenkEnableRequested。 */
   static bool warned = false;
   if (!warned) {
     warned = true;
@@ -271,7 +271,7 @@ static bool ncclGenkGinAvailable(struct ncclComm* comm) {
 
 extern int64_t ncclParamSymCTAs();
 
-bool ncclSymkTmaAvailable(struct ncclComm* comm) {
+bool ncclSymkTmaAvailable(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTmaShmemScratchWarpSize、ncclParamSymTmaEnable。 */
   // TMA requires up to (8KB data + 8B mbarrier + alignment) x 16 warps SMEM.
   // SMEM is partitioned across the 16 warps such that each warp gets ncclTmaShmemScratchWarpSize() bytes.
   if (comm->maxSharedMemOptin < ncclTmaShmemScratchWarpSize() * 16) {
@@ -280,20 +280,20 @@ bool ncclSymkTmaAvailable(struct ncclComm* comm) {
   return comm->minCompCap >= 100 && ncclParamSymTmaEnable();
 }
 
-bool ncclSymkAlltoAllLLForced(struct ncclComm* comm) {
+bool ncclSymkAlltoAllLLForced(struct ncclComm* comm) { /* 中文索引·体内调用 ncclTuningFuncIndex。 */
   constexpr int tuningId = NCCL_TUNING_SYM_KERNEL_ID_OFFSET + ncclSymkKernelId_AlltoAll_LL;
   int tuningFunc = ncclTuningFuncIndex(ncclFuncAlltoAll);
   return comm->tuningContext.forced[tuningFunc] && comm->tuningContext.enabled[tuningId][tuningFunc];
 }
 
-static size_t ncclSymkAlltoAllLLScratchBudget() {
+static size_t ncclSymkAlltoAllLLScratchBudget() { /* 中文索引·体内调用 ncclParamSymkLLScratchSize。 */
   int64_t param = ncclParamSymkLLScratchSize();
   if (param <= (int64_t)sizeof(ncclSymkAlltoAllLLScratchState)) return 0;
   size_t budget = std::min<size_t>((size_t)param, UINT32_MAX);
   return budget & ~(ncclSymkAlltoAllLLScratchAlignment - 1);
 }
 
-static size_t ncclSymkAlltoAllLLProvisionBytes(struct ncclComm* comm) {
+static size_t ncclSymkAlltoAllLLProvisionBytes(struct ncclComm* comm) { /* 中文索引·体内调用 ncclSymkAlltoAllLLForced、ncclSymkAlltoAllLLScratchBudget。 */
   if (comm->symkState.initialized) return comm->symkState.alltoAllLLProvisionBytes;
   if (!ncclSymkAlltoAllLLForced(comm)) return 0;
   size_t scratchBudget = ncclSymkAlltoAllLLScratchBudget();
@@ -312,7 +312,7 @@ static constexpr size_t ncclSymkRsGinDefaultChunkBytes = 128 << 10;
 static constexpr size_t ncclSymkRsGinMinChunkBytes = 128;
 static constexpr size_t ncclSymkRsGinMaxChunkBytes = size_t(1) << 30;
 
-size_t ncclSymkRsGinChunkBytes() {
+size_t ncclSymkRsGinChunkBytes() { /* 中文索引·体内调用 ncclParamSymRsGinChunkSize、pow2Down。 */
   int64_t param = ncclParamSymRsGinChunkSize();
   size_t chunkBytes = param > 0 ? (size_t)param : ncclSymkRsGinDefaultChunkBytes;
   chunkBytes = std::max(ncclSymkRsGinMinChunkBytes, std::min(chunkBytes, ncclSymkRsGinMaxChunkBytes));
@@ -323,7 +323,7 @@ static uint32_t ncclSymkRsGinAccumBytesPerBlock() {
   return (uint32_t)alignUp(2 * ncclSymkRsGinChunkBytes(), 128);
 }
 
-static void getRequirements_gin(struct ncclComm* comm, int* out_nBlocks, size_t* out_bufSize) {
+static void getRequirements_gin(struct ncclComm* comm, int* out_nBlocks, size_t* out_bufSize) { /* 中文索引·体内调用 ncclTuningGetLsaBw、ncclTuningGetGinBw。 */
   *out_nBlocks = 0;
   *out_bufSize = 0;
   for (int ldmc = 0; ldmc <= 1; ldmc++) {
@@ -347,7 +347,7 @@ static void getRequirements_gin(struct ncclComm* comm, int* out_nBlocks, size_t*
   }
 }
 
-ncclResult_t ncclSymkInitOnce(struct ncclComm* comm) {
+ncclResult_t ncclSymkInitOnce(struct ncclComm* comm) { /* 中文索引·体内调用 ncclDevrInitOnce、ncclSymkAlltoAllLLForced。 */
   // ncclTeamLsa() below calls this internally but drops the error code so we do it here.
   NCCLCHECK(ncclDevrInitOnce(comm));
 
@@ -480,7 +480,7 @@ ncclResult_t ncclSymkInitOnce(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclSymkFinalize(struct ncclComm* comm) {
+ncclResult_t ncclSymkFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ncclDevCommDestroy。 */
   struct ncclSymkState* symk = &comm->symkState;
   if (symk->genkInitialized) {
     NCCLCHECK(ncclDevCommDestroy(comm, &symk->genkComm.devComm));
@@ -517,7 +517,7 @@ static bool ncclSymkOtherReduceImplemented(int /*ncclDevRedOp_t*/ red, ncclDataT
   return (red == ncclDevSum) && isFloat && ty != ncclFloat64;
 }
 
-static bool ncclSymkImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty) {
+static bool ncclSymkImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty) { /* 中文索引·体内调用 ncclGenkReduceImplemented、ncclSymkOtherReduceImplemented。 */
   switch (coll) {
   case ncclFuncAlltoAll:
 #if defined(NCCL_OS_WINDOWS)
@@ -539,7 +539,7 @@ static bool ncclSymkImplemented(ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncc
 }
 
 ncclSymkKernelMask ncclSymkMask(struct ncclComm* comm, ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty,
-                                size_t nElts, bool symAligned16B) {
+                                size_t nElts, bool symAligned16B) { /* 中文索引·体内调用 kernelMask_coll、ncclGenkReduceImplemented。 */
   ncclSymkKernelMask kmask = kernelMask_coll(coll);
 
   bool const isReduction = coll == ncclFuncReduce || coll == ncclFuncAllReduce || coll == ncclFuncReduceScatter;
@@ -612,7 +612,7 @@ ncclSymkKernelMask ncclSymkMask(struct ncclComm* comm, ncclFunc_t coll, int /*nc
 }
 
 bool ncclSymkAvailable(struct ncclComm* comm, ncclFunc_t coll, int /*ncclDevRedOp_t*/ red, ncclDataType_t ty,
-                       size_t nElts) {
+                       size_t nElts) { /* 中文索引·体内调用 ncclSymkImplemented、ncclSymkMask。 */
   if (!comm->symmetricSupport) return false;
   if (!ncclSymkImplemented(coll, red, ty)) return false;
 
@@ -627,7 +627,7 @@ const char* ncclSymkKernelIdToString(int kernelId) {
 }
 
 int ncclSymkMaxChunkElts(struct ncclComm* comm, ncclSymkKernelId kernelId, int /*ncclDevRedOp_t*/ red,
-                         ncclDataType_t ty) {
+                         ncclDataType_t ty) { /* 中文索引·体内调用 ncclTypeSize、ncclGenkGetKernelIndex。 */
   bool isReduce = 1 & ((kernelMask_Reduce | kernelMask_AR | kernelMask_RS) >> (int)kernelId);
   int eltSize = ncclTypeSize(ty);
   int accMult = !isReduce ? 1 : eltSize < 4 ? 2 : 1;

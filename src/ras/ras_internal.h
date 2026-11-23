@@ -182,7 +182,7 @@ static inline size_t rasCollDataLength(rasCollectiveType type) {
 }
 
 // Returns the size for a message of a particular type.
-static inline size_t rasMsgLength(rasMsgType type, rasCollectiveType collType = RAS_MSG_NONE) {
+static inline size_t rasMsgLength(rasMsgType type, rasCollectiveType collType = RAS_MSG_NONE) { /* 中文索引·体内调用 rasCollDataLength。 */
   struct rasMsg* msg;
   switch (type) {
   case RAS_MSG_CONNINIT:

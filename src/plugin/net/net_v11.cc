@@ -14,7 +14,7 @@ static ncclCollNet_t ncclCollNet;
 static ncclNet_v11_t* ncclNet_v11;
 static ncclCollNet_v11_t* ncclCollNet_v11;
 
-static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclNet_v11->getProperties。 */
   ncclNetProperties_v11_t props_v11;
   NCCLCHECK(ncclNet_v11->getProperties(dev, &props_v11));
   props->name = props_v11.name;
@@ -41,7 +41,7 @@ static ncclResult_t ncclNet_getProperties(int dev, ncclNetProperties_t* props) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclNet_makeVDevice(int* d, ncclNetVDeviceProps_t* props) {
+static ncclResult_t ncclNet_makeVDevice(int* d, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 ncclNet_v11->makeVDevice。 */
   // Safe cast: devs[] is at the end of the struct and NCCL limits ndevs to
   // NCCL_NET_MAX_DEVS_PER_NIC_V11 for v11 plugins.
   return ncclNet_v11->makeVDevice(d, (ncclNetVDeviceProps_v11_t*)props);
@@ -52,7 +52,7 @@ static ncclResult_t ncclNet_setNetAttr(void* ctx, ncclNetAttr_t* netAttr) {
 }
 
 static ncclResult_t ncclNet_init(void** ctx, uint64_t commId, ncclNetCommConfig_t* config,
-                                 ncclDebugLogger_t logFunction, ncclProfilerCallback_t profFunction) {
+                                 ncclDebugLogger_t logFunction, ncclProfilerCallback_t profFunction) { /* 中文索引·体内调用 ncclNet_v11->init。 */
   // Safe cast: ncclNetCommConfig_v11_t and ncclNetCommConfig_v12_t are binary identical.
   NCCLCHECK(ncclNet_v11->init(ctx, commId, (ncclNetCommConfig_v11_t*)config, logFunction, profFunction));
   ncclNet.devices = ncclNet_v11->devices;
@@ -78,7 +78,7 @@ static ncclResult_t ncclNet_init(void** ctx, uint64_t commId, ncclNetCommConfig_
   return ncclSuccess;
 }
 
-ncclNet_t* getNcclNet_v11(void* lib) {
+ncclNet_t* getNcclNet_v11(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclNet_v11 = (ncclNet_v11_t*)ncclOsDlsym(lib, "ncclNetPlugin_v11");
   if (ncclNet_v11) {
     ncclNet.name = ncclNet_v11->name;
@@ -89,7 +89,7 @@ ncclNet_t* getNcclNet_v11(void* lib) {
   return nullptr;
 }
 
-static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) {
+static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* props) { /* 中文索引·体内调用 ncclCollNet_v11->getProperties。 */
   ncclNetProperties_v11_t props_v11;
   NCCLCHECK(ncclCollNet_v11->getProperties(dev, &props_v11));
   props->name = props_v11.name;
@@ -118,7 +118,7 @@ static ncclResult_t ncclCollNet_getProperties(int dev, ncclNetProperties_t* prop
 
 static ncclResult_t ncclCollNet_iallgather(void* collComm, void* sendData, int nRecvParts, ncclNetSGE_t* recvParts,
                                            size_t bytesPerRank, size_t windowOffset, size_t windowBytes,
-                                           void* sendMhandle, void** request) {
+                                           void* sendMhandle, void** request) { /* 中文索引·体内调用 ncclCollNet_v11->iallgather。 */
   // Safe cast: ncclNetSGE_v11_t and ncclNetSGE_v12_t are binary identical.
   return ncclCollNet_v11->iallgather(collComm, sendData, nRecvParts, (ncclNetSGE_v11_t*)recvParts, bytesPerRank,
                                      windowOffset, windowBytes, sendMhandle, request);
@@ -127,19 +127,19 @@ static ncclResult_t ncclCollNet_iallgather(void* collComm, void* sendData, int n
 static ncclResult_t ncclCollNet_ireducescatter(void* collComm, int nSendParts, ncclNetSGE_t* sendParts, void* recvData,
                                                size_t bytesPerRank, size_t windowOffset, size_t windowBytes,
                                                ncclDataType_t dataType, ncclRedOp_t redOp, void* recvMhandle,
-                                               void** request) {
+                                               void** request) { /* 中文索引·体内调用 ncclCollNet_v11->ireducescatter。 */
   // Safe cast: ncclNetSGE_v11_t and ncclNetSGE_v12_t are binary identical.
   return ncclCollNet_v11->ireducescatter(collComm, nSendParts, (ncclNetSGE_v11_t*)sendParts, recvData, bytesPerRank,
                                          windowOffset, windowBytes, dataType, redOp, recvMhandle, request);
 }
 
-static ncclResult_t ncclCollNet_makeVDevice(int* d, ncclNetVDeviceProps_t* props) {
+static ncclResult_t ncclCollNet_makeVDevice(int* d, ncclNetVDeviceProps_t* props) { /* 中文索引·体内调用 ncclCollNet_v11->makeVDevice。 */
   // Safe cast: devs[] is at the end of the struct and NCCL limits ndevs to
   // NCCL_NET_MAX_DEVS_PER_NIC_V11 for v11 plugins.
   return ncclCollNet_v11->makeVDevice(d, (ncclNetVDeviceProps_v11_t*)props);
 }
 
-static ncclResult_t ncclCollNet_init(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction) {
+static ncclResult_t ncclCollNet_init(void** ctx, uint64_t commId, ncclDebugLogger_t logFunction) { /* 中文索引·体内调用 ncclCollNet_v11->init。 */
   NCCLCHECK(ncclCollNet_v11->init(ctx, commId, logFunction));
   ncclCollNet.devices = ncclCollNet_v11->devices;
   ncclCollNet.getProperties = ncclCollNet_getProperties;
@@ -161,7 +161,7 @@ static ncclResult_t ncclCollNet_init(void** ctx, uint64_t commId, ncclDebugLogge
   return ncclSuccess;
 }
 
-ncclCollNet_t* getNcclCollNet_v11(void* lib) {
+ncclCollNet_t* getNcclCollNet_v11(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclCollNet_v11 = (ncclCollNet_v11_t*)ncclOsDlsym(lib, "ncclCollNetPlugin_v11");
   if (ncclCollNet_v11) {
     ncclCollNet.name = ncclCollNet_v11->name;

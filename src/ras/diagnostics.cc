@@ -19,7 +19,7 @@
 #include "diagnostics_checks.h"
 #include "transport.h"
 
-ncclResult_t rasDiagnosticsFormatLine(char* out, size_t outSize, const char* line) {
+ncclResult_t rasDiagnosticsFormatLine(char* out, size_t outSize, const char* line) { /* 中文索引·体内调用 diagLogInit、snprintf。 */
   int len;
 
   if (out == nullptr || outSize == 0 || line == nullptr) {
@@ -36,7 +36,7 @@ ncclResult_t rasDiagnosticsFormatLine(char* out, size_t outSize, const char* lin
 }
 
 // TODO: Replace this stdout fallback with the Notifier once diagnostics supports it.
-static ncclResult_t rasDiagnosticsDefaultEmit(void* target, const char* line) {
+static ncclResult_t rasDiagnosticsDefaultEmit(void* target, const char* line) { /* 中文索引·体内调用 fflush。 */
   (void)target;
   DIAG_PRINT("NCCL DIAG %s", line);
   if (fflush(stdout) != 0) return ncclSystemError;
@@ -80,7 +80,7 @@ static const struct rasDiagnosticsCheck rasDiagnosticsChecks[RAS_DIAG_CHECK_COUN
 static ncclResult_t rasDiagnosticsSummarizePeerPayloads(
   const struct rasDiagnosticsContext* ctx, const struct rasDiagnosticsReporter* reporter, const char* data, int nData);
 
-ncclResult_t rasDiagnosticsContextInit(struct rasDiagnosticsContext* ctx, const struct ncclComm* comm) {
+ncclResult_t rasDiagnosticsContextInit(struct rasDiagnosticsContext* ctx, const struct ncclComm* comm) { /* 中文索引·体内调用 memset。 */
   if (ctx == nullptr) {
     WARN("RAS diagnostics context init received null context");
     return ncclInternalError;
@@ -130,7 +130,7 @@ static ncclResult_t rasDiagnosticsGetCheck(rasDiagnosticsCheckId checkId, const 
 
 static ncclResult_t rasDiagnosticsSummarizeCheck(rasDiagnosticsCheckId checkId, const struct rasDiagnosticsContext* ctx,
                                                  const struct rasDiagnosticsReporter* reporter, const char* data,
-                                                 int nData) {
+                                                 int nData) { /* 中文索引·体内调用 rasDiagnosticsGetCheck、check->summarize。 */
   const struct rasDiagnosticsCheck* check = nullptr;
 
   NCCLCHECK(rasDiagnosticsGetCheck(checkId, &check));
@@ -138,7 +138,7 @@ static ncclResult_t rasDiagnosticsSummarizeCheck(rasDiagnosticsCheckId checkId, 
   return ncclSuccess;
 }
 
-static ncclResult_t rasDiagnosticsAppendData(char** data, int* nData, const void* extra, int nExtra) {
+static ncclResult_t rasDiagnosticsAppendData(char** data, int* nData, const void* extra, int nExtra) { /* 中文索引·体内调用 ncclRealloc、memcpy。 */
   if (data == nullptr || nData == nullptr || *nData < 0 || nExtra < 0 || *nData > INT_MAX - nExtra) {
     WARN("RAS diagnostics payload size is invalid");
     return ncclInternalError;
@@ -185,7 +185,7 @@ static ncclResult_t rasDiagnosticsValidateLocalData(rasDiagnosticsCheckId checkI
 
 static ncclResult_t rasDiagnosticsAppendCheckPayload(const struct rasDiagnosticsContext* baseCtx,
                                                      const struct rasDiagnosticsCheck& check, char** payload,
-                                                     int* payloadBytes) {
+                                                     int* payloadBytes) { /* 中文索引·体内调用 check.collectLocal、rasDiagnosticsValidateLocalData。 */
   struct rasDiagnosticsLocalData localData = {};
   struct rasDiagnosticsCheckPayloadHeader checkHeader = {};
 
@@ -207,7 +207,7 @@ static ncclResult_t rasDiagnosticsAppendCheckPayload(const struct rasDiagnostics
 }
 
 static ncclResult_t rasDiagnosticsCollectLocalPeerPayload(const struct rasDiagnosticsContext* baseCtx, char** data,
-                                                          int* nData) {
+                                                          int* nData) { /* 中文索引·体内调用 rasDiagnosticsAppendData、rasDiagnosticsAppendCheckPayload。 */
   ncclResult_t ret = ncclSuccess;
   char* payload = nullptr;
   int payloadBytes = 0;
@@ -247,7 +247,7 @@ struct rasDiagnosticsClientState {
 
 // Stores diagnostics context and reporter state on a client before the collective starts.
 ncclResult_t rasDiagnosticsClientInit(struct rasClient* client, const struct rasDiagnosticsContext* ctx,
-                                      const struct rasDiagnosticsReporter* reporter) {
+                                      const struct rasDiagnosticsReporter* reporter) { /* 中文索引·体内调用 ncclCalloc。 */
   if (client == nullptr || ctx == nullptr) {
     WARN("RAS diagnostics client init received invalid arguments");
     return ncclInternalError;
@@ -267,7 +267,7 @@ ncclResult_t rasDiagnosticsClientInit(struct rasClient* client, const struct ras
   return ncclSuccess;
 }
 
-void rasDiagnosticsClientCleanup(struct rasClient* client) {
+void rasDiagnosticsClientCleanup(struct rasClient* client) { /* 中文索引·体内调用 free。 */
   if (client == nullptr) return;
   free(client->diagnostics);
   client->diagnostics = nullptr;
@@ -277,7 +277,7 @@ static bool rasDiagnosticsClientHasActiveRequest(const struct rasClient* client)
   return client != nullptr && client->diagnostics != nullptr;
 }
 
-bool rasDiagnosticsInProgress() {
+bool rasDiagnosticsInProgress() { /* 中文索引·体内调用 rasDiagnosticsClientHasActiveRequest。 */
   for (struct rasClient* client = rasClientsHead; client; client = client->next) {
     if (rasDiagnosticsClientHasActiveRequest(client)) return true;
   }
@@ -295,7 +295,7 @@ void rasDiagnosticsCancelTarget(void* target) {
 
 // RAS_COLL_DIAG init hook: runs on every peer handling the request. Builds this peer's diagnostics payload,
 // scoped by the filter carried in the request.
-ncclResult_t rasCollDiagInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) {
+ncclResult_t rasCollDiagInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) { /* 中文索引·体内调用 rasCollDataLength、rasDiagnosticsCollectLocalPeerPayload。 */
   struct rasDiagnosticsContext ctx = {};
 
   ctx.hasCommFilter = (*pReq)->diag.hasCommFilter;
@@ -308,7 +308,7 @@ ncclResult_t rasCollDiagInit(struct rasCollRequest** pReq, size_t* pReqLen, char
 
 // RAS_COLL_DIAG merge hook: variable-size payload concatenation. Peer payloads are self-delimiting
 // (rasDiagnosticsPeerPayloadHeader.payloadBytes), so we simply append the incoming bytes in peer order.
-ncclResult_t rasCollDiagMerge(struct rasCollective* coll, struct rasMsg* msg) {
+ncclResult_t rasCollDiagMerge(struct rasCollective* coll, struct rasMsg* msg) { /* 中文索引·体内调用 rasMsgLength、ncclRealloc。 */
   const int dataAlign = alignof(int64_t);
   int dataOffset;
   int nData;
@@ -338,7 +338,7 @@ ncclResult_t rasCollDiagMerge(struct rasCollective* coll, struct rasMsg* msg) {
 }
 
 // Locally-initiated RAS_COLL_DIAG completion: summarize the gathered peer payloads owned by the client.
-ncclResult_t rasDiagnosticsResume(struct rasClient* client) {
+ncclResult_t rasDiagnosticsResume(struct rasClient* client) { /* 中文索引·体内调用 diagnostics->reporter.emit、rasDiagnosticsSummarizePeerPayloads。 */
   ncclResult_t ret = ncclSuccess;
   struct rasDiagnosticsClientState* diagnostics;
   struct rasCollective* coll;
@@ -399,7 +399,7 @@ static ncclResult_t rasDiagnosticsAccountCheckRecords(struct rasDiagnosticsLocal
 
 static ncclResult_t rasDiagnosticsSummarizePeerPayloads(const struct rasDiagnosticsContext* baseCtx,
                                                         const struct rasDiagnosticsReporter* reporter, const char* data,
-                                                        int nData) {
+                                                        int nData) { /* 中文索引·体内调用 rasDiagnosticsGetCheck、rasDiagnosticsAccountCheckRecords。 */
   ncclResult_t ret = ncclSuccess;
   struct rasDiagnosticsLocalData combined[RAS_DIAG_CHECK_COUNT] = {};
   int writeOffset[RAS_DIAG_CHECK_COUNT] = {};
@@ -512,7 +512,7 @@ exit:
 }
 
 // Posts the diagnostics collective and advances the client to the completion state.
-ncclResult_t rasDiagnosticsStart(struct rasClient* client) {
+ncclResult_t rasDiagnosticsStart(struct rasClient* client) { /* 中文索引·体内调用 memset、rasCollReqInit。 */
   const struct rasDiagnosticsContext* ctx;
   struct rasCollRequest req;
   bool allDone = false;

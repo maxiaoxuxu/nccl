@@ -29,7 +29,7 @@ struct ncclGenkFlowOps {
   // Genk supports basic reductions but applies no pre-op or post-op.
   template <typename T, typename RedOp, int MaxSrcs, int MaxDsts, typename SrcFn, typename DstFn>
   NCCL_DEVICE_INLINE void reduceCopy(int thread, int nThreads, int nSrcs, SrcFn const& srcFn, int nDsts,
-                                     DstFn const& dstFn, RedOp const& redOp, int nElts) const {
+                                     DstFn const& dstFn, RedOp const& redOp, int nElts) const { /* 中文索引·体内调用 ncclCollUnroll。 */
     ::reduceCopy<ncclCollUnroll(), RedOp, T, 0, 1, MaxSrcs, 0, 1, MaxDsts, /*PreOpSrcs=*/0>(
       thread, nThreads, ncclGenkRedOpArg<RedOp>::get(redOp), /*postOp=*/false, nSrcs, srcFn, nDsts, dstFn, nElts);
   }

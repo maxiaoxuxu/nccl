@@ -24,7 +24,7 @@ bool ncclIbWqeLatReportEnabled = false;
 static const uint64_t kReportIntervalNs = 1000000000ULL;
 static const double kPctlTargets[NCCL_IB_WQE_LAT_NUM_PCTL] = {0.50, 0.90, 0.99, 0.999};
 
-static void ensureInitialized(void) {
+static void ensureInitialized(void) { /* 中文索引·体内调用 std::call_once、ncclParamIbWqeLatencyThresholdNs。 */
   static std::once_flag once;
   std::call_once(once, []() {
     int64_t thr = ncclParamIbWqeLatencyThresholdNs();
@@ -35,7 +35,7 @@ static void ensureInitialized(void) {
   });
 }
 
-uint64_t ncclIbWqeLatMonNowNs(void) {
+uint64_t ncclIbWqeLatMonNowNs(void) { /* 中文索引·体内调用 clock_gettime。 */
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
@@ -63,7 +63,7 @@ static void p2SortAsc(double* a, int n) {
   }
 }
 
-static void p2Update(struct ncclIbP2Quantile* e, double x, uint64_t count) {
+static void p2Update(struct ncclIbP2Quantile* e, double x, uint64_t count) { /* 中文索引·体内调用 p2SortAsc。 */
   if (count <= 5) {
     e->q[count - 1] = x;
     if (count == 5) {
@@ -118,7 +118,7 @@ static void p2Update(struct ncclIbP2Quantile* e, double x, uint64_t count) {
   }
 }
 
-static uint64_t p2Estimate(const struct ncclIbP2Quantile* e, uint64_t count) {
+static uint64_t p2Estimate(const struct ncclIbP2Quantile* e, uint64_t count) { /* 中文索引·体内调用 p2SortAsc、ceil。 */
   if (count == 0) return 0;
   double v;
   if (count >= 5) {
@@ -136,13 +136,13 @@ static uint64_t p2Estimate(const struct ncclIbP2Quantile* e, uint64_t count) {
   return v < 0.0 ? 0 : (uint64_t)(v + 0.5);
 }
 
-void ncclIbWqeLatMonInit(struct ncclIbWqeLatMon* m) {
+void ncclIbWqeLatMonInit(struct ncclIbWqeLatMon* m) { /* 中文索引·体内调用 ensureInitialized、memset。 */
   ensureInitialized();
   memset(m, 0, sizeof(*m));
   for (int i = 0; i < NCCL_IB_WQE_LAT_NUM_PCTL; i++) p2Init(&m->p2[i], kPctlTargets[i]);
 }
 
-void ncclIbWqeLatMonStampSend(struct ncclIbQp* qp, struct ibv_send_wr* head) {
+void ncclIbWqeLatMonStampSend(struct ncclIbQp* qp, struct ibv_send_wr* head) { /* 中文索引·体内调用 ncclIbWqeLatMonNowNs。 */
   struct ncclIbWqeLatMon* m = &qp->latMon;
   uint64_t now = 0;
   bool nowValid = false;
@@ -170,7 +170,7 @@ static void welfordUpdate(struct ncclIbWqeLatMon* m, uint64_t deltaNs) {
   if (deltaNs > m->maxNs) m->maxNs = deltaNs;
 }
 
-static void snapshotStats(const struct ncclIbWqeLatMon* m, struct ncclIbWqeLatStats* out) {
+static void snapshotStats(const struct ncclIbWqeLatMon* m, struct ncclIbWqeLatStats* out) { /* 中文索引·体内调用 sqrt、p2Estimate。 */
   if (!out) return;
   out->count = m->count;
   out->slowCount = m->slowCount;
@@ -188,14 +188,14 @@ static void snapshotStats(const struct ncclIbWqeLatMon* m, struct ncclIbWqeLatSt
   out->p999Ns = p2Estimate(&m->p2[3], m->count);
 }
 
-void ncclIbWqeLatMonSnapshot(const struct ncclIbWqeLatMon* m, struct ncclIbWqeLatStats* out) {
+void ncclIbWqeLatMonSnapshot(const struct ncclIbWqeLatMon* m, struct ncclIbWqeLatStats* out) { /* 中文索引·体内调用 memset、snapshotStats。 */
   if (!out) return;
   memset(out, 0, sizeof(*out));
   snapshotStats(m, out);
 }
 
 bool ncclIbWqeLatMonOnComplete(struct ncclIbWqeLatMon* m, uint64_t tPollNs, uint64_t* outDeltaNs, uint64_t* outPostNs,
-                               struct ncclIbWqeLatStats* outStats) {
+                               struct ncclIbWqeLatStats* outStats) { /* 中文索引·体内调用 memset、welfordUpdate。 */
   if (outDeltaNs) *outDeltaNs = 0;
   if (outPostNs) *outPostNs = 0;
   if (outStats) memset(outStats, 0, sizeof(*outStats));
@@ -253,7 +253,7 @@ struct peerInfo {
   uint8_t peerPort;
 };
 
-static void getPeerInfo(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp, struct peerInfo* info) {
+static void getPeerInfo(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp, struct peerInfo* info) { /* 中文索引·体内调用 memset、ncclSocketGetAddr。 */
   memset(info, 0, sizeof(*info));
   info->hca = "?";
   union ncclSocketAddress addr;
@@ -278,7 +278,7 @@ static void getPeerInfo(struct ncclIbNetCommBase* base, int devIndex, struct ncc
 }
 
 static void reportSlow(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp, uint32_t qpn,
-                       uint64_t deltaNs, uint64_t tPostNs, uint64_t tPollNs, const struct ncclIbWqeLatStats* s) {
+                       uint64_t deltaNs, uint64_t tPostNs, uint64_t tPollNs, const struct ncclIbWqeLatStats* s) { /* 中文索引·体内调用 getPeerInfo。 */
   struct peerInfo p;
   getPeerInfo(base, devIndex, qp, &p);
   INFO(NCCL_NET,
@@ -295,7 +295,7 @@ static void reportSlow(struct ncclIbNetCommBase* base, int devIndex, struct nccl
 }
 
 static void reportStall(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp, uint64_t ageNs,
-                        uint32_t inflight) {
+                        uint32_t inflight) { /* 中文索引·体内调用 getPeerInfo。 */
   struct peerInfo p;
   getPeerInfo(base, devIndex, qp, &p);
   INFO(NCCL_NET,
@@ -310,7 +310,7 @@ static void reportStall(struct ncclIbNetCommBase* base, int devIndex, struct ncc
 }  // namespace
 
 void ncclIbWqeLatHandleCompletion(struct ncclIbNetCommBase* base, int devIndex, struct ibv_wc* wc, uint64_t* tPollNs,
-                                  bool* tPollNsValid) {
+                                  bool* tPollNsValid) { /* 中文索引·体内调用 ncclIbCommBaseGetQpByQpNum、ncclIbWqeLatMonNowNs。 */
   const bool isSendOpcode =
     (wc->opcode == IBV_WC_SEND) || (wc->opcode == IBV_WC_RDMA_WRITE) || (wc->opcode == IBV_WC_RDMA_READ);
   if (!isSendOpcode) return;
@@ -329,7 +329,7 @@ void ncclIbWqeLatHandleCompletion(struct ncclIbNetCommBase* base, int devIndex, 
   }
 }
 
-void ncclIbWqeLatScanStalls(struct ncclIbNetCommBase* base, int devIndex) {
+void ncclIbWqeLatScanStalls(struct ncclIbNetCommBase* base, int devIndex) { /* 中文索引·体内调用 ncclIbWqeLatMonNowNs、ncclIbWqeLatMonCheckStall。 */
   if (base->nqps <= 0 || base->vProps.ndevs <= 0) return;
   int nqpsPerDev = base->nqps / base->vProps.ndevs;
   uint64_t now = ncclIbWqeLatMonNowNs();
@@ -343,7 +343,7 @@ void ncclIbWqeLatScanStalls(struct ncclIbNetCommBase* base, int devIndex) {
   }
 }
 
-void ncclIbWqeLatReportQpSummary(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp) {
+void ncclIbWqeLatReportQpSummary(struct ncclIbNetCommBase* base, int devIndex, struct ncclIbQp* qp) { /* 中文索引·体内调用 ncclIbWqeLatMonSnapshot、getPeerInfo。 */
   if (!ncclIbWqeLatEnabled || !ncclIbWqeLatReportEnabled) return;
   if (qp == NULL || qp->qp == NULL || qp->latMon.count == 0) return;
   struct ncclIbWqeLatStats s;

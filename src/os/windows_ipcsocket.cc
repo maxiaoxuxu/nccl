@@ -30,7 +30,7 @@ struct ncclIpcMsg {
   char hdrData[PIPE_BUFFER_SIZE - sizeof(int) - sizeof(HANDLE) * 2];
 };
 
-ncclResult_t ncclIpcSocketInit(ncclIpcSocket* handle, int rank, uint64_t hash, volatile uint32_t* abortFlag) {
+ncclResult_t ncclIpcSocketInit(ncclIpcSocket* handle, int rank, uint64_t hash, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 snprintf、CreateNamedPipeA。 */
   if (handle == NULL) {
     return ncclInternalError;
   }
@@ -85,7 +85,7 @@ ncclResult_t ncclIpcSocketGetFd(struct ncclIpcSocket* handle, ncclIpcFd* fd) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) {
+ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) { /* 中文索引·体内调用 DisconnectNamedPipe、CloseHandle。 */
   if (handle == NULL) {
     return ncclInternalError;
   }
@@ -98,7 +98,7 @@ ncclResult_t ncclIpcSocketClose(ncclIpcSocket* handle) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIpcSocketRecvMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd* recvFd) {
+ncclResult_t ncclIpcSocketRecvMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd* recvFd) { /* 中文索引·体内调用 ConnectNamedPipe、GetLastError。 */
   if (handle == NULL || handle->fd == NCCL_INVALID_IPC_FD) {
     WARN("IPC: Invalid socket handle");
     return ncclInvalidArgument;
@@ -178,7 +178,7 @@ ncclResult_t ncclIpcSocketRecvFd(ncclIpcSocket* handle, ncclIpcFd* fd) {
 }
 
 ncclResult_t ncclIpcSocketSendMsg(ncclIpcSocket* handle, void* hdr, int hdrLen, ncclIpcFd sendFd, int rank,
-                                  uint64_t hash) {
+                                  uint64_t hash) { /* 中文索引·体内调用 snprintf、CreateFileA。 */
   // Construct target pipe name
   char pipeName[NCCL_IPC_SOCKNAME_LEN];
   int len = snprintf(pipeName, NCCL_IPC_SOCKNAME_LEN, NCCL_IPC_PIPENAME_STR, rank, hash);
@@ -265,7 +265,7 @@ ncclResult_t ncclIpcSocketSendFd(ncclIpcSocket* handle, ncclIpcFd sendFd, int ra
   return ncclIpcSocketSendMsg(handle, NULL, 0, sendFd, rank, hash);
 }
 
-int ncclIpcFdClose(ncclIpcFd fd) {
+int ncclIpcFdClose(ncclIpcFd fd) { /* 中文索引·体内调用 CloseHandle、GetLastError。 */
   if (CloseHandle(reinterpret_cast<HANDLE>(fd))) return 0;
   errno = static_cast<int>(GetLastError());
   return -1;

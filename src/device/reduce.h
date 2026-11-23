@@ -11,7 +11,7 @@
 
 namespace {
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) {
+__device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWorkColl* work) { /* 中文索引·体内调用 ncclCollCbdPart、prims.send。 */
   ncclRing* ring = &ncclShmem.channel.ring;
   const int nranks = ncclShmem.comm.nRanks;
   const int rank = ncclShmem.comm.rank;
@@ -31,7 +31,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
   Primitives<T, RedOp, FanSymmetric<1>, 0, Proto, 0> prims(tid, nthreads, &ring->prev, &ring->next, work->sendbuff,
                                                            work->recvbuff, work->redOpArg);
 
-  if (prevRank == root) {
+  /* 中文图解·five｜root 之后的第一个 rank 开始发送，最后在 root 合并本地输入并写结果。 */ if (prevRank == root) {
     for (size_t elemOffset = 0; elemOffset < channelCount; elemOffset += chunkCount) {
       offset = gridOffset + elemOffset;
       nelem = min(chunkCount, channelCount - elemOffset);

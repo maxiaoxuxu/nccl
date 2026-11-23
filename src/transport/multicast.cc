@@ -18,7 +18,7 @@
 #if CUDART_VERSION >= 12010
 
 static ncclResult_t mcCreate(struct ncclComm* comm, CUmulticastObjectProp* prop, int rank, unsigned int nranks,
-                             CUmemGenericAllocationHandle* mcHandle, char* shareableHandle) {
+                             CUmemGenericAllocationHandle* mcHandle, char* shareableHandle) { /* 中文索引·体内调用 cuMulticastCreate、cuMemExportToShareableHandle。 */
   CUmemAllocationHandleType type = ncclCuMemHandleType;
   size_t size = prop->size;
 
@@ -39,7 +39,7 @@ static ncclResult_t mcCreate(struct ncclComm* comm, CUmulticastObjectProp* prop,
 }
 
 static ncclResult_t mcImport(struct ncclComm* comm, char* shareableHandle, int rank,
-                             CUmemGenericAllocationHandle* mcHandle) {
+                             CUmemGenericAllocationHandle* mcHandle) { /* 中文索引·体内调用 ncclProxyClientGetFdBlocking、cuMemImportFromShareableHandle。 */
   CUmemAllocationHandleType type = ncclCuMemHandleType;
   ncclIpcFd fd = NCCL_INVALID_IPC_FD;
   ncclResult_t ret = ncclSuccess;
@@ -78,7 +78,7 @@ struct ncclMcGroup {
 
 ncclResult_t ncclMcGroupBuildPartitions(struct ncclComm* comm, const struct ncclMcRankSet* ranks,
                                         const struct ncclMcRequest* requests, int nRequests,
-                                        struct ncclMcGroup** outGroup, struct ncclMcPartition* outPartitions) {
+                                        struct ncclMcGroup** outGroup, struct ncclMcPartition* outPartitions) { /* 中文索引·体内调用 cuMulticastGetGranularity、mcCreate。 */
   ncclResult_t ret = ncclSuccess;
   CUmulticastObjectProp mcprop = {};
   CUmemAccessDesc desc = {};
@@ -188,7 +188,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclMcGroupDestroy(struct ncclMcGroup** groupPtr) {
+ncclResult_t ncclMcGroupDestroy(struct ncclMcGroup** groupPtr) { /* 中文索引·体内调用 cuMemUnmap、cuMemAddressFree。 */
   struct ncclMcGroup* group = *groupPtr;
   if (group == NULL) return ncclSuccess;
   INFO(NCCL_NVLS, "NVLS destroy MC group %llx capacity %zu dev %d", group->handle, group->capacity, group->dev);
@@ -202,7 +202,7 @@ ncclResult_t ncclMcGroupDestroy(struct ncclMcGroup** groupPtr) {
 }
 
 ncclResult_t ncclMcPartitionBindMem(const struct ncclMcPartition* partition, size_t offsetInPartition,
-                                    CUmemGenericAllocationHandle mem, size_t memOffset, size_t bindSize) {
+                                    CUmemGenericAllocationHandle mem, size_t memOffset, size_t bindSize) { /* 中文索引·体内调用 cuMulticastBindMem、pfn_cuGetErrorString。 */
   // A bind overrunning its partition would corrupt the next consumer's partition; fail
   // cleanly instead (possible when UC rounding exceeds the MC-rounded partition).
   if (offsetInPartition + bindSize > partition->size) {
@@ -228,7 +228,7 @@ ncclResult_t ncclMcPartitionBindMem(const struct ncclMcPartition* partition, siz
   return ncclSuccess;
 }
 
-ncclResult_t ncclMcPartitionUnbind(const struct ncclMcPartition* partition, size_t offsetInPartition, size_t bindSize) {
+ncclResult_t ncclMcPartitionUnbind(const struct ncclMcPartition* partition, size_t offsetInPartition, size_t bindSize) { /* 中文索引·体内调用 cuMulticastUnbind。 */
   if (bindSize > 0) {
     size_t mcOffset = partition->offset + offsetInPartition;
     INFO(NCCL_NVLS, "NVLS unbind MC group %llx offset %zu size %zu dev %d", partition->mcHandle, mcOffset, bindSize,
@@ -239,7 +239,7 @@ ncclResult_t ncclMcPartitionUnbind(const struct ncclMcPartition* partition, size
 }
 
 ncclResult_t ncclMcPartitionTryBindAddr(const struct ncclMcPartition* partition, size_t offsetInPartition,
-                                        CUdeviceptr address, size_t bindSize, enum ncclMcBindStatus* outStatus) {
+                                        CUdeviceptr address, size_t bindSize, enum ncclMcBindStatus* outStatus) { /* 中文索引·体内调用 cuMulticastBindAddr、pfn_cuGetErrorString。 */
   const char* errStr = NULL;
 
   *outStatus = ncclMcBindStatusTransient;
@@ -271,7 +271,7 @@ ncclResult_t ncclMcPartitionTryBindAddr(const struct ncclMcPartition* partition,
   return ncclSuccess;
 }
 
-bool ncclMcAddrBindable(const void* addr, size_t size) {
+bool ncclMcAddrBindable(const void* addr, size_t size) { /* 中文索引·体内调用 cuMemGetAddressRange、cuMemRetainAllocationHandle。 */
   CUdeviceptr cur = (CUdeviceptr)addr;
   CUdeviceptr end = cur + size;
 

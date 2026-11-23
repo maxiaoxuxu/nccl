@@ -23,7 +23,7 @@ extern const char* ncclAlgoStr[NCCL_NUM_ALGORITHMS];
 extern const char* ncclProtoStr[NCCL_NUM_PROTOCOLS];
 
 #define NCCL_MAX_OPS 2048
-#define NCCL_STEPS 8
+/* 中文图解·fifo｜连接可循环使用八个 step 位置。绝对 step 可继续递增，槽位下标须取模。 */ #define NCCL_STEPS 8
 
 #ifdef __CUDA_ARCH__
 #define NCCL_CUDA_ARCH __CUDA_ARCH__
@@ -236,8 +236,8 @@ struct alignas(16) ncclDevWorkP2p {
 };
 
 // Compute the subset of the data transfer corresponding to the given part index.
-inline __host__ __device__ void ncclP2pPartBounds(int nParts, int part, size_t bytes, size_t* partBeg,
-                                                  size_t* partEnd) {
+/* 中文图解·p2p｜将单向字节范围按 part 切开，partBytes 向上对齐 4 KiB，末端裁到 bytes。 */ inline __host__ __device__ void ncclP2pPartBounds(int nParts, int part, size_t bytes, size_t* partBeg,
+                                                  size_t* partEnd) { /* 中文索引·体内调用 alignUp、divUp。 */
   size_t partBytes = alignUp(divUp(bytes, nParts), 4 << 10);
 #if __CUDA_ARCH__
   *partBeg = min((part + 0) * partBytes, bytes);
@@ -263,7 +263,7 @@ inline __device__ int ncclP2pChannelToPart(int nP2pChannels, int base, int chann
 struct alignas(16) ncclDevWorkColl {
   // Running on channels [channelLo..channelHi], hi is inclusive.
   //   nChannels == (channelHi - channelLo) + 1
-  uint32_t channelLo:8, channelHi:8;
+  /* 中文图解·layout｜channelLo 与 channelHi 都包含在区间内，编号差加一等于参与通道数。 */ uint32_t channelLo:8, channelHi:8;
   uint32_t nWarps:8;
   uint32_t redOpArgIsPtr:1, regUsed:1, netRegUsed:1, oneNode:1, direct:2, isOneRPN:1;
   uint32_t profilerEnabled:1;
@@ -278,7 +278,7 @@ struct alignas(16) ncclDevWorkColl {
     // Continuous-byte-distribution scheduling. The lo and hi channels are of
     // different size than the channels in the middle.
     struct {
-      size_t countLo, countMid, countHi;
+      /* 中文图解·layout｜CBD 三个 count 为元素数；三个 chunkGrains 为协议 grain 数，二者单位不同。 */ size_t countLo, countMid, countHi;
       // Chunk counts where units are ncclProtoGrainSize(protocol) bytes
       uint64_t chunkGrainsLo:21, chunkGrainsMid:21, chunkGrainsHi:21;
     } cbd;
@@ -301,7 +301,7 @@ struct alignas(16) ncclDevWorkBcast {
   // Compiler will add any necessary padding at the end to ensure 16-byte size granularity.
 };
 
-__host__ __device__ constexpr int ncclProtoGrainSize(int proto) {
+/* 中文图解·layout｜Simple 的 grain 为 512 B；LL 为 16 B；LL128 按线程、行与有效数据字计算。 */ __host__ __device__ constexpr int ncclProtoGrainSize(int proto) {
   return proto == NCCL_PROTO_LL     ? 16 :
          proto == NCCL_PROTO_LL128  ? WARP_SIZE * NCCL_LL128_SHMEM_ELEMS_PER_THREAD / NCCL_LL128_LINEELEMS *
                                         NCCL_LL128_DATAELEMS * sizeof(uint64_t) :
@@ -312,9 +312,9 @@ __host__ __device__ constexpr int ncclProtoGrainSize(int proto) {
 template <typename Int>
 __host__ __device__ inline void ncclCollCbdPart(struct ncclDevWorkColl* work, uint32_t channelId, int proto,
                                                 int eltSize, Int* count, Int* partOffset, Int* partCount,
-                                                Int* chunkCount) {
+                                                Int* chunkCount) { /* 中文索引·体内调用 ncclProtoGrainSize。 */
   int eltPerGrain = ncclProtoGrainSize(proto) / eltSize;
-  int nMidChannels = work->channelHi - work->channelLo - 1;
+  /* 中文图解·layout｜中间通道数由闭区间两端推出。单通道时先命中 Lo，countMid 为零。 */ int nMidChannels = work->channelHi - work->channelLo - 1;
   // We can assum that nMidChannels<0 implies countMid==0, which let's us assume
   // that countMid*nMidChannels == 0.
   if (count != nullptr) {
@@ -322,7 +322,7 @@ __host__ __device__ inline void ncclCollCbdPart(struct ncclDevWorkColl* work, ui
   }
   if (channelId == work->channelLo) {
     *partOffset = 0;
-    *partCount = work->cbd.countLo;
+    /* 中文图解·layout｜首段从 0 开始，末段跳过首段及全部中间段，居中通道用相对序号 mid 定位。 */ *partCount = work->cbd.countLo;
     *chunkCount = work->cbd.chunkGrainsLo * eltPerGrain;
   } else if (channelId == work->channelHi) {
     *partOffset = work->cbd.countLo + nMidChannels * work->cbd.countMid;
@@ -566,7 +566,7 @@ __host__ __device__ constexpr int ncclNvlsUnroll(int bytePerPack, int cudaArch =
 }
 
 // The amount of dynamic shmem per warp
-__host__ __device__ constexpr int ncclShmemScratchWarpSize(int cudaArch = NCCL_CUDA_ARCH) {
+__host__ __device__ constexpr int ncclShmemScratchWarpSize(int cudaArch = NCCL_CUDA_ARCH) { /* 中文索引·体内调用 ncclCollUnroll、ncclNvlsUnrollBytes。 */
   return (max_constexpr<int>(
             /*LL    */ 0,
             /*LL128 */ (NCCL_LL128_SHMEM_ELEMS_PER_THREAD * WARP_SIZE) * sizeof(uint64_t),

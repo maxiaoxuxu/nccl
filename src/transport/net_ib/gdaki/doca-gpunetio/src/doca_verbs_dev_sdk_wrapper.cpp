@@ -68,7 +68,7 @@ static doca_verbs_context_destroy_t p_doca_verbs_context_destroy = nullptr;
 static void *common_handle = nullptr;
 static void *verbs_handle = nullptr;
 
-static void doca_verbs_sdk_wrapper_init(int *ret) {
+static void doca_verbs_sdk_wrapper_init(int *ret) { /* 中文索引·体内调用 getenv、memset。 */
     const char *doca_sdk_lib_path = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
     char libcommon_versioned_path[doca_sdk_path_length];
     char libcommon_path[doca_sdk_path_length];
@@ -174,14 +174,14 @@ exit_error:
     return;
 }
 
-static int init_verbs_sdk_wrapper(void) {
+static int init_verbs_sdk_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_sdk_wrapper_init, &ret);
     return ret;
 }
 
-static int get_sdk_wrapper_env_var(void) {
+static int get_sdk_wrapper_env_var(void) { /* 中文索引·体内调用 getenv、strcmp。 */
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
     if (!val) return -1;
@@ -193,7 +193,7 @@ static int get_sdk_wrapper_env_var(void) {
 
 /* Wrapper function implementations */
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_open_from_pd(struct ibv_pd *pd,
-                                                                 doca_dev_t *net_dev) {
+                                                                 doca_dev_t *net_dev) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -236,7 +236,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_open_from_pd(struct ibv_pd *
     }
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_close(doca_dev_t *net_dev) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_close(doca_dev_t *net_dev) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -272,7 +272,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_close(doca_dev_t *net_dev) {
 }
 
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_dev_get_ibv_ctx(doca_dev_t *net_dev,
-                                                                struct ibv_context **ctx) {
+                                                                struct ibv_context **ctx) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     if (net_dev == nullptr || ctx == nullptr) return DOCA_SDK_WRAPPER_API_INVALID_VALUE;
 
     if (get_sdk_wrapper_env_var() > 0) {

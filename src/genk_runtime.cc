@@ -12,7 +12,7 @@
 #include "nccl_device/core.h"
 #include <algorithm>
 
-static ncclResult_t ncclGenkInitRingTopology(struct ncclComm* comm) {
+static ncclResult_t ncclGenkInitRingTopology(struct ncclComm* comm) { /* 中文索引·体内调用 ncclCudaCalloc、ncclCommPushCudaFree。 */
   int const nChannels = comm->symkState.genkComm.nRingChannels;
   struct ncclGenkRing rings[MAXCHANNELS] = {};
   for (int c = 0; c < nChannels; c++) {
@@ -30,7 +30,7 @@ static ncclResult_t ncclGenkInitRingTopology(struct ncclComm* comm) {
 }
 
 // Called after ncclDevrInitOnce(), when the LSA peer reachability used by flow processors is final.
-static ncclResult_t ncclGenkInitTreeTopology(struct ncclComm* comm) {
+static ncclResult_t ncclGenkInitTreeTopology(struct ncclComm* comm) { /* 中文索引·体内调用 ncclCudaCalloc、ncclCommPushCudaFree。 */
   int const nChannels = comm->symkState.genkComm.nTreeChannels;
   struct ncclGenkTree trees[MAXCHANNELS] = {};
 
@@ -84,13 +84,13 @@ static bool ncclGenkPeerNeedsGin(struct ncclComm* comm, int peer) {
   return peer != -1 && comm->rankToNode[peer] != comm->node;
 }
 
-static bool ncclGenkRingChannelSendsGin(struct ncclComm* comm, int channelId) {
+static bool ncclGenkRingChannelSendsGin(struct ncclComm* comm, int channelId) { /* 中文索引·体内调用 ncclGenkPeerNeedsGin。 */
   int const nChannels = comm->symkState.genkComm.nRingChannels;
   if (nChannels == 0) return false;
   return ncclGenkPeerNeedsGin(comm, comm->channels[channelId % nChannels].ring.next);
 }
 
-static bool ncclGenkTreeChannelSendsGin(struct ncclComm* comm, int channelId) {
+static bool ncclGenkTreeChannelSendsGin(struct ncclComm* comm, int channelId) { /* 中文索引·体内调用 ncclGenkPeerNeedsGin。 */
   int const nChannels = comm->symkState.genkComm.nTreeChannels;
   if (nChannels == 0) return false;
   struct ncclTree const& tree = comm->channels[channelId % nChannels].tree;
@@ -101,7 +101,7 @@ static bool ncclGenkTreeChannelSendsGin(struct ncclComm* comm, int channelId) {
   return false;
 }
 
-static void ncclGenkAddGinPeer(struct ncclComm* comm, int peer, int* peers, int* nPeers) {
+static void ncclGenkAddGinPeer(struct ncclComm* comm, int peer, int* peers, int* nPeers) { /* 中文索引·体内调用 ncclGenkPeerNeedsGin。 */
   if (!ncclGenkPeerNeedsGin(comm, peer)) return;
   for (int i = 0; i < *nPeers; i++) {
     if (peers[i] == peer) return;
@@ -109,7 +109,7 @@ static void ncclGenkAddGinPeer(struct ncclComm* comm, int peer, int* peers, int*
   peers[(*nPeers)++] = peer;
 }
 
-static void ncclGenkGinPeers(struct ncclComm* comm, int* peers, int* nPeers) {
+static void ncclGenkGinPeers(struct ncclComm* comm, int* peers, int* nPeers) { /* 中文索引·体内调用 ncclGenkAddGinPeer。 */
   struct ncclGenkDevComm const* genk = &comm->symkState.genkComm;
   *nPeers = 0;
   for (int c = 0; c < genk->nRingChannels; c++) {
@@ -126,7 +126,7 @@ static void ncclGenkGinPeers(struct ncclComm* comm, int* peers, int* nPeers) {
   }
 }
 
-static ncclResult_t ncclGenkInitDevComm(struct ncclComm* comm, bool enableGin, bool* needGenkDevComm) {
+static ncclResult_t ncclGenkInitDevComm(struct ncclComm* comm, bool enableGin, bool* needGenkDevComm) { /* 中文索引·体内调用 ncclGenkRingChannelSendsGin、ncclGenkTreeChannelSendsGin。 */
   struct ncclGenkDevComm* genk = &comm->symkState.genkComm;
   // Per-call CTA limits may reduce a launch, but cannot exceed this communicator-wide bound.
   int const nChannels = std::min(comm->nChannels, comm->config.maxCTAs);
@@ -245,7 +245,7 @@ exit:
   return ret;
 }
 
-ncclResult_t ncclGenkInitStart(struct ncclComm* comm, bool* needGenkDevComm) {
+ncclResult_t ncclGenkInitStart(struct ncclComm* comm, bool* needGenkDevComm) { /* 中文索引·体内调用 ncclDevrInitOnce、ncclGenkInitDevComm。 */
   // Genk has its own device communicator and does not need Symk resources.
   NCCLCHECK(ncclDevrInitOnce(comm));
 
@@ -257,7 +257,7 @@ ncclResult_t ncclGenkInitStart(struct ncclComm* comm, bool* needGenkDevComm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclGenkInitEnd(struct ncclComm* comm) {
+ncclResult_t ncclGenkInitEnd(struct ncclComm* comm) { /* 中文索引·体内调用 ncclGenkInitRingTopology、ncclGenkInitTreeTopology。 */
   bool enableGin = (comm->nNodes > 1);
 
   struct ncclSymkState* symk = &comm->symkState;

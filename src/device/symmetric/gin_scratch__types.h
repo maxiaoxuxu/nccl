@@ -87,12 +87,12 @@ struct ncclGinOutboxSession_internal {
     return sizeof(ncclGinOutboxState) + ncclGinOutboxState::RequestBytes +
            alignUp(1 << handle.size_log2, (int)alignof(ncclGinOutboxState));
   }
-  NCCL_DEVICE_INLINE ncclGinOutboxState* getStatePtr() const {
+  NCCL_DEVICE_INLINE ncclGinOutboxState* getStatePtr() const { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、getBlockStride。 */
     char* p = (char*)ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
     p += block * getBlockStride();
     return (ncclGinOutboxState*)p;
   }
-  NCCL_DEVICE_INLINE ncclSymPtr<ncclGinOutboxState> getStateSymPtr() const {
+  NCCL_DEVICE_INLINE ncclSymPtr<ncclGinOutboxState> getStateSymPtr() const { /* 中文索引·体内调用 ncclGetResourceBuffer、getBlockStride。 */
     ncclSymPtr<char> p = ncclGetResourceBuffer(comm, handle.bufHandle);
     p += block * getBlockStride();
     return (ncclSymPtr<ncclGinOutboxState>)p;
@@ -103,12 +103,12 @@ struct ncclGinOutboxSession_internal {
   NCCL_DEVICE_INLINE ncclGinRequest_t* getRequestPtr(uint32_t id, int nBufs_log2) const {
     return getRequestsPtr() + (id & ((1 << nBufs_log2) - 1));
   }
-  NCCL_DEVICE_INLINE char* getBufsPtr() const {
+  NCCL_DEVICE_INLINE char* getBufsPtr() const { /* 中文索引·体内调用 getStatePtr。 */
     char* p = (char*)(getStatePtr() + 1);
     p += ncclGinOutboxState::RequestBytes;
     return p;
   }
-  NCCL_DEVICE_INLINE ncclSymPtr<char> getBufsSymPtr() const {
+  NCCL_DEVICE_INLINE ncclSymPtr<char> getBufsSymPtr() const { /* 中文索引·体内调用 getStateSymPtr。 */
     ncclSymPtr<char> p = (ncclSymPtr<char>)(getStateSymPtr() + 1);
     p += ncclGinOutboxState::RequestBytes;
     return p;
@@ -128,14 +128,14 @@ struct ncclGinInboxA2ASession_internal {
   int nPeers;
   ncclGinInboxA2AState::Unpadded state;
 
-  NCCL_DEVICE_INLINE ncclGinInboxA2AState* getStatePtr() const {
+  NCCL_DEVICE_INLINE ncclGinInboxA2AState* getStatePtr() const { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、size_t。 */
     char* p = (char*)ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
     p += block *
          size_t((int)sizeof(ncclGinInboxA2AState) + alignUp(1 << handle.size_log2, (int)alignof(ncclGinInboxA2AState)));
     return (ncclGinInboxA2AState*)p;
   }
 
-  NCCL_DEVICE_INLINE ncclSymPtr<char> getBufSymPtr(uint32_t monoStep) const {
+  NCCL_DEVICE_INLINE ncclSymPtr<char> getBufSymPtr(uint32_t monoStep) const { /* 中文索引·体内调用 ncclGetResourceBuffer、size_t。 */
     ncclSymPtr<char> p = ncclGetResourceBuffer(comm, handle.bufHandle);
     p += block *
          size_t((int)sizeof(ncclGinInboxA2AState) + alignUp(1 << handle.size_log2, (int)alignof(ncclGinInboxA2AState)));
@@ -145,7 +145,7 @@ struct ncclGinInboxA2ASession_internal {
     uint32_t bufSize_log2 = handle.size_log2 - nBufs_log2;
     return p + ((monoStep & nBufs - 1) << bufSize_log2);
   }
-  NCCL_DEVICE_INLINE char* getBufsPtr() const {
+  NCCL_DEVICE_INLINE char* getBufsPtr() const { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer、size_t。 */
     char* p = (char*)ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
     p += block *
          size_t((int)sizeof(ncclGinInboxA2AState) + alignUp(1 << handle.size_log2, (int)alignof(ncclGinInboxA2AState)));
@@ -153,13 +153,13 @@ struct ncclGinInboxA2ASession_internal {
     return p;
   }
 
-  NCCL_DEVICE_INLINE ncclGinSignal_t getSignal0(int phaseDelta) const {
+  NCCL_DEVICE_INLINE ncclGinSignal_t getSignal0(int phaseDelta) const { /* 中文索引·体内调用 unsigned。 */
     ncclGinSignal_t signal0 = handle.signals;
     signal0 += (4 * block + unsigned(state.phase + phaseDelta) % 4) * (nPeers + (1 << ncclGinScratchMaxBufs_log2));
     return signal0;
   }
   template <typename SubCoop>
-  NCCL_DEVICE_INLINE void resetSignals(SubCoop subcoop, int phaseDelta) {
+  NCCL_DEVICE_INLINE void resetSignals(SubCoop subcoop, int phaseDelta) { /* 中文索引·体内调用 getSignal0、subcoop.thread_rank。 */
     int nSigs = nPeers + (1 << ncclGinScratchMaxBufs_log2);
     ncclGinSignal_t sig0 = getSignal0(phaseDelta);
     NVCC_PRAGMA_UNROLL_DISABLED
@@ -176,20 +176,20 @@ struct ncclGinInboxA2ASession_internal {
     return getSignal0(/*phaseDelta=*/0) + nPeers + (monoStep & (nBufs - 1));
   }
 
-  NCCL_DEVICE_INLINE void waitC2S(uint32_t step) const {
+  NCCL_DEVICE_INLINE void waitC2S(uint32_t step) const { /* 中文索引·体内调用 getC2SSignal、gin.waitSignal。 */
     ncclGinSignal_t sig = getC2SSignal(/*phaseDelta=*/0, step);
     uint32_t desired = state.monoRound + 1;
     gin.waitSignal(ncclCoopThread(), sig, desired, /*bits=*/ncclGinInboxA2AState::RoundBits);
   }
 
-  NCCL_DEVICE_INLINE void waitR2R(uint32_t monoStep) const {
+  NCCL_DEVICE_INLINE void waitR2R(uint32_t monoStep) const { /* 中文索引·体内调用 gin.waitSignal、ncclCoopThread。 */
     int nBufs_log2 = state.nBufs_log2_plus_1 - 1;
     uint32_t desired = 1 + (monoStep >> nBufs_log2);
     gin.waitSignal(ncclCoopThread(), getR2RSignal(monoStep), desired,
                    /*bits=*/32 - ncclGinScratchMaxBufs_log2);
   }
 
-  NCCL_DEVICE_INLINE int getPeer(bool sendNotRecv, int step, bool step_lt_nPeers) const {
+  NCCL_DEVICE_INLINE int getPeer(bool sendNotRecv, int step, bool step_lt_nPeers) const { /* 中文索引·体内调用 imodFast32、unsigned。 */
     if (!step_lt_nPeers) step = imodFast32(step, nPeers, handle.nPeers_rcp32);
     int sign = sendNotRecv ? 1 : -1;
     int peer = team.rank + sign * (1 + step);
@@ -197,7 +197,7 @@ struct ncclGinInboxA2ASession_internal {
     return peer;
   }
 
-  NCCL_DEVICE_INLINE void sendC2S(int phaseDelta, int step, bool step_lt_nPeers, int credits) {
+  NCCL_DEVICE_INLINE void sendC2S(int phaseDelta, int step, bool step_lt_nPeers, int credits) { /* 中文索引·体内调用 getPeer、getC2SSignal。 */
     int peer = getPeer(/*sendNotRecv=*/false, step, step_lt_nPeers);
     ncclGinSignal_t sig = getC2SSignal(phaseDelta, step);
     gin.signal(team, peer, ncclGin_SignalAdd{sig, (uint64_t)credits});

@@ -9,7 +9,7 @@
 #include "group.h"
 #include "enqueue/task_sched.h"
 
-ncclResult_t ncclTaskSchedule(struct ncclComm* comm, struct ncclClassifiedTaskQueues* ctq) {
+ncclResult_t ncclTaskSchedule(struct ncclComm* comm, struct ncclClassifiedTaskQueues* ctq) { /* 中文索引·体内调用 doLaunches。 */
   struct ncclStrongStream* depStream;
   struct ncclStrongStream* launchOrderStream;
   (void)depStream;

@@ -36,7 +36,7 @@ static float getTotalBw(struct ncclTopoSystem* system, struct ncclTopoNode* dev)
   }
   return std::max(pciBw, nvlinkBw);
 }
-ncclResult_t ncclTopoSearchInit(struct ncclTopoSystem* system) {
+ncclResult_t ncclTopoSearchInit(struct ncclTopoSystem* system) { /* 中文索引·体内调用 getMaxBw、getTotalBw。 */
   system->maxBw = 0.0;
   system->totalBw = 0.0;
   int inter = system->inter;
@@ -79,7 +79,7 @@ static ncclResult_t findRevLink(struct ncclTopoNode* node1, struct ncclTopoNode*
 #define SUB_ROUND(a, b) (a = roundf((a - b) * 1000) / 1000)
 
 static ncclResult_t followPath(struct ncclTopoLinkList* path, struct ncclTopoNode* start, int maxSteps, float bw,
-                               int* steps) {
+                               int* steps) { /* 中文索引·体内调用 findRevLink。 */
   float pciBw = bw;
   for (int step = 0; step < path->count; step++) {
     struct ncclTopoNode* node = path->list[step]->remNode;
@@ -125,7 +125,7 @@ static ncclResult_t followPath(struct ncclTopoLinkList* path, struct ncclTopoNod
 // Try to go from node type1/index1 to no type2/index2. mult indicates whether we are counting the
 // bandwidth (1) or undoing (-1).
 static ncclResult_t ncclTopoFollowPath(struct ncclTopoSystem* system, struct ncclTopoGraph* graph, int type1,
-                                       int index1, int type2, int index2, float mult, struct ncclTopoNode** node) {
+                                       int index1, int type2, int index2, float mult, struct ncclTopoNode** node) { /* 中文索引·体内调用 followPath。 */
   // First handle easy cases
   *node = system->nodes[type2].nodes + index2;
   if (type1 == -1) return ncclSuccess;
@@ -243,7 +243,7 @@ static ncclResult_t getNetIndex(struct ncclTopoSystem* system, int64_t id, int* 
 }
 
 static ncclResult_t getNetPaths(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                struct ncclTopoLinkList** netPaths) {
+                                struct ncclTopoLinkList** netPaths) { /* 中文索引·体内调用 getNetIndex。 */
   int64_t netId = graph->inter[graph->nChannels * 2];
   int n;
   NCCLCHECK(getNetIndex(system, netId, &n));
@@ -282,7 +282,7 @@ static ncclResult_t ncclTopoSearchNextGpuSortNvl(struct ncclTopoSystem* system, 
 }
 
 ncclResult_t ncclTopoSearchNextGpuSort(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                       struct ncclTopoNode* gpu, int* next, int* countPtr, int sortNet) {
+                                       struct ncclTopoNode* gpu, int* next, int* countPtr, int sortNet) { /* 中文索引·体内调用 ncclTopoSearchNextGpuSortNvl、getNetPaths。 */
   const uint64_t flag = 1ULL << (graph->nChannels);
   int ngpus = system->nodes[GPU].count;
   struct ncclTopoLinkList* paths = gpu->paths[GPU];
@@ -360,7 +360,7 @@ ncclResult_t ncclTopoSearchRecGpu(struct ncclTopoSystem* system, struct ncclTopo
 
 ncclResult_t ncclTopoSearchTryGpu(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
                                   struct ncclTopoGraph* saveGraph, int step, int backToNet, int backToFirstRank,
-                                  int forcedOrder, int* time, int type, int index, int g) {
+                                  int forcedOrder, int* time, int type, int index, int g) { /* 中文索引·体内调用 ncclTopoFollowPath、ncclTopoSearchRecGpu。 */
   const uint64_t flag = 1ULL << (graph->nChannels);
   struct ncclTopoNode* gpu;
   NCCLCHECK(ncclTopoFollowPath(system, graph, type, index, GPU, g, 1, &gpu));
@@ -374,7 +374,7 @@ ncclResult_t ncclTopoSearchTryGpu(struct ncclTopoSystem* system, struct ncclTopo
 }
 
 ncclResult_t ncclTopoSearchTryCollnetDirect(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                            struct ncclTopoGraph* saveGraph, int g, int ngpus, int* time) {
+                                            struct ncclTopoGraph* saveGraph, int g, int ngpus, int* time) { /* 中文索引·体内调用 ncclTopoFollowPath、ncclTopoSearchRecGpu。 */
   int fwdg = 0;
   int bwdg = 0;
   struct ncclTopoNode* gpu = NULL;
@@ -411,7 +411,7 @@ ncclResult_t ncclTopoSearchTryCollnetDirect(struct ncclTopoSystem* system, struc
 }
 
 ncclResult_t ncclTopoSearchTryNvls(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                   struct ncclTopoGraph* saveGraph, int g, int ngpus, int* time) {
+                                   struct ncclTopoGraph* saveGraph, int g, int ngpus, int* time) { /* 中文索引·体内调用 ncclTopoFollowPath、ncclTopoSearchRecGpu。 */
   struct ncclTopoNode* nvs;
   struct ncclTopoNode* gpu;
   int d0 = 0; // See if there is enough bandwidth for NVS->GPU traffic
@@ -480,7 +480,7 @@ ncclResult_t ncclTopoCompareGraphs(struct ncclTopoSystem* system, struct ncclTop
 
 // Add the preferred NICs ordered by GPU first
 static ncclResult_t ncclTopoPrefNetsGpuFirst(struct ncclTopoSystem* system, int gpu, int nets[NCCL_TOPO_MAX_NODES],
-                                             int* netCount) {
+                                             int* netCount) { /* 中文索引·体内调用 ncclTopoGetLocalNet、ncclTopoIdToIndex。 */
   const int nGpus = (gpu == -1) ? system->nodes[GPU].count : 1;
   int gpuCount = nGpus;
   int gpuIds[NCCL_TOPO_MAX_NODES] = {gpu};
@@ -516,7 +516,7 @@ static ncclResult_t ncclTopoPrefNetsGpuFirst(struct ncclTopoSystem* system, int 
 
 // Add the preferred NICs ordered by channels first
 static ncclResult_t ncclTopoPrefNetsChannelFirst(struct ncclTopoSystem* system, int gpu, int nets[NCCL_TOPO_MAX_NODES],
-                                                 int* netCount) {
+                                                 int* netCount) { /* 中文索引·体内调用 ncclTopoGetLocalNet、ncclTopoIdToIndex。 */
   for (int g = 0; g < system->nodes[GPU].count; g++) {
     if (gpu != -1 && gpu != g) continue;
     int localNetCount = 0, localNets[MAXCHANNELS];
@@ -554,7 +554,7 @@ static ncclResult_t ncclTopoPrefNetsChannelFirst(struct ncclTopoSystem* system, 
 // used flags).
 NCCL_PARAM(ScatterEnable, "MNNVL_SCATTER_NETS_ENABLE", 1);
 static ncclResult_t ncclTopoSelectNetsCompute(struct ncclTopoSystem* system, int typeInter, int gpu, int* nets,
-                                              int* netCountRet) {
+                                              int* netCountRet) { /* 中文索引·体内调用 ncclParamScatterEnable、ncclParamCrossNic。 */
   ncclResult_t ret = ncclSuccess;
   int netCount = 0;
 
@@ -614,7 +614,7 @@ struct ncclTopoSelectNetsCache {
 // One entry per (typeInter + 1, gpu + 1), covering the typeInter == -1 and gpu == -1 queries.
 #define NCCL_TOPO_SELECT_NETS_CACHE_SIZE(ngpus) ((PATH_DIS + 2) * ((ngpus) + 1))
 
-static ncclResult_t ncclTopoSelectNetsCacheCreate(struct ncclTopoSystem* system) {
+static ncclResult_t ncclTopoSelectNetsCacheCreate(struct ncclTopoSystem* system) { /* 中文索引·体内调用 ncclCalloc。 */
   if (system->selectNetsCache != NULL) {
     WARN("Graph search NET selection cache is already installed");
     return ncclInternalError;
@@ -625,7 +625,7 @@ static ncclResult_t ncclTopoSelectNetsCacheCreate(struct ncclTopoSystem* system)
   return ncclSuccess;
 }
 
-static void ncclTopoSelectNetsCacheDestroy(struct ncclTopoSystem* system) {
+static void ncclTopoSelectNetsCacheDestroy(struct ncclTopoSystem* system) { /* 中文索引·体内调用 free。 */
   struct ncclTopoSelectNetsCache* cache = system->selectNetsCache;
   if (cache == NULL) return;
   int nEntries = NCCL_TOPO_SELECT_NETS_CACHE_SIZE(system->nodes[GPU].count);
@@ -637,7 +637,7 @@ static void ncclTopoSelectNetsCacheDestroy(struct ncclTopoSystem* system) {
 // Return the NETs to try for (typeInter, gpu), see ncclTopoSelectNetsCompute. The list belongs to the cache and
 // stays valid until ncclTopoCompute returns.
 static ncclResult_t ncclTopoSelectNets(struct ncclTopoSystem* system, int typeInter, int gpu, const int** nets,
-                                       int* netCount) {
+                                       int* netCount) { /* 中文索引·体内调用 ncclCalloc、ncclTopoSelectNetsCompute。 */
   struct ncclTopoSelectNetsCache* entry = system->selectNetsCache;
   if (entry == NULL) {
     WARN("Graph search NET selection used outside of ncclTopoCompute");
@@ -656,7 +656,7 @@ static ncclResult_t ncclTopoSelectNets(struct ncclTopoSystem* system, int typeIn
 
 NCCL_PARAM(MnnvlRailPerHost, "MNNVL_RAIL_PER_HOST", -1);
 
-static bool ncclTopoMnnvlRailPerHost(struct ncclTopoSystem* system) {
+static bool ncclTopoMnnvlRailPerHost(struct ncclTopoSystem* system) { /* 中文索引·体内调用 ncclParamMnnvlRailPerHost。 */
   int railPerHost = ncclParamMnnvlRailPerHost();
   if (railPerHost == -1) {
     railPerHost = 1;
@@ -668,7 +668,7 @@ static bool ncclTopoMnnvlRailPerHost(struct ncclTopoSystem* system) {
 }
 
 static bool ncclTopoSearchCheckNet(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                   struct ncclTopoNode* startNet, int n, int step) {
+                                   struct ncclTopoNode* startNet, int n, int step) { /* 中文索引·体内调用 ncclTopoMnnvlRailPerHost。 */
   struct ncclTopoNode* net = system->nodes[NET].nodes + n;
   // Always forbid connections between different networking planes
   if (net->net.planeId != startNet->net.planeId) return false;
@@ -693,7 +693,7 @@ static bool ncclTopoSearchCheckNet(struct ncclTopoSystem* system, struct ncclTop
 
 ncclResult_t ncclTopoSearchRecGpu(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
                                   struct ncclTopoGraph* saveGraph, struct ncclTopoNode* gpu, int step, int backToNet,
-                                  int backToFirstRank, int forcedOrder, int* time) {
+                                  int backToFirstRank, int forcedOrder, int* time) { /* 中文索引·体内调用 ncclTopoCompareGraphs、memcpy。 */
   if ((*time) <= 0) return ncclSuccess;
   (*time)--;
 
@@ -809,7 +809,7 @@ exit:
 }
 
 ncclResult_t ncclTopoSearchRecNet(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                                  struct ncclTopoGraph* saveGraph, int backToNet, int backToFirstRank, int* time) {
+                                  struct ncclTopoGraph* saveGraph, int backToNet, int backToFirstRank, int* time) { /* 中文索引·体内调用 ncclCallocQuiet、ncclTopoSelectNets。 */
   ncclResult_t ret = ncclSuccess;
   const int* nets = NULL;
   int* localGpus = NULL;
@@ -949,7 +949,7 @@ ncclResult_t ncclTopoSearchParams(struct ncclTopoSystem* system, int pattern, in
 // channel speed. The intent of this function is to return the load of the most loaded GPU accurately; this
 // enables us to skip searches for speeds that cannot be satisfied by the topology. If it is too high, valid
 // speeds may be skipped. If it is too low, we do more work than necessary.
-static ncclResult_t ncclTopoGraphMaxGpuLoad(struct ncclTopoSystem* system, struct ncclTopoGraph* graph, float* load) {
+static ncclResult_t ncclTopoGraphMaxGpuLoad(struct ncclTopoSystem* system, struct ncclTopoGraph* graph, float* load) { /* 中文索引·体内调用 ncclTopoSearchParams。 */
   int ndevs = system->nodes[DEV].count;
   int minChannels = graph->minChannels;
   if (ndevs <= 1) {
@@ -989,7 +989,7 @@ static ncclResult_t ncclTopoGraphMaxGpuLoad(struct ncclTopoSystem* system, struc
 }
 
 ncclResult_t ncclTopoSearchRec(struct ncclTopoSystem* system, struct ncclTopoGraph* graph,
-                               struct ncclTopoGraph* saveGraph, int* time) {
+                               struct ncclTopoGraph* saveGraph, int* time) { /* 中文索引·体内调用 ncclTopoSearchParams、ncclTopoSearchRecNet。 */
   int backToNet, backToFirstRank;
   NCCLCHECK(ncclTopoSearchParams(system, graph->pattern, &backToNet, &backToFirstRank));
   if (system->inter) {
@@ -1031,7 +1031,7 @@ struct kvDict kvDictLinkType[] = {{"LOC", PATH_LOC}, {"NVL", PATH_NVL}, {"NVB", 
                                   {"SYS", PATH_SYS}, {NULL, 0}};
 
 ncclResult_t ncclTopoGetChannelFromXml(struct ncclXmlNode* xmlChannel, int c, struct ncclTopoSystem* system,
-                                       struct ncclTopoGraph* graph) {
+                                       struct ncclTopoGraph* graph) { /* 中文索引·体内调用 xmlGetAttrStr、strtol。 */
   int ngpus = system->nodes[GPU].count;
   int64_t* inter = graph->inter + 2 * c;
   int* intra = graph->intra + ngpus * c;
@@ -1068,7 +1068,7 @@ ncclResult_t ncclTopoGetChannelFromXml(struct ncclXmlNode* xmlChannel, int c, st
   return ncclSuccess;
 }
 ncclResult_t ncclTopoGetGraphFromXmlSub(struct ncclXmlNode* xmlGraph, struct ncclTopoSystem* system,
-                                        struct ncclTopoGraph* graph, int* nChannels) {
+                                        struct ncclTopoGraph* graph, int* nChannels) { /* 中文索引·体内调用 xmlGetAttrInt、ncclParamCrossNic。 */
   int id;
   NCCLCHECK(xmlGetAttrInt(xmlGraph, "id", &id));
   if (graph->id != id) return ncclSuccess;
@@ -1098,7 +1098,7 @@ ncclResult_t ncclTopoGetGraphFromXmlSub(struct ncclXmlNode* xmlGraph, struct ncc
   return ncclSuccess;
 }
 ncclResult_t ncclTopoGetGraphFromXml(struct ncclXmlNode* xmlGraphs, struct ncclTopoSystem* system,
-                                     struct ncclTopoGraph* graph, int* nChannels) {
+                                     struct ncclTopoGraph* graph, int* nChannels) { /* 中文索引·体内调用 ncclTopoGetGraphFromXmlSub。 */
   for (int s = 0; s < xmlGraphs->nSubs; s++) {
     NCCLCHECK(ncclTopoGetGraphFromXmlSub(xmlGraphs->subs[s], system, graph, nChannels));
   }
@@ -1107,7 +1107,7 @@ ncclResult_t ncclTopoGetGraphFromXml(struct ncclXmlNode* xmlGraphs, struct ncclT
 
 /* And the reverse : graph->xml */
 ncclResult_t ncclTopoGetXmlFromChannel(struct ncclTopoGraph* graph, int c, struct ncclTopoSystem* system,
-                                       struct ncclXml* xml, struct ncclXmlNode* parent) {
+                                       struct ncclXml* xml, struct ncclXmlNode* parent) { /* 中文索引·体内调用 xmlAddNode、xmlSetAttrLong。 */
   struct ncclXmlNode* xmlChannel;
   int ngpus = system->nodes[GPU].count;
   int64_t* inter = graph->inter + 2 * c;
@@ -1142,7 +1142,7 @@ ncclResult_t ncclTopoGetXmlFromChannel(struct ncclTopoGraph* graph, int c, struc
   return ncclSuccess;
 }
 ncclResult_t ncclTopoGetXmlFromGraph(struct ncclTopoGraph* graph, struct ncclTopoSystem* system, struct ncclXml* xml,
-                                     struct ncclXmlNode* parent) {
+                                     struct ncclXmlNode* parent) { /* 中文索引·体内调用 xmlAddNode、xmlSetAttrInt。 */
   struct ncclXmlNode* xmlGraph;
   NCCLCHECK(xmlAddNode(xml, parent, "graph", &xmlGraph));
   NCCLCHECK(xmlSetAttrInt(xmlGraph, "id", graph->id));
@@ -1164,7 +1164,7 @@ ncclResult_t ncclTopoGetXmlFromGraph(struct ncclTopoGraph* graph, struct ncclTop
   return ncclSuccess;
 }
 ncclResult_t ncclTopoGetXmlFromGraphs(int ngraphs, struct ncclTopoGraph** graphs, struct ncclTopoSystem* system,
-                                      struct ncclXml* xml) {
+                                      struct ncclXml* xml) { /* 中文索引·体内调用 xmlAddNode、xmlSetAttrInt。 */
   xml->maxIndex = 0;
   struct ncclXmlNode* xmlGraphs;
   NCCLCHECK(xmlAddNode(xml, NULL, "graphs", &xmlGraphs));
@@ -1175,7 +1175,7 @@ ncclResult_t ncclTopoGetXmlFromGraphs(int ngraphs, struct ncclTopoGraph** graphs
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoDupChannels(struct ncclTopoGraph* graph, int ccMin, int ngpus) {
+ncclResult_t ncclTopoDupChannels(struct ncclTopoGraph* graph, int ccMin, int ngpus) { /* 中文索引·体内调用 memcpy。 */
   if (graph->nChannels == 0) return ncclSuccess;
   if (graph->pattern == NCCL_TOPO_PATTERN_NVLS) return ncclSuccess;
   if (graph->bwIntra < 25.0) return ncclSuccess;
@@ -1242,7 +1242,7 @@ ncclResult_t ncclTopoCheckCrossNicSupport(bool* supported) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoCompute(ncclTopoSystem* system, struct ncclTopoGraph* graph) {
+ncclResult_t ncclTopoCompute(ncclTopoSystem* system, struct ncclTopoGraph* graph) { /* 中文索引·体内调用 ncclTopoGetCompCap、ncclParamCrossNic。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclTopoGraph* tmpGraph = NULL;
   int ccMin;
@@ -1491,7 +1491,7 @@ exit:
 // Max chars per GPU entry: " GPU/xxxxxxxxxxxxxxxx-xxxxxxxxxxxxxxxx" (~40 chars)
 #define CHARS_PER_GPU_ENTRY 48
 
-ncclResult_t ncclTopoPrintGraph(struct ncclTopoSystem* system, struct ncclTopoGraph* graph) {
+ncclResult_t ncclTopoPrintGraph(struct ncclTopoSystem* system, struct ncclTopoGraph* graph) { /* 中文索引·体内调用 malloc、sprintf。 */
   INFO(NCCL_GRAPH, "Pattern %d, crossNic %d, nChannels %d, bw %f/%f, type %s/%s, sameChannels %d", graph->pattern,
        graph->crossNic, graph->nChannels, graph->bwIntra, graph->bwInter, topoPathTypeStr[graph->typeIntra],
        topoPathTypeStr[graph->typeInter], graph->sameChannels);
@@ -1526,7 +1526,7 @@ ncclResult_t ncclTopoPrintGraph(struct ncclTopoSystem* system, struct ncclTopoGr
   return ncclSuccess;
 }
 
-ncclResult_t ncclTopoDumpGraphs(struct ncclTopoSystem* system, int ngraphs, struct ncclTopoGraph** graphs) {
+ncclResult_t ncclTopoDumpGraphs(struct ncclTopoSystem* system, int ngraphs, struct ncclTopoGraph** graphs) { /* 中文索引·体内调用 ncclGetEnv、xmlAlloc。 */
   ncclResult_t ret = ncclSuccess;
   const char* str = ncclGetEnv("NCCL_GRAPH_DUMP_FILE");
   struct ncclXml* xml = NULL;
@@ -1574,7 +1574,7 @@ fail:
 NCCL_PARAM(P2pPxnLevel, "P2P_PXN_LEVEL", 2);
 
 ncclResult_t ncclTopoGetNetDev(struct ncclComm* comm, int rank, struct ncclTopoGraph* graph, int channelId,
-                               int peerRank, int64_t* id, int* dev, int* proxyRank) {
+                               int peerRank, int64_t* id, int* dev, int* proxyRank) { /* 中文索引·体内调用 getNvlsNetDev、ncclTopoIdToNetDev。 */
   int64_t netId = -1;
   int netDev = -1;
   if (graph) {

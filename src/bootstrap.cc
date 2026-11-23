@@ -81,7 +81,7 @@ static int nRankFromRoot(int root, int nRanks, int nRoots, int offset) {
 }
 // return the local id of a given rank for a given root
 // root will be periodize, rank will not
-static int localIdFromRoot(int rank, int root, int nRanks, int nRoots, int offset) {
+static int localIdFromRoot(int rank, int root, int nRanks, int nRoots, int offset) { /* 中文索引·体内调用 firstRankFromRoot。 */
   // any rank for root -1 has a local id that is the rank id
   if (root == -1) return rank;
   int ir = BOOTSTRAP_PID(root, nRoots);
@@ -105,7 +105,7 @@ static std::mutex bootstrapNetMutex;
 
 NCCL_PARAM(BootstrapNetEnable, "OOB_NET_ENABLE", 0);
 
-ncclResult_t bootstrapNetInit() {
+ncclResult_t bootstrapNetInit() { /* 中文索引·体内调用 ncclGetEnv、ncclSocketGetAddrFromString。 */
   if (bootstrapNetInitDone == 0) {
     std::lock_guard<std::mutex> lock(bootstrapNetMutex);
     if (bootstrapNetInitDone == 0) {
@@ -162,13 +162,13 @@ static ncclResult_t netReg(ncclNet_t* net, void* comm, void* data, int size, voi
   NCCLCHECK(net->regMr(comm, data, size, NCCL_PTR_HOST, handle));
   return ncclSuccess;
 }
-static ncclResult_t netDereg(ncclNet_t* net, void* comm, void** handle) {
+static ncclResult_t netDereg(ncclNet_t* net, void* comm, void** handle) { /* 中文索引·体内调用 net->deregMr。 */
   NCCLCHECK(net->deregMr(comm, *handle));
   *handle = NULL;
   return ncclSuccess;
 }
 static ncclResult_t netIsend(ncclNet_t* net, void* sendComm, void* data, int size, void* dataHandle, int tag,
-                             void** sendReq, int* done) {
+                             void** sendReq, int* done) { /* 中文索引·体内调用 net->isend、net->test。 */
   if (*done) return ncclSuccess;
   if (!*sendReq) {
     NCCLCHECK(net->isend(sendComm, data, (size_t)size, tag, dataHandle, NULL, sendReq));
@@ -182,7 +182,7 @@ static ncclResult_t netIsend(ncclNet_t* net, void* sendComm, void* data, int siz
   return ncclSuccess;
 }
 static ncclResult_t netIrecv(ncclNet_t* net, void* recvComm, void* data, int size, void* dataHandle, int tag,
-                             void** recvReq, int* done) {
+                             void** recvReq, int* done) { /* 中文索引·体内调用 net->irecv、net->test。 */
   if (*done) return ncclSuccess;
   if (!*recvReq) {
     size_t size64 = size;
@@ -198,7 +198,7 @@ static ncclResult_t netIrecv(ncclNet_t* net, void* recvComm, void* data, int siz
 }
 static ncclResult_t netSendRecv(ncclNet_t* net, void* sendComm, void* sendData, int sendSize, void* sendDataHandle,
                                 void* recvComm, void* recvData, int recvSize, void* recvDataHandle, int tag,
-                                volatile uint32_t* abortFlag) {
+                                volatile uint32_t* abortFlag) { /* 中文索引·体内调用 checkAbort、netIrecv。 */
   int abortCounter = 0;
   int doneSend = 0, doneRecv = 0;
   void *sendReq = NULL, *recvReq = NULL;
@@ -215,12 +215,12 @@ static ncclResult_t netSendRecv(ncclNet_t* net, void* sendComm, void* sendData, 
 }
 
 // Additional socket based functions, first send the size, then send the message
-static ncclResult_t socketSend(struct ncclSocket* sock, void* data, int size) {
+static ncclResult_t socketSend(struct ncclSocket* sock, void* data, int size) { /* 中文索引·体内调用 ncclSocketSend。 */
   NCCLCHECK(ncclSocketSend(sock, &size, sizeof(int)));
   if (size > 0) NCCLCHECK(ncclSocketSend(sock, data, size));
   return ncclSuccess;
 }
-static ncclResult_t socketRecv(struct ncclSocket* sock, void* data, int size) {
+static ncclResult_t socketRecv(struct ncclSocket* sock, void* data, int size) { /* 中文索引·体内调用 ncclSocketRecv。 */
   int recvSize;
   NCCLCHECK(ncclSocketRecv(sock, &recvSize, sizeof(int)));
   if (recvSize > size) {
@@ -232,7 +232,7 @@ static ncclResult_t socketRecv(struct ncclSocket* sock, void* data, int size) {
   return ncclSuccess;
 }
 static ncclResult_t socketSendRecv(struct ncclSocket* sendSock, void* sendData, int sendSize,
-                                   struct ncclSocket* recvSock, void* recvData, int recvSize) {
+                                   struct ncclSocket* recvSock, void* recvData, int recvSize) { /* 中文索引·体内调用 ncclSocketSendRecv。 */
   int senderRecvSize;
   NCCLCHECK(ncclSocketSendRecv(sendSock, &sendSize, sizeof(int), recvSock, &senderRecvSize, sizeof(int)));
   if (senderRecvSize > recvSize) {
@@ -243,7 +243,7 @@ static ncclResult_t socketSendRecv(struct ncclSocket* sendSock, void* sendData, 
   return ncclSuccess;
 }
 
-static ncclResult_t socketDoubleSendRecv(struct ncclSocketOp ops[4]) {
+static ncclResult_t socketDoubleSendRecv(struct ncclSocketOp ops[4]) { /* 中文索引·体内调用 ncclSocketSendRecv、ncclSocketMultiOp。 */
   // ops synchronously exchange size then asynchronously exchange data in send->recv->send->recv order
   int senderRecvSize1, senderRecvSize2;
   NCCLCHECK(ncclSocketSendRecv(ops[0].sock, &ops[0].size, sizeof(int), ops[1].sock, &senderRecvSize1, sizeof(int)));
@@ -276,7 +276,7 @@ struct extInfo {
 #define NET_HANDLE(h, rank) ((h) + (rank * NCCL_NET_HANDLE_MAXSIZE))
 #define BOOTSTRAP_HANDLE(h, i) ((struct ncclBootstrapHandle*)((char*)h + i * NCCL_UNIQUE_ID_BYTES))
 
-static ncclResult_t rootSend(union ncclSocketAddress* addr, uint64_t magic, union ringConnectInfo* info) {
+static ncclResult_t rootSend(union ncclSocketAddress* addr, uint64_t magic, union ringConnectInfo* info) { /* 中文索引·体内调用 ncclSocketInit、ncclSocketConnect。 */
   ncclResult_t res = ncclSuccess;
   struct ncclSocket sock;
   NCCLCHECKGOTO(ncclSocketInit(&sock, addr, magic, ncclSocketTypeBootstrap), res, fail);
@@ -288,7 +288,7 @@ fail:
   (void)ncclSocketClose(&sock);
   return res;
 }
-static void* bootstrapRoot(void* rargs) {
+static void* bootstrapRoot(void* rargs) { /* 中文索引·体内调用 memset、ncclOsSetFilesLimit。 */
   uint64_t timers[BOOTSTRAP_INIT_ROOT_N] = {0};
   struct bootstrapRootArgs* args = (struct bootstrapRootArgs*)rargs;
   struct ncclSocket* listenSock = args->listenSock;
@@ -405,7 +405,7 @@ out:
   return NULL;
 }
 
-ncclResult_t bootstrapCreateRoot(struct ncclBootstrapHandle* handle, bool idFromEnv) {
+ncclResult_t bootstrapCreateRoot(struct ncclBootstrapHandle* handle, bool idFromEnv) { /* 中文索引·体内调用 ncclCalloc、ncclSocketInit。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclSocket* listenSock = NULL;
   struct bootstrapRootArgs* args = NULL;
@@ -430,7 +430,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t bootstrapGetUniqueId(struct ncclBootstrapHandle* handle, struct ncclComm* comm) {
+ncclResult_t bootstrapGetUniqueId(struct ncclBootstrapHandle* handle, struct ncclComm* comm) { /* 中文索引·体内调用 memset、ncclGetEnv。 */
   memset(handle, 0, sizeof(ncclBootstrapHandle));
 
   const char* env = ncclGetEnv("NCCL_COMM_ID");
@@ -462,7 +462,7 @@ ncclResult_t bootstrapGetUniqueId(struct ncclBootstrapHandle* handle, struct ncc
   return ncclSuccess;
 }
 
-ncclResult_t bcastGrowHandle(struct ncclBootstrapHandle* handle, struct ncclComm* parent, bool isRoot) {
+ncclResult_t bcastGrowHandle(struct ncclBootstrapHandle* handle, struct ncclComm* parent, bool isRoot) { /* 中文索引·体内调用 bootstrapSend、bootstrapRecv。 */
   if (!parent || !handle) {
     WARN("bcastGrowHandle: parent comm and handle must be provided");
     return ncclInvalidArgument;
@@ -549,20 +549,20 @@ struct bootstrapState {
 
 // helper functions
 static ncclResult_t createListenSocket(struct ncclComm* comm, uint64_t magic, struct ncclSocket* socket,
-                                       union ncclSocketAddress* addr, ncclSocketType type) {
+                                       union ncclSocketAddress* addr, ncclSocketType type) { /* 中文索引·体内调用 ncclSocketInit、ncclSocketListen。 */
   NCCLCHECK(ncclSocketInit(socket, &bootstrapNetIfAddr, magic, type, comm->abortFlag));
   NCCLCHECK(ncclSocketListen(socket));
   NCCLCHECK(ncclSocketGetAddr(socket, addr));
   return ncclSuccess;
 }
-static ncclResult_t getUDS(uint64_t* peerUDS) {
+static ncclResult_t getUDS(uint64_t* peerUDS) { /* 中文索引·体内调用 getRandomData、getPidHash。 */
   uint64_t randId;
   NCCLCHECK(getRandomData(&randId, sizeof(randId)));
   *peerUDS = getPidHash() + randId;
   return ncclSuccess;
 }
 #define MAX_OOB_DEVS 16
-static ncclResult_t netGetDevice(int rank, struct ncclComm* comm, int* dev) {
+static ncclResult_t netGetDevice(int rank, struct ncclComm* comm, int* dev) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   static int devOOB = -1;
   if (devOOB < 0) {
     std::lock_guard<std::mutex> lock(bootstrapNetMutex);
@@ -618,7 +618,7 @@ static ncclResult_t netGetDevice(int rank, struct ncclComm* comm, int* dev) {
 static ncclResult_t netRingConnect(void* ctx, ncclNet_t* net, struct bootstrapListen_t* listen,
                                    char peerHandle[NCCL_NET_HANDLE_MAXSIZE], void** sendComm,
                                    ncclNetDeviceHandle_t** sendDevHandle, void** recvComm,
-                                   ncclNetDeviceHandle_t** recvDevHandle, volatile uint32_t* abortFlag) {
+                                   ncclNetDeviceHandle_t** recvDevHandle, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 checkAbort、net->connect。 */
   int abortCounter = 0;
   do {
     NCCLCHECK(checkAbort(abortFlag, &abortCounter));
@@ -646,7 +646,7 @@ static void bootstrapThreadRun(void* opaque) {
 }
 
 static ncclResult_t bootstrapConcurrent(ncclResult_t (*sendFn)(void*), void* sendArgs, ncclResult_t (*recvFn)(void*),
-                                        void* recvArgs) {
+                                        void* recvArgs) { /* 中文索引·体内调用 ncclGetCryptConnectionMode、sendFn。 */
   bool encrypted;
   NCCLCHECK(ncclGetCryptConnectionMode(&encrypted));
   if (!encrypted) {
@@ -678,7 +678,7 @@ struct socketAcceptArgs {
   struct ncclSocket* listenSock;
 };
 
-static ncclResult_t socketAcceptOp(void* opaque) {
+static ncclResult_t socketAcceptOp(void* opaque) { /* 中文索引·体内调用 ncclSocketAccept。 */
   struct socketAcceptArgs* op = (struct socketAcceptArgs*)opaque;
   NCCLCHECK(ncclSocketAccept(op->sock, op->listenSock));
   return ncclSuccess;
@@ -686,7 +686,7 @@ static ncclResult_t socketAcceptOp(void* opaque) {
 
 static ncclResult_t socketRingConnect(ncclSocketAddress* addr, struct ncclSocket* sendSocket,
                                       struct ncclSocket* listenSock, struct ncclSocket* recvSocket, uint64_t magic,
-                                      volatile uint32_t* abortFlag) {
+                                      volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclSocketInit、bootstrapConcurrent。 */
   ncclResult_t ret = ncclSuccess;
   struct socketAcceptArgs acceptArgs = {recvSocket, listenSock};
   NCCLCHECK(ncclSocketInit(recvSocket));
@@ -700,7 +700,7 @@ fail:
 }
 static ncclResult_t ringAllInfo(struct ncclComm* comm, struct bootstrapState* state,
                                 union ncclSocketAddress* peerAddresss, union ncclSocketAddress* peerProxy,
-                                uint64_t* peerUDS, struct rasRankInit* rasRanks) {
+                                uint64_t* peerUDS, struct rasRankInit* rasRanks) { /* 中文索引·体内调用 ncclCalloc、memcpy。 */
   ncclResult_t res = ncclSuccess;
   int rank = comm->rank;
   int nRanks = comm->nRanks;
@@ -734,7 +734,7 @@ exit:
   return ncclSuccess;
 }
 
-static ncclResult_t sendToRoot(struct ncclBootstrapHandle* handle, struct ncclComm* comm, struct extInfo* info) {
+static ncclResult_t sendToRoot(struct ncclBootstrapHandle* handle, struct ncclComm* comm, struct extInfo* info) { /* 中文索引·体内调用 ncclSocketInit、ncclSocketConnect。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclSocket sock;
   NCCLCHECK(ncclSocketInit(&sock, &handle->addr, handle->magic, ncclSocketTypeBootstrap, comm->abortFlag));
@@ -751,7 +751,7 @@ NCCL_PARAM(StaggerRate, "UID_STAGGER_RATE", 7000);
 NCCL_PARAM(StaggerThreshold, "UID_STAGGER_THRESHOLD", 256);
 extern int64_t ncclParamRasEnable();
 
-ncclResult_t bootstrapInit(int nHandles, void* handles, struct ncclComm* comm, struct ncclComm* parent) {
+ncclResult_t bootstrapInit(int nHandles, void* handles, struct ncclComm* comm, struct ncclComm* parent) { /* 中文索引·体内调用 ncclIntruQueueConstruct、hashCombine。 */
   ncclResult_t result = ncclSuccess;
   int rank = comm->rank;
   int nranks = comm->nRanks;
@@ -964,7 +964,7 @@ fail:
 }
 
 ncclResult_t bootstrapSplit(uint64_t magic, struct ncclComm* comm, struct ncclComm* parent, int color, int key,
-                            int* parentRanks) {
+                            int* parentRanks) { /* 中文索引·体内调用 ncclIntruQueueConstruct、ncclParamBootstrapNetEnable。 */
   ncclResult_t ret = ncclSuccess;
   int rank = comm->rank;
   int nranks = comm->nRanks;
@@ -1064,7 +1064,7 @@ struct socketAckInfo {
   int tag;
 };
 
-static ncclResult_t socketConnect(void* commState, int peer, int tag, struct ncclSocket* sock) {
+static ncclResult_t socketConnect(void* commState, int peer, int tag, struct ncclSocket* sock) { /* 中文索引·体内调用 ncclSocketInit、ncclSocketConnect。 */
   ncclResult_t ret = ncclSuccess;
   struct bootstrapState* state = (struct bootstrapState*)commState;
 
@@ -1079,7 +1079,7 @@ fail:
   (void)ncclSocketClose(sock);
   return ret;
 }
-static ncclResult_t bootstrapSendSync(void* commState, int peer, int tag, void* data, int size) {
+static ncclResult_t bootstrapSendSync(void* commState, int peer, int tag, void* data, int size) { /* 中文索引·体内调用 socketConnect、socketSend。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclSocket sock;
   TRACE(NCCL_BOOTSTRAP, "Sending to peer=%d tag=%d size=%d", peer, tag, size);
@@ -1121,7 +1121,7 @@ static bool bootstrapAsyncSendMatches(struct bootstrapAsyncSend* a, struct boots
   return a == b;
 }
 
-static void bootstrapAsyncSendMain(void* opaque) {
+static void bootstrapAsyncSendMain(void* opaque) { /* 中文索引·体内调用 ncclIntruQueueHead、state->asyncSendCond.wait。 */
   struct bootstrapAsyncSend* op = (struct bootstrapAsyncSend*)opaque;
   struct bootstrapState* state = op->state;
   std::unique_lock<std::mutex> lock(state->asyncSendLock);
@@ -1151,14 +1151,14 @@ static void bootstrapAsyncSendMain(void* opaque) {
   free(op);
 }
 
-static ncclResult_t bootstrapAsyncSendDrain(struct bootstrapState* state) {
+static ncclResult_t bootstrapAsyncSendDrain(struct bootstrapState* state) { /* 中文索引·体内调用 ncclIntruQueueEmpty、state->asyncSendCond.wait。 */
   std::unique_lock<std::mutex> lock(state->asyncSendLock);
   state->asyncSendClosing = true;
   while (!ncclIntruQueueEmpty(&state->asyncSendQueue)) state->asyncSendCond.wait(lock);
   return COMPILER_ATOMIC_LOAD(&state->asyncSendError, std::memory_order_acquire);
 }
 
-ncclResult_t bootstrapSend(void* commState, int peer, int tag, void* data, int size) {
+ncclResult_t bootstrapSend(void* commState, int peer, int tag, void* data, int size) { /* 中文索引·体内调用 ncclGetCryptConnectionMode、bootstrapSendSync。 */
   struct bootstrapState* state = (struct bootstrapState*)commState;
   ncclResult_t ret = ncclSuccess;
   bool encrypted;
@@ -1217,7 +1217,7 @@ fail:
 }
 
 // Bootstrap send/receive functions
-static ncclResult_t unexpectedEnqueue(struct bootstrapState* state, int peer, int tag, struct ncclSocket* sock) {
+static ncclResult_t unexpectedEnqueue(struct bootstrapState* state, int peer, int tag, struct ncclSocket* sock) { /* 中文索引·体内调用 ncclCalloc、ncclSocketMove。 */
   // New unex
   struct unexConn* unex;
   NCCLCHECK(ncclCalloc(&unex, 1));
@@ -1236,7 +1236,7 @@ static ncclResult_t unexpectedEnqueue(struct bootstrapState* state, int peer, in
   return ncclSuccess;
 }
 static ncclResult_t unexpectedDequeue(struct bootstrapState* state, int peer, int tag, struct ncclSocket* sock,
-                                      int* found) {
+                                      int* found) { /* 中文索引·体内调用 ncclSocketMove、free。 */
   struct unexConn* elem = state->unexpectedConnections;
   struct unexConn* prev = NULL;
   *found = 0;
@@ -1259,7 +1259,7 @@ static ncclResult_t unexpectedDequeue(struct bootstrapState* state, int peer, in
   return ncclSuccess;
 }
 
-static void unexpectedFree(struct bootstrapState* state) {
+static void unexpectedFree(struct bootstrapState* state) { /* 中文索引·体内调用 ncclSocketClose、free。 */
   struct unexConn* elem = state->unexpectedConnections;
   struct unexConn* prev = NULL;
 
@@ -1273,7 +1273,7 @@ static void unexpectedFree(struct bootstrapState* state) {
 }
 
 // We can't know who we'll receive from, so we need to receive everything at once
-static ncclResult_t socketAccept(void* commState, int peer, int tag, struct ncclSocket* sock) {
+static ncclResult_t socketAccept(void* commState, int peer, int tag, struct ncclSocket* sock) { /* 中文索引·体内调用 unexpectedDequeue、ncclSocketInit。 */
   ncclResult_t ret = ncclSuccess;
   struct bootstrapState* state = (struct bootstrapState*)commState;
 
@@ -1300,7 +1300,7 @@ fail:
 }
 
 // We can't know who we'll receive from, so we need to receive everything at once
-ncclResult_t bootstrapRecv(void* commState, int peer, int tag, void* data, int size) {
+ncclResult_t bootstrapRecv(void* commState, int peer, int tag, void* data, int size) { /* 中文索引·体内调用 socketAccept、socketRecv。 */
   ncclResult_t ret;
   struct ncclSocket sock;
   struct bootstrapState* state = (struct bootstrapState*)commState;
@@ -1324,7 +1324,7 @@ fail:
 }
 
 static ncclResult_t netRingAllGather(ncclNet_t* net, void* sendComm, void* recvComm, int rank, int nranks, char* data,
-                                     int size, volatile uint32_t* abortFlag) {
+                                     int size, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 netReg、netSendRecv。 */
   ncclResult_t res;
   uint64_t tFirst = 0, tRest = 0;
   void* sendDataHandle = NULL;
@@ -1361,7 +1361,7 @@ exit:
   return res;
 }
 static ncclResult_t socketRingAllGather(struct ncclSocket* nextSock, struct ncclSocket* prevSock, int rank, int nranks,
-                                        char* data, int size) {
+                                        char* data, int size) { /* 中文索引·体内调用 socketSendRecv、socketDoubleSendRecv。 */
   ncclResult_t res = ncclSuccess;
   uint64_t tFirst = 0, tRest = 0;
   /* Simple ring based AllGather
@@ -1410,7 +1410,7 @@ static ncclResult_t socketRingAllGather(struct ncclSocket* nextSock, struct nccl
 exit:
   return res;
 }
-ncclResult_t bootstrapAllGather(void* commState, void* allData, int size) {
+ncclResult_t bootstrapAllGather(void* commState, void* allData, int size) { /* 中文索引·体内调用 ncclParamBootstrapNetEnable、netRingAllGather。 */
   ncclResult_t res = ncclSuccess;
   struct bootstrapState* state = (struct bootstrapState*)commState;
   int rank = state->rank;
@@ -1437,7 +1437,7 @@ exit:
   return res;
 }
 
-static ncclResult_t bootstrapP2PBarrier(void* commState, int* ranks, int rank, int nranks, int tag) {
+static ncclResult_t bootstrapP2PBarrier(void* commState, int* ranks, int rank, int nranks, int tag) { /* 中文索引·体内调用 bootstrapSend、bootstrapRecv。 */
   if (nranks == 1) return ncclSuccess;
   /* Simple [intra] process barrier
    *
@@ -1454,7 +1454,7 @@ static ncclResult_t bootstrapP2PBarrier(void* commState, int* ranks, int rank, i
   return ncclSuccess;
 }
 
-ncclResult_t bootstrapIntraNodeBarrier(void* commState, int* ranks, int rank, int nranks, int tag) {
+ncclResult_t bootstrapIntraNodeBarrier(void* commState, int* ranks, int rank, int nranks, int tag) { /* 中文索引·体内调用 bootstrapP2PBarrier。 */
   uint64_t time = 0;
   BOOTSTRAP_PROF_OPEN(time);
   NCCLCHECK(bootstrapP2PBarrier(commState, ranks, rank, nranks, tag));
@@ -1463,7 +1463,7 @@ ncclResult_t bootstrapIntraNodeBarrier(void* commState, int* ranks, int rank, in
   return ncclSuccess;
 }
 
-ncclResult_t bootstrapBarrier(void* commState, int rank, int nranks, int tag) {
+ncclResult_t bootstrapBarrier(void* commState, int rank, int nranks, int tag) { /* 中文索引·体内调用 bootstrapP2PBarrier。 */
   uint64_t time = 0;
   BOOTSTRAP_PROF_OPEN(time);
   NCCLCHECK(bootstrapP2PBarrier(commState, NULL, rank, nranks, tag));
@@ -1480,18 +1480,18 @@ struct bootstrapPeerSocketOp {
   int tag;
   struct ncclSocket* sock;
 };
-static ncclResult_t bootstrapPeerConnectOp(void* opaque) {
+static ncclResult_t bootstrapPeerConnectOp(void* opaque) { /* 中文索引·体内调用 socketConnect。 */
   struct bootstrapPeerSocketOp* op = (struct bootstrapPeerSocketOp*)opaque;
   NCCLCHECK(socketConnect(op->commState, op->peer, op->tag, op->sock));
   return ncclSuccess;
 }
-static ncclResult_t bootstrapPeerAcceptOp(void* opaque) {
+static ncclResult_t bootstrapPeerAcceptOp(void* opaque) { /* 中文索引·体内调用 socketAccept。 */
   struct bootstrapPeerSocketOp* op = (struct bootstrapPeerSocketOp*)opaque;
   NCCLCHECK(socketAccept(op->commState, op->peer, op->tag, op->sock));
   return ncclSuccess;
 }
 
-ncclResult_t bootstrapIntraNodeAllGather(void* commState, int* ranks, int rank, int nranks, void* allData, int size) {
+ncclResult_t bootstrapIntraNodeAllGather(void* commState, int* ranks, int rank, int nranks, void* allData, int size) { /* 中文索引·体内调用 ncclSocketInit、bootstrapConcurrent。 */
   if (nranks == 1) return ncclSuccess;
   ncclResult_t ret = ncclSuccess;
   TRACE(NCCL_INIT, "rank %d nranks %d size %d - ENTER", rank, nranks, size);
@@ -1521,7 +1521,7 @@ fail:
 
 // [IntraNode] in-place Broadcast
 static ncclResult_t bootstrapP2PBroadcast(void* commState, int* ranks, int rank, int nranks, int root, void* bcastData,
-                                          int size) {
+                                          int size) { /* 中文索引·体内调用 bootstrapSend、bootstrapRecv。 */
   if (nranks == 1) return ncclSuccess;
   if (rank == root) {
     for (int i = 0; i < nranks; i++) {
@@ -1537,7 +1537,7 @@ static ncclResult_t bootstrapP2PBroadcast(void* commState, int* ranks, int rank,
 }
 
 ncclResult_t bootstrapIntraNodeBroadcast(void* commState, int* ranks, int rank, int nranks, int root, void* bcastData,
-                                         int size) {
+                                         int size) { /* 中文索引·体内调用 bootstrapP2PBroadcast。 */
   uint64_t time = 0;
   BOOTSTRAP_PROF_OPEN(time);
   NCCLCHECK(bootstrapP2PBroadcast(commState, ranks, rank, nranks, root, bcastData, size));
@@ -1546,7 +1546,7 @@ ncclResult_t bootstrapIntraNodeBroadcast(void* commState, int* ranks, int rank, 
         time / 1e9, (nranks * size / 1e6) / (time / 1e9));
   return ncclSuccess;
 }
-ncclResult_t bootstrapBroadcast(void* commState, int rank, int nranks, int root, void* bcastData, int size) {
+ncclResult_t bootstrapBroadcast(void* commState, int rank, int nranks, int root, void* bcastData, int size) { /* 中文索引·体内调用 bootstrapP2PBroadcast。 */
   uint64_t time = 0;
   BOOTSTRAP_PROF_OPEN(time);
   NCCLCHECK(bootstrapP2PBroadcast(commState, NULL, rank, nranks, root, bcastData, size));
@@ -1555,7 +1555,7 @@ ncclResult_t bootstrapBroadcast(void* commState, int rank, int nranks, int root,
   return ncclSuccess;
 }
 
-ncclResult_t bootstrapClose(void* commState) {
+ncclResult_t bootstrapClose(void* commState) { /* 中文索引·体内调用 bootstrapAsyncSendDrain、unexpectedFree。 */
   if (commState == NULL) return ncclSuccess;
   struct bootstrapState* state = (struct bootstrapState*)commState;
   // In-flight asynchronous sends reference this state; let them finish before

@@ -30,7 +30,7 @@ extern int ncclParamIbReceiverSideMatchingScheme();
 extern int ncclParamIbOooRq();
 extern int ncclParamIbResiliencyPortFailover();
 
-ncclResult_t ncclIbStatsCheckFatalCount(struct ncclIbStats* stat, const char* funcName) {
+ncclResult_t ncclIbStatsCheckFatalCount(struct ncclIbStats* stat, const char* funcName) { /* 中文索引·体内调用 ncclParamIbAsyncEvents。 */
   if (ncclParamIbAsyncEvents() && COMPILER_ATOMIC_LOAD(&stat->fatalErrorCount, std::memory_order_relaxed)) {
     WARN("communicator encountered a fatal error (detected in %s)", funcName);
     return ncclSystemError;
@@ -48,7 +48,7 @@ struct ncclIbNetCommDevBase* ncclIbGetNetCommDevBase(ncclIbNetCommBase* base, in
   }
 }
 
-ncclResult_t ncclIbBaseCommInit(struct ncclIbNetCommBase* baseComm, bool isSend) {
+ncclResult_t ncclIbBaseCommInit(struct ncclIbNetCommBase* baseComm, bool isSend) { /* 中文索引·体内调用 memset、ncclParamIbSplitDataOnQps。 */
   for (int i = 0; i < NCCL_IB_MAX_QPS; i++) {
     baseComm->qps[i].devIndex = -1;
     baseComm->qps[i].remDevIdx = -1;
@@ -83,7 +83,7 @@ ncclResult_t ncclIbBaseCommInit(struct ncclIbNetCommBase* baseComm, bool isSend)
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbRecvCommInit(struct ncclIbRecvComm* recvComm) {
+ncclResult_t ncclIbRecvCommInit(struct ncclIbRecvComm* recvComm) { /* 中文索引·体内调用 ncclIbBaseCommInit、ncclParamIbPrepostReceiveWorkRequests。 */
   NCCLCHECK(ncclIbBaseCommInit(&recvComm->base, false));
   recvComm->ibRecvWorkRequest = {.wr_id = NCCL_IB_RECV_WR_ID_DUMMY, .next = NULL, .sg_list = NULL, .num_sge = 0};
 
@@ -113,7 +113,7 @@ ncclResult_t ncclIbSendCommInit(struct ncclIbSendComm* sendComm) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclIbEventGidChange(struct ncclIbDev* dev) {
+static ncclResult_t ncclIbEventGidChange(struct ncclIbDev* dev) { /* 中文索引·体内调用 wrap_ibv_query_port、ncclIbGidInfoQuery。 */
   INFO(NCCL_NET, "NET/IB: %s: GID table changed on %s:%d", __func__, dev->devName, dev->portNum);
   if (dev->gidInfo.link_layer != IBV_LINK_LAYER_ETHERNET) {
     INFO(NCCL_NET, "NET/IB : %s:%d link is not Ethernet; ignoring GID change", dev->devName, dev->portNum);
@@ -144,7 +144,7 @@ static ncclResult_t ncclIbEventGidChange(struct ncclIbDev* dev) {
   return ncclSuccess;
 }
 
-static void ncclIbUpdateDeviceSpeed(struct ncclIbDev* dev) {
+static void ncclIbUpdateDeviceSpeed(struct ncclIbDev* dev) { /* 中文索引·体内调用 wrap_ibv_query_port_speed。 */
   uint64_t oldSpeed = COMPILER_ATOMIC_LOAD(&dev->currSpeed, std::memory_order_relaxed);
   uint64_t newSpeed = 0;
   if (wrap_ibv_query_port_speed(dev->context, dev->portNum, &newSpeed) != ncclSuccess) return;
@@ -163,7 +163,7 @@ static void ncclIbUpdateDeviceSpeed(struct ncclIbDev* dev) {
 }
 
 std::thread ncclIbAsyncThread;
-void* ncclIbAsyncThreadMain(void* args) {
+void* ncclIbAsyncThreadMain(void* args) { /* 中文索引·体内调用 wrap_ibv_get_async_event、wrap_ibv_event_type_str。 */
   struct ncclIbDev* dev = (struct ncclIbDev*)args;
   while (1) {
     struct ibv_async_event event;

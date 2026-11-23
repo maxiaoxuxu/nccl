@@ -20,7 +20,7 @@ NCCL_PARAM(SymCTAs, "SYM_CTAS", 0)
 
 static constexpr float disableTime = 1.e30f;
 
-int ncclSymkModelCtasEnvOverride() {
+int ncclSymkModelCtasEnvOverride() { /* 中文索引·体内调用 ncclParamSymCTAs。 */
   int64_t nUserCTAs = ncclParamSymCTAs();
   if (nUserCTAs < 1) return 0;
   if (nUserCTAs > ncclSymkMaxBlocks) return ncclSymkMaxBlocks;
@@ -28,7 +28,7 @@ int ncclSymkModelCtasEnvOverride() {
 }
 
 static ncclResult_t queryModel(struct ncclTuningInput_t* input, enum ncclSymkKernelId kernelId, size_t nBytes,
-                               float* timeUs, float* selectionTimeUs, int* nBlocks) {
+                               float* timeUs, float* selectionTimeUs, int* nBlocks) { /* 中文索引·体内调用 ncclSymkGinKernelMask、ncclSymkGinModel。 */
   if (ncclSymkGinKernelMask() >> kernelId & 1) {
     NCCLCHECK(ncclSymkGinModel(input, kernelId, nBytes, timeUs, nBlocks));
     *selectionTimeUs = *timeUs;
@@ -39,7 +39,7 @@ static ncclResult_t queryModel(struct ncclTuningInput_t* input, enum ncclSymkKer
 }
 
 ncclResult_t ncclTuningSymkModelSim(struct ncclTuningInput_t* const inputs, struct ncclTuningResult_t* const tuning,
-                                    struct ncclTuningModelState* /*internal*/) {
+                                    struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclSymkAvailable、ncclSymkMask。 */
   ncclResult_t ret = ncclSuccess;
   tuning->selectionTimeUs = NCCL_TUNING_IGNORE;
 

@@ -89,7 +89,7 @@ struct EfaGdaWriteWqeRegs {
   uint64_t w[8];
 
   NCCL_DEVICE_INLINE EfaGdaWriteWqeRegs(uint32_t phase, uint16_t ah, uint16_t qpn, uint32_t qkey, uint64_t dstAddr,
-                                        uint32_t dstRkey, uint64_t srcAddr, uint32_t srcLkey, uint32_t bytes) {
+                                        uint32_t dstRkey, uint64_t srcAddr, uint32_t srcLkey, uint32_t bytes) { /* 中文索引·体内调用 bit。 */
     using namespace efa_gda_wqe;
     const uint64_t reqId = threadIdx.x;
     w[0] = ((reqId & 0xFFFFull) << bit(kReqId)) | (kCtrl1Val << bit(kCtrl1)) |

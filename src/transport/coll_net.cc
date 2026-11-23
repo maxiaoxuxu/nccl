@@ -168,7 +168,7 @@ struct setupReq {
  * communicator to connect to me */
 static ncclResult_t sendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                               struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                              struct ncclConnector* send, int channelId, int connIndex) {
+                              struct ncclConnector* send, int channelId, int connIndex) { /* 中文索引·体内调用 ncclTopoGetNetDev、ncclTopoCheckGdr。 */
   struct setupReq req = {0};
 
   int proxyRank;
@@ -190,7 +190,7 @@ static ncclResult_t sendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph
 
 static ncclResult_t recvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                               struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                              struct ncclConnector* recv, int channelId, int connIndex) {
+                              struct ncclConnector* recv, int channelId, int connIndex) { /* 中文索引·体内调用 ncclTopoGetNetDev、ncclTopoCheckGdr。 */
   struct setupReq req = {0};
 
   int proxyRank;
@@ -216,7 +216,7 @@ static ncclResult_t recvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph
   return ncclSuccess;
 }
 
-static ncclResult_t collNetDumpMap(struct connectMap* map) {
+static ncclResult_t collNetDumpMap(struct connectMap* map) { /* 中文索引·体内调用 printf。 */
   printf("Dump map\n");
   struct connectMapMem* mem = map->mems + NCCL_NET_MAP_HOSTMEM;
   printf("Mem 0: Host mem (%x B) CPU %p GPU %p\n", mem->size, mem->cpuPtr, mem->gpuPtr);
@@ -251,7 +251,7 @@ struct collNetConnectArgs {
 static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args);
 
 static ncclResult_t sendConnect(struct ncclComm* comm, struct ncclConnect* connectInfos, int nranks, int rank,
-                                struct ncclConnector* send) {
+                                struct ncclConnector* send) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   // We're on the same process as the proxy. We can pass a pointer to a struct.
   struct collNetConnectArgs args = {rank, nranks, connectInfos};
   struct connectMap* map;
@@ -285,7 +285,7 @@ static ncclResult_t sendConnect(struct ncclComm* comm, struct ncclConnect* conne
 static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args);
 
 static ncclResult_t recvConnect(struct ncclComm* comm, struct ncclConnect* connectInfos, int nranks, int rank,
-                                struct ncclConnector* recv) {
+                                struct ncclConnector* recv) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   // We're on the same process as the proxy. We can pass a pointer to a struct.
   struct collNetConnectArgs args = {rank, nranks, connectInfos};
   struct connectMap* map;
@@ -326,7 +326,7 @@ static ncclResult_t recvFree(struct ncclComm* comm, struct ncclConnector* recv) 
 }
 
 static ncclResult_t sendProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclCollNet->getProperties。 */
   struct setupReq* req = (struct setupReq*)reqBuff;
   if (reqSize != sizeof(struct setupReq)) return ncclInternalError;
 
@@ -360,7 +360,7 @@ struct sharedResources {
 };
 
 static ncclResult_t sharedListen(struct ncclProxyState* proxyState, int netDev, struct ncclCollNetSharedRes* collNet,
-                                 void* collNetHandle) {
+                                 void* collNetHandle) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclCollNet->listen。 */
   struct sharedResources* resources = (struct sharedResources*)collNet->resources;
   if (resources == NULL) {
     NCCLCHECK(ncclCalloc(&resources, 1));
@@ -374,7 +374,7 @@ static ncclResult_t sharedListen(struct ncclProxyState* proxyState, int netDev, 
 }
 
 static ncclResult_t sharedConnect(struct ncclProxyState* proxyState, int netDev, struct ncclConnect* connectInfos,
-                                  int nranks, int rank, struct ncclCollNetSharedRes* collNet, void** collNetComm) {
+                                  int nranks, int rank, struct ncclCollNetSharedRes* collNet, void** collNetComm) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclCollNet->connect。 */
   struct sharedResources* resources = (struct sharedResources*)collNet->resources;
   if (resources->collNetComms[netDev] == NULL) {
     // Connect to coll comm
@@ -399,7 +399,7 @@ static ncclResult_t sharedConnect(struct ncclProxyState* proxyState, int netDev,
   return ncclSuccess;
 }
 
-static ncclResult_t sharedFree(struct ncclProxyState* proxyState, struct ncclCollNetSharedRes* collNet, int netDev) {
+static ncclResult_t sharedFree(struct ncclProxyState* proxyState, struct ncclCollNetSharedRes* collNet, int netDev) { /* 中文索引·体内调用 proxyState->ncclCollNet->closeColl、free。 */
   struct sharedResources* resources = (struct sharedResources*)collNet->resources;
   resources->commRefCount[netDev]--;
   if (resources->commRefCount[netDev] == 0) {
@@ -414,7 +414,7 @@ static ncclResult_t sharedFree(struct ncclProxyState* proxyState, struct ncclCol
 }
 
 static ncclResult_t sharedBuffersInit(struct ncclCollNetSharedRes* collNet, int cuda, char** gpuPtr, char** cpuPtr,
-                                      int* size, struct ncclMemManager* manager) {
+                                      int* size, struct ncclMemManager* manager) { /* 中文索引·体内调用 ncclCudaCalloc、cudaMemset。 */
   if (collNet->size == 0) {
     collNet->size = 2 * collNet->nChannels * collNet->buffSize;
   }
@@ -433,7 +433,7 @@ static ncclResult_t sharedBuffersInit(struct ncclCollNetSharedRes* collNet, int 
   return ncclSuccess;
 }
 
-static ncclResult_t sharedBuffersDestroy(struct ncclCollNetSharedRes* collNet, struct ncclProxyState* proxyState) {
+static ncclResult_t sharedBuffersDestroy(struct ncclCollNetSharedRes* collNet, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclCudaFree、ncclCudaHostFree。 */
   if (collNet->size == 0) return ncclSuccess;
   NCCLCHECK(ncclCudaFree(collNet->cudaBuff, proxyState->memManager));
   NCCLCHECK(ncclCudaHostFree(collNet->hostBuff));
@@ -443,7 +443,7 @@ static ncclResult_t sharedBuffersDestroy(struct ncclCollNetSharedRes* collNet, s
 }
 
 static ncclResult_t recvProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclCollNet->getProperties。 */
   struct setupReq* req = (struct setupReq*)reqBuff;
   if (reqSize != sizeof(struct setupReq)) return ncclInternalError;
 
@@ -476,7 +476,7 @@ static ncclResult_t recvProxySetup(struct ncclProxyConnection* connection, struc
 }
 
 static ncclResult_t sendProxyConnect(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 sharedConnect、ncclCudaHostCalloc。 */
   ncclResult_t ret = ncclSuccess;
   if (reqSize != sizeof(struct collNetConnectArgs)) {
     WARN("sendProxyConnect: reqSize is %d != %ld", reqSize, sizeof(struct collNetConnectArgs));
@@ -573,7 +573,7 @@ fail:
 }
 
 static ncclResult_t recvProxyConnect(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 sharedConnect、ncclCudaHostCalloc。 */
   ncclResult_t ret = ncclSuccess;
   if (reqSize != sizeof(struct collNetConnectArgs)) {
     WARN("recvProxyConnect: reqSize is %d != %ld", reqSize, sizeof(struct collNetConnectArgs));
@@ -674,7 +674,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   struct sendResources* resources = (struct sendResources*)(connection->transportResources);
 
   if (resources) {
@@ -701,7 +701,7 @@ static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct
   return ncclSuccess;
 }
 
-static ncclResult_t recvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t recvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueDequeue。 */
   struct recvResources* resources = (struct recvResources*)(connection->transportResources);
 
   if (resources) {
@@ -745,7 +745,7 @@ static size_t calcAlgoOffset(struct ncclProxyArgs* args, int isAllNotOne, int su
 
 static ssize_t calcRegionOffset(struct ncclProxyArgs* args, int isRecvNotSend, int sub, uint64_t step,
                                 int side // 0=begin, 1=end
-) {
+) { /* 中文索引·体内调用 calcAlgoOffset。 */
   struct ncclCollNetSharedRes* collNet = args->subs[0].connection->collNet;
   ssize_t slotSize = collNet->buffSize / NCCL_STEPS;
   ssize_t chunkSize = args->chunkSize;
@@ -771,7 +771,7 @@ static constexpr int calcStepsPerGroup(int nGroups) {
 
 static ncclResult_t collNetRegIallreduce(struct ncclProxyState* proxyState, struct sendResources* resources,
                                          struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, int groupStart,
-                                         ssize_t* nBytesInOut, void** request) {
+                                         ssize_t* nBytesInOut, void** request) { /* 中文索引·体内调用 ncclTypeSize、proxyState->ncclCollNet->iallreduce。 */
   ssize_t loopSize, winOffset, nBytes;
   ssize_t eltSize = ncclTypeSize((ncclDataType_t)args->dtype);
   // for UB iallreduce 1RPN case, user's send and recv buffers are both directly accessed by collnet network.
@@ -814,7 +814,7 @@ static ncclResult_t collNetRegIallreduce(struct ncclProxyState* proxyState, stru
 
 static ncclResult_t collNetIallreduce(struct ncclProxyState* proxyState, struct sendResources* resources,
                                       struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, ssize_t nBytes,
-                                      ssize_t sendBeg, ssize_t recvBeg, void** request) {
+                                      ssize_t sendBeg, ssize_t recvBeg, void** request) { /* 中文索引·体内调用 ncclTypeSize、proxyState->ncclCollNet->iallreduce。 */
   void* sendMhandle = resources->sendMhandles[NCCL_PROTO_SIMPLE];
   void* recvMhandle = resources->recvMhandles[NCCL_PROTO_SIMPLE];
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
@@ -833,7 +833,7 @@ static ncclResult_t collNetIallreduce(struct ncclProxyState* proxyState, struct 
 
 static ncclResult_t collNetRegIallgather(struct ncclProxyState* proxyState, struct sendResources* resources,
                                          struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, ssize_t nBytesIn,
-                                         ssize_t allBeg, ssize_t recvBeg, void* recvMhandle, void** request) {
+                                         ssize_t allBeg, ssize_t recvBeg, void* recvMhandle, void** request) { /* 中文索引·体内调用 proxyState->ncclCollNet->iallgather。 */
   ncclNetSGE_t recvParts;
   ssize_t sizePerRank = args->specifics.collnetDirect.sizePerRank;
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
@@ -882,7 +882,7 @@ static ncclResult_t collNetRegIallgather(struct ncclProxyState* proxyState, stru
 static ncclResult_t collNetIallgather(struct ncclProxyState* proxyState, struct sendResources* resources,
                                       struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, ssize_t nBytes,
                                       ssize_t allBeg, ssize_t sendBeg, ssize_t recvBeg, void* sendMhandle,
-                                      void* recvMhandle, void** request) {
+                                      void* recvMhandle, void** request) { /* 中文索引·体内调用 proxyState->ncclCollNet->iallgather。 */
   ncclNetSGE_t recvParts;
   ssize_t sizePerRank = args->specifics.collnetDirect.sizePerRank;
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
@@ -904,7 +904,7 @@ static ncclResult_t collNetIallgather(struct ncclProxyState* proxyState, struct 
 
 static ncclResult_t collNetRegIreducescatter(struct ncclProxyState* proxyState, struct sendResources* resources,
                                              struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, ssize_t nBytesIn,
-                                             ssize_t allBeg, ssize_t sendBeg, void* sendMhandle, void** request) {
+                                             ssize_t allBeg, ssize_t sendBeg, void* sendMhandle, void** request) { /* 中文索引·体内调用 proxyState->ncclCollNet->ireducescatter。 */
   ncclNetSGE_t sendParts;
   ssize_t sizePerRank = args->specifics.collnetDirect.sizePerRank;
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
@@ -951,7 +951,7 @@ static ncclResult_t collNetRegIreducescatter(struct ncclProxyState* proxyState, 
 static ncclResult_t collNetIreducescatter(struct ncclProxyState* proxyState, struct sendResources* resources,
                                           struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, ssize_t nBytes,
                                           ssize_t allBeg, ssize_t sendBeg, ssize_t recvBeg, void* sendMhandle,
-                                          void* recvMhandle, void** request) {
+                                          void* recvMhandle, void** request) { /* 中文索引·体内调用 proxyState->ncclCollNet->ireducescatter。 */
   ncclNetSGE_t sendParts;
   ssize_t sizePerRank = args->specifics.collnetDirect.sizePerRank;
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
@@ -969,7 +969,7 @@ static ncclResult_t collNetIreducescatter(struct ncclProxyState* proxyState, str
   return ncclSuccess;
 }
 
-static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) {
+static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) { /* 中文索引·体内调用 calcRegionOffset、std::atomic_thread_fence。 */
   if (args->state == ncclProxyOpReady) {
     for (int s = 0; s < args->nsubs; s++) {
       struct ncclProxySubArgs* sub = args->subs + s;
@@ -1124,7 +1124,7 @@ static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct 
 
 static ncclResult_t collNetRecvFlush(struct ncclProxyState* proxyState, struct recvResources* resources,
                                      struct ncclProxyArgs* args, struct ncclProxySubArgs* sub, int groupStart,
-                                     ssize_t nBytesIn, ssize_t recvBeg, void** request) {
+                                     ssize_t nBytesIn, ssize_t recvBeg, void** request) { /* 中文索引·体内调用 proxyState->ncclCollNet->iflush。 */
   char* region = NCCL_NET_MAP_GET_POINTER(&resources->map, gpu, buffs[NCCL_PROTO_SIMPLE]);
   if (sub->reg && (sub->isOneRPN || args->coll != ncclFuncAllGather)) {
     ssize_t nBytes, loopSize;
@@ -1172,7 +1172,7 @@ static ncclResult_t collNetRecvFlush(struct ncclProxyState* proxyState, struct r
   return ncclSuccess;
 }
 
-static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) {
+static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) { /* 中文索引·体内调用 memset、calcStepsPerGroup。 */
   if (args->state == ncclProxyOpReady) {
     for (int s = 0; s < args->nsubs; s++) {
       struct ncclProxySubArgs* sub = args->subs + s;
@@ -1301,7 +1301,7 @@ struct collnetRegInfo {
 };
 
 static ncclResult_t collnetRegisterBuffer(struct ncclComm* comm, const void* userbuff, size_t buffSize, int type,
-                                          struct ncclReg* regRecord, int* outRegBufFlag, void** outHandle) {
+                                          struct ncclReg* regRecord, int* outRegBufFlag, void** outHandle) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   ncclResult_t ret = ncclSuccess;
   int gdrEnable = -1;
   if (regRecord) {
@@ -1352,7 +1352,7 @@ fail:
 }
 
 ncclResult_t ncclCollnetLocalRegisterBuffer(struct ncclComm* comm, const void* userbuff, size_t buffSize, int type,
-                                            int* outRegBufFlag, void** outHandle) {
+                                            int* outRegBufFlag, void** outHandle) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclReg* regRecord = NULL;
   bool isValid = false;
@@ -1384,7 +1384,7 @@ struct ncclCollnetCleanupCallback {
   struct ncclReg* reg;
 };
 
-static ncclResult_t cleanupCollnet(struct ncclComm* comm, struct ncclCommCallback* cb) {
+static ncclResult_t cleanupCollnet(struct ncclComm* comm, struct ncclCommCallback* cb) { /* 中文索引·体内调用 ncclCommGraphDeregister、free。 */
   struct ncclCollnetCleanupCallback* obj = (struct ncclCollnetCleanupCallback*)cb;
   NCCLCHECK(ncclCommGraphDeregister(obj->comm, obj->reg));
   free(obj);
@@ -1393,7 +1393,7 @@ static ncclResult_t cleanupCollnet(struct ncclComm* comm, struct ncclCommCallbac
 
 ncclResult_t ncclCollnetGraphRegisterBuffer(
   struct ncclComm* comm, const void* userbuff, size_t buffSize, int type, int* outRegBufFlag, void** outHandle,
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueElts) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueElts) { /* 中文索引·体内调用 cuMemGetAddressRange、ncclCommGraphRegister。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclCollnetCleanupCallback* record = NULL;
   struct ncclReg* regRecord = NULL;
@@ -1428,14 +1428,14 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCollnetDeregBuffer(struct ncclComm* comm, struct ncclProxyConnector* proxyconn, void* handle) {
+ncclResult_t ncclCollnetDeregBuffer(struct ncclComm* comm, struct ncclProxyConnector* proxyconn, void* handle) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   NCCLCHECK(ncclProxyCallBlocking(comm, proxyconn, ncclProxyMsgDeregister, &handle, sizeof(void*), NULL, 0));
   INFO(NCCL_REG, "rank %d - COLLNET deregistered buffer handle %p", comm->rank, handle);
   return ncclSuccess;
 }
 
 static ncclResult_t sendProxyRegBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclOsGetPageSize、cuMemGetHandleForAddressRange。 */
   void* handle = NULL;
   struct collnetRegInfo* info = (struct collnetRegInfo*)reqBuff;
   struct sendResources* resources = (struct sendResources*)(connection->transportResources);
@@ -1494,7 +1494,7 @@ fail:
 }
 
 static ncclResult_t recvProxyRegBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclOsGetPageSize、cuMemGetHandleForAddressRange。 */
   void* handle = NULL;
   struct collnetRegInfo* info = (struct collnetRegInfo*)reqBuff;
   struct recvResources* resources = (struct recvResources*)(connection->transportResources);
@@ -1556,7 +1556,7 @@ static bool collnetHandleCmp(struct proxyMemHandle* a, struct proxyMemHandle* b)
 }
 
 static ncclResult_t sendProxyDeregBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                         void* reqBuff, int reqSize, int* done) {
+                                         void* reqBuff, int reqSize, int* done) { /* 中文索引·体内调用 memcpy、ncclIntruQueueDelete。 */
   void* handle;
   struct sendResources* resources = (struct sendResources*)(connection->transportResources);
 
@@ -1578,7 +1578,7 @@ static ncclResult_t sendProxyDeregBuffer(struct ncclProxyConnection* connection,
 }
 
 static ncclResult_t recvProxyDeregBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                         void* reqBuff, int reqSize, int* done) {
+                                         void* reqBuff, int reqSize, int* done) { /* 中文索引·体内调用 memcpy、ncclIntruQueueDelete。 */
   void* handle;
   struct recvResources* resources = (struct recvResources*)(connection->transportResources);
 
@@ -1599,7 +1599,7 @@ static ncclResult_t recvProxyDeregBuffer(struct ncclProxyConnection* connection,
   return ncclSuccess;
 }
 
-ncclResult_t ncclCollNetChainBufferSetup(ncclComm_t comm) {
+ncclResult_t ncclCollNetChainBufferSetup(ncclComm_t comm) { /* 中文索引·体内调用 ncclTransportP2pConnect、ncclTransportP2pSetup。 */
   ncclResult_t ret = ncclSuccess;
   char line[1024];
 
@@ -1633,7 +1633,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclCollNetDirectBufferSetup(ncclComm_t comm) {
+ncclResult_t ncclCollNetDirectBufferSetup(ncclComm_t comm) { /* 中文索引·体内调用 ncclTransportP2pConnect、ncclTransportP2pSetup。 */
   ncclResult_t ret = ncclSuccess;
 
   if (comm->config.collnetEnable == 0) goto exit;
@@ -1684,7 +1684,7 @@ static int isCollNetChainHeadsSubset(ncclComm_t comm, struct ncclTopoGraph* coll
   return (chainHeadMask & ~collNetHeadMask) == 0;
 }
 
-ncclResult_t ncclCollNetSetup(ncclComm_t comm, ncclComm_t parent, struct ncclTopoGraph* graphs[]) {
+ncclResult_t ncclCollNetSetup(ncclComm_t comm, ncclComm_t parent, struct ncclTopoGraph* graphs[]) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   int rank = comm->rank;
   int collNetSetupFail = 0;

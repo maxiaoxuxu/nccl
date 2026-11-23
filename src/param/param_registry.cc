@@ -13,7 +13,7 @@ extern "C" void* ncclParamRegistryInstance() {
   return &state;
 }
 
-ncclResult_t ncclParamRegistry::add(std::string key, ncclParamInfo_t info, ncclParamInterface* param) {
+ncclResult_t ncclParamRegistry::add(std::string key, ncclParamInfo_t info, ncclParamInterface* param) { /* 中文索引·体内调用 state、reg.map.find。 */
   auto& reg = state();
   std::lock_guard<std::mutex> lock(reg.mtx);
   if (reg.map.find(key) != reg.map.end()) {
@@ -24,14 +24,14 @@ ncclResult_t ncclParamRegistry::add(std::string key, ncclParamInfo_t info, ncclP
   return ncclSuccess;
 }
 
-ncclParamRegistry::mapEntry* ncclParamRegistry::find(std::string key) {
+ncclParamRegistry::mapEntry* ncclParamRegistry::find(std::string key) { /* 中文索引·体内调用 state、reg.map.find。 */
   auto& reg = state();
   std::lock_guard<std::mutex> lock(reg.mtx);
   auto it = reg.map.find(key);
   return (it != reg.map.end()) ? &it->second : nullptr;
 }
 
-ncclResult_t ncclParamRegistry::remove(std::string key) {
+ncclResult_t ncclParamRegistry::remove(std::string key) { /* 中文索引·体内调用 state、reg.map.erase。 */
   auto& reg = state();
   std::lock_guard<std::mutex> lock(reg.mtx);
   reg.map.erase(key);

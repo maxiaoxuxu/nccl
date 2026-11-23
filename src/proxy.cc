@@ -52,7 +52,7 @@ struct ncclProxyPool {
   struct ncclProxyArgs elems[PROXYARGS_ALLOCATE_SIZE];
 };
 
-static void expectedProxyResponseFree(struct ncclProxyState* state) {
+static void expectedProxyResponseFree(struct ncclProxyState* state) { /* 中文索引·体内调用 free。 */
   struct ncclExpectedProxyResponse* elem = state->expectedResponses;
   struct ncclExpectedProxyResponse* prev = NULL;
 
@@ -65,7 +65,7 @@ static void expectedProxyResponseFree(struct ncclProxyState* state) {
 }
 
 static ncclResult_t expectedProxyResponseStore(struct ncclProxyState* state, void* opId, void* respBuff, int respSize,
-                                               ncclResult_t res) {
+                                               ncclResult_t res) { /* 中文索引·体内调用 memcpy、free。 */
   struct ncclExpectedProxyResponse* elem = state->expectedResponses;
   while (elem) {
     if (elem->opId == opId) {
@@ -94,7 +94,7 @@ static ncclResult_t expectedProxyResponseStore(struct ncclProxyState* state, voi
   return ncclInternalError;
 }
 
-static ncclResult_t expectedProxyResponseEnqueue(struct ncclProxyState* state, void* opId, int respSize) {
+static ncclResult_t expectedProxyResponseEnqueue(struct ncclProxyState* state, void* opId, int respSize) { /* 中文索引·体内调用 ncclCalloc、malloc。 */
   struct ncclExpectedProxyResponse* ex;
   NCCLCHECK(ncclCalloc(&ex, 1));
   ex->opId = opId;
@@ -116,7 +116,7 @@ static ncclResult_t expectedProxyResponseEnqueue(struct ncclProxyState* state, v
   return ncclSuccess;
 }
 
-static ncclResult_t expectedProxyResponseDequeue(struct ncclProxyState* state, void* opId, void* respBuff, int* found) {
+static ncclResult_t expectedProxyResponseDequeue(struct ncclProxyState* state, void* opId, void* respBuff, int* found) { /* 中文索引·体内调用 memcpy、free。 */
   struct ncclExpectedProxyResponse* elem = state->expectedResponses;
   struct ncclExpectedProxyResponse* prev = NULL;
   *found = 0;
@@ -140,7 +140,7 @@ static ncclResult_t expectedProxyResponseDequeue(struct ncclProxyState* state, v
   return ncclSuccess;
 }
 
-static ncclResult_t expectedProxyResponseRemove(struct ncclProxyState* state, void* opId) {
+static ncclResult_t expectedProxyResponseRemove(struct ncclProxyState* state, void* opId) { /* 中文索引·体内调用 free。 */
   struct ncclExpectedProxyResponse* elem = state->expectedResponses;
   struct ncclExpectedProxyResponse* prev = NULL;
   while (elem) {
@@ -172,7 +172,7 @@ static ncclResult_t asyncProxyOpEnqueue(struct ncclProxyLocalPeer* peer, ncclPro
   return ncclSuccess;
 }
 
-static ncclResult_t asyncProxyOpDequeue(struct ncclProxyLocalPeer* peer, ncclProxyAsyncOp* op) {
+static ncclResult_t asyncProxyOpDequeue(struct ncclProxyLocalPeer* peer, ncclProxyAsyncOp* op) { /* 中文索引·体内调用 free。 */
   struct ncclProxyAsyncOp* elem = peer->asyncOps;
   struct ncclProxyAsyncOp* prev = NULL;
   while (elem) {
@@ -204,7 +204,7 @@ static ncclResult_t asyncProxyOpDequeue(struct ncclProxyLocalPeer* peer, ncclPro
   return ncclInternalError;
 }
 
-static ncclResult_t allocateArgs(struct ncclProxyProgressState* state, struct ncclProxyArgs** argsptr) {
+static ncclResult_t allocateArgs(struct ncclProxyProgressState* state, struct ncclProxyArgs** argsptr) { /* 中文索引·体内调用 ncclCalloc。 */
   struct ncclProxyArgs* elem;
   if (state->pool == NULL) {
     // Allocate a new pool of elements. Make sure we allocate the memory close
@@ -257,7 +257,7 @@ ncclResult_t getOpIndex(struct ncclProxyArgs* op, struct ncclProxyProgressState*
   return ncclInternalError;
 }
 
-ncclResult_t printProxyOp(struct ncclProxyArgs* op, int poolIndex, int opIndex) {
+ncclResult_t printProxyOp(struct ncclProxyArgs* op, int poolIndex, int opIndex) { /* 中文索引·体内调用 printf。 */
   printf("[%d-%d|%ld| %s", poolIndex, opIndex, op->opCount,
          op->pattern == ncclPatternSend ? "Send" :
          op->pattern == ncclPatternRecv ? "Recv" :
@@ -287,7 +287,7 @@ ncclResult_t printProxyOp(struct ncclProxyArgs* op, int poolIndex, int opIndex) 
   printf("]");
   return ncclSuccess;
 }
-ncclResult_t dumpProxyState(struct ncclProxyProgressState* state) {
+ncclResult_t dumpProxyState(struct ncclProxyProgressState* state) { /* 中文索引·体内调用 printf、getOpIndex。 */
   struct ncclProxyArgs* op = state->active;
   int poolIndex, opIndex;
   printf("ACTIVE OPS\n");
@@ -366,7 +366,7 @@ ncclResult_t dumpProxyState(struct ncclProxyProgressState* state) {
 }
 
 static ncclResult_t ncclProxyOpToArgs(struct ncclProxyOp* op, struct ncclProxyArgs* args, int subIndex,
-                                      void* localProfilerContext) {
+                                      void* localProfilerContext) { /* 中文索引·体内调用 ncclProfilerStartProxyOpEvent。 */
   struct ncclProxySubArgs* sub = args->subs + subIndex;
   if (subIndex >= NCCL_PROXY_MAX_SUBS) {
     WARN("Proxy append out of bounds");
@@ -438,7 +438,7 @@ exit:
   return ncclSuccess;
 }
 
-static ncclResult_t ProxyAppend(struct ncclProxyState* proxyState, struct ncclProxyOp* op) {
+static ncclResult_t ProxyAppend(struct ncclProxyState* proxyState, struct ncclProxyOp* op) { /* 中文索引·体内调用 ncclProxyOpToArgs、allocateArgs。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
   struct ncclProxyConnection* connection = op->connection;
   int shared = connection->shared;
@@ -478,7 +478,7 @@ static ncclResult_t ProxyAppend(struct ncclProxyState* proxyState, struct ncclPr
   return ncclSuccess;
 }
 
-ncclResult_t ncclProxyPost(struct ncclProxyOpsPool* pool, int nextOps, int nextOpsEnd) {
+ncclResult_t ncclProxyPost(struct ncclProxyOpsPool* pool, int nextOps, int nextOpsEnd) { /* 中文索引·体内调用 pool->cond.notify_one。 */
   std::lock_guard<std::mutex> lock(pool->mutex);
   if (pool->nextOps == -1) {
     pool->nextOps = nextOps;
@@ -491,7 +491,7 @@ ncclResult_t ncclProxyPost(struct ncclProxyOpsPool* pool, int nextOps, int nextO
 }
 
 static ncclResult_t ncclLocalOpAppend(struct ncclComm* comm, struct ncclProxyConnector* proxyConn,
-                                      struct ncclProxyOp* proxyOp) {
+                                      struct ncclProxyOp* proxyOp) { /* 中文索引·体内调用 std::this_thread::yield、memcpy。 */
   int tpLocalRank = comm->topParentLocalRanks[comm->localRank];
   struct ncclProxyOps* proxyOps = comm->proxyState->proxyOps;
   if (proxyOps == NULL) return ncclInternalError;
@@ -559,7 +559,7 @@ static ncclResult_t ncclLocalOpAppend(struct ncclComm* comm, struct ncclProxyCon
 }
 
 static ncclResult_t SaveProxy(struct ncclComm* comm, struct ncclChannel* channel, int type, int peer,
-                              struct ncclProxyOp* op, int connIndex, bool* justInquire) {
+                              struct ncclProxyOp* op, int connIndex, bool* justInquire) { /* 中文索引·体内调用 ncclLocalOpAppend。 */
   if (peer < 0) return ncclSuccess;
 
   struct ncclChannelPeer* peerComm = channel->peers[peer];
@@ -593,7 +593,7 @@ static int nvlsDensePeer(struct ncclComm* comm, int node, int denseLocalRank) {
 
 // justInquire != nullptr means don't actually do anything, just assertain need of
 // ncclProxySaveOp for this op.
-ncclResult_t ncclProxySaveOp(struct ncclComm* comm, struct ncclProxyOp* op, bool* justInquire) {
+ncclResult_t ncclProxySaveOp(struct ncclComm* comm, struct ncclProxyOp* op, bool* justInquire) { /* 中文索引·体内调用 NeedProxy、SaveProxy。 */
   struct ncclChannel* channel = &comm->channels[op->channelId];
   bool needProxy = false;
   if (justInquire) *justInquire = false;
@@ -766,7 +766,7 @@ ncclResult_t ncclProxySaveOp(struct ncclComm* comm, struct ncclProxyOp* op, bool
 }
 
 static ncclResult_t removeOp(struct ncclProxyProgressState* state, struct ncclProxyArgs** opPtr,
-                             struct ncclProxyArgs** prevOpPtr) {
+                             struct ncclProxyArgs** prevOpPtr) { /* 中文索引·体内调用 dumpProxyState。 */
   struct ncclProxyArgs* freeOp = *opPtr;
   struct ncclProxyArgs* next = freeOp->next;
   DEBUG_PROXY_PRINT("Remove %ld -> %ld -> %ld\n", OP_INDEX(*prevOpPtr), OP_INDEX(freeOp), OP_INDEX(next));
@@ -799,7 +799,7 @@ static ncclResult_t removeOp(struct ncclProxyProgressState* state, struct ncclPr
 }
 
 static ncclResult_t progressOps(struct ncclProxyState* proxyState, struct ncclProxyProgressState* state,
-                                struct ncclProxyArgs* opStart, int* idle) {
+                                struct ncclProxyArgs* opStart, int* idle) { /* 中文索引·体内调用 op->progress、removeOp。 */
   struct ncclProxyArgs* prevOp = NULL;
   struct ncclProxyArgs* op = opStart;
   ncclResult_t status = ncclSuccess;
@@ -832,7 +832,7 @@ static ncclResult_t progressOps(struct ncclProxyState* proxyState, struct ncclPr
 
 NCCL_PARAM(ProxyAppendBatchSize, "PROXY_APPEND_BATCH_SIZE", 16);
 
-static ncclResult_t ncclProxyGetPostedOps(struct ncclProxyState* proxyState, int* added) {
+static ncclResult_t ncclProxyGetPostedOps(struct ncclProxyState* proxyState, int* added) { /* 中文索引·体内调用 lock.try_lock、lock.lock。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
   if (state->opsPool == NULL) return ncclInternalError;
   struct ncclProxyOpsPool* pool = state->opsPool;
@@ -929,7 +929,7 @@ NCCL_PARAM(ProgressAppendOpFreq, "PROGRESS_APPENDOP_FREQ", 8);
 
 static ncclAffinity proxyCpuset;
 static std::once_flag proxyCpusetOnceFlag;
-void proxyCpusetOnceFunc() {
+void proxyCpusetOnceFunc() { /* 中文索引·体内调用 ncclGetEnv、ncclStrListToCpuset。 */
   const char* setEnv = ncclGetEnv("NCCL_PROXY_CPUSET");
   if (setEnv) {
     ncclResult_t res = ncclStrListToCpuset(setEnv, &proxyCpuset);
@@ -953,7 +953,7 @@ fail:
   return;
 }
 
-void* ncclProxyProgress(void* proxyState_) {
+/* 中文图解·transport｜进度线程从待办集合读取工作，推动 transport 回调直到该操作完成。 */ void* ncclProxyProgress(void* proxyState_) {
   struct ncclProxyState* proxyState = (struct ncclProxyState*)proxyState_;
   // This thread is created by proxyService, therefore setting the affinity is not needed.
   INFO(NCCL_INIT, "[Proxy Progress] Device %d CPU core %d", proxyState->cudaDev, ncclOsGetCpu());
@@ -1015,7 +1015,7 @@ void* ncclProxyProgress(void* proxyState_) {
   return NULL;
 }
 
-ncclResult_t ncclProxyStart(struct ncclComm* comm) {
+ncclResult_t ncclProxyStart(struct ncclComm* comm) { /* 中文索引·体内调用 ncclProxyPost。 */
   struct ncclProxyOps* proxyOps = comm->proxyState->proxyOps;
   if (proxyOps == NULL) return ncclSuccess;
   TIME_START(1);
@@ -1032,7 +1032,7 @@ ncclResult_t ncclProxyStart(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-static ncclResult_t ncclProxyProgressCreate(struct ncclProxyState* proxyState) {
+static ncclResult_t ncclProxyProgressCreate(struct ncclProxyState* proxyState) { /* 中文索引·体内调用 state->thread.joinable、std::thread。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
   if (!state->thread.joinable()) {
     state->thread = std::thread(ncclProxyProgress, proxyState);
@@ -1041,7 +1041,7 @@ static ncclResult_t ncclProxyProgressCreate(struct ncclProxyState* proxyState) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProxyProgressDestroy(struct ncclProxyState* proxyState) {
+ncclResult_t ncclProxyProgressDestroy(struct ncclProxyState* proxyState) { /* 中文索引·体内调用 state->stop.store、state->opsPool->cond.notify_one。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
 
   // Request the proxy to stop and then wake it
@@ -1078,7 +1078,7 @@ struct ncclProxyConnectionPool {
   int offset;
 };
 
-static ncclResult_t ncclProxyNewConnection(struct ncclProxyConnectionPool* pool, int* id) {
+static ncclResult_t ncclProxyNewConnection(struct ncclProxyConnectionPool* pool, int* id) { /* 中文索引·体内调用 ncclRealloc、ncclCalloc。 */
   if (pool->offset == NCCL_PROXY_CONN_POOL_SIZE) {
     NCCLCHECK(ncclRealloc(&pool->pools, pool->banks, pool->banks + 1));
     NCCLCHECK(ncclCalloc(pool->pools + pool->banks, NCCL_PROXY_CONN_POOL_SIZE));
@@ -1138,7 +1138,7 @@ static ncclResult_t proxyFree(struct ncclProxyConnection* connection, struct ncc
   return ncclSuccess;
 }
 
-static ncclResult_t ncclProxyFreeConnections(struct ncclProxyConnectionPool* pool, struct ncclProxyState* proxyState) {
+static ncclResult_t ncclProxyFreeConnections(struct ncclProxyConnectionPool* pool, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 proxyFree、free。 */
   for (int b = 0; b < pool->banks; b++) {
     int max = b == pool->banks - 1 ? pool->offset : NCCL_PROXY_CONN_POOL_SIZE;
     for (int i = 0; i < max; i++) {
@@ -1169,7 +1169,7 @@ struct ncclProxyInitResp {
 };
 
 ncclResult_t ncclProxyConnect(struct ncclComm* comm, int transport, int send, int proxyRank,
-                              struct ncclProxyConnector* proxyConn) {
+                              struct ncclProxyConnector* proxyConn) { /* 中文索引·体内调用 ncclCalloc、ncclSocketSetFd。 */
   struct ncclSocket* sock;
   int ready;
   struct ncclProxyState* sharedProxyState = comm->proxyState;
@@ -1256,7 +1256,7 @@ ncclResult_t ncclProxyConnect(struct ncclComm* comm, int transport, int send, in
 // UDS support
 ncclResult_t ncclProxyCallBlockingUDS(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, int type,
                                       void* reqBuff, int reqSize, void* respBuff, int respSize, ncclIpcFd* reqFd,
-                                      ncclIpcFd* respFd) {
+                                      ncclIpcFd* respFd) { /* 中文索引·体内调用 getRandomData、ncclIpcSocketInit。 */
   ncclResult_t res = ncclSuccess;
   struct ncclIpcSocket ipcSock = {0};
   void* opId;
@@ -1312,7 +1312,7 @@ error:
 
 // cuMem API support
 // The request/response is sent out-of-band using ncclIpcSocket for this specific command
-ncclResult_t ncclProxyClientGetFdBlocking(struct ncclComm* comm, int proxyRank, void* handle, ncclIpcFd* convertedFd) {
+ncclResult_t ncclProxyClientGetFdBlocking(struct ncclComm* comm, int proxyRank, void* handle, ncclIpcFd* convertedFd) { /* 中文索引·体内调用 ncclProxyConnect、ncclProxyCallBlockingUDS。 */
   ncclResult_t ret = ncclSuccess;
 
   // Request the allocation of a UDS fd for the handle
@@ -1336,7 +1336,7 @@ error:
 }
 
 ncclResult_t ncclProxyClientBatchQueryFdBlocking(struct ncclComm* comm, struct ncclProxyConnector* proxyConn,
-                                                 ncclIpcFd* localFds, ncclIpcFd* rmtFds, int numSegments) {
+                                                 ncclIpcFd* localFds, ncclIpcFd* rmtFds, int numSegments) { /* 中文索引·体内调用 ncclProxyCallBlockingUDS。 */
   ncclResult_t ret = ncclSuccess;
   for (int segment = 0; segment < numSegments; segment++) {
     NCCLCHECKGOTO(ncclProxyCallBlockingUDS(comm, proxyConn, ncclProxyMsgQueryFd, NULL, 0, (void*)&rmtFds[segment],
@@ -1353,7 +1353,7 @@ fail:
 }
 
 ncclResult_t ncclProxyClientQueryFdBlocking(struct ncclComm* comm, struct ncclProxyConnector* proxyConn,
-                                            ncclIpcFd localFd, ncclIpcFd* rmtFd) {
+                                            ncclIpcFd localFd, ncclIpcFd* rmtFd) { /* 中文索引·体内调用 ncclProxyCallBlockingUDS。 */
   ncclResult_t ret = ncclSuccess;
   NCCLCHECKGOTO(ncclProxyCallBlockingUDS(comm, proxyConn, ncclProxyMsgQueryFd, NULL, 0, (void*)rmtFd, sizeof(ncclIpcFd),
                                          &localFd, NULL),
@@ -1372,7 +1372,7 @@ fail:
 const char* ncclProxyMsgTypeStr[] = {"Unknown", "Init", "SharedInit", "Setup",   "Connect",  "Start",     "Close",
                                      "Abort",   "Stop", "GetFd",      "QueryFd", "Register", "Deregister"};
 ncclResult_t ncclProxyCallAsync(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, int type, void* reqBuff,
-                                int reqSize, int respSize, void* opId) {
+                                int reqSize, int respSize, void* opId) { /* 中文索引·体内调用 ncclSocketSend、expectedProxyResponseEnqueue。 */
   struct ncclSocket* sock;
   ncclResult_t ret = ncclSuccess;
   struct ncclProxyState* sharedProxyState = comm->proxyState;
@@ -1399,7 +1399,7 @@ error:
 }
 
 ncclResult_t ncclPollProxyResponse(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, void* respBuff,
-                                   void* opId) {
+                                   void* opId) { /* 中文索引·体内调用 expectedProxyResponseDequeue、ncclSocketProgress。 */
   struct ncclProxyState* sharedProxyState = comm->proxyState;
   // Receive the connection pointer from the Proxy
   if (COMPILER_ATOMIC_LOAD(comm->abortFlag, std::memory_order_acquire)) {
@@ -1467,7 +1467,7 @@ ncclResult_t ncclPollProxyResponse(struct ncclComm* comm, struct ncclProxyConnec
 }
 
 ncclResult_t ncclProxyCallBlocking(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, int type, void* reqBuff,
-                                   int reqSize, void* respBuff, int respSize) {
+                                   int reqSize, void* respBuff, int respSize) { /* 中文索引·体内调用 malloc、ncclProxyCallAsync。 */
   // Alloc some memory to act as a handle
   ncclResult_t res = ncclSuccess;
   void* opId = malloc(1);
@@ -1485,7 +1485,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t proxyProgressInit(struct ncclProxyState* proxyState) {
+static ncclResult_t proxyProgressInit(struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclShmOpen、ncclOsSetMutexCondShared。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
   if (state->opsPool == NULL) {
     int size = sizeof(struct ncclProxyOpsPool);
@@ -1530,7 +1530,7 @@ static ncclResult_t proxyProgressInit(struct ncclProxyState* proxyState) {
   return ncclSuccess;
 }
 
-static void proxyOpsFree(struct ncclProxyState* proxyState) {
+static void proxyOpsFree(struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclOsUnsetMutexCondShared、ncclShmClose。 */
   struct ncclProxyProgressState* state = &proxyState->progressState;
   if (state->opsPool) {
     ncclOsUnsetMutexCondShared(state->opsPool->mutex, state->opsPool->cond, &state->opsPool->syncObjectsInitialized);
@@ -1542,7 +1542,7 @@ static void proxyOpsFree(struct ncclProxyState* proxyState) {
   state->handle = NULL;
 }
 
-ncclResult_t ncclProxyShmUnlink(struct ncclComm* comm) {
+ncclResult_t ncclProxyShmUnlink(struct ncclComm* comm) { /* 中文索引·体内调用 ncclShmUnlink。 */
   struct ncclProxyProgressState* state = &comm->proxyState->progressState;
   if (state->opsPool == NULL) return ncclSuccess;
 
@@ -1554,7 +1554,7 @@ ncclResult_t ncclProxyShmUnlink(struct ncclComm* comm) {
 
 static ncclResult_t proxyConnInit(struct ncclProxyLocalPeer* peer, struct ncclProxyConnectionPool* connectionPool,
                                   struct ncclProxyState* proxyState, ncclProxyInitReq* req, ncclProxyInitResp* resp,
-                                  struct ncclProxyConnection** connection) {
+                                  struct ncclProxyConnection** connection) { /* 中文索引·体内调用 ncclProxyNewConnection、ncclProxyGetConnection。 */
   int id;
   NCCLCHECK(ncclProxyNewConnection(connectionPool, &id));
   NCCLCHECK(ncclProxyGetConnection(connectionPool, id, connection));
@@ -1585,7 +1585,7 @@ static ncclResult_t proxyConnInit(struct ncclProxyLocalPeer* peer, struct ncclPr
   return ncclSuccess;
 }
 
-static ncclResult_t proxyQueryFd(struct ncclProxyState* proxyState, int rank, void* opId, ncclIpcFd rmtFd) {
+static ncclResult_t proxyQueryFd(struct ncclProxyState* proxyState, int rank, void* opId, ncclIpcFd rmtFd) { /* 中文索引·体内调用 ncclIpcSocketInit、ncclIpcSocketSendMsg。 */
 #if CUDART_VERSION >= 11030
   struct ncclIpcSocket ipcSock = {0};
   uint64_t hash = (uint64_t)opId;
@@ -1602,7 +1602,7 @@ exit:
 }
 
 // cuMem API support
-static ncclResult_t proxyGetFd(struct ncclProxyState* proxyState, int rank, void* opId, uint64_t handle) {
+static ncclResult_t proxyGetFd(struct ncclProxyState* proxyState, int rank, void* opId, uint64_t handle) { /* 中文索引·体内调用 cuMemExportToShareableHandle、ncclIpcSocketInit。 */
 #if CUDART_VERSION >= 11030
   // cuMem API support
   ncclResult_t ret = ncclSuccess;
@@ -1629,7 +1629,7 @@ error:
 
 static ncclResult_t proxyProgressAsync(struct ncclProxyAsyncOp* op, struct ncclProxyState* proxyState,
                                        int* asyncOpCount, struct ncclProxyLocalPeer* peer,
-                                       struct ncclProxyConnectionPool* connectionPool) {
+                                       struct ncclProxyConnectionPool* connectionPool) { /* 中文索引·体内调用 op->connection->tcomm->proxySetup、op->connection->tcomm->proxyConnect。 */
   int done = 1;
   ncclResult_t res = ncclInternalError;
   if (op->type == ncclProxyMsgSetup) {
@@ -1705,7 +1705,7 @@ static ncclResult_t proxyProgressAsync(struct ncclProxyAsyncOp* op, struct ncclP
 
 static ncclResult_t proxyServiceInitOp(int type, struct ncclProxyLocalPeer* peer,
                                        struct ncclProxyConnectionPool* connectionPool,
-                                       struct ncclProxyState* proxyState, int* asyncOpCount) {
+                                       struct ncclProxyState* proxyState, int* asyncOpCount) { /* 中文索引·体内调用 ncclCalloc、ncclSocketRecv。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclSocket* sock = &peer->sock;
   struct ncclProxyAsyncOp* asyncOp;
@@ -1790,7 +1790,7 @@ enum {
   PROXY_ABORT = 2
 };
 
-void* ncclProxyService(void* _args) {
+void* ncclProxyService(void* _args) { /* 中文索引·体内调用 std::call_once、ncclOsCpuCount。 */
   struct ncclProxyState* proxyState = (struct ncclProxyState*)_args;
   // set the thread affinity before cudaSetDevice
   std::call_once(proxyCpusetOnceFlag, proxyCpusetOnceFunc);
@@ -2020,7 +2020,7 @@ fail:
 }
 
 // Process a request on the UDS socket
-static ncclResult_t proxyUDSRecvReq(struct ncclProxyState* proxyState, ncclIpcFd reqFd) {
+static ncclResult_t proxyUDSRecvReq(struct ncclProxyState* proxyState, ncclIpcFd reqFd) { /* 中文索引·体内调用 ncclIpcSocketRecvMsg、ncclIpcFdClose。 */
   ncclIpcHdr hdr;
   ncclIpcFd rmtFd = NCCL_INVALID_IPC_FD;
 
@@ -2045,7 +2045,7 @@ static ncclResult_t proxyUDSRecvReq(struct ncclProxyState* proxyState, ncclIpcFd
 }
 
 // UDS fd handle support
-void* ncclProxyServiceUDS(void* _args) {
+void* ncclProxyServiceUDS(void* _args) { /* 中文索引·体内调用 std::call_once、ncclOsCpuCount。 */
   struct ncclProxyState* proxyState = (struct ncclProxyState*)_args;
   struct pollfd pollfds[1];
 
@@ -2113,7 +2113,7 @@ void* ncclProxyServiceUDS(void* _args) {
 }
 
 ncclResult_t ncclProxyInit(struct ncclComm* comm, struct ncclSocket* sock, union ncclSocketAddress* peerAddresses,
-                           uint64_t* peerAddressesUDS) {
+                           uint64_t* peerAddressesUDS) { /* 中文索引·体内调用 ncclIpcSocketInit。 */
   if (comm->sharedRes->proxyState != nullptr) {
     WARN("Proxy state is already initialized");
     return ncclInternalError;
@@ -2131,7 +2131,7 @@ ncclResult_t ncclProxyInit(struct ncclComm* comm, struct ncclSocket* sock, union
   return ncclSuccess;
 }
 
-ncclResult_t ncclProxyCreate(struct ncclComm* comm) {
+ncclResult_t ncclProxyCreate(struct ncclComm* comm) { /* 中文索引·体内调用 memcpy、std::thread。 */
   /* proxyState is shared among parent comm and split comms. comm->proxyState->thread is
    * join()'d by commFree() in init.cc when the refCount reduces down to 0. */
   struct ncclProxyState* proxyState = comm->proxyState;
@@ -2168,7 +2168,7 @@ ncclResult_t ncclProxyCreate(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProxyStop(struct ncclComm* comm) {
+ncclResult_t ncclProxyStop(struct ncclComm* comm) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement、ncclSocketInit。 */
   if (comm->proxyState) {
     struct ncclProxyState* sharedProxyState = comm->proxyState;
 
@@ -2213,7 +2213,7 @@ ncclResult_t ncclProxyStop(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclProxyDestroy(struct ncclComm* comm) {
+ncclResult_t ncclProxyDestroy(struct ncclComm* comm) { /* 中文索引·体内调用 free、expectedProxyResponseFree。 */
   struct ncclProxyState* sharedProxyState = comm->sharedRes->proxyState;
 
   if (sharedProxyState) {

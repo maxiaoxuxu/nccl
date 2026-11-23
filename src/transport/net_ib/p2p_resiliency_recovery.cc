@@ -152,7 +152,7 @@ struct ncclIbPortRecoveryContext {
 // Producer threads add items here; the async thread drains it under lock.
 static std::list<ncclIbPortRecoveryContext*> recoveryInbox;
 
-static inline ncclResult_t ncclIbPortRecoveryQpsToError(ncclIbPortRecoveryContext* recoveryContext) {
+static inline ncclResult_t ncclIbPortRecoveryQpsToError(ncclIbPortRecoveryContext* recoveryContext) { /* 中文索引·体内调用 ncclIbQpError。 */
   uint nqps = recoveryContext->resCtx->baseComm->nqps;
   for (int qpIndex = 0; qpIndex < nqps; qpIndex++) {
     ncclIbQp* localQp = &recoveryContext->resCtx->baseComm->qps[qpIndex];
@@ -180,7 +180,7 @@ inline static ncclResult_t ncclIbPortRecoveryPostRecvWorkRequest(struct ibv_qp* 
   return wrap_ibv_post_recv(qp, &ncclIbResiliencyPortRecoveryRecvWr, &bad_wr);
 }
 
-ncclResult_t ncclIbPortRecoveryQpsReconfigure(struct ncclIbResiliency* resCtx, int devIndex, bool* success) {
+ncclResult_t ncclIbPortRecoveryQpsReconfigure(struct ncclIbResiliency* resCtx, int devIndex, bool* success) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase、ncclIbResiliencyQpReconfigure。 */
   *success = false;
   bool isSend = resCtx->baseComm->isSend;
   const char* dir = isSend ? "send" : "recv";
@@ -222,7 +222,7 @@ ncclResult_t ncclIbPortRecoveryQpsReconfigure(struct ncclIbResiliency* resCtx, i
 // Helper function to drain CQEs on the provided CQ and fill a Receive WQE for
 // every CQE drained on the provided QP.
 static ncclResult_t ncclIbPortRecoveryDrainCqAndPostReceiveWRs(struct ncclIbPortRecoveryContext* recoveryContext,
-                                                               bool* success) {
+                                                               bool* success) { /* 中文索引·体内调用 wrap_ibv_poll_cq、ncclIbPortRecoveryPostRecvWorkRequest。 */
   struct ibv_cq* cq = recoveryContext->recoveryCq;
   struct ibv_qp* qp = recoveryContext->resCtx->portRecoveryQps[recoveryContext->devIndex].qp;
   int wrDone = 0;
@@ -255,7 +255,7 @@ static ncclResult_t ncclIbPortRecoveryDrainCqAndPostReceiveWRs(struct ncclIbPort
 }
 
 static inline ncclResult_t ncclIbPortRecoveryContextInit(struct ncclIbResiliency* resCtx, int failedDevIndex,
-                                                         ncclIbPortRecoveryContext** outRecoveryCtx) {
+                                                         ncclIbPortRecoveryContext** outRecoveryCtx) { /* 中文索引·体内调用 malloc、memset。 */
   ncclResult_t res = ncclSuccess;
   if (!outRecoveryCtx) return ncclInternalError;
   ncclIbPortRecoveryContext* recoveryCtx = (ncclIbPortRecoveryContext*)malloc(sizeof(ncclIbPortRecoveryContext));
@@ -329,7 +329,7 @@ static inline ncclResult_t ncclIbPortRecoveryContextInit(struct ncclIbResiliency
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryContextDestroy(ncclIbPortRecoveryContext* recoveryContext) {
+static inline ncclResult_t ncclIbPortRecoveryContextDestroy(ncclIbPortRecoveryContext* recoveryContext) { /* 中文索引·体内调用 free。 */
   if (recoveryContext == NULL) {
     WARN("NET/IB: Port recovery context is NULL while destroying");
     return ncclInternalError;
@@ -341,7 +341,7 @@ static inline ncclResult_t ncclIbPortRecoveryContextDestroy(ncclIbPortRecoveryCo
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryDevInit(struct ncclIbResiliency* resCtx, int devIndex, ncclIbDev* ibDev) {
+ncclResult_t ncclIbPortRecoveryDevInit(struct ncclIbResiliency* resCtx, int devIndex, ncclIbDev* ibDev) { /* 中文索引·体内调用 wrap_ibv_create_cq。 */
   if (resCtx == NULL) {
     WARN("NET/IB: Resiliency context is NULL while initializing port recovery device %d", devIndex);
     return ncclInternalError;
@@ -360,7 +360,7 @@ ncclResult_t ncclIbPortRecoveryDevInit(struct ncclIbResiliency* resCtx, int devI
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryDevDestroy(struct ncclIbResiliency* resCtx, int devIndex) {
+ncclResult_t ncclIbPortRecoveryDevDestroy(struct ncclIbResiliency* resCtx, int devIndex) { /* 中文索引·体内调用 wrap_ibv_destroy_cq。 */
   struct ncclIbResiliencyDev* resDev = &resCtx->devs[devIndex];
   if (resDev->portRecoveryCq) {
     NCCLCHECK(wrap_ibv_destroy_cq(resDev->portRecoveryCq));
@@ -371,7 +371,7 @@ ncclResult_t ncclIbPortRecoveryDevDestroy(struct ncclIbResiliency* resCtx, int d
 }
 
 ncclResult_t ncclIbPortRecoverySenderQpsCreate(struct ncclIbResiliency* resCtx,
-                                               struct ncclIbQpInfo* localPortRecoveryQpsInfo, int nQps) {
+                                               struct ncclIbQpInfo* localPortRecoveryQpsInfo, int nQps) { /* 中文索引·体内调用 memset、ncclIbQpCreate。 */
   if (resCtx == NULL) {
     WARN("NET/IB: Resiliency context is NULL while creating sender port recovery QPs");
     return ncclInternalError;
@@ -419,7 +419,7 @@ ncclResult_t ncclIbPortRecoverySenderQpsCreate(struct ncclIbResiliency* resCtx,
 }
 
 ncclResult_t ncclIbPortRecoverySenderQpsToRts(struct ncclIbResiliency* resCtx, struct ncclIbConnectionMetadata* remInfo,
-                                              int nQps) {
+                                              int nQps) { /* 中文索引·体内调用 ncclIbQpRtr、ncclIbQpRts。 */
   if (resCtx == NULL) {
     WARN("NET/IB: Resiliency context is NULL while connecting sender port recovery QPs");
     return ncclInternalError;
@@ -471,7 +471,7 @@ ncclResult_t ncclIbPortRecoverySenderQpsToRts(struct ncclIbResiliency* resCtx, s
 
 ncclResult_t ncclIbPortRecoveryReceiverQpsCreateToRts(struct ncclIbResiliency* resCtx,
                                                       struct ncclIbConnectionMetadata* remInfo,
-                                                      struct ncclIbQpInfo* localPortRecoveryQpsInfo, int nQps) {
+                                                      struct ncclIbQpInfo* localPortRecoveryQpsInfo, int nQps) { /* 中文索引·体内调用 memset、ncclIbQpCreate。 */
   ncclIbRecvComm* recvComm = (ncclIbRecvComm*)resCtx->baseComm;
   void* qpContext = (void*)&recvComm->base.stats;
   struct ncclIbQpCreateAttr qpCreateAttrs;
@@ -528,7 +528,7 @@ ncclResult_t ncclIbPortRecoveryReceiverQpsCreateToRts(struct ncclIbResiliency* r
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryQpsDestroy(struct ncclIbResiliency* resCtx, int nQps) {
+ncclResult_t ncclIbPortRecoveryQpsDestroy(struct ncclIbResiliency* resCtx, int nQps) { /* 中文索引·体内调用 wrap_ibv_destroy_qp。 */
   for (int qpIndex = 0; qpIndex < nQps; qpIndex++) {
     struct ncclIbQp* recoveryQp = &resCtx->portRecoveryQps[qpIndex];
     if (!recoveryQp->qp) {
@@ -542,7 +542,7 @@ ncclResult_t ncclIbPortRecoveryQpsDestroy(struct ncclIbResiliency* resCtx, int n
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryQpsRestore(ncclIbPortRecoveryContext* recoveryContext, bool* success) {
+static inline ncclResult_t ncclIbPortRecoveryQpsRestore(ncclIbPortRecoveryContext* recoveryContext, bool* success) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase、ncclIbResiliencyQpReconfigure。 */
   ncclResult_t res = ncclSuccess;
   uint nqps = recoveryContext->resCtx->baseComm->nqps;
   struct ncclIbNetCommDevBase* devBase =
@@ -622,7 +622,7 @@ static inline ncclResult_t ncclIbPortRecoveryQpsRestore(ncclIbPortRecoveryContex
 #define NCCL_IB_RESILIENCY_PORT_RECOVERY_ACK_MSG_ID (0x1234)
 
 static inline ncclResult_t ncclIbPortRecoveryHandleCompletionReceiver(struct ncclIbPortRecoveryContext* recoveryContext,
-                                                                      struct ibv_wc completion, bool* success) {
+                                                                      struct ibv_wc completion, bool* success) { /* 中文索引·体内调用 ibvWcOpcodeStr、ncclIbPortRecoveryPostRecvWorkRequest。 */
   ncclResult_t res = ncclSuccess;
   INFO(NCCL_NET, "NET/IB: %s: Receiver received completion for device %d (comm=%p, wr_id=%lu, opcode=%s, imm_data=%u)",
        __func__, recoveryContext->devIndex, recoveryContext->resCtx->baseComm, completion.wr_id,
@@ -720,7 +720,7 @@ static inline ncclResult_t ncclIbPortRecoveryHandleCompletionReceiver(struct ncc
 }
 
 static inline ncclResult_t ncclIbPortRecoveryHandleCompletionSender(struct ncclIbPortRecoveryContext* recoveryContext,
-                                                                    struct ibv_wc completion, bool* success) {
+                                                                    struct ibv_wc completion, bool* success) { /* 中文索引·体内调用 ibvWcOpcodeStr。 */
   INFO(NCCL_NET, "NET/IB: %s: Sender received completion for device %d (comm=%p, wr_id=%lu, opcode=%s, imm_data=%u)",
        __func__, recoveryContext->devIndex, recoveryContext->resCtx->baseComm, completion.wr_id,
        ibvWcOpcodeStr(completion.opcode), completion.imm_data);
@@ -785,7 +785,7 @@ static inline ncclResult_t ncclIbPortRecoveryHandleCompletionSender(struct ncclI
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryPollCq(struct ncclIbPortRecoveryContext* recoveryContext, bool* success) {
+static inline ncclResult_t ncclIbPortRecoveryPollCq(struct ncclIbPortRecoveryContext* recoveryContext, bool* success) { /* 中文索引·体内调用 wrap_ibv_poll_cq、ibvWcStatusStr。 */
   int completions = 0;
   struct ibv_wc completion;
 
@@ -830,7 +830,7 @@ enum ncclIbPortRecoveryStateProgressResult {
 };
 
 static inline ncclResult_t ncclIbPortRecoveryPostAliveMessages(struct ncclIbPortRecoveryContext* recoveryContext,
-                                                               bool* success) {
+                                                               bool* success) { /* 中文索引·体内调用 ncclParamIbResiliencyPortRecoveryAliveMsgSequenceSize、memset。 */
   struct ibv_send_wr* bad_wr = NULL;
   struct ibv_send_wr wr[NCCL_IB_RESILIENCY_PORT_RECOVERY_ALIVE_MSG_BATCH_SIZE_MAX];
   int nMsgsToPost = ncclParamIbResiliencyPortRecoveryAliveMsgSequenceSize();
@@ -872,7 +872,7 @@ static inline ncclResult_t ncclIbPortRecoveryPostAliveMessages(struct ncclIbPort
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryPostAck(ncclIbPortRecoveryContext* recoveryContext, bool* success) {
+static inline ncclResult_t ncclIbPortRecoveryPostAck(ncclIbPortRecoveryContext* recoveryContext, bool* success) { /* 中文索引·体内调用 memset、ibv_post_send。 */
   struct ibv_send_wr* bad_wr = NULL;
   struct ibv_send_wr wr;
   memset(&wr, 0, sizeof(wr));
@@ -901,7 +901,7 @@ static inline ncclResult_t ncclIbPortRecoveryPostAck(ncclIbPortRecoveryContext* 
 }
 
 static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessagesSender(
-  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) {
+  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) { /* 中文索引·体内调用 clockNano、ncclParamIbResiliencyPortRecoveryAliveMsgBatchInterval。 */
   // Sender can either post new alive messages or poll for completions of previously
   // posted alive messages.
   if (!recoveryContext->send.aliveMsgPosted) {
@@ -945,7 +945,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessagesSender(
 }
 
 static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessagesReceiver(
-  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) {
+  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) { /* 中文索引·体内调用 ncclIbPortRecoveryPollCq、ncclParamIbResiliencyPortRecoveryAliveMsgSequenceSize。 */
   bool success = false;
   ncclResult_t res = ncclSuccess;
   if (recoveryContext->ackPosted == false) {
@@ -1057,7 +1057,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessagesReceiver(
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessages(ncclIbPortRecoveryContext* recoveryContext) {
+static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessages(ncclIbPortRecoveryContext* recoveryContext) { /* 中文索引·体内调用 ncclIbPortRecoveryProgressAliveMessagesSender、ncclIbPortRecoveryProgressAliveMessagesReceiver。 */
   enum ncclIbPortRecoveryStateProgressResult progressResult = ncclIbPortRecoveryStateProgressResultGoToNextState;
   if (recoveryContext->resCtx->baseComm->isSend) {
     NCCLCHECK(ncclIbPortRecoveryProgressAliveMessagesSender(recoveryContext, &progressResult));
@@ -1089,7 +1089,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAliveMessages(ncclIbPortRec
 }
 
 static inline ncclResult_t ncclIbPortRecoveryProgressAckSender(ncclIbPortRecoveryContext* recoveryContext,
-                                                               enum ncclIbPortRecoveryStateProgressResult* outResult) {
+                                                               enum ncclIbPortRecoveryStateProgressResult* outResult) { /* 中文索引·体内调用 ncclIbPortRecoveryPollCq、clockNano。 */
   bool success = false;
   if (!recoveryContext->ackReceived) {
     NCCLCHECK(ncclIbPortRecoveryPollCq(recoveryContext, &success));
@@ -1159,7 +1159,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAckSender(ncclIbPortRecover
 }
 
 static inline ncclResult_t ncclIbPortRecoveryProgressAckReceiver(
-  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) {
+  ncclIbPortRecoveryContext* recoveryContext, enum ncclIbPortRecoveryStateProgressResult* outResult) { /* 中文索引·体内调用 ncclIbPortRecoveryPollCq、clockNano。 */
   bool success = false;
   NCCLCHECK(ncclIbPortRecoveryPollCq(recoveryContext, &success));
   if (!success) {
@@ -1200,7 +1200,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAckReceiver(
   return ncclSuccess;
 }
 
-static inline ncclResult_t ncclIbPortRecoveryProgressAck(ncclIbPortRecoveryContext* recoveryContext) {
+static inline ncclResult_t ncclIbPortRecoveryProgressAck(ncclIbPortRecoveryContext* recoveryContext) { /* 中文索引·体内调用 ncclIbPortRecoveryProgressAckSender、ncclIbPortRecoveryProgressAckReceiver。 */
   enum ncclIbPortRecoveryStateProgressResult progressResult = ncclIbPortRecoveryStateProgressResultFailed;
   if (recoveryContext->resCtx->baseComm->isSend) {
     NCCLCHECK(ncclIbPortRecoveryProgressAckSender(recoveryContext, &progressResult));
@@ -1232,7 +1232,7 @@ static inline ncclResult_t ncclIbPortRecoveryProgressAck(ncclIbPortRecoveryConte
 }
 
 static inline ncclResult_t ncclIbPortRecoveryContextProgress(ncclIbPortRecoveryContext* recoveryContext,
-                                                             bool* outDone) {
+                                                             bool* outDone) { /* 中文索引·体内调用 clockNano、ncclParamIbResiliencyPortRecoveryStartDelay。 */
   if (recoveryContext == NULL) {
     WARN("NET/IB: Port recovery context is NULL while progressing");
     return ncclInternalError;
@@ -1310,7 +1310,7 @@ static inline ncclResult_t ncclIbPortRecoveryContextProgress(ncclIbPortRecoveryC
 // Scan recoveryQueue and remove (destroy) any contexts belonging to the
 // resiliency contexts referenced by the close requests.
 static void ncclIbPortRecoveryHandleCloseRequests(std::vector<ncclIbPortRecoveryCloseRequest*>& closeRequests,
-                                                  std::list<ncclIbPortRecoveryContext*>& recoveryQueue) {
+                                                  std::list<ncclIbPortRecoveryContext*>& recoveryQueue) { /* 中文索引·体内调用 closeRequests.begin、closeRequests.end。 */
   for (auto it = closeRequests.begin(); it != closeRequests.end(); ++it) {
     ncclIbPortRecoveryCloseRequest* closeReq = *it;
     int removedForThisReq = 0;
@@ -1339,7 +1339,7 @@ static void ncclIbPortRecoveryHandleCloseRequests(std::vector<ncclIbPortRecovery
 // The thread waits for nodes to be added to the recovery queue and
 // processes them to advance their recovery protocol state.
 // The thread runs until the shutdown flag is set.
-ncclResult_t ncclIbPortRecoveryAsyncThreadMain() {
+ncclResult_t ncclIbPortRecoveryAsyncThreadMain() { /* 中文索引·体内调用 ncclIbPortRecoveryCond.wait、ncclIbPortRecoveryThreadActive.load。 */
   // Thread-local recovery queue. Items are transferred from recoveryInbox
   // under the lock and then iterated here without holding the lock.
   std::list<ncclIbPortRecoveryContext*> recoveryQueue;
@@ -1422,7 +1422,7 @@ ncclResult_t ncclIbPortRecoveryAsyncThreadMain() {
 // Implementation of entry point functions
 // -----------------------------
 
-ncclResult_t ncclIbPortRecoveryInit(struct ncclIbResiliency* resCtx) {
+ncclResult_t ncclIbPortRecoveryInit(struct ncclIbResiliency* resCtx) { /* 中文索引·体内调用 ncclIbPortRecoveryThreadActive.load。 */
   resCtx->recoveryEnabled = ncclIbPortRecoveryThreadActive.load();
   INFO(NCCL_NET, "NET/IB: %s: Port recovery %s (%s comm=%p)", __func__,
        resCtx->recoveryEnabled ? "initialized" : "disabled", resCtx->baseComm->isSend ? "send" : "recv",
@@ -1430,7 +1430,7 @@ ncclResult_t ncclIbPortRecoveryInit(struct ncclIbResiliency* resCtx) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryClose(struct ncclIbResiliency* resCtx) {
+ncclResult_t ncclIbPortRecoveryClose(struct ncclIbResiliency* resCtx) { /* 中文索引·体内调用 ncclIbPortRecoveryThreadActive.load、recoveryCloseRequests.push_back。 */
   if (resCtx->recoveryEnabled == false) {
     return ncclSuccess;
   }
@@ -1467,7 +1467,7 @@ ncclResult_t ncclIbPortRecoveryClose(struct ncclIbResiliency* resCtx) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryThreadStart() {
+ncclResult_t ncclIbPortRecoveryThreadStart() { /* 中文索引·体内调用 ncclParamIbResiliencyPortRecovery、ncclIbPortRecoveryThreadActive.compare_exchange_strong。 */
   if (ncclParamIbResiliencyPortRecovery() == 0) {
     return ncclSuccess;
   }
@@ -1487,7 +1487,7 @@ ncclResult_t ncclIbPortRecoveryThreadStart() {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryThreadStop() {
+ncclResult_t ncclIbPortRecoveryThreadStop() { /* 中文索引·体内调用 ncclParamIbResiliencyPortRecovery、ncclIbPortRecoveryThreadActive.store。 */
   if (ncclParamIbResiliencyPortRecovery() == 0) {
     return ncclSuccess;
   }
@@ -1509,7 +1509,7 @@ ncclResult_t ncclIbPortRecoveryThreadStop() {
   return ncclSuccess;
 }
 
-ncclResult_t ncclIbPortRecoveryHandleFailure(struct ncclIbResiliency* resCtx, int devIndex) {
+ncclResult_t ncclIbPortRecoveryHandleFailure(struct ncclIbResiliency* resCtx, int devIndex) { /* 中文索引·体内调用 ncclIbPortRecoveryContextInit、recoveryInbox.push_back。 */
   if (resCtx == NULL) {
     WARN("NET/IB: Resiliency context is NULL while handling port recovery failure on device %d", devIndex);
     return ncclInternalError;

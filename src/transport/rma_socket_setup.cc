@@ -14,7 +14,7 @@ static ncclResult_t ncclRmaSocketProxyFreeCtx(struct ncclRmaSocketProxyCtx* ctx)
   return ncclSuccess;
 }
 
-static ncclResult_t ncclRmaSocketProxyFreeCollComm(struct ncclRmaSocketProxyCollComm* comm) {
+static ncclResult_t ncclRmaSocketProxyFreeCollComm(struct ncclRmaSocketProxyCollComm* comm) { /* 中文索引·体内调用 ncclSocketClose、ncclRmaSocketProxyFreeChunkBuffer。 */
   if (comm == NULL) return ncclSuccess;
   if (comm->mrHead != NULL) {
     WARN("RMA/Socket : freeing collComm with registered memory handles");
@@ -42,7 +42,7 @@ static ncclResult_t ncclRmaSocketProxyFreeCollComm(struct ncclRmaSocketProxyColl
   return ret;
 }
 
-static ncclResult_t ncclRmaSocketProxySetSendQueueCapacity(struct ncclRmaSocketProxyCollComm* comm, int nContexts) {
+static ncclResult_t ncclRmaSocketProxySetSendQueueCapacity(struct ncclRmaSocketProxyCollComm* comm, int nContexts) { /* 中文索引·体内调用 ncclCalloc、free。 */
   const int tasksPerContext = 2 * NCCL_RMA_SOCKET_MAX_REQUESTS_PER_PEER;
   if (comm == NULL || nContexts < 0 || nContexts > INT_MAX / tasksPerContext) {
     WARN("RMA/Socket : invalid send queue context count %d", nContexts);
@@ -76,7 +76,7 @@ static ncclResult_t ncclRmaSocketProxySetSendQueueCapacity(struct ncclRmaSocketP
 
 static ncclResult_t ncclRmaSocketProxyConnectPeers(struct ncclRmaSocketProxyCollComm* comm,
                                                    struct ncclSocket* listenSock, void* handles[],
-                                                   volatile uint32_t* abortFlag) {
+                                                   volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclCalloc、ncclRmaSocketProxyAllocChunkBuffer。 */
   int nranks = comm->nranks;
   int* accepted = NULL;
   ncclResult_t ret = ncclSuccess;
@@ -145,7 +145,7 @@ fail:
 }
 
 ncclResult_t ncclRmaSocketProxyConnect(void* ctx, void* handles[], int nranks, int rank, void* listenComm,
-                                       void** collComm, volatile uint32_t* abortFlag) {
+                                       void** collComm, volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclCalloc、ncclRmaSocketProxyConnectPeers。 */
   if (handles == NULL || listenComm == NULL || collComm == NULL || rank < 0 || rank >= nranks) {
     WARN("RMA/Socket : invalid connect arguments handles=%p listenComm=%p collComm=%p rank=%d nranks=%d", handles,
          listenComm, collComm, rank, nranks);
@@ -172,7 +172,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclRmaSocketProxyCreateContext(void* collComm, ncclRmaConfig_t* config, void** rmaCtx) {
+ncclResult_t ncclRmaSocketProxyCreateContext(void* collComm, ncclRmaConfig_t* config, void** rmaCtx) { /* 中文索引·体内调用 ncclCalloc、ncclRmaSocketProxySetSendQueueCapacity。 */
   if (collComm == NULL || config == NULL || rmaCtx == NULL) {
     WARN("RMA/Socket : invalid createContext arguments collComm=%p config=%p rmaCtx=%p", collComm, config, rmaCtx);
     return ncclInvalidArgument;
@@ -213,7 +213,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclRmaSocketProxyDestroyContext(void* rmaCtx) {
+ncclResult_t ncclRmaSocketProxyDestroyContext(void* rmaCtx) { /* 中文索引·体内调用 ncclRmaSocketProxyFreeCtx、free。 */
   struct ncclRmaSocketProxyCtx* ctx = (struct ncclRmaSocketProxyCtx*)rmaCtx;
   if (ctx) {
     int nContexts = ctx[0].nContexts;
@@ -241,7 +241,7 @@ ncclResult_t ncclRmaSocketProxyDestroyContext(void* rmaCtx) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclRmaSocketProxyCloseColl(void* collComm) {
+ncclResult_t ncclRmaSocketProxyCloseColl(void* collComm) { /* 中文索引·体内调用 ncclRmaSocketProxyFreeCollComm。 */
   struct ncclRmaSocketProxyCollComm* comm = (struct ncclRmaSocketProxyCollComm*)collComm;
   if (comm == NULL) return ncclSuccess;
 

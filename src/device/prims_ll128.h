@@ -67,7 +67,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
 
   int abort = 0;
 
-  inline __device__ void waitSend(int nbytes) {
+  inline __device__ void waitSend(int nbytes) { /* 中文索引·体内调用 checkAbort。 */
     if (sendConnHeadPtr) {
       int spins = 0;
       while (sendConnHeadCache + NCCL_STEPS < sendConnHead + 1) {
@@ -84,7 +84,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
   inline __device__ void postRecv() {
     if (recvConnHeadPtr) *recvConnHeadPtr = recvConnHead += 1;
   }
-  inline __device__ void postSend() {
+  inline __device__ void postSend() { /* 中文索引·体内调用 __threadfence_system、__threadfence。 */
     if (sendConnTailPtr) {
 #if __CUDA_ARCH__ >= 900
       __threadfence_system();
@@ -96,7 +96,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
   }
 
   template <int WordPerThread>
-  __device__ __forceinline__ void loadRegsBegin(uint64_t (&regs)[WordPerThread], T const* src, int eltN) {
+  __device__ __forceinline__ void loadRegsBegin(uint64_t (&regs)[WordPerThread], T const* src, int eltN) { /* 中文索引·体内调用 load128、uintptr_t。 */
     constexpr int EltPer16B = 16 / sizeof(T);
     if (reinterpret_cast<uintptr_t>(src) % 16 == 0) {
       /* We are aligned to 16 bytes, so load directly to registers no shmem.
@@ -151,7 +151,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
   }
 
   template <int WordPerThread>
-  __device__ __forceinline__ void storeRegs(T* dst, uint64_t (&regs)[WordPerThread], int eltN) {
+  __device__ __forceinline__ void storeRegs(T* dst, uint64_t (&regs)[WordPerThread], int eltN) { /* 中文索引·体内调用 shmemCvtPtr、ncclScratchForWarp。 */
     constexpr int EltPer16B = 16 / sizeof(T);
     // Reverse Finish() register permuatation.
     NVCC_PRAGMA_UNROLL_AUTO
@@ -181,7 +181,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
 #define WARP_MASK 0xffffffff
 
   template <int ELEMS_PER_THREAD, int RECV, int SEND, int SrcBuf, int DstBuf>
-  __device__ __forceinline__ void recvReduceSendCopy(uint64_t (&v)[ELEMS_PER_THREAD], int ll128Offset, bool postOp) {
+  __device__ __forceinline__ void recvReduceSendCopy(uint64_t (&v)[ELEMS_PER_THREAD], int ll128Offset, bool postOp) { /* 中文索引·体内调用 __syncwarp、recvPtr。 */
     constexpr int SRC = SrcBuf != -1 ? 1 : 0;
     uint64_t vr[ELEMS_PER_THREAD];
 
@@ -294,7 +294,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
     (WireWordPerSlice - WireWordPerSlice / NCCL_LL128_LINEELEMS) * (sizeof(uint64_t) / sizeof(T));
 
   template <int RECV, int SEND, int SrcBuf, int DstBuf>
-  __device__ __forceinline__ void GenericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) {
+  __device__ __forceinline__ void GenericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) { /* 中文索引·体内调用 waitSend、divUp。 */
     constexpr int SRC = SrcBuf != -1 ? 1 : 0;
     constexpr int DST = DstBuf != -1 ? 1 : 0;
     T const* srcPtr = SrcBuf == -1 ? nullptr : userBufs[SrcBuf] + srcIx;
@@ -337,7 +337,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
     recvStep[i] = conn->step;
     if (wid == i) recvConn = conn;
   }
-  __device__ __forceinline__ void loadRecvSync() {
+  __device__ __forceinline__ void loadRecvSync() { /* 中文索引·体内调用 fan.nrecv。 */
     if (tid >= nthreads - WARP_SIZE && wid < fan.nrecv()) {
       recvConnHeadPtr = recvConn->head;
       recvConnHead = recvConn->step;
@@ -349,7 +349,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
     sendStep[i] = conn->step;
     if (wid == i) sendConn = conn;
   }
-  __device__ __forceinline__ void loadSendSync() {
+  __device__ __forceinline__ void loadSendSync() { /* 中文索引·体内调用 fan.nsend。 */
     if (tid < fan.nsend()) {
       sendConnHeadPtr = sendConn->head;
       sendConnHeadCache = *sendConnHeadPtr;
@@ -371,7 +371,7 @@ public:
                         bool ipcReg = false, bool netReg = false, int stepSize_ = 0)
     : redOp(redOpArg), tid(tid), nthreads(nthreads), wid(tid % WARP_SIZE), warp(tid / WARP_SIZE),
       warpInBlock(threadIdx.x / WARP_SIZE), flagThread((tid % 8) == 7), group(group),
-      stepSize(ncclShmem.comm.buffSizes[NCCL_PROTO_LL128] / NCCL_STEPS / sizeof(uint64_t)) {
+      stepSize(ncclShmem.comm.buffSizes[NCCL_PROTO_LL128] / NCCL_STEPS / sizeof(uint64_t)) { /* 中文索引·体内调用 loadRecvConn、loadSendConn。 */
     auto* channel = &ncclShmem.channel;
     int nrecv = 0, nsend = 0;
     while (nrecv < MaxRecv && recvPeers[nrecv] >= 0) {
@@ -392,7 +392,7 @@ public:
     setDataPtrs(inputBuf, outputBuf);
   }
 
-  __device__ ~Primitives() {
+  __device__ ~Primitives() { /* 中文索引·体内调用 fan.nrecv、fan.nsend。 */
     // Save steps for the next operation
     if (tid >= nthreads - WARP_SIZE && wid < fan.nrecv()) recvConn->step = recvConnHead;
     if (tid < fan.nsend()) sendConn->step = sendConnHead;

@@ -70,7 +70,7 @@ extern int64_t ncclParamNvtxDisable();
 class payload_schema {
 public:
   explicit payload_schema(const nvtxPayloadSchemaEntry_t entries[], size_t numEntries, const uint64_t schemaId,
-                          const size_t size) noexcept {
+                          const size_t size) noexcept { /* 中文索引·体内调用 nvtxPayloadSchemaRegister。 */
     schema_attr.payloadStaticSize = size;
     schema_attr.entries = entries;
     schema_attr.numEntries = numEntries;
@@ -102,13 +102,13 @@ private:
 
 class ncclOptionalNvtxScopedRange {
 public:
-  void push(const nvtx3::event_attributes& attr) noexcept {
+  void push(const nvtx3::event_attributes& attr) noexcept { /* 中文索引·体内调用 nvtxDomainRangePushEx、attr.get。 */
     // pushed must not be true already, but it's too expensive to check
     pushed = true;
     nvtxDomainRangePushEx(nvtx3::domain::get<nccl_domain>(), attr.get());
   }
 
-  ~ncclOptionalNvtxScopedRange() noexcept {
+  ~ncclOptionalNvtxScopedRange() noexcept { /* 中文索引·体内调用 nvtxDomainRangePop。 */
     if (!pushed) {
       return;
     }
@@ -157,13 +157,13 @@ private:
 template <typename PayloadType>
 class ncclOptionalNvtxPayloadRange {
 public:
-  void push(const nvtx3::event_attributes& attr) noexcept {
+  void push(const nvtx3::event_attributes& attr) noexcept { /* 中文索引·体内调用 nvtxDomainRangePushEx、attr.get。 */
     // pushed must not be true already, but it's too expensive to check
     pushed = true;
     nvtxDomainRangePushEx(nvtx3::domain::get<nccl_domain>(), attr.get());
   }
 
-  ~ncclOptionalNvtxPayloadRange() noexcept {
+  ~ncclOptionalNvtxPayloadRange() noexcept { /* 中文索引·体内调用 nvtxRangePopPayload、nvtxDomainRangePop。 */
     if (!pushed) {
       return;
     }

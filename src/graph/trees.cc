@@ -88,7 +88,7 @@ ncclResult_t ncclGetBtree(int nranks, int rank, int* u, int* d0, int* d1, int* p
  *   1   3   5   7   9   11       2   4   6   8  10   12
  */
 ncclResult_t ncclGetDtree(int nranks, int rank, int* s0, int* d0_0, int* d0_1, int* parentChildType0, int* s1,
-                          int* d1_0, int* d1_1, int* parentChildType1) {
+                          int* d1_0, int* d1_1, int* parentChildType1) { /* 中文索引·体内调用 ncclGetBtree。 */
   // First tree ... use a btree
   ncclGetBtree(nranks, rank, s0, d0_0, d0_1, parentChildType0);
   // Second tree ... mirror or shift

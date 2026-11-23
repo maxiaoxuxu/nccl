@@ -105,14 +105,14 @@ struct doca_gpu_verbs_service {
 
 bool priv_is_power_of_two(uint64_t x) { return x && (x & (x - 1)) == 0; }
 
-static size_t priv_get_page_size() {
+static size_t priv_get_page_size() { /* 中文索引·体内调用 sysconf。 */
     auto ret = sysconf(_SC_PAGESIZE);
     if (ret == -1) return 4096;  // 4KB, default Linux page size
 
     return (size_t)ret;
 }
 
-doca_error_t doca_gpu_create(const char *gpu_bus_id, doca_gpu_t **gpu_dev) {
+doca_error_t doca_gpu_create(const char *gpu_bus_id, doca_gpu_t **gpu_dev) { /* 中文索引·体内调用 calloc、cudaDeviceGetByPCIBusId。 */
     struct doca_gpu_internal *gpu_dev_internal_ = nullptr;
     doca_gpu_t *gpu_dev_ = nullptr;
     CUdevice cuda_dev;
@@ -213,7 +213,7 @@ exit_error:
     return DOCA_ERROR_INITIALIZATION;
 }
 
-doca_error_t doca_gpu_destroy(doca_gpu_t *gpu_dev) {
+doca_error_t doca_gpu_destroy(doca_gpu_t *gpu_dev) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_destroy、gpu_dev->open->mtable->size。 */
     doca_error_t status = DOCA_SUCCESS;
     doca_sdk_wrapper_error_t err;
 
@@ -265,7 +265,7 @@ exit:
 
 doca_error_t doca_gpu_mem_alloc(doca_gpu_t *gpu_dev, size_t size, size_t alignment,
                                 enum doca_gpu_mem_type mtype, void **memptr_gpu,
-                                void **memptr_cpu) {
+                                void **memptr_cpu) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_mem_alloc、doca_gpu_gdrcopy_supports_force_pcie。 */
     cudaError_t res;
     CUresult res_drv;
     int ret;
@@ -537,7 +537,7 @@ error:
     return status;
 }
 
-doca_error_t doca_gpu_mem_free(doca_gpu_t *gpu_dev, void *memptr_gpu) {
+doca_error_t doca_gpu_mem_free(doca_gpu_t *gpu_dev, void *memptr_gpu) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_mem_free、gpu_dev->open->mtable->find。 */
     struct doca_gpu_mtable *mentry;
     cudaError_t res_cuda;
     doca_sdk_wrapper_error_t err;
@@ -608,7 +608,7 @@ doca_error_t doca_gpu_mem_free(doca_gpu_t *gpu_dev, void *memptr_gpu) {
 }
 
 doca_error_t doca_gpu_get_dmabuf_fd(doca_gpu_t *gpu_dev, void *memptr_gpu, size_t size,
-                                    int *dmabuf_fd) {
+                                    int *dmabuf_fd) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_dmabuf_fd、priv_doca_gpu_t_to_doca_gpu_internal。 */
 #if DOCA_GPUNETIO_HAVE_CUDA_DMABUF == 1
     doca_sdk_wrapper_error_t err;
     CUresult res_drv = CUDA_SUCCESS;
@@ -658,7 +658,7 @@ doca_error_t doca_gpu_get_dmabuf_fd(doca_gpu_t *gpu_dev, void *memptr_gpu, size_
 
 static std::mutex registered_uar_mutex;
 
-doca_error_t doca_gpu_verbs_can_gpu_register_uar(void *db, bool *out_can_register) {
+doca_error_t doca_gpu_verbs_can_gpu_register_uar(void *db, bool *out_can_register) { /* 中文索引·体内调用 cudaHostRegister、cudaHostUnregister。 */
     std::lock_guard<std::mutex> lock(registered_uar_mutex);
     cudaError_t cuda_status = cudaSuccess;
     static bool can_register = false;
@@ -686,7 +686,7 @@ doca_error_t doca_gpu_verbs_can_gpu_register_uar(void *db, bool *out_can_registe
 
 static std::unordered_map<void *, unsigned int> registered_uar_refcount;
 
-doca_error_t doca_gpu_verbs_export_uar(uint64_t *sq_db, uint64_t **uar_addr_gpu) {
+doca_error_t doca_gpu_verbs_export_uar(uint64_t *sq_db, uint64_t **uar_addr_gpu) { /* 中文索引·体内调用 registered_uar_refcount.find、registered_uar_refcount.end。 */
     std::lock_guard<std::mutex> lock(registered_uar_mutex);
 
     void *ptr = nullptr;
@@ -737,7 +737,7 @@ out:
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_gpu_verbs_unexport_uar(uint64_t *uar_addr_gpu) {
+doca_error_t doca_gpu_verbs_unexport_uar(uint64_t *uar_addr_gpu) { /* 中文索引·体内调用 registered_uar_refcount.find、registered_uar_refcount.end。 */
     std::lock_guard<std::mutex> lock(registered_uar_mutex);
 
     cudaError_t cuda_status = cudaSuccess;
@@ -772,7 +772,7 @@ static void mlx5_init_cqes(struct doca_gpunetio_ib_mlx5_cqe64 *cqes, uint32_t nb
 }
 
 static doca_error_t get_rq_cq_resources(doca_verbs_cq_t *cq_rq, uint32_t rq_wqe_num,
-                                        void **cqe_haddr_out, uint32_t **ci_dbr_out) {
+                                        void **cqe_haddr_out, uint32_t **ci_dbr_out) { /* 中文索引·体内调用 doca_verbs_cq_get_wq、doca_verbs_cq_get_dbr_db_addr。 */
     doca_error_t status = DOCA_SUCCESS;
     void *cqe_haddr = nullptr;
     uint32_t cqe_num = 0;
@@ -813,7 +813,7 @@ static doca_error_t get_rq_cq_resources(doca_verbs_cq_t *cq_rq, uint32_t rq_wqe_
 /* Initialize the RQ before the QP can receive traffic. Runtime reset is handled by
  * doca_gpu_verbs_reset_tracking_and_memory() after the caller moves the QP to RST. */
 static doca_error_t initialize_rq(struct doca_gpu_verbs_qp *qp_gverbs, void *rq_wqe_daddr,
-                                  uint32_t rq_wqe_num, uint32_t rcv_wqe_size) {
+                                  uint32_t rq_wqe_num, uint32_t rcv_wqe_size) { /* 中文索引·体内调用 get_rq_cq_resources、cudaMemset。 */
     doca_error_t status = DOCA_SUCCESS;
     cudaError_t status_cuda = cudaSuccess;
     struct doca_gpunetio_ib_mlx5_cqe64 *cqe_init = nullptr;
@@ -866,7 +866,7 @@ static doca_error_t initialize_rq(struct doca_gpu_verbs_qp *qp_gverbs, void *rq_
  */
 static doca_error_t setup_rq(struct doca_gpu_verbs_qp *qp_gverbs, doca_verbs_cq_t *cq_rq,
                              void *dbr_cpu_ptr, void *rq_wqe_daddr, uint32_t rq_wqe_num,
-                             uint32_t rcv_wqe_size) {
+                             uint32_t rcv_wqe_size) { /* 中文索引·体内调用 initialize_rq。 */
     if (qp_gverbs == nullptr || cq_rq == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     if (dbr_cpu_ptr == nullptr) {
@@ -891,7 +891,7 @@ doca_error_t doca_gpu_verbs_export_qp(doca_gpu_t *gpu_dev, doca_verbs_qp_t *qp,
                                       doca_verbs_cq_t *cq_rq, void *dbr_cpu_ptr,
                                       enum doca_gpu_verbs_send_dbr_mode_ext send_dbr_mode_ext,
                                       enum doca_gpu_dev_verbs_cq_type cq_type,
-                                      bool enable_data_direct, struct doca_gpu_verbs_qp **qp_out) {
+                                      bool enable_data_direct, struct doca_gpu_verbs_qp **qp_out) { /* 中文索引·体内调用 normalize_export_cq_type、doca_gpu_gdrcopy_is_supported。 */
     doca_error_t status = DOCA_SUCCESS;
     struct doca_gpu_dev_verbs_qp *qp_cpu_ = nullptr;
     struct doca_gpu_verbs_qp *qp_gverbs = nullptr;
@@ -1161,7 +1161,7 @@ out:
 }
 
 doca_error_t doca_gpu_verbs_get_qp_dev(struct doca_gpu_verbs_qp *qp,
-                                       struct doca_gpu_dev_verbs_qp **qp_gpu) {
+                                       struct doca_gpu_dev_verbs_qp **qp_gpu) { /* 中文索引·体内调用 assert、doca_gpu_mem_alloc。 */
     doca_error_t status = DOCA_SUCCESS;
     int custatus = 0;
 
@@ -1210,7 +1210,7 @@ doca_error_t doca_gpu_verbs_get_qp_dev(struct doca_gpu_verbs_qp *qp,
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_gpu_verbs_unexport_qp(doca_gpu_t *gpu_dev, struct doca_gpu_verbs_qp *qp_gverbs) {
+doca_error_t doca_gpu_verbs_unexport_qp(doca_gpu_t *gpu_dev, struct doca_gpu_verbs_qp *qp_gverbs) { /* 中文索引·体内调用 doca_gpu_mem_free、doca_gpu_verbs_unexport_uar。 */
     if (gpu_dev == nullptr || qp_gverbs == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
     if (qp_gverbs->refcount > 0) {
@@ -1248,7 +1248,7 @@ doca_error_t doca_gpu_verbs_unexport_qp(doca_gpu_t *gpu_dev, struct doca_gpu_ver
 doca_error_t doca_gpu_verbs_export_multi_qps_dev(doca_gpu_t *gpu_dev,
                                                  struct doca_gpu_verbs_qp **qps,
                                                  unsigned int num_qps,
-                                                 struct doca_gpu_dev_verbs_qp **out_qp_gpus) {
+                                                 struct doca_gpu_dev_verbs_qp **out_qp_gpus) { /* 中文索引·体内调用 assert、doca_gpu_gdrcopy_is_supported。 */
     doca_error_t status = DOCA_SUCCESS;
     int custatus = 0;
 
@@ -1335,7 +1335,7 @@ out:
 doca_error_t doca_gpu_verbs_unexport_multi_qps_dev(doca_gpu_t *gpu_dev,
                                                    struct doca_gpu_verbs_qp **qps,
                                                    unsigned int num_qps,
-                                                   struct doca_gpu_dev_verbs_qp *qp_gpus) {
+                                                   struct doca_gpu_dev_verbs_qp *qp_gpus) { /* 中文索引·体内调用 doca_gpu_mem_free。 */
     doca_error_t status = DOCA_SUCCESS;
     if (gpu_dev == nullptr || qps == nullptr || num_qps == 0 || qp_gpus == nullptr)
         return DOCA_ERROR_INVALID_VALUE;
@@ -1352,7 +1352,7 @@ doca_error_t doca_gpu_verbs_unexport_multi_qps_dev(doca_gpu_t *gpu_dev,
 }
 
 static inline void priv_cpu_proxy_progress_full_assisted(struct doca_gpu_verbs_qp *qp,
-                                                         bool *out_progressed) {
+                                                         bool *out_progressed) { /* 中文索引·体内调用 htobe32、std::atomic_thread_fence。 */
     __be32 dbr_val;
     bool progressed = false;
     bool use_free_flow =
@@ -1399,7 +1399,7 @@ static inline void priv_cpu_proxy_progress_full_assisted(struct doca_gpu_verbs_q
     *out_progressed = progressed;
 }
 
-static inline void priv_cpu_proxy_progress_dbr_assisted(struct doca_gpu_verbs_qp *qp) {
+static inline void priv_cpu_proxy_progress_dbr_assisted(struct doca_gpu_verbs_qp *qp) { /* 中文索引·体内调用 htobe32、std::atomic_thread_fence。 */
     uint32_t tmp_db = 0;
     __be32 dbr_val;
 
@@ -1420,7 +1420,7 @@ static inline void priv_cpu_proxy_progress_dbr_assisted(struct doca_gpu_verbs_qp
     }
 }
 
-static inline void priv_cpu_proxy_progress_cq(struct doca_gpu_verbs_qp *qp, bool *out_progressed) {
+static inline void priv_cpu_proxy_progress_cq(struct doca_gpu_verbs_qp *qp, bool *out_progressed) { /* 中文索引·体内调用 be32toh、priv_doca_gpu_t_to_doca_gpu_internal。 */
     bool progressed = false;
     struct doca_gpu_dev_verbs_qp *qp_cpu = qp->qp_cpu;
     struct doca_gpu_dev_verbs_cq *cq = &qp_cpu->cq_sq;
@@ -1473,7 +1473,7 @@ out:
     *out_progressed = progressed;
 }
 
-doca_error_t doca_gpu_verbs_cpu_proxy_progress(struct doca_gpu_verbs_qp *qp, bool *out_progressed) {
+doca_error_t doca_gpu_verbs_cpu_proxy_progress(struct doca_gpu_verbs_qp *qp, bool *out_progressed) { /* 中文索引·体内调用 priv_cpu_proxy_progress_cq、priv_cpu_proxy_progress_dbr_assisted。 */
     bool progressed = false;
     bool cq_progressed = false;
     bool qp_progressed = false;
@@ -1505,7 +1505,7 @@ doca_error_t doca_gpu_verbs_cpu_proxy_progress(struct doca_gpu_verbs_qp *qp, boo
 }
 
 /*This function is used to log the error CQE, pulled from the device code*/
-static void priv_log_rq_err_cqe(const struct doca_gpunetio_ib_mlx5_cqe64 *cqe) {
+static void priv_log_rq_err_cqe(const struct doca_gpunetio_ib_mlx5_cqe64 *cqe) { /* 中文索引·体内调用 be16toh。 */
     const struct doca_gpunetio_ib_mlx5_err_cqe_ex *err_cqe =
         (const struct doca_gpunetio_ib_mlx5_err_cqe_ex *)cqe;
 
@@ -1518,7 +1518,7 @@ static void priv_log_rq_err_cqe(const struct doca_gpunetio_ib_mlx5_cqe64 *cqe) {
 
 static doca_error_t priv_rq_progress(struct doca_gpu_verbs_qp *qp,
                                     struct doca_gpu_verbs_signal_map *map,
-                                    bool *out_progressed) {
+                                    bool *out_progressed) { /* 中文索引·体内调用 doca_verbs_cq_get_wq、__atomic_load_n。 */
     void *cq_rq_cqe_haddr = nullptr;
     uint32_t cq_rq_cqe_num = 0;
     uint8_t cq_rq_cqe_size = 0;
@@ -1598,7 +1598,7 @@ static doca_error_t priv_rq_progress(struct doca_gpu_verbs_qp *qp,
     return status;
 }
 
-static void *priv_service_mainloop(void *args) {
+static void *priv_service_mainloop(void *args) { /* 中文索引·体内调用 __atomic_load_n、pthread_rwlock_rdlock。 */
     struct doca_gpu_verbs_service *service = (struct doca_gpu_verbs_service *)args;
 
     while (__atomic_load_n(&service->running, __ATOMIC_RELAXED)) {
@@ -1664,7 +1664,7 @@ static void *priv_service_mainloop(void *args) {
     return nullptr;
 }
 
-doca_error_t doca_gpu_verbs_create_service(doca_gpu_verbs_service_t *out_service) {
+doca_error_t doca_gpu_verbs_create_service(doca_gpu_verbs_service_t *out_service) { /* 中文索引·体内调用 calloc、pthread_rwlock_init。 */
     int status = 0;
     bool service_lock_initialized = false;
     doca_error_t doca_status = DOCA_SUCCESS;
@@ -1715,7 +1715,7 @@ out:
 }
 
 doca_error_t doca_gpu_verbs_service_monitor_qp(doca_gpu_verbs_service_t service,
-                                               struct doca_gpu_verbs_qp *qp) {
+                                               struct doca_gpu_verbs_qp *qp) { /* 中文索引·体内调用 pthread_rwlock_wrlock、pthread_rwlock_unlock。 */
     struct doca_gpu_verbs_service *service_ = (struct doca_gpu_verbs_service *)service;
     if (service == nullptr || qp == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
@@ -1753,7 +1753,7 @@ doca_error_t doca_gpu_verbs_service_monitor_qp(doca_gpu_verbs_service_t service,
 }
 
 doca_error_t doca_gpu_verbs_service_set_signal_map(doca_gpu_verbs_service_t service,
-                                                   struct doca_gpu_verbs_signal_map *map) {
+                                                   struct doca_gpu_verbs_signal_map *map) { /* 中文索引·体内调用 pthread_rwlock_wrlock、pthread_rwlock_unlock。 */
     struct doca_gpu_verbs_service *service_ = (struct doca_gpu_verbs_service *)service;
     if (service == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
@@ -1783,7 +1783,7 @@ doca_error_t doca_gpu_verbs_service_set_signal_map(doca_gpu_verbs_service_t serv
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_gpu_verbs_destroy_service(doca_gpu_verbs_service_t service) {
+doca_error_t doca_gpu_verbs_destroy_service(doca_gpu_verbs_service_t service) { /* 中文索引·体内调用 __atomic_store_n、pthread_join。 */
     struct doca_gpu_verbs_service *service_ = (struct doca_gpu_verbs_service *)service;
     if (service == nullptr) return DOCA_ERROR_INVALID_VALUE;
 
@@ -1810,7 +1810,7 @@ doca_error_t doca_gpu_verbs_destroy_service(doca_gpu_verbs_service_t service) {
 }
 
 doca_error_t doca_gpu_verbs_query_last_error(struct doca_gpu_verbs_qp *qp,
-                                             struct doca_gpu_verbs_qp_error_info *error_info) {
+                                             struct doca_gpu_verbs_qp_error_info *error_info) { /* 中文索引·体内调用 memset、doca_verbs_qp_init_attr_create。 */
     doca_error_t status = DOCA_SUCCESS;
     enum doca_verbs_qp_state current_state;
     doca_verbs_qp_attr_t *qp_attr = nullptr;
@@ -1872,7 +1872,7 @@ out:
     return status;
 }
 
-doca_error_t doca_gpu_verbs_reset_tracking_and_memory(struct doca_gpu_verbs_qp *qp_gverbs) {
+doca_error_t doca_gpu_verbs_reset_tracking_and_memory(struct doca_gpu_verbs_qp *qp_gverbs) { /* 中文索引·体内调用 assert、cudaMemcpy。 */
     doca_error_t status = DOCA_SUCCESS;
     cudaError_t cuda_status = cudaSuccess;
 
@@ -2026,7 +2026,7 @@ doca_error_t doca_gpu_verbs_check_host_code_compatibility(uint32_t host_code_ver
     return DOCA_SUCCESS;
 }
 
-doca_error_t doca_gpu_verbs_req_notify_cq(doca_gpu_t *gpu_dev, doca_verbs_cq_t *verbs_cq) {
+doca_error_t doca_gpu_verbs_req_notify_cq(doca_gpu_t *gpu_dev, doca_verbs_cq_t *verbs_cq) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_verbs_req_notify_cq、cudaStreamCreateWithFlags。 */
     doca_error_t status = DOCA_SUCCESS;
     cudaError_t cuda_status;
     cudaPointerAttributes attributes;
@@ -2118,7 +2118,7 @@ out:
     return status;
 }
 
-doca_error_t doca_gpu_nic_cap_is_gpu_mem_umem_supported(doca_gpu_t *gpu_dev, doca_dev_t *net_dev) {
+doca_error_t doca_gpu_nic_cap_is_gpu_mem_umem_supported(doca_gpu_t *gpu_dev, doca_dev_t *net_dev) { /* 中文索引·体内调用 priv_get_page_size、doca_gpu_sdk_wrapper_cap_is_gpu_mem_umem_supported。 */
     const size_t size = priv_get_page_size();
     doca_error_t status = DOCA_SUCCESS;
     doca_error_t cleanup_status;
@@ -2233,7 +2233,7 @@ cleanup:
 }
 
 doca_error_t doca_gpu_nic_cap_is_host_mem_umem_supported(doca_gpu_t *gpu_dev,
-                                                         struct doca_dev *net_dev) {
+                                                         struct doca_dev *net_dev) { /* 中文索引·体内调用 priv_get_page_size、doca_gpu_sdk_wrapper_cap_is_host_mem_umem_supported。 */
     const size_t size = priv_get_page_size();
     doca_error_t status = DOCA_SUCCESS;
     doca_error_t cleanup_status;
@@ -2331,7 +2331,7 @@ cleanup:
 }
 
 doca_error_t doca_gpu_nic_cap_is_nic_handler_gpu_sm_db_supported(doca_gpu_t *gpu_dev,
-                                                                 struct doca_dev *net_dev) {
+                                                                 struct doca_dev *net_dev) { /* 中文索引·体内调用 doca_gpu_sdk_wrapper_cap_is_nic_handler_gpu_sm_db_supported、doca_gpu_cuda_wrapper_cuCtxGetCurrent。 */
     doca_error_t status = DOCA_SUCCESS;
     doca_error_t cleanup_status;
     doca_verbs_uar_t *uar = nullptr;

@@ -63,7 +63,7 @@ static int efa_check_buf_size(uint32_t buf_size, size_t required)
 }
 
 static int efa_check_cq_attrs(const struct efa_cuda_cq_attrs *attrs, uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_field_avail、efa_ext_is_cleared。 */
 	if (!attrs)
 		return -EINVAL;
 
@@ -88,7 +88,7 @@ static int efa_check_cq_attrs(const struct efa_cuda_cq_attrs *attrs, uint32_t in
 
 static int efa_init_cq_v0(void *cq_buf, uint32_t cq_buf_size, const struct efa_cuda_cq_attrs *attrs,
 			  uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_check_buf_size、efa_check_cq_attrs。 */
 	struct efa_cuda_cq_v0 *cq;
 	int ret;
 
@@ -136,7 +136,7 @@ static int efa_check_sq_limits(uint32_t wqe_size, uint32_t max_inline_data,
 }
 
 static int efa_check_qp_attrs(const struct efa_cuda_qp_attrs *attrs, uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_field_avail、efa_ext_is_cleared。 */
 	if (!attrs)
 		return -EINVAL;
 
@@ -164,7 +164,7 @@ static int efa_check_qp_attrs(const struct efa_cuda_qp_attrs *attrs, uint32_t in
 
 static void efa_init_wq_v0(struct efa_cuda_wq_v0 *wq, uint8_t *buf, uint32_t *db,
 			   uint32_t num_entries, uint32_t max_batch, int phase)
-{
+{ /* 中文索引·体内调用 __builtin_ctz。 */
 	wq->buf = buf;
 	wq->db = db;
 	wq->max_wqes = num_entries;
@@ -176,7 +176,7 @@ static void efa_init_wq_v0(struct efa_cuda_wq_v0 *wq, uint8_t *buf, uint32_t *db
 
 static int efa_init_qp_v0(void *qp_buf, uint32_t qp_buf_size, const struct efa_cuda_qp_attrs *attrs,
 			  uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_qp_attr_or_zero、efa_check_buf_size。 */
 	uint32_t sq_max_inline_data = efa_qp_attr_or_zero(attrs, sq_max_inline_data, inlen);
 	uint32_t sq_max_rdma_sges = efa_qp_attr_or_zero(attrs, sq_max_rdma_sges, inlen);
 	uint32_t sq_caps = efa_qp_attr_or_zero(attrs, sq_caps, inlen);
@@ -243,7 +243,7 @@ static void efa_init_sq_wr_ctx_v0(struct efa_cuda_wr_ctx_v0 *ctx,
 
 static int efa_init_qp_v1(void *qp_buf, uint32_t qp_buf_size, const struct efa_cuda_qp_attrs *attrs,
 			  uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_check_buf_size、efa_check_qp_attrs。 */
 	struct efa_cuda_qp_v1 *qp;
 	int ret;
 
@@ -309,7 +309,7 @@ struct efa_cuda_host_context {
 };
 
 struct efa_cuda_host_context *efa_cuda_host_context_create(int major, int minor, int subminor)
-{
+{ /* 中文索引·体内调用 calloc。 */
 	struct efa_cuda_host_context *ctx;
 
 	if (major < 0 || major > EFA_CUDA_DP_VERSION_MAJOR) {
@@ -335,7 +335,7 @@ void efa_cuda_host_context_destroy(struct efa_cuda_host_context *ctx)
 
 int efa_cuda_init_cq(struct efa_cuda_host_context *ctx, void *cq_buf, uint32_t cq_buf_size,
 		     const struct efa_cuda_cq_attrs *attrs, uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_init_cq_v0。 */
 	if (!ctx)
 		return -EINVAL;
 
@@ -350,7 +350,7 @@ int efa_cuda_init_cq(struct efa_cuda_host_context *ctx, void *cq_buf, uint32_t c
 
 int efa_cuda_init_qp(struct efa_cuda_host_context *ctx, void *qp_buf, uint32_t qp_buf_size,
 		     const struct efa_cuda_qp_attrs *attrs, uint32_t inlen)
-{
+{ /* 中文索引·体内调用 efa_init_qp_v0、efa_init_qp_v1。 */
 	if (!ctx)
 		return -EINVAL;
 

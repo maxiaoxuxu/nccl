@@ -83,7 +83,7 @@ static_assert(offsetof(struct ncclDevComm_v22902, ginCounterCount) == 188);
 static_assert(offsetof(struct ncclDevComm_v22902, ginSignalShadows) == 192);
 static_assert(sizeof(struct ncclDevComm_v22902) == 200);
 
-static ncclResult_t ncclCommPropertiesFilter_v22902(ncclComm_t comm, struct ncclCommProperties* props) {
+static ncclResult_t ncclCommPropertiesFilter_v22902(ncclComm_t comm, struct ncclCommProperties* props) { /* 中文索引·体内调用 ncclTeamLsa。 */
   // We don't provide backwards compatibility for GIN with 2.29.2.  If a communicator needs it, we indicate that
   // the Device API is not available.
   props->deviceApiSupport = (props->deviceApiSupport && ncclTeamLsa(comm).nRanks == comm->nRanks);
@@ -95,7 +95,7 @@ static ncclResult_t ncclCommPropertiesFilter_v22902(ncclComm_t comm, struct nccl
   return ncclSuccess;
 }
 
-static ncclResult_t ncclDevCommRequirementsFilter_v22902(ncclComm_t comm, ncclDevCommRequirements_t* reqs) {
+static ncclResult_t ncclDevCommRequirementsFilter_v22902(ncclComm_t comm, ncclDevCommRequirements_t* reqs) { /* 中文索引·体内调用 ncclVersionToString。 */
   bool userRequestedGin = reqs->ginForceEnable || reqs->ginSignalCount > 0 || reqs->ginCounterCount > 0;
   {
     struct ncclDevResourceRequirements* rr = reqs->resourceRequirementsList;
@@ -126,7 +126,7 @@ static ncclResult_t ncclDevCommRequirementsFilter_v22902(ncclComm_t comm, ncclDe
 }
 
 static ncclResult_t ncclDevCommCopyNewToOld_v22902(ncclComm_t comm, void* oldDevComm,
-                                                   struct ncclDevComm const* newDevComm) {
+                                                   struct ncclDevComm const* newDevComm) { /* 中文索引·体内调用 memset、ncclDevCommCopyResourceWindow_v22902。 */
   struct ncclDevComm_v22902* old = (struct ncclDevComm_v22902*)oldDevComm;
 
   memset(old, '\0', sizeof(*old));
@@ -147,7 +147,7 @@ static ncclResult_t ncclDevCommCopyNewToOld_v22902(ncclComm_t comm, void* oldDev
 }
 
 static ncclResult_t ncclDevCommCopyOldToNew_v22902(ncclComm_t comm, struct ncclDevComm* newDevComm,
-                                                   void const* oldDevComm) {
+                                                   void const* oldDevComm) { /* 中文索引·体内调用 ncclDevCommCopyResourceWindow_v22902。 */
   struct ncclDevComm_v22902* old = (struct ncclDevComm_v22902*)oldDevComm;
 
   // Note: this callback will be used with v22907 as well because, prior to 2.30.0, ncclDevComm was unversioned,

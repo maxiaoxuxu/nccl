@@ -54,7 +54,7 @@ NCCL_DEVICE_INLINE void unsupported() {
 }
 
 #if NCCL_CFT_ENABLE
-NCCL_DEVICE_INLINE uint32_t smemAddr(void* ptr) {
+NCCL_DEVICE_INLINE uint32_t smemAddr(void* ptr) { /* 中文索引·体内调用 assert、__isShared。 */
 #ifdef NCCL_DEVICE_CFT_ENABLE_DEBUG
   assert(__isShared(ptr));
 #endif
@@ -65,7 +65,7 @@ NCCL_DEVICE_INLINE uint32_t smemAddr(ncclCftSmem& cftSmem) {
   return smemAddr(&cftSmem.bar);
 }
 
-NCCL_DEVICE_INLINE void waitMbarrier(ncclCftSmem& cftSmem, uint32_t phaseParity, int* hasReport, uint32_t* report) {
+NCCL_DEVICE_INLINE void waitMbarrier(ncclCftSmem& cftSmem, uint32_t phaseParity, int* hasReport, uint32_t* report) { /* 中文索引·体内调用 smemAddr。 */
   int ready = 0;
   *hasReport = 0;
   *report = 0;
@@ -297,7 +297,7 @@ NCCL_CFT_RED_TRAIT_NO_PULL(ncclCftOpSum, double, add_f64)
 
 template <typename Coop>
 NCCL_DEVICE_INLINE void ncclMemFence(Coop coop, cuda::memory_order order, ncclMemProxyType producer,
-                                     ncclMemProxyType consumer, ncclMemFenceScope scope) {
+                                     ncclMemProxyType consumer, ncclMemFenceScope scope) { /* 中文索引·体内调用 nccl::utility::releaseOrderOf、coop.sync。 */
   if (order == cuda::memory_order_relaxed) return;
   if (nccl::utility::releaseOrderOf(order) == cuda::memory_order_release ||
       nccl::utility::releaseOrderOf(order) == cuda::memory_order_seq_cst) {
@@ -383,7 +383,7 @@ NCCL_DEVICE_INLINE ncclCft<Coop>::ncclCft(Coop coop, ncclCftSmem& cftSmem)
 }
 
 template <typename Coop>
-NCCL_DEVICE_INLINE ncclCft<Coop>::~ncclCft() {
+NCCL_DEVICE_INLINE ncclCft<Coop>::~ncclCft() { /* 中文索引·体内调用 this->coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   // Elected thread must wait for all threads using mbarrier to be done before invalidating it
   this->coop.sync();
@@ -400,7 +400,7 @@ NCCL_DEVICE_INLINE ncclCft<Coop>::~ncclCft() {
 
 template <typename Coop>
 template <typename OpCoop>
-NCCL_DEVICE_INLINE void ncclCft<Coop>::submit(OpCoop coop) {
+NCCL_DEVICE_INLINE void ncclCft<Coop>::submit(OpCoop coop) { /* 中文索引·体内调用 nccl::cft::internal::elected、nccl::cft::internal::smemAddr。 */
 #if NCCL_CFT_ENABLE
   if (nccl::cft::internal::elected(coop)) {
     asm volatile("fabric.submit;" ::: "memory");
@@ -418,7 +418,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::submit(OpCoop coop) {
 
 template <typename Coop>
 template <typename OpCoop>
-NCCL_DEVICE_INLINE void ncclCft<Coop>::flushSmem(OpCoop coop) {
+NCCL_DEVICE_INLINE void ncclCft<Coop>::flushSmem(OpCoop coop) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::unsupported。 */
 #if NCCL_CFT_ENABLE
   asm volatile("fabric.wait.sync_restrict::reads;" ::: "memory");
   // Every thread in the coop must wait for fabric operations to consume shared memory.
@@ -431,7 +431,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::flushSmem(OpCoop coop) {
 
 template <typename Coop>
 template <typename OpCoop>
-NCCL_DEVICE_INLINE void ncclCft<Coop>::flush(OpCoop coop, bool* hasReport, uint32_t* report) {
+NCCL_DEVICE_INLINE void ncclCft<Coop>::flush(OpCoop coop, bool* hasReport, uint32_t* report) { /* 中文索引·体内调用 nccl::cft::internal::elected、nccl::cft::internal::smemAddr。 */
 #if NCCL_CFT_ENABLE
   if (nccl::cft::internal::elected(coop)) {
     asm volatile("mbarrier.arrive.relaxed.cta.shared::cta.b64 _, [%0], %1;"
@@ -458,7 +458,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::flush(OpCoop coop, bool* hasReport, uint3
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::waitCounted(OpCoop coop, cuda::memory_order order, ncclMemProxyType consumer,
-                                                   uint64_t* counter, size_t expected, uint32_t* abortFlag) {
+                                                   uint64_t* counter, size_t expected, uint32_t* abortFlag) { /* 中文索引·体内调用 nccl::cft::internal::unsupported。 */
 #if NCCL_CFT_ENABLE
   nccl::cft::internal::waitCountedInternal</*EnableTimeout=*/false>(coop, order, consumer, counter, expected,
                                                                     abortFlag);
@@ -496,7 +496,7 @@ NCCL_DEVICE_INLINE ncclResult_t ncclCft<Coop>::waitCounted(OpCoop coop, cuda::me
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::put(OpCoop coop, ncclCftLeId leId, size_t leOffset, void* smemSource,
-                                           uint32_t bytes) {
+                                           uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -528,7 +528,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::put(OpCoop coop, ncclCftLeId leId, size_t
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::putCpMask(OpCoop coop, ncclCftLeId leId, size_t leOffset, void* smemSource,
-                                                 uint32_t bytes, uint16_t cpMask) {
+                                                 uint32_t bytes, uint16_t cpMask) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -560,7 +560,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::putCpMask(OpCoop coop, ncclCftLeId leId, 
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::putCounted(OpCoop coop, ncclCftLeId leId, size_t leOffset, size_t counterOffset,
-                                                  void* smemSource, uint32_t bytes) {
+                                                  void* smemSource, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -592,7 +592,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::putCounted(OpCoop coop, ncclCftLeId leId,
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimem(OpCoop coop, ncclCftLeId leId, size_t leOffset, void* smemSource,
-                                                   uint32_t bytes) {
+                                                   uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -624,7 +624,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimem(OpCoop coop, ncclCftLeId leId
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimemCounted(OpCoop coop, ncclCftLeId leId, size_t leOffset,
-                                                          size_t counterOffset, void* smemSource, uint32_t bytes) {
+                                                          size_t counterOffset, void* smemSource, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -656,7 +656,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimemCounted(OpCoop coop, ncclCftLe
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimemCpMask(OpCoop coop, ncclCftLeId leId, size_t leOffset,
-                                                         void* smemSource, uint32_t bytes, uint16_t cpMask) {
+                                                         void* smemSource, uint32_t bytes, uint16_t cpMask) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -689,7 +689,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::putMultimemCpMask(OpCoop coop, ncclCftLeI
 template <typename Coop>
 template <typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::get(OpCoop coop, ncclCftLeId leId, size_t leOffset, void* smemDestination,
-                                           uint32_t bytes) {
+                                           uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -721,7 +721,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::get(OpCoop coop, ncclCftLeId leId, size_t
 template <typename Coop>
 template <typename RedOp, typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::red(OpCoop coop, ncclCftLeId leId, size_t leOffset, RedOp const& red,
-                                           void* smemSource, uint32_t bytes) {
+                                           void* smemSource, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -748,7 +748,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::red(OpCoop coop, ncclCftLeId leId, size_t
 template <typename Coop>
 template <typename RedOp, typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::redCounted(OpCoop coop, ncclCftLeId leId, size_t leOffset, size_t counterOffset,
-                                                  RedOp const& red, void* smemSource, uint32_t bytes) {
+                                                  RedOp const& red, void* smemSource, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -776,7 +776,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::redCounted(OpCoop coop, ncclCftLeId leId,
 template <typename Coop>
 template <typename RedOp, typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::redMultimem(OpCoop coop, ncclCftLeId leId, size_t leOffset, RedOp const& red,
-                                                   void* smemSource, uint32_t bytes) {
+                                                   void* smemSource, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -804,7 +804,7 @@ template <typename Coop>
 template <typename RedOp, typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::redMultimemCounted(OpCoop coop, ncclCftLeId leId, size_t leOffset,
                                                           size_t counterOffset, RedOp const& red, void* smemSource,
-                                                          uint32_t bytes) {
+                                                          uint32_t bytes) { /* 中文索引·体内调用 coop.sync、nccl::cft::internal::elected。 */
 #if NCCL_CFT_ENABLE
   coop.sync();
   if (nccl::cft::internal::elected(coop)) {
@@ -833,7 +833,7 @@ NCCL_DEVICE_INLINE void ncclCft<Coop>::redMultimemCounted(OpCoop coop, ncclCftLe
 template <typename Coop>
 template <typename RedOp, typename OpCoop>
 NCCL_DEVICE_INLINE void ncclCft<Coop>::pullRed(OpCoop coop, ncclCftLeId leId, size_t leOffset, RedOp const& red,
-                                               void* smemDestination, uint32_t bytes) {
+                                               void* smemDestination, uint32_t bytes) { /* 中文索引·体内调用 coop.sync、assert。 */
   static_assert(std::is_same<OpCoop, ncclCoopWarp>::value, "ncclCft::pullRed requires ncclCoopWarp");
 #if NCCL_CFT_ENABLE
   coop.sync();

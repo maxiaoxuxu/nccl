@@ -61,7 +61,7 @@ namespace nccl {
 namespace param {
 namespace utils {
 
-inline std::string flagsStr(uint64_t flags) {
+inline std::string flagsStr(uint64_t flags) { /* 中文索引·体内调用 result.empty。 */
   static const struct {
     uint64_t flag;
     const char* name;
@@ -90,7 +90,7 @@ inline constexpr const char* srcEnvPlugin() {
 // simple formatting helper that does
 // std::string s = string_format("Name: %s, type: %s", name, type);
 template <typename... Args>
-std::string stringFormat(const char* fmt, Args... args) {
+std::string stringFormat(const char* fmt, Args... args) { /* 中文索引·体内调用 std::snprintf、buf.data。 */
   int n = std::snprintf(nullptr, 0, fmt, args...);
   if (n < 0) return {};
 
@@ -100,7 +100,7 @@ std::string stringFormat(const char* fmt, Args... args) {
 }
 
 // Case-insensitive ASCII compare without allocating.
-inline bool iequals(std::string a, std::string b) {
+inline bool iequals(std::string a, std::string b) { /* 中文索引·体内调用 a.size、b.size。 */
   if (a.size() != b.size()) return false;
   for (size_t i = 0; i < a.size(); ++i) {
     if (std::tolower(static_cast<unsigned char>(a[i])) != std::tolower(static_cast<unsigned char>(b[i]))) {
@@ -110,7 +110,7 @@ inline bool iequals(std::string a, std::string b) {
   return true;
 }
 
-inline std::string trim(std::string s) {
+inline std::string trim(std::string s) { /* 中文索引·体内调用 s.size、std::isspace。 */
   size_t start = 0;
   while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) ++start;
   size_t end = s.size();
@@ -118,7 +118,7 @@ inline std::string trim(std::string s) {
   return s.substr(start, end - start);
 }
 
-inline std::vector<std::string> split(std::string sv, char delimiter) {
+inline std::vector<std::string> split(std::string sv, char delimiter) { /* 中文索引·体内调用 sv.find、result.push_back。 */
   std::vector<std::string> result;
   size_t start = 0;
   size_t end = sv.find(delimiter);

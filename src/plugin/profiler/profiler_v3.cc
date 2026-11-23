@@ -125,7 +125,7 @@ static ncclResult_t ncclProfiler_init(void** context, uint64_t commId __attribut
                                       const char* commName __attribute__((unused)), int nNodes __attribute__((unused)),
                                       int nranks __attribute__((unused)), int rank __attribute__((unused)),
                                       ncclDebugLogger_t logfn __attribute__((unused)),
-                                      ncclProfilerConfig_t* config __attribute__((unused))) {
+                                      ncclProfilerConfig_t* config __attribute__((unused))) { /* 中文索引·体内调用 getActiveProfiler、p->init。 */
   ncclProfilerShim_t* p = getActiveProfiler();
   if (p == nullptr) return ncclInternalError;
   NCCLCHECK(p->init(context, eActivationMask));

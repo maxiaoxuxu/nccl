@@ -22,7 +22,7 @@ NCCL_DEVICE_INLINE void ncclFlowLL128Store128(uint64_t* dst, uint64_t lo, uint64
 }
 
 template <typename T>
-NCCL_DEVICE_INLINE uint64_t ncclFlowLL128LoadDataWord(T* src, int nElts) {
+NCCL_DEVICE_INLINE uint64_t ncclFlowLL128LoadDataWord(T* src, int nElts) { /* 中文索引·体内调用 loader.begin、loader.finish。 */
   if (nElts <= 0) return 0;
   constexpr int EltPerWord = sizeof(uint64_t) / sizeof(T);
   ncclFlowLLDataLoader<T> loader;
@@ -35,7 +35,7 @@ NCCL_DEVICE_INLINE uint64_t ncclFlowLL128LoadDataWord(T* src, int nElts) {
 
 template <typename T>
 NCCL_DEVICE_INLINE void ncclFlowLL128LoadDataBegin(uint64_t (&data)[NCCL_LL128_SHMEM_ELEMS_PER_THREAD], T* src,
-                                                   int nElts, int lane, bool flagThread, int misalign16) {
+                                                   int nElts, int lane, bool flagThread, int misalign16) { /* 中文索引·体内调用 ncclFlowLL128Load128、ncclFlowLL128LoadDataWord。 */
   constexpr int EltPerWord = sizeof(uint64_t) / sizeof(T);
   constexpr int EltPer128 = 2 * EltPerWord;
   if (misalign16 == 0) {
@@ -83,7 +83,7 @@ NCCL_DEVICE_INLINE void ncclFlowLL128LoadDataFinish(uint64_t (&data)[NCCL_LL128_
 
 template <typename T>
 NCCL_DEVICE_INLINE void ncclFlowLL128StoreData(T* dst, uint64_t (&data)[NCCL_LL128_SHMEM_ELEMS_PER_THREAD], int nElts,
-                                               int lane, bool flagThread, int misalign16, int misalign4) {
+                                               int lane, bool flagThread, int misalign16, int misalign4) { /* 中文索引·体内调用 ncclFlowLL128Store128、ncclFlowLLStoreData。 */
   constexpr int EltPerWord = sizeof(uint64_t) / sizeof(T);
   constexpr int EltPer128 = 2 * EltPerWord;
   NVCC_PRAGMA_UNROLL_AUTO
@@ -124,7 +124,7 @@ NCCL_DEVICE_INLINE void ncclFlowLL128StoreData(T* dst, uint64_t (&data)[NCCL_LL1
 }
 
 NCCL_DEVICE_INLINE void ncclFlowLL128LoadWire(uint64_t (&data)[NCCL_LL128_SHMEM_ELEMS_PER_THREAD], uint64_t* src,
-                                              uint64_t flag, bool flagThread, uint32_t* abortFlag) {
+                                              uint64_t flag, bool flagThread, uint32_t* abortFlag) { /* 中文索引·体内调用 ncclFlowLL128Load128、nccl::utility::testAbort。 */
   uint32_t spins = 0;
   bool needReload;
   do {
@@ -144,7 +144,7 @@ NCCL_DEVICE_INLINE void ncclFlowLL128LoadWire(uint64_t (&data)[NCCL_LL128_SHMEM_
 }
 
 NCCL_DEVICE_INLINE void ncclFlowLL128StoreWire(uint64_t* dst, uint64_t const (&data)[NCCL_LL128_SHMEM_ELEMS_PER_THREAD],
-                                               uint64_t flag, bool flagThread) {
+                                               uint64_t flag, bool flagThread) { /* 中文索引·体内调用 ncclFlowLL128Store128。 */
   NVCC_PRAGMA_UNROLL_AUTO
   for (int u = 0; u < NCCL_LL128_SHMEM_ELEMS_PER_THREAD; u += 2) {
     ncclFlowLL128Store128(dst + u * 32, data[u], flagThread ? flag : data[u + 1]);
@@ -156,7 +156,7 @@ template <bool Send, bool DirectSend, bool Recv, bool DirectRecv, typename T, ty
           typename RedOp>
 NCCL_DEVICE_INLINE void ncclFlowBase<Backend, SlicesPerChunk, MaxPeers>::process(
   bool sendDirect, bool recvDirect, ncclSymPtr<T> /*input*/, ncclSymPtr<T> /*output*/, SrcLambda srcLambda, int nSrc,
-  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolLL128>) {
+  DstLambda dstLambda, int nDst, RedOp const& redOp, size_t nElts, ncclFlowProtocolTag<ncclFlowProtocolLL128>) { /* 中文索引·体内调用 assert、workers.size。 */
   static_assert(!DirectSend && !DirectRecv, "LL128 Flow does not support direct operations");
   assert(!sendDirect && !recvDirect);
   static_assert(SlicesPerChunk == 1, "LL128 Flow processes one FIFO slice per call");

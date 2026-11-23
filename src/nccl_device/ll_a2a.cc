@@ -17,7 +17,7 @@ int ncclLLA2ACalcSlots(int maxElts, int maxEltSize) {
 NCCL_API(ncclResult_t, ncclLLA2ACreateRequirement, int nBlocks, int nSlots, ncclLLA2AHandle_t* outHandle,
          ncclDevResourceRequirements_t* outReq);
 ncclResult_t ncclLLA2ACreateRequirement(int nBlocks, int nSlots, ncclLLA2AHandle_t* outHandle,
-                                        ncclDevResourceRequirements_t* outReq) {
+                                        ncclDevResourceRequirements_t* outReq) { /* 中文索引·体内调用 memset。 */
   outHandle->nSlots = nSlots;
   memset(outReq, 0, sizeof(*outReq));
   outReq->bufferSize = nBlocks * (1 + 2 * nSlots) * 16;

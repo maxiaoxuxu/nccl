@@ -164,7 +164,7 @@ static void jsonWriteFooter(double collectionTime, int timeoutsCount);
 ///////////////////////////////////
 
 // Creates a listening socket for clients to connect to.
-ncclResult_t rasClientInitSocket() {
+ncclResult_t rasClientInitSocket() { /* 中文索引·体内调用 ncclGetEnv、ncclSocketGetAddrFromString。 */
   ncclResult_t ret = ncclSuccess;
   const char* clientAddr = "localhost:" STR(NCCL_RAS_CLIENT_PORT);
   union ncclSocketAddress addr;
@@ -195,7 +195,7 @@ fail:
 }
 
 // Accepts a new RAS client connection.  The acceptance process may need to continue in the main event loop.
-ncclResult_t rasClientAcceptNewSocket() {
+ncclResult_t rasClientAcceptNewSocket() { /* 中文索引·体内调用 getNewClientEntry、accept。 */
   ncclResult_t ret = ncclSuccess;
   struct rasClient* client = nullptr;
   union ncclSocketAddress addr;
@@ -221,7 +221,7 @@ fail:
 }
 
 // Returns the index of the first available entry in the rasClients array, enlarging the array if necessary.
-static ncclResult_t getNewClientEntry(struct rasClient** pClient) {
+static ncclResult_t getNewClientEntry(struct rasClient** pClient) { /* 中文索引·体内调用 ncclCalloc、ncclIntruQueueConstruct。 */
   struct rasClient* client;
 
   NCCLCHECK(ncclCalloc(&client, 1));
@@ -257,7 +257,7 @@ static void rasClientFreeMsg(char* msg) {
 }
 
 // Enqueues a message for sending to a RAS client.  The message *must* have been allocated using rasClientAllocMsg.
-static void rasClientEnqueueMsg(struct rasClient* client, char* msg, size_t msgLen) {
+static void rasClientEnqueueMsg(struct rasClient* client, char* msg, size_t msgLen) { /* 中文索引·体内调用 ncclIntruQueueEnqueue。 */
   // Get to the metadata of this message.
   struct rasMsgMeta* meta = (struct rasMsgMeta*)((char*)msg - offsetof(struct rasMsgMeta, msg));
   meta->offset = 0;
@@ -271,7 +271,7 @@ static void rasClientEnqueueMsg(struct rasClient* client, char* msg, size_t msgL
 }
 
 // Allocates and enqueues a text response, optionally appending a newline.
-static ncclResult_t rasClientEnqueueText(struct rasClient* client, const char* text, bool appendNewline) {
+static ncclResult_t rasClientEnqueueText(struct rasClient* client, const char* text, bool appendNewline) { /* 中文索引·体内调用 strlen、rasClientAllocMsg。 */
   char* msg;
   size_t textLen = strlen(text);
   size_t msgLen = textLen + (appendNewline ? 1 : 0);
@@ -294,7 +294,7 @@ static ncclResult_t rasClientEnqueueLine(struct rasClient* client, const char* l
 }
 
 // Diagnostics reporter callback that streams one summary line to the owning client.
-static ncclResult_t rasClientDiagnosticsEmit(void* target, const char* line) {
+static ncclResult_t rasClientDiagnosticsEmit(void* target, const char* line) { /* 中文索引·体内调用 rasDiagnosticsFormatLine、rasClientEnqueueLine。 */
   struct rasClient* client = (struct rasClient*)target;
   char formattedLine[2048];
 
@@ -305,7 +305,7 @@ static ncclResult_t rasClientDiagnosticsEmit(void* target, const char* line) {
 }
 
 // Diagnostics reporter callback that emits a final error line when summarization fails.
-static ncclResult_t rasClientDiagnosticsFinish(void* target, ncclResult_t result) {
+static ncclResult_t rasClientDiagnosticsFinish(void* target, ncclResult_t result) { /* 中文索引·体内调用 snprintf、rasClientDiagnosticsEmit。 */
   if (result != ncclSuccess) {
     snprintf(rasLine, sizeof(rasLine), "ERROR: diagnostics summary failed (%d)", result);
     NCCLCHECK(rasClientDiagnosticsEmit(target, rasLine));
@@ -314,7 +314,7 @@ static ncclResult_t rasClientDiagnosticsFinish(void* target, ncclResult_t result
 }
 
 // Handles an NCCL-thread request to run diagnostics without a socket-backed RAS client.
-ncclResult_t rasLocalHandleRunDiag(const struct rasDiagnosticsContext* ctx) {
+ncclResult_t rasLocalHandleRunDiag(const struct rasDiagnosticsContext* ctx) { /* 中文索引·体内调用 getNewClientEntry、rasDiagnosticsClientInit。 */
   struct rasClient* client = nullptr;
   bool closed = false;
   ncclResult_t ret = ncclSuccess;
@@ -333,7 +333,7 @@ fail:
 
 // Parses a CONTROL PROFILER_MASK value: "none", "all", a hex/decimal integer, or a comma-separated list of
 // event names.  Leaves str unmodified (tokenizes a copy) so the caller can echo it in an error message.
-static bool rasParseProfilerMask(const char* str, int* outMask) {
+static bool rasParseProfilerMask(const char* str, int* outMask) { /* 中文索引·体内调用 strcasecmp、strtol。 */
   if (str == nullptr || *str == '\0') return false;
   const int allBits = ncclProfileGroup | ncclProfileColl | ncclProfileP2p | ncclProfileProxyOp | ncclProfileProxyStep |
                       ncclProfileProxyCtrl | ncclProfileKernelCh | ncclProfileNetPlugin | ncclProfileGroupApi |
@@ -382,7 +382,7 @@ static bool rasParseProfilerMask(const char* str, int* outMask) {
 }
 
 // Terminates a connection with a RAS client.
-static void rasClientTerminate(struct rasClient* client) {
+static void rasClientTerminate(struct rasClient* client) { /* 中文索引·体内调用 rasDiagnosticsCancelTarget、rasDiagnosticsClientCleanup。 */
   rasDiagnosticsCancelTarget(client);
   rasDiagnosticsClientCleanup(client);
 
@@ -415,7 +415,7 @@ static void rasClientTerminate(struct rasClient* client) {
 
 // Invoked when an asynchronous operation that a client was waiting on completes.  Finds the right client and
 // reinvokes rasClientRun.
-ncclResult_t rasClientResume(struct rasCollective* coll) {
+ncclResult_t rasClientResume(struct rasCollective* coll) { /* 中文索引·体内调用 rasCollFree、rasClientRun。 */
   struct rasClient* client;
 
   for (client = rasClientsHead; client; client = client->next)
@@ -432,7 +432,7 @@ exit:
 }
 
 // Handles a ready client FD from the main event loop.
-void rasClientEventLoop(struct rasClient* client, int pollIdx) {
+void rasClientEventLoop(struct rasClient* client, int pollIdx) { /* 中文索引·体内调用 recv、rasClientTerminate。 */
   bool closed = false;
 
   if (client->status == RAS_CLIENT_CONNECTED) {
@@ -670,7 +670,7 @@ void rasClientEventLoop(struct rasClient* client, int pollIdx) {
 // There are multiple asynchronous aspects of it (getting the data on connections and on communicators), so the
 // function may exit early and needs to be reinvoked when the asynchronous responses arrive or the timeout expires.
 // The state tracking the progress of such operations is kept in the rasClient.
-static ncclResult_t rasClientRun(struct rasClient* client, bool* closed) {
+static ncclResult_t rasClientRun(struct rasClient* client, bool* closed) { /* 中文索引·体内调用 rasClientRunInit、rasClientRunConns。 */
   ncclResult_t ret = ncclSuccess;
   if (closed != nullptr) *closed = false;
 
@@ -723,7 +723,7 @@ exit:
 }
 
 // Starts the diagnostics collective for a client.
-static ncclResult_t rasClientRunDiagInit(struct rasClient* client) {
+static ncclResult_t rasClientRunDiagInit(struct rasClient* client) { /* 中文索引·体内调用 rasDiagnosticsContextInit、rasDiagnosticsClientInit。 */
   ncclResult_t ret = ncclSuccess;
 
   if (client->diagnostics == nullptr) {
@@ -745,7 +745,7 @@ static ncclResult_t rasClientRunDiagInit(struct rasClient* client) {
 
 // Sends to the client the initial data that can be obtained locally -- version info, stats on rasPeers,
 // dump of rasDeadPeers.  Initiates the RAS_COLL_CONNS collective operation.
-static ncclResult_t rasClientRunInit(struct rasClient* client) {
+static ncclResult_t rasClientRunInit(struct rasClient* client) { /* 中文索引·体内调用 rasOutReset、cudaRuntimeGetVersion。 */
   ncclResult_t ret = ncclSuccess;
   char* msg = nullptr;
   int msgLen;
@@ -1031,7 +1031,7 @@ fail:
 // To be revisited with future extensions to RAS.
 // Processes the response from the RAS_COLL_CONNS collective operation and sends the data to the client (for now
 // primarily the list of missing processes).  Initiates the RAS_COLL_COMMS collective operation.
-static ncclResult_t rasClientRunConns(struct rasClient* client) {
+static ncclResult_t rasClientRunConns(struct rasClient* client) { /* 中文索引·体内调用 rasOutReset、rasOutAppend。 */
   ncclResult_t ret = ncclSuccess;
   char* msg = nullptr;
   int msgLen;
@@ -1161,7 +1161,7 @@ fail:
 // Processes the response from the RAS_COLL_COMMS collective operation and sends the data to the client:
 // statistics on the communicators, missing data from ranks, inconsistent collective operation counts,
 // initialization and asynchronous errors, and inconsistent initialization/termination status.
-static ncclResult_t rasClientRunComms(struct rasClient* client) {
+static ncclResult_t rasClientRunComms(struct rasClient* client) { /* 中文索引·体内调用 rasOutReset、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   char* msg = nullptr;
   int msgLen;
@@ -1879,7 +1879,7 @@ fail:
 
 // Generates detailed info about encountered errors, be it initialization ones or asynchronous ones.
 static void rasClientBreakDownErrors(struct rasClient* client, struct rasCollComms::comm* comm, const int* peerIdxConv,
-                                     int ncclErrors[ncclNumResults], bool isAsync) {
+                                     int ncclErrors[ncclNumResults], bool isAsync) { /* 中文索引·体内调用 rasOutAppend、ncclErrorToString。 */
   // Because the number of possible error kinds is finite and small, we don't bother in this case with allocating
   // temporary data structures, counting the errors, sorting arrays, etc.  Instead, in each iteration we pick the most
   // numerous error kind, we iterate through the ranks in search for this error, and immediately add it to the output.
@@ -1931,7 +1931,7 @@ static void rasClientBreakDownErrors(struct rasClient* client, struct rasCollCom
 
 // Appends a printf-formatted string to the output buffer.
 // Unlike with INFO or WARN messages, the caller should terminate lines with '\n' as appropriate.
-static void rasOutAppend(const char* format, ...) {
+static void rasOutAppend(const char* format, ...) { /* 中文索引·体内调用 va_start、vsnprintf。 */
   ncclResult_t ret; // Ignored.
   va_list vargs;
   int needed;
@@ -1970,7 +1970,7 @@ exit:
 // Copies the output data from an internal buffer to a user-supplied one, including the terminating '\0'.
 // The user buffer must already be allocated and be at least rasOutLength() bytes long (which includes
 // the terminating '\0').  Resets the output buffer when done.
-static void rasOutExtract(char* buffer) {
+static void rasOutExtract(char* buffer) { /* 中文索引·体内调用 memcpy、rasOutLength。 */
   if (rasOutBuffer) {
     memcpy(buffer, rasOutBuffer, rasOutLength());
     rasOutReset();
@@ -1983,7 +1983,7 @@ static int rasOutLength() {
 }
 
 // Resets the output buffer position to the beginning (effectively clearing the buffer).
-static void rasOutReset() {
+static void rasOutReset() { /* 中文索引·体内调用 ncclCalloc。 */
   ncclResult_t ret; // Ignored.
   nRasOutBuffer = 0;
   if (rasOutBuffer == nullptr) {
@@ -2000,7 +2000,7 @@ exit:
 
 // Sorting callback for rasAuxPeerInfo elements.  Sorts by value, with the peers host IP as the secondary key and
 // the process id as the tertiary key.
-static int rasAuxPeersValueCompare(const void* e1, const void* e2) {
+static int rasAuxPeersValueCompare(const void* e1, const void* e2) { /* 中文索引·体内调用 ncclSocketsHostCompare。 */
   const struct rasAuxPeerInfo* p1 = (const struct rasAuxPeerInfo*)e1;
   const struct rasAuxPeerInfo* p2 = (const struct rasAuxPeerInfo*)e2;
 
@@ -2018,7 +2018,7 @@ static int rasAuxPeersValueCompare(const void* e1, const void* e2) {
 }
 
 // Sorting callback for ncclSocketAddress.  Unlike the ncclSocketsCompare, it ignores the port.
-static int ncclSocketsHostCompare(const void* p1, const void* p2) {
+static int ncclSocketsHostCompare(const void* p1, const void* p2) { /* 中文索引·体内调用 memcmp。 */
   const union ncclSocketAddress* a1 = (const union ncclSocketAddress*)p1;
   const union ncclSocketAddress* a2 = (const union ncclSocketAddress*)p2;
   // AF_INET (2) is less than AF_INET6 (10).
@@ -2116,7 +2116,7 @@ static int rasAuxCommRanksValueCompare(const void* p1, const void* p2) {
 
 // Writes the JSON document header with metadata and opens the communicators array.
 static void jsonWriteHeader(const char* ncclVersion, int cudaRuntime, int cudaDriver, const char* timestamp,
-                            int commsCount) {
+                            int commsCount) { /* 中文索引·体内调用 rasOutAppend。 */
   rasOutAppend("{\n");
   rasOutAppend("  \"nccl_version\": \"%s\",\n", ncclVersion);
   rasOutAppend("  \"cuda_runtime_version\": %d,\n", cudaRuntime);
@@ -2128,7 +2128,7 @@ static void jsonWriteHeader(const char* ncclVersion, int cudaRuntime, int cudaDr
 
 // Starts a new communicator entry in the JSON output.
 static void jsonStartCommunicator(unsigned long commHash, unsigned long hostHash, unsigned long pidHash, int commSize,
-                                  int ranksCount, int missingCount, bool firstComm) {
+                                  int ranksCount, int missingCount, bool firstComm) { /* 中文索引·体内调用 rasOutAppend。 */
   if (!firstComm) rasOutAppend(",\n");
   rasOutAppend("    {\n");
   rasOutAppend("      \"hash\": \"0x%lx\",\n", commHash);
@@ -2142,7 +2142,7 @@ static void jsonStartCommunicator(unsigned long commHash, unsigned long hostHash
 // Writes detailed rank information including status and collective operation counts.
 static void jsonWriteRankData(int rank, const char* host, int pid, int cudaDev, int nvmlDev, int initState,
                               int asyncError, bool finalizeCalled, bool destroyFlag, bool abortFlag,
-                              const unsigned long* collCounts, bool firstRank) {
+                              const unsigned long* collCounts, bool firstRank) { /* 中文索引·体内调用 rasOutAppend、ncclFuncToString。 */
   if (!firstRank) rasOutAppend(",\n");
   rasOutAppend("        {\n");
   rasOutAppend("          \"rank\": %d,\n", rank);
@@ -2172,7 +2172,7 @@ static void jsonWriteRankData(int rank, const char* host, int pid, int cudaDev, 
 }
 
 // Closes the ranks array and starts the missing ranks section.
-static void jsonStartMissingRanks() {
+static void jsonStartMissingRanks() { /* 中文索引·体内调用 rasOutAppend。 */
   rasOutAppend("\n"
                "      ],\n");
 
@@ -2181,7 +2181,7 @@ static void jsonStartMissingRanks() {
 
 // Writes basic information for a missing rank.
 static void jsonWriteMissingRank(int rank, const char* host, int pid, int cudaDev, int nvmlDev, bool unresponsive,
-                                 bool dead, bool firstMissing) {
+                                 bool dead, bool firstMissing) { /* 中文索引·体内调用 rasOutAppend。 */
   if (!firstMissing) rasOutAppend(",\n");
   rasOutAppend("        {\n");
   rasOutAppend("          \"rank\": %d,\n", rank);
@@ -2205,7 +2205,7 @@ static void jsonEndCommunicator() {
 }
 
 // Writes the JSON document footer with RAS metadata and closes the document.
-static void jsonWriteFooter(double collectionTime, int timeoutsCount) {
+static void jsonWriteFooter(double collectionTime, int timeoutsCount) { /* 中文索引·体内调用 rasOutAppend。 */
   rasOutAppend("\n  ],\n");
   rasOutAppend("  \"ras\": {\n");
   rasOutAppend("    \"collection_time_sec\": %.3f,\n", collectionTime);
@@ -2219,7 +2219,7 @@ static void jsonWriteFooter(double collectionTime, int timeoutsCount) {
 ////////////////////////////////////////////////////////////
 
 // Coverts a GPU mask(s) to a string.  If the CUDA mask is different from the NVML mask, both are printed.
-const char* rasGpuDevsToString(uint64_t cudaDevs, uint64_t nvmlDevs, char* buf, size_t size) {
+const char* rasGpuDevsToString(uint64_t cudaDevs, uint64_t nvmlDevs, char* buf, size_t size) { /* 中文索引·体内调用 snprintf、strlen。 */
   bool first = true;
   buf[0] = '\0';
   for (int i = 0; i < sizeof(cudaDevs) * 8; i++)
@@ -2242,7 +2242,7 @@ const char* rasGpuDevsToString(uint64_t cudaDevs, uint64_t nvmlDevs, char* buf, 
 
 // Formats a GPU string based on the CUDA/NVML ids provided.  If the CUDA id is different from the NVML id, both are
 // printed.
-static const char* rasGpuToString(int cudaDev, int nvmlDev, char* buf, size_t size) {
+static const char* rasGpuToString(int cudaDev, int nvmlDev, char* buf, size_t size) { /* 中文索引·体内调用 snprintf、strlen。 */
   snprintf(buf, size, "%d", cudaDev);
   if (cudaDev != nvmlDev) {
     snprintf(buf + strlen(buf), size - strlen(buf), " (NVML %d)", nvmlDev);
@@ -2279,7 +2279,7 @@ static const char* ncclErrorToString(ncclResult_t err) {
 }
 
 // Converts the IP number of a NCCL address to a string (the port part is ignored and no DNS resolution is attempted).
-const char* ncclSocketToHost(const union ncclSocketAddress* addr, char* buf, size_t size) {
+const char* ncclSocketToHost(const union ncclSocketAddress* addr, char* buf, size_t size) { /* 中文索引·体内调用 inet_ntop。 */
   if (addr->sa.sa_family > 0) {
     return inet_ntop(addr->sa.sa_family,
                      (addr->sa.sa_family == AF_INET ? (void*)&addr->sin.sin_addr : (void*)&addr->sin6.sin6_addr), buf,
@@ -2292,7 +2292,7 @@ const char* ncclSocketToHost(const union ncclSocketAddress* addr, char* buf, siz
 
 // Dump communicator data to JSON format - build JSON in output buffer.
 static void rasDumpCommsToJSON(struct rasClient* client, struct rasCollComms* commsData, struct rasCollective* coll,
-                               const int* peerIdxConv) {
+                               const int* peerIdxConv) { /* 中文索引·体内调用 time、localtime_r。 */
   char hostBuf[256], timeBuf[64];
 
   time_t timestampSec = time(NULL);
@@ -2378,7 +2378,7 @@ static bool rasCountIsOutlier(int count, bool verbose, int totalCount) {
 // Notifies all connected monitoring clients about an event.
 // Iterates through the client list and sends formatted notifications to clients
 // whose monitor mask matches the event group.
-void rasClientsNotifyEvent(rasEventGroup group, const struct rasEventNotification* event) {
+void rasClientsNotifyEvent(rasEventGroup group, const struct rasEventNotification* event) { /* 中文索引·体内调用 time、localtime_r。 */
   char* msg;
   char formattedNotification[2048];
   time_t currentTime;
@@ -2491,7 +2491,7 @@ void rasClientsNotifyEvent(rasEventGroup group, const struct rasEventNotificatio
 }
 
 // Invoked during RAS termination to release all the allocated resources.
-void rasClientSupportTerminate() {
+void rasClientSupportTerminate() { /* 中文索引·体内调用 close、free。 */
   (void)close(rasClientListeningSocket);
   rasClientListeningSocket = -1;
 

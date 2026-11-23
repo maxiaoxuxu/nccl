@@ -47,7 +47,7 @@ static const char* format = nullptr;
 static const char* events = nullptr;
 static int sock = -1;
 
-static void printUsage(const char* argv0) {
+static void printUsage(const char* argv0) { /* 中文索引·体内调用 fprintf。 */
   // clang-format off
   fprintf(stderr,
           "Usage: %s [OPTION]...\n"
@@ -79,7 +79,7 @@ static void printUsage(const char* argv0) {
   // clang-format on
 }
 
-static void parseArgs(int argc, char** argv) {
+static void parseArgs(int argc, char** argv) { /* 中文索引·体内调用 getopt_long、strcasecmp。 */
   int c;
   int optIdx = 0;
   // clang-format off
@@ -149,7 +149,7 @@ static void parseArgs(int argc, char** argv) {
   }
 }
 
-static ssize_t socketWrite(int fd, const void* buf, size_t count) {
+static ssize_t socketWrite(int fd, const void* buf, size_t count) { /* 中文索引·体内调用 write。 */
   size_t done = 0;
   do {
     ssize_t ret;
@@ -167,7 +167,7 @@ static ssize_t socketWrite(int fd, const void* buf, size_t count) {
 // Reads a message from RAS.  Assumes that the message ends with '\n' (will continue reading until the terminating
 // newline, unless false is passed as untilNewLine).
 // Terminates the buffer with '\0'.  Returns the number of bytes read (excluding the added terminating '\0').
-static ssize_t rasRead(int fd, void* buf, size_t count, bool untilNewline = true) {
+static ssize_t rasRead(int fd, void* buf, size_t count, bool untilNewline = true) { /* 中文索引·体内调用 read。 */
   char* bufChar = (char*)buf;
   size_t done = 0;
   do {
@@ -333,7 +333,7 @@ timeout:
   goto retry;
 }
 
-static int setOutputFormat() {
+static int setOutputFormat() { /* 中文索引·体内调用 snprintf、socketWrite。 */
   char msgBuf[4096];
   int bytes;
 
@@ -364,7 +364,7 @@ static int setOutputFormat() {
   return 0;
 }
 
-static int streamRasResponseToStdout() {
+static int streamRasResponseToStdout() { /* 中文索引·体内调用 rasRead、fprintf。 */
   char msgBuf[4096];
   ssize_t bytes;
 
@@ -391,7 +391,7 @@ static int streamRasResponseToStdout() {
   return 0;
 }
 
-static int getNCCLStatus() {
+static int getNCCLStatus() { /* 中文索引·体内调用 snprintf、socketWrite。 */
   char msgBuf[4096];
 
   // Send the status command.
@@ -404,7 +404,7 @@ static int getNCCLStatus() {
   return streamRasResponseToStdout();
 }
 
-static int runNCCLDiagnostics() {
+static int runNCCLDiagnostics() { /* 中文索引·体内调用 snprintf、socketWrite。 */
   char msgBuf[4096];
 
   snprintf(msgBuf, sizeof(msgBuf), "DIAGNOSTICS\n");
@@ -510,7 +510,7 @@ static int monitorNCCLEvents() {
 }
 
 // Sends the positional args as one command line and prints the reply; returns non-zero on ERROR or failure.
-static int sendCommand(int argc, char** argv) {
+static int sendCommand(int argc, char** argv) { /* 中文索引·体内调用 snprintf、fprintf。 */
   char msgBuf[4096];
   size_t len = 0;
   for (int i = optind; i < argc; i++) {
@@ -542,7 +542,7 @@ static int sendCommand(int argc, char** argv) {
   return (strncasecmp(msgBuf, "ERROR", 5) == 0) ? 1 : 0;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) { /* 中文索引·体内调用 parseArgs、connectToNCCL。 */
   parseArgs(argc, argv);
 
   if (connectToNCCL()) return 1;

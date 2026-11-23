@@ -41,7 +41,7 @@ ncclResult_t ncclGetRailedGinType(struct ncclComm* comm, ncclGinType_t* ginType)
   return ncclSuccess;
 }
 
-static void ginProgressWriteLock(struct ncclGinState* ginState) {
+static void ginProgressWriteLock(struct ncclGinState* ginState) { /* 中文索引·体内调用 ginState->writePending.store、ginState->devCommRwMutex.lock。 */
   // This logic assumes just 1 writer. That's okay for this use case.
   ginState->writePending.store(true);
   ginState->devCommRwMutex.lock();
@@ -54,7 +54,7 @@ static void ginProgressWriteUnlock(struct ncclGinState* ginState) {
 
 // Per-thread progress worker. Thread t owns GIN connections t, t+proxyNthreads, t+2*proxyNthreads, ...
 // across all devComms.
-void* ncclGinProgress(struct ncclGinState* ginState, int threadIdx) {
+void* ncclGinProgress(struct ncclGinState* ginState, int threadIdx) { /* 中文索引·体内调用 ncclOsCpuCount、ncclOsSetAffinity。 */
   if (ncclOsCpuCount(ginState->cpuAffinity)) {
     ncclOsSetAffinity(ginState->cpuAffinity);
   }
@@ -90,7 +90,7 @@ void* ncclGinProgress(struct ncclGinState* ginState, int threadIdx) {
 NCCL_PARAM(GinNconnections, "GIN_NCONNECTIONS", -2);
 NCCL_PARAM(GinProxyNthreads, "GIN_PROXY_NTHREADS", 1);
 
-ncclResult_t ncclGinConnectOnce(struct ncclComm* comm) {
+ncclResult_t ncclGinConnectOnce(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamGinEnable、ncclTopoGetLocalGinDevs。 */
   ncclTeam_t ginTeam;
   struct ncclGinState* ginState = &comm->ginState;
 
@@ -265,7 +265,7 @@ static ncclResult_t ginAssignSignals(struct ncclComm* comm, struct ncclDevCommRe
                                      struct ncclDevResourceRequirements* resReqs,
                                      struct ncclGinBarrierReq const* barrierReqs, int nBarrierReqs,
                                      struct ncclGinBackendState const* backend,
-                                     struct ncclDevCommCompat const* devCompat, int* outSignalCount) {
+                                     struct ncclDevCommCompat const* devCompat, int* outSignalCount) { /* 中文索引·体内调用 ncclGinBarrierSizeRequirement。 */
   for (int i = 0; i < nBarrierReqs; i++) {
     NCCLCHECK(ncclGinBarrierSizeRequirement(comm, backend, devCompat, &barrierReqs[i]));
   }
@@ -281,7 +281,7 @@ static ncclResult_t ginAssignSignals(struct ncclComm* comm, struct ncclDevCommRe
 static ncclResult_t ginDevCommSetupWithBackend(
   struct ncclComm* comm, struct ncclDevCommRequirements const* reqs, struct ncclDevResourceRequirements* resReqs,
   struct ncclGinBarrierReq const* barrierReqs, int nBarrierReqs, struct ncclDevComm* devComm,
-  uint32_t deviceCodeVersion, struct ncclDevCommCompat const* devCompat, struct ncclGinBackendState* backend) {
+  uint32_t deviceCodeVersion, struct ncclDevCommCompat const* devCompat, struct ncclGinBackendState* backend) { /* 中文索引·体内调用 ginAssignSignals、ncclCalloc。 */
   ncclGinConfig_t ginConfig;
   struct ncclGinState* ginState = &comm->ginState;
 
@@ -513,7 +513,7 @@ ncclResult_t ncclGinDevCommSetup(struct ncclComm* comm, struct ncclDevCommRequir
                                  struct ncclDevResourceRequirements* resReqs,
                                  struct ncclGinBarrierReq const* barrierReqs, int nBarrierReqs,
                                  struct ncclDevComm* devComm, uint32_t deviceCodeVersion,
-                                 struct ncclDevCommCompat const* devCompat) {
+                                 struct ncclDevCommCompat const* devCompat) { /* 中文索引·体内调用 ncclParamGinType、ncclGinValidateSignalRequest。 */
   struct ncclGinState* ginState = &comm->ginState;
   ncclGinType_t reqGinType = reqs->ginType;
   int64_t envGinType = ncclParamGinType();
@@ -550,7 +550,7 @@ ncclResult_t ncclGinDevCommSetup(struct ncclComm* comm, struct ncclDevCommRequir
 }
 
 // Called from main thread.
-ncclResult_t ncclGinDevCommFree(struct ncclComm* comm, struct ncclDevComm const* devComm) {
+ncclResult_t ncclGinDevCommFree(struct ncclComm* comm, struct ncclDevComm const* devComm) { /* 中文索引·体内调用 ginProgressWriteLock、ginProgressWriteUnlock。 */
   // Find the resource associated with this devComm. Use the gin handle as key.
   struct ncclGinState* ginState = &comm->ginState;
 
@@ -581,7 +581,7 @@ ncclResult_t ncclGinDevCommFree(struct ncclComm* comm, struct ncclDevComm const*
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinHostFinalize(struct ncclComm* comm) {
+ncclResult_t ncclGinHostFinalize(struct ncclComm* comm) { /* 中文索引·体内调用 ginState->proxyThreadStopSignal.store、backend->ncclGin->closeColl。 */
   struct ncclGinState* ginState = &comm->ginState;
   if (!ginState->connected) return ncclSuccess;
 
@@ -608,7 +608,7 @@ ncclResult_t ncclGinHostFinalize(struct ncclComm* comm) {
 ncclResult_t ncclGinRegister(struct ncclComm* comm, void* address, size_t size,
                              void* ginHostWins[NCCL_GIN_MAX_CONNECTIONS * NCCL_GIN_MAX_ACTIVE_BACKENDS],
                              ncclGinWindow_t ginDevWins[NCCL_GIN_MAX_CONNECTIONS * NCCL_GIN_MAX_ACTIVE_BACKENDS],
-                             int winFlags, bool multiSegment, int memType) {
+                             int winFlags, bool multiSegment, int memType) { /* 中文索引·体内调用 backend->ncclGin->regMrSym。 */
   struct ncclGinState* ginState = &comm->ginState;
   int mrFlags = (winFlags & NCCL_WIN_STRICT_ORDERING) ? NCCL_NET_MR_FLAG_FORCE_SO : 0;
   for (int backendIdx = 0; backendIdx < ginState->numActiveBackends; backendIdx++) {
@@ -637,7 +637,7 @@ ncclResult_t ncclGinRegister(struct ncclComm* comm, void* address, size_t size,
 }
 
 ncclResult_t ncclGinDeregister(struct ncclComm* comm,
-                               void* ginHostWins[NCCL_GIN_MAX_CONNECTIONS * NCCL_GIN_MAX_ACTIVE_BACKENDS]) {
+                               void* ginHostWins[NCCL_GIN_MAX_CONNECTIONS * NCCL_GIN_MAX_ACTIVE_BACKENDS]) { /* 中文索引·体内调用 backend->ncclGin->deregMrSym。 */
   struct ncclGinState* ginState = &comm->ginState;
   for (int backendIdx = 0; backendIdx < ginState->numActiveBackends; backendIdx++) {
     struct ncclGinBackendState* backend = &ginState->backends[backendIdx];
@@ -649,7 +649,7 @@ ncclResult_t ncclGinDeregister(struct ncclComm* comm,
   return ncclSuccess;
 }
 
-ncclResult_t ncclGinQueryLastError(struct ncclGinState* ginState, bool* hasError) {
+ncclResult_t ncclGinQueryLastError(struct ncclGinState* ginState, bool* hasError) { /* 中文索引·体内调用 backend->ncclGin->queryLastError。 */
   *hasError = false;
   std::shared_lock<std::shared_timed_mutex> rlock(ginState->devCommRwMutex);
   struct ncclGinStateDevComm* dc = ginState->devComms;

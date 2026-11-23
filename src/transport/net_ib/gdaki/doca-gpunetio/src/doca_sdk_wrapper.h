@@ -61,7 +61,7 @@ extern "C" {
 
 const size_t doca_sdk_path_length = 2048;
 
-static inline void *doca_sdk_find_symbol(void *handle, const char *symbol_name, int required) {
+static inline void *doca_sdk_find_symbol(void *handle, const char *symbol_name, int required) { /* 中文索引·体内调用 dlerror、dlsym。 */
     dlerror();
     void *symbol = dlsym(handle, symbol_name);
     const char *error = dlerror();

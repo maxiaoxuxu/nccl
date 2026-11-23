@@ -79,7 +79,7 @@ ncclResult_t xmlUnsetAttr(struct ncclXmlNode* node, const char* attrName);
 static size_t xmlMemSize(int maxNodes) {
   return offsetof(struct ncclXml, nodes) + sizeof(struct ncclXmlNode) * maxNodes;
 }
-static ncclResult_t xmlAlloc(struct ncclXml** xml, int maxNodes) {
+static ncclResult_t xmlAlloc(struct ncclXml** xml, int maxNodes) { /* 中文索引·体内调用 ncclCalloc、xmlMemSize。 */
   char* mem;
   NCCLCHECK(ncclCalloc(&mem, xmlMemSize(maxNodes)));
   *xml = (struct ncclXml*)mem;
@@ -87,7 +87,7 @@ static ncclResult_t xmlAlloc(struct ncclXml** xml, int maxNodes) {
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttrIndex(struct ncclXmlNode* node, const char* attrName, int* index) {
+static ncclResult_t xmlGetAttrIndex(struct ncclXmlNode* node, const char* attrName, int* index) { /* 中文索引·体内调用 strncmp。 */
   *index = -1;
   const int nAttrs = node->nAttrs;
   for (int a = 0; a < nAttrs; a++) {
@@ -108,14 +108,14 @@ static ncclResult_t xmlGetNextAttrIndex(struct ncclXmlNode* node, int* index) {
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttr(struct ncclXmlNode* node, const char* attrName, const char** value) {
+static ncclResult_t xmlGetAttr(struct ncclXmlNode* node, const char* attrName, const char** value) { /* 中文索引·体内调用 xmlGetAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   *value = index == -1 ? NULL : node->attrs[index].value;
   return ncclSuccess;
 }
 
-inline void printMissingTopoAttrHint(const char* attrName, const char* nodeName) {
+inline void printMissingTopoAttrHint(const char* attrName, const char* nodeName) { /* 中文索引·体内调用 strcmp。 */
   if (strcmp(attrName, "busid") == 0 && strcmp(nodeName, "nic") == 0) {
     INFO(NCCL_GRAPH, "HINT: In many cases this error indicates that NCCL could not obtain complete PCI topology "
                      "information, which inside a container is often caused by running with '--net host'.");
@@ -123,7 +123,7 @@ inline void printMissingTopoAttrHint(const char* attrName, const char* nodeName)
   }
 }
 
-static ncclResult_t xmlGetAttrStr(struct ncclXmlNode* node, const char* attrName, const char** value) {
+static ncclResult_t xmlGetAttrStr(struct ncclXmlNode* node, const char* attrName, const char** value) { /* 中文索引·体内调用 xmlGetAttr、printMissingTopoAttrHint。 */
   NCCLCHECK(xmlGetAttr(node, attrName, value));
   if (*value == NULL) {
     WARN("Attribute %s of node %s not found", attrName, node->name);
@@ -132,21 +132,21 @@ static ncclResult_t xmlGetAttrStr(struct ncclXmlNode* node, const char* attrName
   }
   return ncclSuccess;
 }
-static ncclResult_t xmlGetAttrInt(struct ncclXmlNode* node, const char* attrName, int* value) {
+static ncclResult_t xmlGetAttrInt(struct ncclXmlNode* node, const char* attrName, int* value) { /* 中文索引·体内调用 xmlGetAttrStr、strtol。 */
   const char* str;
   NCCLCHECK(xmlGetAttrStr(node, attrName, &str));
   *value = strtol(str, NULL, 0);
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttrIntDefault(struct ncclXmlNode* node, const char* attrName, int* value, int defaultValue) {
+static ncclResult_t xmlGetAttrIntDefault(struct ncclXmlNode* node, const char* attrName, int* value, int defaultValue) { /* 中文索引·体内调用 xmlGetAttr、strtol。 */
   const char* str;
   NCCLCHECK(xmlGetAttr(node, attrName, &str));
   *value = str ? strtol(str, NULL, 0) : defaultValue;
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttrUint64(struct ncclXmlNode* node, const char* attrName, uint64_t* value) {
+static ncclResult_t xmlGetAttrUint64(struct ncclXmlNode* node, const char* attrName, uint64_t* value) { /* 中文索引·体内调用 xmlGetAttrStr、strtoull。 */
   const char* str;
   NCCLCHECK(xmlGetAttrStr(node, attrName, &str));
   *value = strtoull(str, NULL, 0);
@@ -154,21 +154,21 @@ static ncclResult_t xmlGetAttrUint64(struct ncclXmlNode* node, const char* attrN
 }
 
 static ncclResult_t xmlGetAttrUint64Default(struct ncclXmlNode* node, const char* attrName, uint64_t* value,
-                                            uint64_t defaultValue) {
+                                            uint64_t defaultValue) { /* 中文索引·体内调用 xmlGetAttr、strtoull。 */
   const char* str;
   NCCLCHECK(xmlGetAttr(node, attrName, &str));
   *value = str ? strtoull(str, NULL, 0) : defaultValue;
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttrLong(struct ncclXmlNode* node, const char* attrName, int64_t* value) {
+static ncclResult_t xmlGetAttrLong(struct ncclXmlNode* node, const char* attrName, int64_t* value) { /* 中文索引·体内调用 xmlGetAttrStr、strtol。 */
   const char* str;
   NCCLCHECK(xmlGetAttrStr(node, attrName, &str));
   *value = strtol(str, NULL, 0);
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetAttrFloat(struct ncclXmlNode* node, const char* attrName, float* value) {
+static ncclResult_t xmlGetAttrFloat(struct ncclXmlNode* node, const char* attrName, float* value) { /* 中文索引·体内调用 xmlGetAttrStr、strtof。 */
   const char* str;
   NCCLCHECK(xmlGetAttrStr(node, attrName, &str));
   *value = strtof(str, NULL);
@@ -176,14 +176,14 @@ static ncclResult_t xmlGetAttrFloat(struct ncclXmlNode* node, const char* attrNa
 }
 
 static ncclResult_t xmlGetAttrFloatDefault(struct ncclXmlNode* node, const char* attrName, float* value,
-                                           float defaultValue) {
+                                           float defaultValue) { /* 中文索引·体内调用 xmlGetAttr、strtof。 */
   const char* str;
   NCCLCHECK(xmlGetAttr(node, attrName, &str));
   *value = str ? strtof(str, NULL) : defaultValue;
   return ncclSuccess;
 }
 
-static ncclResult_t xmlFindTag(struct ncclXml* xml, const char* tagName, struct ncclXmlNode** node) {
+static ncclResult_t xmlFindTag(struct ncclXml* xml, const char* tagName, struct ncclXmlNode** node) { /* 中文索引·体内调用 strcmp。 */
   *node = NULL;
   for (int i = 0; i < xml->maxIndex; i++) {
     struct ncclXmlNode* n = xml->nodes + i;
@@ -196,7 +196,7 @@ static ncclResult_t xmlFindTag(struct ncclXml* xml, const char* tagName, struct 
 }
 
 static ncclResult_t xmlFindNextTag(struct ncclXml* xml, const char* tagName, struct ncclXmlNode* prev,
-                                   struct ncclXmlNode** node) {
+                                   struct ncclXmlNode** node) { /* 中文索引·体内调用 strcmp。 */
   *node = NULL;
   for (int i = prev - xml->nodes + 1; i < xml->maxIndex; i++) {
     struct ncclXmlNode* n = xml->nodes + i;
@@ -209,7 +209,7 @@ static ncclResult_t xmlFindNextTag(struct ncclXml* xml, const char* tagName, str
 }
 
 static ncclResult_t xmlFindTagKv(struct ncclXml* xml, const char* tagName, struct ncclXmlNode** node,
-                                 const char* attrName, const char* attrValue) {
+                                 const char* attrName, const char* attrValue) { /* 中文索引·体内调用 strcmp、xmlGetAttr。 */
   *node = NULL;
   for (int i = 0; i < xml->maxIndex; i++) {
     struct ncclXmlNode* n = xml->nodes + i;
@@ -226,7 +226,7 @@ static ncclResult_t xmlFindTagKv(struct ncclXml* xml, const char* tagName, struc
 }
 
 static ncclResult_t xmlFindNode(struct ncclXmlNode* parentNode, struct ncclXmlNode* searchNode,
-                                struct ncclXmlNode** node) {
+                                struct ncclXmlNode** node) { /* 中文索引·体内调用 strcmp、xmlGetAttr。 */
   *node = NULL;
   // Search for the node at the current level only.
   for (int i = 0; i < parentNode->nSubs; i++) {
@@ -248,7 +248,7 @@ static ncclResult_t xmlFindNode(struct ncclXmlNode* parentNode, struct ncclXmlNo
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttr(struct ncclXmlNode* node, const char* attrName, const char* value) {
+static ncclResult_t xmlSetAttr(struct ncclXmlNode* node, const char* attrName, const char* value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -261,7 +261,7 @@ static ncclResult_t xmlSetAttr(struct ncclXmlNode* node, const char* attrName, c
   return ncclSuccess;
 }
 
-static ncclResult_t xmlPrintNodeRecursive(struct ncclXmlNode* node, const char* name) {
+static ncclResult_t xmlPrintNodeRecursive(struct ncclXmlNode* node, const char* name) { /* 中文索引·体内调用 snprintf、strlen。 */
   while (node) {
     char line[1024 * 8];
     int cursor = 0;
@@ -278,7 +278,7 @@ static ncclResult_t xmlPrintNodeRecursive(struct ncclXmlNode* node, const char* 
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttrIfUnset(struct ncclXmlNode* node, const char* attrName, const char* value) {
+static ncclResult_t xmlSetAttrIfUnset(struct ncclXmlNode* node, const char* attrName, const char* value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index != -1) return ncclSuccess;
@@ -290,7 +290,7 @@ static ncclResult_t xmlSetAttrIfUnset(struct ncclXmlNode* node, const char* attr
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttrInt(struct ncclXmlNode* node, const char* attrName, const int value) {
+static ncclResult_t xmlSetAttrInt(struct ncclXmlNode* node, const char* attrName, const int value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -302,7 +302,7 @@ static ncclResult_t xmlSetAttrInt(struct ncclXmlNode* node, const char* attrName
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttrFloat(struct ncclXmlNode* node, const char* attrName, const float value) {
+static ncclResult_t xmlSetAttrFloat(struct ncclXmlNode* node, const char* attrName, const float value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -314,7 +314,7 @@ static ncclResult_t xmlSetAttrFloat(struct ncclXmlNode* node, const char* attrNa
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttrLong(struct ncclXmlNode* node, const char* attrName, const int64_t value) {
+static ncclResult_t xmlSetAttrLong(struct ncclXmlNode* node, const char* attrName, const int64_t value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -326,7 +326,7 @@ static ncclResult_t xmlSetAttrLong(struct ncclXmlNode* node, const char* attrNam
   return ncclSuccess;
 }
 
-static ncclResult_t xmlSetAttrUint64(struct ncclXmlNode* node, const char* attrName, const uint64_t value) {
+static ncclResult_t xmlSetAttrUint64(struct ncclXmlNode* node, const char* attrName, const uint64_t value) { /* 中文索引·体内调用 xmlGetAttrIndex、xmlGetNextAttrIndex。 */
   int index;
   NCCLCHECK(xmlGetAttrIndex(node, attrName, &index));
   if (index == -1) {
@@ -338,7 +338,7 @@ static ncclResult_t xmlSetAttrUint64(struct ncclXmlNode* node, const char* attrN
   return ncclSuccess;
 }
 
-static ncclResult_t xmlGetSub(struct ncclXmlNode* node, const char* subName, struct ncclXmlNode** sub) {
+static ncclResult_t xmlGetSub(struct ncclXmlNode* node, const char* subName, struct ncclXmlNode** sub) { /* 中文索引·体内调用 strcmp。 */
   *sub = NULL;
   for (int s = 0; s < node->nSubs; s++) {
     if (strcmp(node->subs[s]->name, subName) == 0) {
@@ -350,7 +350,7 @@ static ncclResult_t xmlGetSub(struct ncclXmlNode* node, const char* subName, str
 }
 
 static ncclResult_t xmlGetSubKv(struct ncclXmlNode* node, const char* subName, struct ncclXmlNode** sub,
-                                const char* attrName, const char* attrValue) {
+                                const char* attrName, const char* attrValue) { /* 中文索引·体内调用 strcmp、xmlGetAttr。 */
   *sub = NULL;
   for (int s = 0; s < node->nSubs; s++) {
     struct ncclXmlNode* subNode = node->subs[s];
@@ -366,7 +366,7 @@ static ncclResult_t xmlGetSubKv(struct ncclXmlNode* node, const char* subName, s
   return ncclSuccess;
 }
 static ncclResult_t xmlGetSubKvInt(struct ncclXmlNode* node, const char* subName, struct ncclXmlNode** sub,
-                                   const char* attrName, const int attrValue) {
+                                   const char* attrName, const int attrValue) { /* 中文索引·体内调用 snprintf、xmlGetSubKv。 */
   char strValue[10];
   snprintf(strValue, 10, "%d", attrValue);
   NCCLCHECK(xmlGetSubKv(node, subName, sub, attrName, strValue));
@@ -374,7 +374,7 @@ static ncclResult_t xmlGetSubKvInt(struct ncclXmlNode* node, const char* subName
 }
 
 static ncclResult_t xmlAddNode(struct ncclXml* xml, struct ncclXmlNode* parent, const char* subName,
-                               struct ncclXmlNode** sub) {
+                               struct ncclXmlNode** sub) { /* 中文索引·体内调用 strncpy。 */
   if (xml->maxIndex == xml->maxNodes) {
     WARN("Error : too many XML nodes (max %d)", xml->maxNodes);
     return ncclInternalError;
@@ -409,7 +409,7 @@ static ncclResult_t xmlRemoveNode(struct ncclXmlNode* node) {
   return ncclSuccess;
 }
 
-static ncclResult_t xmlAddTree(struct ncclXml* dst, struct ncclXmlNode* parent, struct ncclXmlNode* srcNode) {
+static ncclResult_t xmlAddTree(struct ncclXml* dst, struct ncclXmlNode* parent, struct ncclXmlNode* srcNode) { /* 中文索引·体内调用 xmlAddTree。 */
   if (dst->maxIndex == dst->maxNodes) {
     WARN("Error : too many XML nodes (max %d)", dst->maxNodes);
     return ncclInternalError;
@@ -445,7 +445,7 @@ struct kvDict {
   int value;
 };
 
-static ncclResult_t kvConvertToInt(const char* str, int* value, struct kvDict* dict) {
+static ncclResult_t kvConvertToInt(const char* str, int* value, struct kvDict* dict) { /* 中文索引·体内调用 strncmp、strlen。 */
   struct kvDict* d = dict;
   while (d->str) {
     if (strncmp(str, d->str, strlen(d->str)) == 0) {
@@ -459,7 +459,7 @@ static ncclResult_t kvConvertToInt(const char* str, int* value, struct kvDict* d
   *value = d->value;
   return ncclSuccess;
 }
-static ncclResult_t kvConvertToStr(int value, const char** str, struct kvDict* dict) {
+static ncclResult_t kvConvertToStr(int value, const char** str, struct kvDict* dict) { /* 中文索引·体内调用 printMissingTopoDictValueHint。 */
   struct kvDict* d = dict;
   while (d->str) {
     if (value == d->value) {

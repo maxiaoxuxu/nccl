@@ -19,7 +19,7 @@ NCCL_PARAM(CftEnable, "CFT_ENABLE", 1);
 NCCL_PARAM(CftUcTeamSize, "CFT_UC_TEAM_SIZE", 0);
 NCCL_PARAM(CftMcTeamSize, "CFT_MC_TEAM_SIZE", 0);
 
-ncclResult_t ncclGpuGetCliqueIds(CUdevice dev, uint32_t* unicastId, uint32_t* multicastId) {
+ncclResult_t ncclGpuGetCliqueIds(CUdevice dev, uint32_t* unicastId, uint32_t* multicastId) { /* 中文索引·体内调用 cuDeviceGetCliqueCount、ncclCalloc。 */
   *unicastId = UINT32_MAX;
   *multicastId = UINT32_MAX;
 
@@ -58,7 +58,7 @@ exit:
   return ncclSuccess;
 }
 
-static int computeCftCliqueSize(struct ncclComm* comm, bool multicast) {
+static int computeCftCliqueSize(struct ncclComm* comm, bool multicast) { /* 中文索引·体内调用 gcd。 */
   int size = 0;
   int cliqueSize = 0;
   uint32_t previousId = UINT32_MAX;
@@ -76,7 +76,7 @@ static int computeCftCliqueSize(struct ncclComm* comm, bool multicast) {
 }
 
 ncclResult_t ncclGpuCftSupport(struct ncclComm* comm, int* gpuCftSupport, bool* gpuCftMulticastSupport,
-                               bool* gpuCftCountedSupport) {
+                               bool* gpuCftCountedSupport) { /* 中文索引·体内调用 ncclParamCftEnable、ncclCudaDriverVersion。 */
   *gpuCftSupport = 0;
   *gpuCftMulticastSupport = false;
   *gpuCftCountedSupport = false;
@@ -107,7 +107,7 @@ ncclResult_t ncclGpuCftSupport(struct ncclComm* comm, int* gpuCftSupport, bool* 
   return ncclSuccess;
 }
 
-ncclResult_t computeCftSizes(struct ncclComm* comm, int* cftSize, int* cftMcSize) {
+ncclResult_t computeCftSizes(struct ncclComm* comm, int* cftSize, int* cftMcSize) { /* 中文索引·体内调用 computeLsaTeamSize、computeCftCliqueSize。 */
   int lsaSize = computeLsaTeamSize(comm);
   *cftSize = lsaSize;
   *cftMcSize = lsaSize;
@@ -131,7 +131,7 @@ ncclResult_t computeCftSizes(struct ncclComm* comm, int* cftSize, int* cftMcSize
   return ncclSuccess;
 }
 
-ncclResult_t symBindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, ncclCftLeId le) {
+ncclResult_t symBindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, ncclCftLeId le) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、cuLogicalEndpointBindAddr。 */
   if (ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterCft) && le != NCCL_LE_ID_INVALID &&
       !mem->globalHasSysmemSegment) {
 #if CUDA_VERSION >= 13030
@@ -142,7 +142,7 @@ ncclResult_t symBindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, nc
   return ncclSuccess;
 }
 
-ncclResult_t symUnbindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, ncclCftLeId le) {
+ncclResult_t symUnbindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, ncclCftLeId le) { /* 中文索引·体内调用 ncclDevrWinRegEnabled、cuLogicalEndpointUnbind。 */
   if (ncclDevrWinRegEnabled(mem->winFlags, ncclDevrRegisterCft) && le != NCCL_LE_ID_INVALID &&
       !mem->globalHasSysmemSegment) {
 #if CUDA_VERSION >= 13030
@@ -152,7 +152,7 @@ ncclResult_t symUnbindTeamLe(struct ncclComm* comm, struct ncclDevrMemory* mem, 
   return ncclSuccess;
 }
 
-static ncclResult_t checkLeSize(CUlogicalEndpointProp prop, size_t bigSize) {
+static ncclResult_t checkLeSize(CUlogicalEndpointProp prop, size_t bigSize) { /* 中文索引·体内调用 cuLogicalEndpointGetLimits。 */
   ncclResult_t ret = ncclSuccess;
   cuuint64_t bindAlignment = 0, maxSize = 0;
   CUCHECK(cuLogicalEndpointGetLimits(&bindAlignment, &maxSize, &prop));
@@ -165,7 +165,7 @@ static ncclResult_t checkLeSize(CUlogicalEndpointProp prop, size_t bigSize) {
   return ret;
 }
 
-static ncclResult_t waitLeReady(ncclCftLeId le, uint32_t leCount) {
+static ncclResult_t waitLeReady(ncclCftLeId le, uint32_t leCount) { /* 中文索引·体内调用 cuLogicalEndpointQuery。 */
   while (true) {
     int query = 0;
     CUCHECK(cuLogicalEndpointQuery(le, leCount, &query));
@@ -175,7 +175,7 @@ static ncclResult_t waitLeReady(ncclCftLeId le, uint32_t leCount) {
 }
 
 ncclResult_t symTeamObtainUcLe(struct ncclComm* comm, struct ncclDevrTeam* t, struct ncclDevrState* devr,
-                               bool* /*needBarrier*/, bool counted) {
+                               bool* /*needBarrier*/, bool counted) { /* 中文索引·体内调用 ncclTeamCft、size_t。 */
   // No need to request a barrier: local completion of waitLeReady guarantees that the remote LE is ready.
   // Remote completion of the binding is guaranteed by the bootstrapAllGather.
   ncclResult_t ret = ncclSuccess;
@@ -265,7 +265,7 @@ fail:
 }
 
 ncclResult_t symTeamObtainMcLe(struct ncclComm* comm, struct ncclDevrTeam* t, struct ncclDevrState* devr,
-                               bool* needBarrier, bool counted) {
+                               bool* needBarrier, bool counted) { /* 中文索引·体内调用 size_t、checkLeSize。 */
   if (!comm->gpuCftMulticastSupport) {
     WARN("CFT multicast support requested, but not all ranks in the communicator support it.");
     return ncclInvalidArgument;
@@ -342,7 +342,7 @@ fail:
 
 NCCL_API(ncclResult_t, ncclGetMultimemDeviceLeInfo, ncclWindow_t window, size_t offset, ncclCftLeId* leId,
          size_t* leOffset);
-ncclResult_t ncclGetMultimemDeviceLeInfo(ncclWindow_t window, size_t offset, ncclCftLeId* leId, size_t* leOffset) {
+ncclResult_t ncclGetMultimemDeviceLeInfo(ncclWindow_t window, size_t offset, ncclCftLeId* leId, size_t* leOffset) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(leId, __func__, "leId"));
   NCCLCHECK(PtrCheck(leOffset, __func__, "leOffset"));
@@ -376,7 +376,7 @@ ncclResult_t ncclGetMultimemDeviceLeInfo(ncclWindow_t window, size_t offset, ncc
 NCCL_API(ncclResult_t, ncclGetCftDeviceLeInfo, ncclWindow_t window, size_t offset, int peerCft, ncclTeam_t cftTeam,
          ncclCftLeId* leId, size_t* leOffset);
 ncclResult_t ncclGetCftDeviceLeInfo(ncclWindow_t window, size_t offset, int peerCft, ncclTeam_t cftTeam,
-                                    ncclCftLeId* leId, size_t* leOffset) {
+                                    ncclCftLeId* leId, size_t* leOffset) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(leId, __func__, "leId"));
   NCCLCHECK(PtrCheck(leOffset, __func__, "leOffset"));
@@ -412,7 +412,7 @@ ncclResult_t ncclGetCftDeviceLeInfo(ncclWindow_t window, size_t offset, int peer
 NCCL_API(ncclResult_t, ncclGetPeerDeviceLeInfo, ncclWindow_t window, size_t offset, int peerWorld, ncclCftLeId* leId,
          size_t* leOffset);
 ncclResult_t ncclGetPeerDeviceLeInfo(ncclWindow_t window, size_t offset, int peerWorld, ncclCftLeId* leId,
-                                     size_t* leOffset) {
+                                     size_t* leOffset) { /* 中文索引·体内调用 PtrCheck、findCommAndHostWindowFromDeviceWindow。 */
   NCCLCHECK(PtrCheck(window, __func__, "window"));
   NCCLCHECK(PtrCheck(leId, __func__, "leId"));
   NCCLCHECK(PtrCheck(leOffset, __func__, "leOffset"));

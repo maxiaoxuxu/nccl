@@ -402,7 +402,7 @@ struct alignas(32) ncclIbNetCommBase {
 };
 
 // Compute per-device LB weights (1-100); weight is never 0 since it is not considered a speed update but rather a port down.
-static inline void ncclIbComputeLbWeights(struct ncclIbNetCommBase* base) {
+static inline void ncclIbComputeLbWeights(struct ncclIbNetCommBase* base) { /* 中文索引·体内调用 ncclParamIbEventBasedLb。 */
   int ndevs = base->vProps.ndevs;
   // totalSpeed can not be 0: devices with inactive ports (speed 0) are
   // skipped at init, and speed-to-zero events are skipped in
@@ -419,7 +419,7 @@ static inline void ncclIbComputeLbWeights(struct ncclIbNetCommBase* base) {
 
 struct ncclIbNetCommDevBase* ncclIbGetNetCommDevBase(ncclIbNetCommBase* base, int devIndex);
 
-static inline void ncclIbComputeDevSpeeds(struct ncclIbNetCommBase* base) {
+static inline void ncclIbComputeDevSpeeds(struct ncclIbNetCommBase* base) { /* 中文索引·体内调用 ncclIbGetNetCommDevBase。 */
   uint64_t totalSpeed = 0;
   for (int d = 0; d < base->vProps.ndevs; d++) {
     int ibDevN = ncclIbGetNetCommDevBase(base, d)->ibDevN;
@@ -460,7 +460,7 @@ static inline ncclResult_t ncclIbCommBaseGetNqpsPerRequest(struct ncclIbNetCommB
     WARN("NET/IB: nqps is not initialized");
     return ncclInternalError;
   }
-  *nQps = (baseComm->splitDataOnQps == 1) ? baseComm->nqps : baseComm->nDataQps;
+  /* 中文图解·qp｜请求使用的 QP 数由 splitDataOnQps 决定，可能只使用已建集合中的部分 QP。 */ *nQps = (baseComm->splitDataOnQps == 1) ? baseComm->nqps : baseComm->nDataQps;
   return ncclSuccess;
 }
 
@@ -473,7 +473,7 @@ static inline ncclResult_t ncclIbCommBaseGetNqpsPerRequest(struct ncclIbNetCommB
 // outQpIndex argument with the index of the selected QP. Note that the
 // outQpIndex is the index of the QP in the base::qps[] array.
 static inline ncclResult_t ncclIbCommBaseGetQpForRequest(struct ncclIbNetCommBase* baseComm, const uint64_t id,
-                                                         const uint8_t qpIndex, ncclIbQp** outQp, int* outQpIndex) {
+                                                         const uint8_t qpIndex, ncclIbQp** outQp, int* outQpIndex) { /* 中文索引·体内调用 ncclIbCommBaseGetNqpsPerRequest。 */
   int nQps = 0;
   NCCLCHECK(ncclIbCommBaseGetNqpsPerRequest(baseComm, &nQps));
   *outQpIndex = (id * nQps + qpIndex) % baseComm->nqps;
@@ -512,7 +512,7 @@ static inline ncclResult_t ncclIbCommBaseGetQpByQpNum(struct ncclIbNetCommBase* 
   return ncclInternalError;
 }
 
-static inline ncclResult_t ncclIbPostRecvWorkRequest(struct ibv_qp* qp, struct ibv_recv_wr* wr) {
+static inline ncclResult_t ncclIbPostRecvWorkRequest(struct ibv_qp* qp, struct ibv_recv_wr* wr) { /* 中文索引·体内调用 wrap_ibv_post_recv。 */
   struct ibv_recv_wr* bad_wr;
   NCCLCHECK(wrap_ibv_post_recv(qp, wr, &bad_wr));
   return ncclSuccess;
@@ -655,7 +655,7 @@ struct ncclIbListenComm {
   struct ncclIbCommStage* stage;
 };
 
-static inline void ncclIbCheckSpeedChanges(struct ncclIbSendComm* sendComm, struct ncclIbNetCommBase* base) {
+static inline void ncclIbCheckSpeedChanges(struct ncclIbSendComm* sendComm, struct ncclIbNetCommBase* base) { /* 中文索引·体内调用 ncclIbComputeDevSpeeds、ncclIbComputeLbWeights。 */
   bool speedChanged = false;
   // Local speed change detection
   if (base->speedChangeCounter != COMPILER_ATOMIC_LOAD(&ncclIbSpeedChangeCounter, std::memory_order_acquire)) {

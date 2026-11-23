@@ -38,7 +38,7 @@ NCCL_PARAM(Diagnostics, "RUN_DIAGNOSTICS", 0);
 // longer than the read buffer), letting callers react to child milestones (e.g. a benchmark
 // server announcing its listen socket) while the child is still running.
 int ncclDiagChildRunStream(const char* command, int timeoutSec, char* output, int outputSize,
-                           ncclDiagChildLineFn onLine, void* onLineCtx, bool* outputTruncated) {
+                           ncclDiagChildLineFn onLine, void* onLineCtx, bool* outputTruncated) { /* 中文索引·体内调用 snprintf、popen。 */
   if (output != nullptr && outputSize > 0) output[0] = '\0';
   if (outputTruncated != nullptr) *outputTruncated = false;
   if (command == nullptr || timeoutSec < 1) return -1;
@@ -76,7 +76,7 @@ int ncclDiagChildRun(const char* command, int timeoutSec, char* output, int outp
   return ncclDiagChildRunStream(command, timeoutSec, output, outputSize, nullptr, nullptr, outputTruncated);
 }
 
-static ncclResult_t ncclDiagDetectTransportMask(struct ncclComm* comm, unsigned int* outUnionMask) {
+static ncclResult_t ncclDiagDetectTransportMask(struct ncclComm* comm, unsigned int* outUnionMask) { /* 中文索引·体内调用 ncclTopoRankToIndex、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   unsigned int* allPathMasks = nullptr;
   unsigned int localPathMask = 0;
@@ -122,7 +122,7 @@ fail:
   return ret;
 }
 
-ncclResult_t ncclRunDiagnostics(struct ncclComm* comm) {
+ncclResult_t ncclRunDiagnostics(struct ncclComm* comm) { /* 中文索引·体内调用 std::chrono::steady_clock::now、ncclDiagDetectTransportMask。 */
   auto t0 = std::chrono::steady_clock::now();
 
   if (comm->rank == 0) DIAG_PRINT("NCCL DIAG === NCCL Diagnostics ===");

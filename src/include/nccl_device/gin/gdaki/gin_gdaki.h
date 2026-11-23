@@ -53,7 +53,7 @@ NCCL_DEVICE_INLINE static void putImplMode(
   ncclGinCtx ctx, Coop coop, int peer, bool hasWins, ncclGinWindow_t dstWin, size_t dstOff, ncclGinWindow_t srcWin,
   size_t srcOff, size_t bytes, bool hasSignal, size_t signalOffset, __be32 signalKey, ncclGinSignalOp_t signalOp,
   uint64_t signalOpArg, bool hasCounter, ncclGinCounter_t counterId, bool hasDescriptor,
-  ncclGinDescriptorSmem* descriptor, cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) {
+  ncclGinDescriptorSmem* descriptor, cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::utility::loadConst;
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -158,7 +158,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode resource_sharing_mode, t
 NCCL_DEVICE_INLINE static void putValueImplMode(
   ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t dstWin, size_t dstOff, T srcData, bool hasSignal,
   size_t signalOffset, __be32 signalKey, ncclGinSignalOp_t signalOp, uint64_t signalOpArg, bool hasDescriptor,
-  ncclGinDescriptorSmem* descriptor, cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) {
+  ncclGinDescriptorSmem* descriptor, cuda::thread_scope required, cuda::thread_scope given, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::utility::loadConst;
 
   coop.sync();
@@ -260,7 +260,7 @@ template <enum doca_gpu_dev_verbs_resource_sharing_mode doca_sharing_mode,
           enum ncclGinResourceSharingMode gin_sharing_mode, typename Coop>
 NCCL_DEVICE_INLINE static void getImplMode(ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t remoteWin,
                                            size_t remoteOff, ncclGinWindow_t localWin, size_t localOff, size_t bytes,
-                                           bool hasDescriptor, ncclGinDescriptorSmem* descriptor, uint32_t optFlags) {
+                                           bool hasDescriptor, ncclGinDescriptorSmem* descriptor, uint32_t optFlags) { /* 中文索引·体内调用 coop.sync、coop.thread_rank。 */
   using nccl::utility::loadConst;
   coop.sync();
   if (coop.thread_rank() == 0) {
@@ -305,7 +305,7 @@ NCCL_DEVICE_INLINE static void getImpl(ncclGinCtx ctx, Coop coop, int peer, nccl
 
 template <enum doca_gpu_dev_verbs_resource_sharing_mode doca_sharing_mode,
           enum ncclGinResourceSharingMode gin_sharing_mode>
-NCCL_DEVICE_INLINE static void flushAsyncImpl(ncclGinCtx ctx, int peer, ncclGinRequest_t* outRequest) {
+NCCL_DEVICE_INLINE static void flushAsyncImpl(ncclGinCtx ctx, int peer, ncclGinRequest_t* outRequest) { /* 中文索引·体内调用 loadConst。 */
   using nccl::utility::loadConst;
   ncclGinGdakiRequest* req = reinterpret_cast<ncclGinGdakiRequest*>(outRequest);
   req->peer = peer;
@@ -485,7 +485,7 @@ struct ncclGinApi_Get<NCCL_NET_DEVICE_GIN_GDAKI> {
   template <typename Coop>
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, Coop coop, int peer, ncclGinWindow_t remoteWin, size_t remoteOff,
                                       ncclGinWindow_t localWin, size_t localOff, size_t bytes, bool hasDescriptor,
-                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 nccl::gin::gdaki::getImpl。 */
     nccl::gin::gdaki::getImpl(ctx, coop, peer, remoteWin, remoteOff, localWin, localOff, bytes, hasDescriptor,
                               descriptor, optFlags);
   }
@@ -554,7 +554,7 @@ struct ncclGinApi_Put<NCCL_NET_DEVICE_GIN_GDAKI> {
                                       ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp, uint64_t signalOpArg,
                                       bool hasCounter, ncclGinCounter_t counterId, bool hasDescriptor,
                                       ncclGinDescriptorSmem* descriptor, cuda::thread_scope required,
-                                      cuda::thread_scope given, uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      cuda::thread_scope given, uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 loadConst、nccl::gin::gdaki::putImpl。 */
     using nccl::utility::loadConst;
     size_t signalOffset = 0;
     __be32 signalKey = 0;
@@ -581,7 +581,7 @@ struct ncclGinApi_PutValue<NCCL_NET_DEVICE_GIN_GDAKI> {
                                       T srcVal, ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp,
                                       uint64_t signalOpArg, bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
                                       cuda::thread_scope required, cuda::thread_scope given,
-                                      uint32_t optFlags = ncclGinOptFlagsDefault) {
+                                      uint32_t optFlags = ncclGinOptFlagsDefault) { /* 中文索引·体内调用 loadConst、nccl::gin::gdaki::putValueImpl。 */
     using nccl::utility::loadConst;
     size_t signalOffset = 0;
     __be32 signalKey = 0;
@@ -609,7 +609,7 @@ struct ncclGinApi_SupportsStrongSignal<NCCL_NET_DEVICE_GIN_GDAKI> {
 
 template <>
 struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_GDAKI> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 loadConst。 */
     using nccl::utility::loadConst;
     ncclGinGdakiGPUContext* gdaki = &((struct ncclGinGdakiGPUContext*)ctx.handle)[ctx.contextId];
     loadConst(&gdaki->counters_table.buffer)[counterId] = 0;
@@ -618,7 +618,7 @@ struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_GDAKI> {
 
 template <>
 struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_GDAKI> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) { /* 中文索引·体内调用 ncclGetLocalPointer、loadConst。 */
     using nccl::utility::loadConst;
     if (signal.type == NCCL_GIN_SIGNAL_TYPE_VA) {
       uint64_t* signalPtr = (uint64_t*)ncclGetLocalPointer(signal.vaSignal.ncclWindow, signal.vaSignal.signalOffset);
@@ -632,7 +632,7 @@ struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_GDAKI> {
 
 template <>
 struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_GDAKI> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 loadConst。 */
     using nccl::utility::loadConst;
     ncclGinGdakiGPUContext* gdaki = &((struct ncclGinGdakiGPUContext*)ctx.handle)[ctx.contextId];
     return {loadConst(&gdaki->counters_table.buffer) + counterId, 0};
@@ -641,7 +641,7 @@ struct ncclGinApi_GetCounterPtr<NCCL_NET_DEVICE_GIN_GDAKI> {
 
 template <>
 struct ncclGinApi_GetSignalPtr<NCCL_NET_DEVICE_GIN_GDAKI> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) { /* 中文索引·体内调用 loadConst。 */
     using nccl::utility::loadConst;
     ncclGinGdakiGPUContext* gdaki = &((struct ncclGinGdakiGPUContext*)ctx.handle)[ctx.contextId];
     return {loadConst(&gdaki->signals_table.buffer) + signalId, 0};
@@ -669,7 +669,7 @@ template <>
 struct ncclGinApi_Flush<NCCL_NET_DEVICE_GIN_GDAKI> {
   template <typename Coop>
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, Coop coop, bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
-                                      cuda::memory_order ord, uint32_t* abortFlag) {
+                                      cuda::memory_order ord, uint32_t* abortFlag) { /* 中文索引·体内调用 coop.thread_rank、coop.size。 */
     for (int peer = coop.thread_rank(); peer < ctx.nRanks; peer += coop.size()) {
       ncclGinRequest_t outRequest;
       switch ((ncclGinResourceSharingMode)ctx.resourceSharingMode) {

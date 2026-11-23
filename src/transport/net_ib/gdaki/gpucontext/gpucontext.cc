@@ -30,7 +30,7 @@ ncclResult_t ncclGinGdakiGPUContext_init(int version, void* ctxArray, int idx, s
                                          struct ncclGinGdakiGlobalGPUBufferTable<uint64_t> counters_table,
                                          struct ncclGinGdakiGlobalGPUBufferTable<uint64_t> signals_table,
                                          __be32 sink_buffer_lkey, uint64_t* last_issued_get, uint64_t* last_visible_get,
-                                         bool use_mcst) {
+                                         bool use_mcst) { /* 中文索引·体内调用 ncclGinGdakiGPUContext_v1_init、ncclGinGdakiGPUContext_initCurrent。 */
   switch (version) {
   case 1:
     ncclGinGdakiGPUContext_v1_init(ctxArray, idx, gdqp, companion_gdqp, counters_table, signals_table,

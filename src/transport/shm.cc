@@ -59,7 +59,7 @@ static void initShmLocality();
 
 /* Determine two peers can communicate with SHM */
 static ncclResult_t shmCanConnect(int* ret, struct ncclComm* comm, struct ncclTopoGraph* graph,
-                                  struct ncclPeerInfo* info1, struct ncclPeerInfo* info2) {
+                                  struct ncclPeerInfo* info1, struct ncclPeerInfo* info2) { /* 中文索引·体内调用 initShmLocality、ncclParamShmDisable。 */
   *ret = 0;
   initShmLocality();
 
@@ -87,7 +87,7 @@ static ncclResult_t shmCanConnect(int* ret, struct ncclComm* comm, struct ncclTo
 /* Create and return connect structures for this peer to connect to me */
 static ncclResult_t shmSendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                                  struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                                 struct ncclConnector* send, int channelId, int connIndex) {
+                                 struct ncclConnector* send, int channelId, int connIndex) { /* 中文索引·体内调用 ncclCalloc、ncclProxyConnect。 */
   struct shmSendResources* resources;
   struct shmConnectInfo* info = (struct shmConnectInfo*)connectInfo;
   size_t shmSize = sizeof(struct ncclSendMem);
@@ -120,7 +120,7 @@ static ncclResult_t shmSendSetup(struct ncclComm* comm, struct ncclTopoGraph* gr
 
 static ncclResult_t shmRecvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                                  struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                                 struct ncclConnector* recv, int channelId, int connIndex) {
+                                 struct ncclConnector* recv, int channelId, int connIndex) { /* 中文索引·体内调用 ncclCalloc、ncclProxyConnect。 */
   struct shmRecvResources* resources;
   struct shmConnectInfo* info = (struct shmConnectInfo*)connectInfo;
   size_t shmSize = sizeof(struct ncclRecvMem);
@@ -151,7 +151,7 @@ static ncclResult_t shmRecvSetup(struct ncclComm* comm, struct ncclTopoGraph* gr
 
 /* Connect to this peer */
 static ncclResult_t shmSendConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                                   struct ncclConnector* send) {
+                                   struct ncclConnector* send) { /* 中文索引·体内调用 ncclShmImportShareableBuffer。 */
   // Setup device pointers
   struct shmConnectInfo* info = (struct shmConnectInfo*)connectInfo;
   struct shmSendResources* resources = (struct shmSendResources*)send->transportResources;
@@ -176,7 +176,7 @@ static ncclResult_t shmSendConnect(struct ncclComm* comm, struct ncclConnect* co
 }
 
 static ncclResult_t shmRecvConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                                   struct ncclConnector* recv) {
+                                   struct ncclConnector* recv) { /* 中文索引·体内调用 ncclShmImportShareableBuffer。 */
   // Setup device pointers
   struct shmRecvResources* resources = (struct shmRecvResources*)recv->transportResources;
   struct shmConnectInfo* info = (struct shmConnectInfo*)connectInfo;
@@ -200,7 +200,7 @@ static ncclResult_t shmRecvConnect(struct ncclComm* comm, struct ncclConnect* co
   return ncclSuccess;
 }
 
-static ncclResult_t shmSendFree(struct ncclComm* comm, struct ncclConnector* send) {
+static ncclResult_t shmSendFree(struct ncclComm* comm, struct ncclConnector* send) { /* 中文索引·体内调用 ncclShmIpcClose、free。 */
   struct shmRecvResources* resources = (struct shmRecvResources*)send->transportResources;
   if (resources) {
     NCCLCHECK(ncclShmIpcClose(&resources->remDesc));
@@ -210,7 +210,7 @@ static ncclResult_t shmSendFree(struct ncclComm* comm, struct ncclConnector* sen
   return ncclSuccess;
 }
 
-static ncclResult_t shmRecvFree(struct ncclComm* comm, struct ncclConnector* recv) {
+static ncclResult_t shmRecvFree(struct ncclComm* comm, struct ncclConnector* recv) { /* 中文索引·体内调用 ncclShmIpcClose、free。 */
   struct shmRecvResources* resources = (struct shmRecvResources*)recv->transportResources;
   if (resources) {
     NCCLCHECK(ncclShmIpcClose(&resources->remDesc));
@@ -220,7 +220,7 @@ static ncclResult_t shmRecvFree(struct ncclComm* comm, struct ncclConnector* rec
   return ncclSuccess;
 }
 
-static ncclResult_t shmSendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t shmSendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclShmIpcClose、free。 */
   struct shmProxyResources* resources = (struct shmProxyResources*)connection->transportResources;
 
   if (resources) {
@@ -231,7 +231,7 @@ static ncclResult_t shmSendProxyFree(struct ncclProxyConnection* connection, str
   return ncclSuccess;
 }
 
-static ncclResult_t shmRecvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t shmRecvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 ncclShmIpcClose、free。 */
   struct shmProxyResources* resources = (struct shmProxyResources*)connection->transportResources;
 
   if (resources) {
@@ -243,7 +243,7 @@ static ncclResult_t shmRecvProxyFree(struct ncclProxyConnection* connection, str
 }
 
 static ncclResult_t shmSendProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、ncclShmAllocateShareableBuffer。 */
   ncclResult_t result = ncclSuccess;
   struct shmRequest* req = (struct shmRequest*)reqBuff;
   /* check message size */
@@ -267,7 +267,7 @@ fail:
 }
 
 static ncclResult_t shmRecvProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                      void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、ncclShmAllocateShareableBuffer。 */
   ncclResult_t result = ncclSuccess;
   struct shmRequest* req = (struct shmRequest*)reqBuff;
   /* check message size */
@@ -290,7 +290,7 @@ fail:
   goto exit;
 }
 
-static void initShmLocality() {
+static void initShmLocality() { /* 中文索引·体内调用 ncclParamShmLocality。 */
   static int init = 0;
   if (!init) {
     shmLocality = ncclParamShmLocality();
@@ -304,7 +304,7 @@ static void initShmLocality() {
 
 // legacy is the final allocation mode (proxy callers must set it to true when proxyState->cuMemHostEnabled is false)
 ncclResult_t ncclShmAllocateShareableBuffer(size_t size, bool legacy, ncclShmIpcDesc_t* desc, void** hptr,
-                                            void** dptr) {
+                                            void** dptr) { /* 中文索引·体内调用 ncclCuMemHostAlloc、memcpy。 */
   if (desc == NULL || hptr == NULL) {
     WARN("Invalid argument desc %p, hptr %p", desc, hptr);
     return ncclInvalidArgument;
@@ -357,7 +357,7 @@ ncclResult_t ncclShmAllocateShareableBuffer(size_t size, bool legacy, ncclShmIpc
 }
 
 ncclResult_t ncclShmImportShareableBuffer(struct ncclComm* comm, int proxyRank, ncclShmIpcDesc_t* desc, void** hptr,
-                                          void** dptr, ncclShmIpcDesc_t* descOut) {
+                                          void** dptr, ncclShmIpcDesc_t* descOut) { /* 中文索引·体内调用 ncclProxyClientGetFdBlocking、cuMemImportFromShareableHandle。 */
   if (comm == NULL || desc == NULL || hptr == NULL || descOut == NULL) {
     WARN("Invalid argument comm %p, desc %p, hptr %p, descOut %p", comm, desc, hptr, descOut);
     return ncclInvalidArgument;
@@ -452,7 +452,7 @@ ncclResult_t ncclShmImportShareableBuffer(struct ncclComm* comm, int proxyRank, 
   return ncclSuccess;
 }
 
-ncclResult_t ncclShmIpcClose(ncclShmIpcDesc_t* desc) {
+ncclResult_t ncclShmIpcClose(ncclShmIpcDesc_t* desc) { /* 中文索引·体内调用 ncclCuMemHostFree、ncclShmClose。 */
   if (desc) {
 #if CUDART_VERSION >= 12020
     if (!desc->legacy) {

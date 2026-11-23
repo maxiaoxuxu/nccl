@@ -158,7 +158,7 @@ struct netRegInfo {
 
 /* Determine if two peers can communicate with NET */
 static ncclResult_t canConnect(int* ret, struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* info1,
-                               struct ncclPeerInfo* info2) {
+                               struct ncclPeerInfo* info2) { /* 中文索引·体内调用 ncclTopoCheckNet。 */
   *ret = 1;
   if (info1->hostHash == info2->hostHash) {
     // If on the same host, check intra-node net is not disabled.
@@ -218,14 +218,14 @@ static void populateCommNetAttrs(struct ncclComm* comm, struct ncclConnector* co
 }
 
 // Apply the netAttr to the netComm
-void setNetAttrs(struct ncclProxyState* proxyState, ncclNetAttr_t* netAttr) {
+void setNetAttrs(struct ncclProxyState* proxyState, ncclNetAttr_t* netAttr) { /* 中文索引·体内调用 proxyState->ncclNet->setNetAttr。 */
   if (proxyState->ncclNet->setNetAttr) {
     proxyState->ncclNet->setNetAttr(proxyState->netContext, netAttr);
     proxyState->netAttr = *netAttr;
   }
 }
 
-void printNetAttrs(ncclNetAttr_t* netAttr, const char* task) {
+void printNetAttrs(ncclNetAttr_t* netAttr, const char* task) { /* 中文索引·体内调用 ncclBitsToString。 */
   const int opBufLen = ncclNumFuncs * 32;
   char opBuf[opBufLen] = "";
   const int algoBufLen = NCCL_NUM_ALGORITHMS * 32;
@@ -246,7 +246,7 @@ void printNetAttrs(ncclNetAttr_t* netAttr, const char* task) {
 }
 
 // Set the netAttr for a transfer operation
-void setXferNetAttrs(struct ncclProxyState* proxyState, struct ncclProxyArgs* args, int send) {
+void setXferNetAttrs(struct ncclProxyState* proxyState, struct ncclProxyArgs* args, int send) { /* 中文索引·体内调用 memcmp、setNetAttrs。 */
   ncclNetAttr_t netAttr;
 
   if (!proxyState->ncclNet->setNetAttr) return;
@@ -295,7 +295,7 @@ static inline int getHandleForAddressRangeFlags(ncclTopoGdrMode useGdr) {
  * information for this peer */
 static ncclResult_t sendSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                               struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                              struct ncclConnector* send, int channelId, int connIndex) {
+                              struct ncclConnector* send, int channelId, int connIndex) { /* 中文索引·体内调用 ncclParamNetSharedBuffers、ncclTopoGetNetDev。 */
   struct setupReq req = {0};
 
   send->conn.shared = req.shared = graph || connIndex == 0           ? 0 :
@@ -355,7 +355,7 @@ static const char* ncclTopoFlushTypeStr(enum ncclTopoFlushType flush) {
 /* Setup recv connector */
 static ncclResult_t recvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph, struct ncclPeerInfo* myInfo,
                               struct ncclPeerInfo* peerInfo, struct ncclConnect* connectInfo,
-                              struct ncclConnector* recv, int channelId, int connIndex) {
+                              struct ncclConnector* recv, int channelId, int connIndex) { /* 中文索引·体内调用 ncclParamNetSharedBuffers、ncclTopoGetNetDev。 */
   struct setupReq req = {0};
 
   recv->conn.shared = req.shared = graph || connIndex == 0           ? 0 :
@@ -399,20 +399,20 @@ static ncclResult_t recvSetup(struct ncclComm* comm, struct ncclTopoGraph* graph
   return ncclSuccess;
 }
 
-static ncclResult_t netMapShm(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, struct connectMapMem* mem) {
+static ncclResult_t netMapShm(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, struct connectMapMem* mem) { /* 中文索引·体内调用 ncclShmImportShareableBuffer。 */
   NCCLCHECK(ncclShmImportShareableBuffer(comm, proxyConn->rank, &mem->createDesc, (void**)&mem->cpuPtr,
                                          (void**)&mem->gpuPtr, &mem->attachDesc));
   return ncclSuccess;
 }
 
-static ncclResult_t netCreateShm(struct ncclProxyState* proxyState, struct connectMapMem* mem) {
+static ncclResult_t netCreateShm(struct ncclProxyState* proxyState, struct connectMapMem* mem) { /* 中文索引·体内调用 ncclShmAllocateShareableBuffer。 */
   // The proxy only needs CPU access to this buffer (the sender registers its own mapping).
   NCCLCHECK(ncclShmAllocateShareableBuffer(mem->size, !proxyState->cuMemHostEnabled, &mem->createDesc,
                                            (void**)&mem->cpuPtr, nullptr));
   return ncclSuccess;
 }
 
-static ncclResult_t netDumpMap(struct connectMap* map) {
+static ncclResult_t netDumpMap(struct connectMap* map) { /* 中文索引·体内调用 printf。 */
   printf("Dump map same process %d shared %d\n", map->sameProcess, map->shared);
   struct connectMapMem* mem = map->mems + NCCL_NET_MAP_HOSTMEM;
   printf("Mem 0: Host mem (%zx B) CPU %p GPU %p\n", mem->size, mem->cpuPtr, mem->gpuPtr);
@@ -449,7 +449,7 @@ struct netRecvConnectArgs {
 };
 
 static ncclResult_t sendConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                                struct ncclConnector* send) {
+                                struct ncclConnector* send) { /* 中文索引·体内调用 memcpy、ncclCalloc。 */
   struct connectMap* map = (connectMap*)send->transportResources;
   void* opId;
   int recvUseGdr;
@@ -562,7 +562,7 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct 
 
 /* Connect to this peer */
 static ncclResult_t recvConnect(struct ncclComm* comm, struct ncclConnect* connectInfo, int nranks, int rank,
-                                struct ncclConnector* recv) {
+                                struct ncclConnector* recv) { /* 中文索引·体内调用 memcpy、ncclCalloc。 */
   struct connectMap* map = (connectMap*)recv->transportResources;
   void* opId;
   int sendUseGdr;
@@ -634,7 +634,7 @@ static ncclResult_t recvConnect(struct ncclComm* comm, struct ncclConnect* conne
   return ncclSuccess;
 }
 
-static ncclResult_t sendFree(struct ncclComm* comm, struct ncclConnector* send) {
+static ncclResult_t sendFree(struct ncclComm* comm, struct ncclConnector* send) { /* 中文索引·体内调用 cudaGetDevice、ncclCuMemEnable。 */
   struct connectMap* map = (struct connectMap*)(send->transportResources);
   if (map) {
     int cudaDev;
@@ -666,7 +666,7 @@ static ncclResult_t recvFree(struct ncclComm* comm, struct ncclConnector* recv) 
 #define NCCL_SHARED_STEPS 16
 static ncclResult_t sharedNetBuffersInit(struct ncclProxyState* proxyState, int cuda, int tpLocalRank, int type,
                                          int sameProcess, int nChannels, char** gpuPtr, char** cpuPtr, ssize_t* size,
-                                         ncclIpcDesc* ipcDesc) {
+                                         ncclIpcDesc* ipcDesc) { /* 中文索引·体内调用 ncclCalloc、ncclCuMemEnable。 */
   if (cuda == 0 && sameProcess == 0) {
     WARN("PXN should not use host buffers for data");
     return ncclInternalError;
@@ -714,7 +714,7 @@ static ncclResult_t sharedBuffersGet(struct ncclProxyState* proxyState, int chan
 }
 
 static ncclResult_t sharedNetBuffersDestroy(struct ncclProxyState* proxyState, int tpLocalRank, int type,
-                                            struct ncclProxyConnection* connection) {
+                                            struct ncclProxyConnection* connection) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement、ncclCuMemEnable。 */
   if (proxyState->progressState.localPeers == NULL) NCCLCHECK(ncclInternalError);
   struct ncclProxyPeer* peer = proxyState->progressState.localPeers[tpLocalRank];
   if (peer == NULL) NCCLCHECK(ncclInternalError);
@@ -744,14 +744,14 @@ static ncclResult_t sharedNetBuffersDestroy(struct ncclProxyState* proxyState, i
 }
 
 static ncclResult_t proxySharedInit(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                    int nChannels) {
+                                    int nChannels) { /* 中文索引·体内调用 sharedNetBuffersInit。 */
   NCCLCHECK(sharedNetBuffersInit(proxyState, 1, connection->tpLocalRank, 0, connection->sameProcess, nChannels, NULL,
                                  NULL, NULL, NULL));
   return ncclSuccess;
 }
 
 static ncclResult_t sendProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclNet->getProperties。 */
   struct setupReq* req = (struct setupReq*)reqBuff;
   if (reqSize != sizeof(struct setupReq)) return ncclInternalError;
 
@@ -792,7 +792,7 @@ static ncclResult_t sendProxySetup(struct ncclProxyConnection* connection, struc
 }
 
 static ncclResult_t recvProxySetup(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                   void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclCalloc、proxyState->ncclNet->getProperties。 */
   struct setupReq* req = (struct setupReq*)reqBuff;
   if (reqSize != sizeof(struct setupReq)) return ncclInternalError;
 
@@ -835,7 +835,7 @@ static ncclResult_t recvProxySetup(struct ncclProxyConnection* connection, struc
 
 // This function embeds plugin-specific rules given the current versions
 static ncclResult_t ncclNetGetDeviceHandle(ncclNetDeviceType type, int version, bool isRecv,
-                                           ncclNetDeviceHandle_t** handle) {
+                                           ncclNetDeviceHandle_t** handle) { /* 中文索引·体内调用 ncclCalloc。 */
   bool needsDeviceHandle = false;
 
   if (type == NCCL_NET_DEVICE_UNPACK) {
@@ -857,7 +857,7 @@ static ncclResult_t ncclNetGetDeviceHandle(ncclNetDeviceType type, int version, 
 }
 
 static ncclResult_t sendProxyConnect(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 setNetAttrs、ncclNetGetDeviceHandle。 */
   struct sendNetResources* resources = (struct sendNetResources*)(connection->transportResources);
   if (reqSize != sizeof(netSendConnectArgs)) return ncclInternalError;
   ncclResult_t ret = ncclSuccess;
@@ -1043,7 +1043,7 @@ static ncclResult_t sendProxyConnect(struct ncclProxyConnection* connection, str
 }
 
 static ncclResult_t recvProxyConnect(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                     void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 setNetAttrs、ncclNetGetDeviceHandle。 */
   if (reqSize != sizeof(netRecvConnectArgs)) return ncclInternalError;
   struct recvNetResources* resources = (struct recvNetResources*)(connection->transportResources);
   netRecvConnectArgs* req = (netRecvConnectArgs*)reqBuff;
@@ -1216,7 +1216,7 @@ static ncclResult_t recvProxyConnect(struct ncclProxyConnection* connection, str
   return ncclSuccess;
 }
 
-static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 sharedNetBuffersDestroy、ncclIntruQueueEmpty。 */
   struct sendNetResources* resources = (struct sendNetResources*)(connection->transportResources);
   if (connection->state == connSharedInitialized) {
     // NVB Preconnect
@@ -1271,7 +1271,7 @@ static ncclResult_t sendProxyFree(struct ncclProxyConnection* connection, struct
   return ncclSuccess;
 }
 
-static ncclResult_t recvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) {
+static ncclResult_t recvProxyFree(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState) { /* 中文索引·体内调用 sharedNetBuffersDestroy、ncclIntruQueueEmpty。 */
   struct recvNetResources* resources = (struct recvNetResources*)(connection->transportResources);
   if (connection->state == connSharedInitialized) {
     // NVB Preconnect
@@ -1324,7 +1324,7 @@ static ncclResult_t recvProxyFree(struct ncclProxyConnection* connection, struct
 
 static_assert(NCCL_STEPS <= NCCL_NET_MAX_REQUESTS, "Not enough net requests to cover for steps");
 
-static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) {
+static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) { /* 中文索引·体内调用 ncclProfilerRecordProxyOpEventState、ncclProfilerStartSendProxyStepEvent。 */
   int checkedNetAttr = 0;
   if (args->state == ncclProxyOpReady) {
     for (int s = 0; s < args->nsubs; s++) {
@@ -1437,7 +1437,7 @@ static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct 
             // coverity[use_invalid:FALSE]
             void* phandle = &sub->pHandles[DIVUP(transmittedStepId, args->sliceSteps) % NCCL_STEPS];
             if (!checkedNetAttr++) setXferNetAttrs(proxyState, args, 1);
-            NCCLCHECK(proxyState->ncclNet->isend(resources->netSendComm, buff, size, resources->tpRank,
+            /* 中文图解·transport｜数据和协议标志就绪后，以当前 buff、size、内存句柄调用网络接口。 */ NCCLCHECK(proxyState->ncclNet->isend(resources->netSendComm, buff, size, resources->tpRank,
                                                  sub->sendMhandle, phandle, sub->requests + buffSlot));
             if (sub->requests[buffSlot] != NULL) {
               TRACE(NCCL_NET,
@@ -1459,7 +1459,7 @@ static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct 
         int done;
         int size;
         int buffSlot = (sub->base + sub->done) % NCCL_STEPS;
-        NCCLCHECK(proxyState->ncclNet->test(sub->requests[buffSlot], &done, &size));
+        /* 中文图解·transport｜test 返回完成后才推进 done，回收 FIFO 槽位供下一批数据使用。 */ NCCLCHECK(proxyState->ncclNet->test(sub->requests[buffSlot], &done, &size));
         if (done) {
           // Make sure size is reset to -1 before we update the head.
           connFifo[buffSlot].size = -1;
@@ -1493,7 +1493,7 @@ static ncclResult_t sendProxyProgress(struct ncclProxyState* proxyState, struct 
   return ncclSuccess;
 }
 
-static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) {
+static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct ncclProxyArgs* args) { /* 中文索引·体内调用 memcpy、ncclProfilerRecordProxyOpEventState。 */
   int checkedNetAttr = 0;
   if (args->state == ncclProxyOpReady) {
     // Initialize subs and group them by same recvComm.
@@ -1792,7 +1792,7 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct 
   return ncclSuccess;
 }
 
-ncclResult_t ncclNetDeregBuffer(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, void* handle) {
+ncclResult_t ncclNetDeregBuffer(struct ncclComm* comm, struct ncclProxyConnector* proxyConn, void* handle) { /* 中文索引·体内调用 ncclProxyCallBlocking。 */
   NCCLCHECK(ncclProxyCallBlocking(comm, proxyConn, ncclProxyMsgDeregister, &handle, sizeof(void*), NULL, 0));
   INFO(NCCL_REG, "rank %d - deregistered net buffer handle %p", comm->rank, handle);
   return ncclSuccess;
@@ -1800,7 +1800,7 @@ ncclResult_t ncclNetDeregBuffer(struct ncclComm* comm, struct ncclProxyConnector
 
 static ncclResult_t netRegisterBuffer(ncclComm* comm, const void* userbuff, size_t buffSize,
                                       struct ncclConnector** peerConns, int nPeers, struct ncclReg* regRecord,
-                                      int* outRegBufFlag, void** outHandle, int numSegments) {
+                                      int* outRegBufFlag, void** outHandle, int numSegments) { /* 中文索引·体内调用 ncclProxyCallBlocking、ncclCalloc。 */
   ncclResult_t ret = ncclSuccess;
   int gdrFlag = 1;
 
@@ -1867,7 +1867,7 @@ fail:
 
 ncclResult_t ncclNetLocalRegisterBuffer(ncclComm* comm, const void* userbuff, size_t buffSize,
                                         struct ncclConnector** peerConns, int nPeers, int* outRegBufFlag,
-                                        void** outHandle) {
+                                        void** outHandle) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclReg* regRecord = NULL;
   bool isValid = false;
@@ -1902,7 +1902,7 @@ struct ncclNetCleanupCallback {
   struct ncclReg* reg;
 };
 
-static ncclResult_t cleanupNet(struct ncclComm* comm, struct ncclCommCallback* cb) {
+static ncclResult_t cleanupNet(struct ncclComm* comm, struct ncclCommCallback* cb) { /* 中文索引·体内调用 ncclCommGraphDeregister、free。 */
   struct ncclNetCleanupCallback* obj = (struct ncclNetCleanupCallback*)cb;
   NCCLCHECK(ncclCommGraphDeregister(obj->comm, obj->reg));
   free(obj);
@@ -1912,7 +1912,7 @@ static ncclResult_t cleanupNet(struct ncclComm* comm, struct ncclCommCallback* c
 ncclResult_t ncclNetGraphRegisterBuffer(
   ncclComm* comm, const void* userbuff, size_t buffSize, struct ncclConnector** peerConns, int nPeers,
   int* outRegBufFlag, void** outHandle,
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueElts) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueElts) { /* 中文索引·体内调用 ncclCuMemGetAddressRange、ncclParamMultiSegmentRegister。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclNetCleanupCallback* record = NULL;
   struct ncclReg* regRecord = NULL;
@@ -1947,7 +1947,7 @@ fail:
 }
 
 static ncclResult_t sendProxyRegBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclOsGetPageSize、cuMemGetHandleForAddressRange。 */
   void* handle = NULL;
   struct netRegInfo* info = (struct netRegInfo*)reqBuff;
   struct sendNetResources* resources = (struct sendNetResources*)(connection->transportResources);
@@ -2016,7 +2016,7 @@ fail:
 }
 
 static ncclResult_t recvProxyRegBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) {
+                                       void* reqBuff, int reqSize, void* respBuff, int respSize, int* done) { /* 中文索引·体内调用 ncclOsGetPageSize、cuMemGetHandleForAddressRange。 */
   void* handle = NULL;
   struct netRegInfo* info = (struct netRegInfo*)reqBuff;
   struct recvNetResources* resources = (struct recvNetResources*)(connection->transportResources);
@@ -2089,7 +2089,7 @@ static bool netHandleCmp(struct proxyMemHandle* a, struct proxyMemHandle* b) {
 }
 
 static ncclResult_t sendProxyDeregBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                         void* reqBuff, int reqSize, int* done) {
+                                         void* reqBuff, int reqSize, int* done) { /* 中文索引·体内调用 memcpy、ncclIntruQueueDelete。 */
   void* handle;
   struct sendNetResources* resources = (struct sendNetResources*)(connection->transportResources);
 
@@ -2111,7 +2111,7 @@ static ncclResult_t sendProxyDeregBuffer(struct ncclProxyConnection* connection,
 }
 
 static ncclResult_t recvProxyDeregBuffer(struct ncclProxyConnection* connection, struct ncclProxyState* proxyState,
-                                         void* reqBuff, int reqSize, int* done) {
+                                         void* reqBuff, int reqSize, int* done) { /* 中文索引·体内调用 memcpy、ncclIntruQueueDelete。 */
   void* handle;
   struct recvNetResources* resources = (struct recvNetResources*)(connection->transportResources);
 

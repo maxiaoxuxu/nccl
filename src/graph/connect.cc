@@ -19,7 +19,7 @@
 /********************* Internode connection ***********************/
 /******************************************************************/
 
-ncclResult_t ncclTopoPreset(struct ncclComm* comm, struct ncclTopoGraph** graphs, struct ncclTopoRanks* topoRanks) {
+ncclResult_t ncclTopoPreset(struct ncclComm* comm, struct ncclTopoGraph** graphs, struct ncclTopoRanks* topoRanks) { /* 中文索引·体内调用 memcpy。 */
   int rank = comm->rank;
   int localRanks = comm->topo->nodes[GPU].count;
   int nChannels = comm->nChannels;
@@ -148,7 +148,7 @@ static ncclResult_t setTreeDown(struct ncclTree* tree, int* indexes, int d, int 
 }
 
 static ncclResult_t connectTrees(struct ncclComm* comm, int* treeToParent, int* treeToChild0, int* treeToChild1,
-                                 int* treePatterns) {
+                                 int* treePatterns) { /* 中文索引·体内调用 log2i、ncclGetDtree。 */
   const int nChannels = comm->nChannels, nNodes = comm->nNodes, node = comm->node;
 
   // Compute tree depth. Not an exact value but a good approximation in most
@@ -189,7 +189,7 @@ static ncclResult_t connectTrees(struct ncclComm* comm, int* treeToParent, int* 
   return ncclSuccess;
 }
 
-static ncclResult_t connectCollNet(struct ncclComm* comm, struct ncclTopoGraph* collNetGraph) {
+static ncclResult_t connectCollNet(struct ncclComm* comm, struct ncclTopoGraph* collNetGraph) { /* 中文索引·体内调用 ncclCalloc、sprintf。 */
   int rank = comm->rank;
   int localRanks = comm->localRanks;
   int nHeads = 0;
@@ -259,7 +259,7 @@ static ncclResult_t connectCollNet(struct ncclComm* comm, struct ncclTopoGraph* 
   return ncclSuccess;
 }
 
-static ncclResult_t connectNvls(struct ncclComm* comm, int* nvlsHeads, int nHeads) {
+static ncclResult_t connectNvls(struct ncclComm* comm, int* nvlsHeads, int nHeads) { /* 中文索引·体内调用 ncclGetDtree、sprintf。 */
   int headRank = -1;
   if (nHeads == 0) {
     comm->nvlsChannels = 0;
@@ -345,7 +345,7 @@ NCCL_PARAM(MaxNrings, "MAX_NRINGS", -2);
 NCCL_PARAM(MinNchannels, "MIN_NCHANNELS", -2);
 NCCL_PARAM(MaxNchannels, "MAX_NCHANNELS", -2);
 
-int ncclMinNchannels() {
+int ncclMinNchannels() { /* 中文索引·体内调用 ncclParamMinNrings、ncclParamMinNchannels。 */
   int minNchannels = 0;
   if (ncclParamMinNrings() != -2) minNchannels = ncclParamMinNrings();
   if (ncclParamMinNchannels() != -2) minNchannels = ncclParamMinNchannels();
@@ -359,7 +359,7 @@ int ncclMinNchannels() {
 
 extern int64_t ncclParamWorkArgsBytes();
 
-int ncclMaxNchannels() {
+int ncclMaxNchannels() { /* 中文索引·体内调用 ncclParamMaxNrings、ncclParamMaxNchannels。 */
   int maxNchannels = MAXCHANNELS;
   if (ncclParamMaxNrings() != -2) maxNchannels = ncclParamMaxNrings();
   if (ncclParamMaxNchannels() != -2) maxNchannels = ncclParamMaxNchannels();
@@ -372,7 +372,7 @@ int ncclMaxNchannels() {
   return maxNchannels;
 }
 
-static int copyChannels(struct ncclComm* comm, int start, int end, int* ringPrev, int* ringNext) {
+static int copyChannels(struct ncclComm* comm, int start, int end, int* ringPrev, int* ringNext) { /* 中文索引·体内调用 memcpy。 */
   int nranks = comm->nRanks;
   int c;
   for (c = start; c < end; c++) {
@@ -394,7 +394,7 @@ NCCL_PARAM(RubinSmBw, "RUBIN_SM_BW", 24);
 
 ncclResult_t ncclTopoPostset(struct ncclComm* comm, int* firstRanks, int* treePatterns,
                              struct ncclTopoRanks** allTopoRanks, int* rings, struct ncclTopoGraph** graphs,
-                             struct ncclComm* parent) {
+                             struct ncclComm* parent) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、ncclCalloc。 */
   // Gather data from all ranks
   ncclResult_t ret = ncclSuccess;
   int *ringRecv = NULL, *ringSend = NULL, *ringPrev = NULL, *ringNext = NULL, *treeToParent = NULL,
@@ -554,7 +554,7 @@ ncclResult_t ncclTopoPostset(struct ncclComm* comm, int* firstRanks, int* treePa
   }
 
   // Create rings array and check all is fine
-  NCCLCHECKGOTO(ncclBuildRings(nChannels, rings, comm->rank, comm->nRanks, ringPrev, ringNext), ret, fail);
+  /* 中文图解·host｜根据前驱后继生成并验证每条环的 rank 序列，供通道初始化使用。 */ NCCLCHECKGOTO(ncclBuildRings(nChannels, rings, comm->rank, comm->nRanks, ringPrev, ringNext), ret, fail);
   comm->symkState.genkComm.nRingChannels = symkNRingChannels;
   comm->symkState.genkComm.nTreeChannels = symkNTreeChannels;
   comm->symkState.genkComm.nTreeSearchChannels = std::min(symkNTreeSearchChannels, symkNTreeChannels);

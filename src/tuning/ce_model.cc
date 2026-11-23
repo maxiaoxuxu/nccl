@@ -54,7 +54,7 @@ static float ncclCeD2hBw(struct ncclComm* comm) {
 }
 
 static float ncclCeAgLatencyUs(struct ncclComm* comm, bool multicast, int nRanks, size_t perRankBytes, int captured,
-                               int inPlace) {
+                               int inPlace) { /* 中文索引·体内调用 ncclCeArchBucket、ncclCudaDriverVersion。 */
   int arch = ncclCeArchBucket(comm);
   int capturedIdx = captured ? CE_GRAPH : CE_NOGRAPH;
   const struct ncclCeAgFloorParams f = CE_AG_FLOOR[arch][multicast ? 1 : 0][capturedIdx];
@@ -104,7 +104,7 @@ static float ncclCeAgLatencyUs(struct ncclComm* comm, bool multicast, int nRanks
 }
 
 ncclResult_t ncclTuningCeModelSim(struct ncclTuningInput_t* const input, struct ncclTuningResult_t* const result,
-                                  struct ncclTuningModelState* /*internal*/) {
+                                  struct ncclTuningModelState* /*internal*/) { /* 中文索引·体内调用 ncclCeAgLatencyUs。 */
   int method = result->id - NCCL_TUNING_CE_METHOD_ID_OFFSET;
   bool multicast = (method == ncclCeMethodId_AllGather_MC);
   int nRanks = input->comm->devrState.lsaTeamSize;

@@ -32,7 +32,7 @@
 
 NCCL_PARAM(L1SharedMemoryCarveout, "L1_SHARED_MEMORY_CARVEOUT", 0);
 NCCL_PARAM(AllgathervEnable, "ALLGATHERV_ENABLE", 1);
-NCCL_PARAM(EnqueueRearchEnable, "ENQUEUE_REARCH_ENABLE", 0);
+/* 中文图解·host｜默认值 0 选常规排队。打开重构开关后原始任务先经过 task_prep，group.cc 中仍可追到 doLaunches。 */ NCCL_PARAM(EnqueueRearchEnable, "ENQUEUE_REARCH_ENABLE", 0);
 NCCL_PARAM(SymCeThreshold, "SYM_CE_THRESHOLD", 8 * 1024 * 1024);
 NCCL_PARAM(P2pPerChannelRegNetBw, "P2P_PER_CHANNEL_REG_NET_BW", /*GB/s*/ -1); // -1 = full network bw
 
@@ -43,7 +43,7 @@ int64_t ncclParamNvlsChannels();
 int64_t ncclParamCGAClusterSize();
 
 // Higher CE threshold for AllGather since TMA kernels continue to perform better till higher message sizes.
-static int64_t symCeAllGatherThreshold(struct ncclComm* comm) {
+static int64_t symCeAllGatherThreshold(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamSymCeThreshold、ncclGetEnv。 */
   int64_t threshold = ncclParamSymCeThreshold();
   const char* env = ncclGetEnv("NCCL_SYM_CE_THRESHOLD");
   if (env == nullptr || strlen(env) == 0) {
@@ -54,7 +54,7 @@ static int64_t symCeAllGatherThreshold(struct ncclComm* comm) {
 }
 
 // Returns maximum kernel stack size of all CUDA kernels
-ncclResult_t ncclInitKernelsForDevice(int cudaArch, int maxSharedMem, size_t* maxStackSize) {
+ncclResult_t ncclInitKernelsForDevice(int cudaArch, int maxSharedMem, size_t* maxStackSize) { /* 中文索引·体内调用 ncclParamL1SharedMemoryCarveout、ncclCudaDriverVersion。 */
   ncclResult_t result = ncclSuccess;
 
   if (maxStackSize) *maxStackSize = 0;
@@ -146,7 +146,7 @@ ncclResult_t ncclInitKernelsForDevice(int cudaArch, int maxSharedMem, size_t* ma
 /*       Launch system : synchronization and CUDA kernel launch              */
 /*****************************************************************************/
 
-ncclResult_t ncclAddProxyOpIfNeeded(struct ncclComm* comm, struct ncclKernelPlan* plan, struct ncclProxyOp* op) {
+ncclResult_t ncclAddProxyOpIfNeeded(struct ncclComm* comm, struct ncclKernelPlan* plan, struct ncclProxyOp* op) { /* 中文索引·体内调用 ncclProxySaveOp、ncclIntruQueueEnqueue。 */
   bool needed = true;
   NCCLCHECK(ncclProxySaveOp(comm, op, &needed));
   if (needed) {
@@ -161,7 +161,7 @@ NCCL_PARAM(P2pEpochEnable, "P2P_EPOCH_ENABLE", 1);
 
 void ncclAddWorkBatchToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan, int channelId,
                             enum ncclDevWorkType workType, int devFuncId, int progressSlot, uint32_t workOffset,
-                            int p2pEpoch, int p2pRound, bool newBatch) {
+                            int p2pEpoch, int p2pRound, bool newBatch) { /* 中文索引·体内调用 ncclDevWorkSize、ncclParamP2pEpochEnable。 */
   size_t workSize = ncclDevWorkSize(workType);
   ncclKernelPlanner::WipPlan::Channel* chan = &comm->planner.wipPlan.channels[channelId];
   // Conditions causing us to create a new blank batch.
@@ -242,7 +242,7 @@ void ncclAddWorkBatchToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan, 
   }
 }
 
-static void finishPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+static void finishPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 alignUp、ncclMemoryStackAlloc。 */
   ncclKernelPlanner::WipPlan::Channel* wipChannels = comm->planner.wipPlan.channels;
   size_t workBytes = plan->workBytes;
   size_t batchBytes = plan->nWorkBatches * sizeof(struct ncclDevWorkBatch);
@@ -357,7 +357,7 @@ bool ncclTestBudget(struct ncclKernelPlanBudget* budget, int nWorkBatches, ssize
   return ok;
 }
 
-ncclResult_t ncclTasksRegAndEnqueue(struct ncclComm* comm) {
+ncclResult_t ncclTasksRegAndEnqueue(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueHead、ncclIntruQueueDequeue。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   struct ncclTaskColl* task;
   task = ncclIntruQueueHead(&planner->collTaskQueue);
@@ -430,7 +430,7 @@ ncclResult_t ncclValidateCollConfigLaunchCompletionEvents(struct ncclComm* comm)
 // Called once per ncclGroup to organize the user submitted tasks in
 // comm->planner so that they can be peeled off into plans.
 ncclResult_t ncclPrepareTasks(struct ncclComm* comm, bool* algoNeedConnect, bool* needConnect, bool* needGenkDevComm,
-                              ncclSimInfo_t* simInfo) {
+                              ncclSimInfo_t* simInfo) { /* 中文索引·体内调用 ncclValidateCollConfigLaunchCompletionEvents、ncclCudaGraphValid。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   if (needGenkDevComm) *needGenkDevComm = false;
 
@@ -525,7 +525,7 @@ ncclResult_t ncclPrepareTasks(struct ncclComm* comm, bool* algoNeedConnect, bool
         aggEnd = aggEnd->next;
       }
 
-      NCCLCHECK(ncclGetAlgoInfo(comm, &agg, collNetSupport, nvlsTransportEnabled, nTasksPerChannel, simInfo));
+      /* 中文图解·host｜同组任务的聚合输入 agg 交给调优器，选出的算法和协议影响后续切块与设备模板。 */ NCCLCHECK(ncclGetAlgoInfo(comm, &agg, collNetSupport, nvlsTransportEnabled, nTasksPerChannel, simInfo));
       agg.devFuncId = ncclDevFuncId(agg.func, agg.opDev.op, agg.datatype, agg.algorithm, agg.protocol);
 
       int isCollnet = 0, isNvls = 0;
@@ -656,7 +656,7 @@ ncclResult_t ncclPrepareTasks(struct ncclComm* comm, bool* algoNeedConnect, bool
 }
 
 static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan,
-                                            struct ncclKernelPlanBudget* budget) {
+                                            struct ncclKernelPlanBudget* budget) { /* 中文索引·体内调用 ncclCommNMaxChannels、ncclIntruQueueHead。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   // Estimate number of tasks that will fit in this plan.
   int nPlanColls = 0;
@@ -714,7 +714,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
 
     int kind = 2 * task->isCollnet + task->isNvls;
     if (kind != kindPrev) {
-      trafficPerChannel = ncclCollTrafficPerChannel(trafficBytes[kind], nChannels[kind]);
+      /* 中文图解·layout｜trafficPerChannel 以估算流量字节计，同一类任务共用这份预算。 */ trafficPerChannel = ncclCollTrafficPerChannel(trafficBytes[kind], nChannels[kind]);
       kindPrev = kind;
       channelId = 0;
       currentTraffic = 0;
@@ -730,7 +730,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
       size_t globalBytesPerElement = elementSize * ncclFuncMaxSendRecvCount(task->func, comm->nRanks, 1);
       struct ncclProxyOp proxyOp;
       uint32_t chunkSize, directFlags = 0;
-      NCCLCHECK(calcCollChunking(comm, task, nChannels, globalBytesPerElement * task->count, &chunkSize, &directFlags,
+      /* 中文图解·layout｜CollNet 直接记录全量 count 和 chunkCount，GPU 使用独立的 collnet 联合体成员。 */ NCCLCHECK(calcCollChunking(comm, task, nChannels, globalBytesPerElement * task->count, &chunkSize, &directFlags,
                                  &proxyOp));
       devWork->channelLo = 0;
       devWork->channelHi = nChannels - 1;
@@ -755,7 +755,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
       // not task->isCollnet
       int trafficPerByte = ncclFuncTrafficPerByte(task->func, comm->nRanks);
       if (task->protocol == NCCL_PROTO_LL) trafficPerByte *= 4;
-      struct ncclCollChannelLayout layout = ncclComputeCollChannelLayout(
+      /* 中文图解·layout｜从 task 元素数、每字节流量权重、当前 channel 已用预算算出首中尾区间。 */ struct ncclCollChannelLayout layout = ncclComputeCollChannelLayout(
         task->count, elementSize, trafficPerByte, trafficPerChannel, currentTraffic, channelId, nMaxChannels[kind]);
       channelId += layout.channelOffset;
       int elementsPerCell = layout.elementsPerCell;
@@ -778,7 +778,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
       devWork->channelHi = channelId + nChannels - 1;
       task->channelLo = (uint8_t)channelId;
       task->channelHi = (uint8_t)(channelId + nChannels - 1);
-      devWork->cbd.countLo = countLo;
+      /* 中文图解·layout｜这里写入 work 的是元素数。countMid 表示每一条中间通道各自处理多少。 */ devWork->cbd.countLo = countLo;
       devWork->cbd.countMid = countMid;
       devWork->cbd.countHi = countHi;
 
@@ -792,7 +792,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
       if (countLo != 0) {
         NCCLCHECK(calcCollChunking(comm, task, /*nChannels=*/1, globalBytesPerElement * countLo, &chunkSize,
                                    &directFlags, &proxyOpLo));
-        devWork->cbd.chunkGrainsLo = chunkSize / grainSize;
+        /* 中文图解·layout｜chunkSize 是字节；除以协议 grain 后压入 21 位字段，GPU 再用 sizeof(T) 换算回元素。 */ devWork->cbd.chunkGrainsLo = chunkSize / grainSize;
       }
       if (countHi != 0) {
         NCCLCHECK(calcCollChunking(comm, task, /*nChannels=*/1, globalBytesPerElement * countHi, &chunkSize,
@@ -827,7 +827,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
         struct ncclProxyOp* proxyOp;
         if (c == (int)devWork->channelLo) {
           proxyOp = &proxyOpLo;
-          proxyOp->loopOffset = 0;
+          /* 中文图解·transport｜每个 channel 的 proxy 描述与同通道 GPU work 配对，loopOffset 和 channelSize 以字节计。 */ proxyOp->loopOffset = 0;
           proxyOp->channelSize = countLo * elementSize;
         } else if (c == (int)devWork->channelHi) {
           proxyOp = &proxyOpHi;
@@ -937,7 +937,7 @@ static ncclResult_t scheduleCollTasksToPlan(struct ncclComm* comm, struct ncclKe
 NCCL_PARAM(P2pLLThreshold, "P2P_LL_THRESHOLD", 16384);
 NCCL_PARAM(ChunkSize, "CHUNK_SIZE", 0);
 
-static int computeP2pChannels(ssize_t bytes, int nChannelsMin, int nChannelsMax, ssize_t stepSize, int nNodes) {
+static int computeP2pChannels(ssize_t bytes, int nChannelsMin, int nChannelsMax, ssize_t stepSize, int nNodes) { /* 中文索引·体内调用 divUp。 */
   if (bytes == -1) return 0;
   if (bytes == 0) return 1;
 
@@ -973,7 +973,7 @@ static inline int p2pPayloadPerChunk(int chunkSize, int protocol) {
 // No-op's are encoded with a -1 size.
 static ncclResult_t addP2pToPlan(struct ncclComm* comm, struct ncclKernelPlan* plan, int nChannelsMin, int nChannelsMax,
                                  int p2pEpoch, int p2pRound, int sendRank, void* sendAddr, ssize_t sendBytes,
-                                 int recvRank, void* recvAddr, ssize_t recvBytes, struct ncclTaskP2p** p2pTasks) {
+                                 int recvRank, void* recvAddr, ssize_t recvBytes, struct ncclTaskP2p** p2pTasks) { /* 中文索引·体内调用 ncclP2pChannelBaseForRound、ncclP2pChannelForPart。 */
   ncclResult_t ret = ncclSuccess;
   constexpr int connIndex = 1;
   bool selfSend = (sendRank == comm->rank);
@@ -1238,7 +1238,7 @@ cleanup:
   return ret;
 }
 
-static int calcP2pChannelCount(size_t totalSize, int minChannels, int maxChannels, size_t minSize, size_t maxSize) {
+static int calcP2pChannelCount(size_t totalSize, int minChannels, int maxChannels, size_t minSize, size_t maxSize) { /* 中文索引·体内调用 divUp。 */
   size_t size = std::max(minSize, divUp(totalSize, minChannels));
   int nChannels = minChannels;
   while (size > maxSize && nChannels <= maxChannels / 2) {
@@ -1248,8 +1248,8 @@ static int calcP2pChannelCount(size_t totalSize, int minChannels, int maxChannel
   return nChannels;
 }
 
-static ncclResult_t scheduleP2pTasksToPlan(struct ncclComm* comm, int* p2pEpoch, int* p2pRound,
-                                           struct ncclKernelPlan* plan, struct ncclKernelPlanBudget* budget) {
+/* 中文图解·p2p｜P2P 按 peer 的 send/recv 队列与通信轮次组装计划，使用自己的 channel 分派。 */ static ncclResult_t scheduleP2pTasksToPlan(struct ncclComm* comm, int* p2pEpoch, int* p2pRound,
+                                           struct ncclKernelPlan* plan, struct ncclKernelPlanBudget* budget) { /* 中文索引·体内调用 ncclDevFuncId_P2p、ncclIntruQueueHead。 */
   int nRanks = comm->nRanks;
   struct ncclKernelPlanner::Peer* peers = comm->planner.peers;
 
@@ -1365,7 +1365,7 @@ static ncclResult_t scheduleP2pTasksToPlan(struct ncclComm* comm, int* p2pEpoch,
 }
 
 // Spin until its safe to increase comm->workFifoProduced to desiredProduced.
-static ncclResult_t waitWorkFifoAvailable(struct ncclComm* comm, uint32_t desiredProduced) {
+static ncclResult_t waitWorkFifoAvailable(struct ncclComm* comm, uint32_t desiredProduced) { /* 中文索引·体内调用 ncclCommPollEventCallbacks、std::this_thread::yield。 */
   bool hasRoom = (desiredProduced - comm->workFifoConsumed) <= comm->workFifoBytes;
   if (!hasRoom) {
     while (true) {
@@ -1388,7 +1388,7 @@ struct uploadWork_cleanup_t {
   struct ncclCommEventCallback base;
   void* hostBuf;
 };
-ncclResult_t uploadWork_cleanup_fn(struct ncclComm* comm, struct ncclCommEventCallback* cb) {
+ncclResult_t uploadWork_cleanup_fn(struct ncclComm* comm, struct ncclCommEventCallback* cb) { /* 中文索引·体内调用 ncclOsAlignedFree、cudaEventDestroy。 */
   struct uploadWork_cleanup_t* me = (struct uploadWork_cleanup_t*)cb;
   ncclOsAlignedFree(me->hostBuf);
   CUDACHECK(cudaEventDestroy(me->base.event));
@@ -1397,7 +1397,7 @@ ncclResult_t uploadWork_cleanup_fn(struct ncclComm* comm, struct ncclCommEventCa
 }
 } // namespace
 
-static ncclResult_t uploadWork(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+static ncclResult_t uploadWork(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 waitWorkFifoAvailable、ncclOsAlignedAlloc。 */
   if (plan->isSymColl || plan->isCeColl || plan->isRma) return ncclSuccess;
 
   size_t workBytes = plan->workBytes;
@@ -1546,7 +1546,7 @@ static struct ncclProfilerEventRef gettaskEventHandle(struct ncclProxyOp* op) {
   return op->task.coll->eventHandle;
 }
 
-static ncclResult_t uploadProxyOps(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+static ncclResult_t uploadProxyOps(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclIntruQueueHead、geteActivationMask。 */
   uint64_t collOpCount = comm->sharedRes->collOpCount;
   uint64_t p2pOpBump[MAXCHANNELS] = {/*0...*/};
   // Advance comm's collOpCount by number of colls in this plan.
@@ -1590,7 +1590,7 @@ static ncclResult_t uploadProxyOps(struct ncclComm* comm, struct ncclKernelPlan*
   return ncclSuccess;
 }
 
-static ncclResult_t hostStreamPlanTask(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+static ncclResult_t hostStreamPlanTask(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 ncclProfilerStartGroupEvent、ncclProfilerStartTaskEvents。 */
   // Start/post/stop profiler events for every plan (sym and non-sym) so start and stop
   // stay balanced -- once per launch in eager mode, once per replay under graph capture.
   // Sym plans reserve their device counters pre-launch; the events are handled here.
@@ -1611,7 +1611,7 @@ static ncclResult_t hostStreamPlanTask(struct ncclComm* comm, struct ncclKernelP
   return ncclSuccess;
 }
 
-static void CUDART_CB hostStreamPlanCallback(void* plan_) {
+static void CUDART_CB hostStreamPlanCallback(void* plan_) { /* 中文索引·体内调用 hostStreamPlanTask、ncclGetErrorString。 */
   NCCL_NVTX3_FUNC_RANGE;
   struct ncclKernelPlan* plan = (struct ncclKernelPlan*)plan_;
   ncclResult_t result = hostStreamPlanTask(plan->comm, plan);
@@ -1621,7 +1621,7 @@ static void CUDART_CB hostStreamPlanCallback(void* plan_) {
   return;
 }
 
-static ncclResult_t reclaimPlan(struct ncclComm* comm, struct ncclCommCallback* me) {
+static ncclResult_t reclaimPlan(struct ncclComm* comm, struct ncclCommCallback* me) { /* 中文索引·体内调用 cudaThreadExchangeStreamCaptureMode、cudaFree。 */
   struct ncclKernelPlan* plan = (struct ncclKernelPlan*)me; // cast from first member `reclaim`
   if (plan->persistent) {
     comm->sharedRes->persistentRefs -= 1;
@@ -1687,7 +1687,7 @@ static ncclResult_t reclaimPlan(struct ncclComm* comm, struct ncclCommCallback* 
   return ncclSuccess;
 }
 
-static void persistentDestructor(void* plans_) {
+static void persistentDestructor(void* plans_) { /* 中文索引·体内调用 ncclIntruQueueMpscEnqueue。 */
   struct ncclKernelPlan* plan = (struct ncclKernelPlan*)plans_;
   struct ncclComm* comm = plan->comm;
   while (plan != nullptr) {
@@ -1713,7 +1713,7 @@ static bool ncclGraphStreamOrderingSerialize(struct ncclComm* comm) {
 } // namespace
 
 static ncclResult_t getImplicitOrder(enum ncclImplicitOrder* mode, struct ncclComm* comm, bool capturing,
-                                     int driver = -1) {
+                                     int driver = -1) { /* 中文索引·体内调用 ncclCudaDriverVersion。 */
   if (comm->config.launchOrderImplicit == 1) {
     if (driver < 0) NCCLCHECK(ncclCudaDriverVersion(&driver));
     if (capturing && driver < 12090) {
@@ -1727,7 +1727,7 @@ static ncclResult_t getImplicitOrder(enum ncclImplicitOrder* mode, struct ncclCo
   return ncclSuccess;
 }
 
-static void isolateP2pCollTasks(struct ncclComm* comm) {
+static void isolateP2pCollTasks(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueHead、tasks.push_back。 */
   auto* planner = &comm->planner;
   if (!planner->p2pCollNeedsIsolation) return;
   std::vector<ncclTaskP2p*> tasks;
@@ -1752,7 +1752,7 @@ static void isolateP2pCollTasks(struct ncclComm* comm) {
   }
 }
 
-ncclResult_t ncclLaunchPrepare(struct ncclComm* comm) {
+ncclResult_t ncclLaunchPrepare(struct ncclComm* comm) { /* 中文索引·体内调用 ncclCudaGraphValid、isolateP2pCollTasks。 */
   ncclResult_t result = ncclSuccess;
   struct ncclKernelPlanner* planner = &comm->planner;
   bool persistent = ncclCudaGraphValid(planner->capturingGraph);
@@ -1776,7 +1776,7 @@ ncclResult_t ncclLaunchPrepare(struct ncclComm* comm) {
       plan->comm = comm;
       plan->reclaimer.fn = reclaimPlan;
       plan->persistent = persistent;
-      // finishPlan() promotes ncclDevWorkStorageType[Fifo|Persistent]->Args if the work can fit.
+      /* 中文图解·host｜一个组可以产生多个计划；调度受参数空间、work 批次数量及数据大小预算约束。 */ // finishPlan() promotes ncclDevWorkStorageType[Fifo|Persistent]->Args if the work can fit.
       plan->workStorageType = persistent ? ncclDevWorkStorageTypePersistent : ncclDevWorkStorageTypeFifo;
       plan->cgaClusterSize = comm->config.cgaClusterSize;
 
@@ -1927,7 +1927,7 @@ failure:
   return result;
 }
 
-ncclResult_t ncclLaunchKernelBefore_NoUncapturedCuda(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclLaunchKernelBefore_NoUncapturedCuda(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 uploadWork、ncclProfilerReserveSymCounters。 */
   // This code is called after we've checked in to the intra-process barrier
   // but before launching the kernel. We are not allowed to call CUDA unless the
   // kernel launch is captured.
@@ -1944,7 +1944,7 @@ ncclResult_t ncclLaunchKernelBefore_NoUncapturedCuda(struct ncclComm* comm, stru
 NCCL_PARAM(MemSyncDomain, "MEM_SYNC_DOMAIN", cudaLaunchMemSyncDomainRemote);
 #endif
 
-ncclResult_t ncclLaunchKernel(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclLaunchKernel(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 countOneBits、ncclShmemDynamicSize。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclKernelPlanner* planner = &comm->planner;
   int nChannels = countOneBits(plan->channelMask);
@@ -2072,7 +2072,7 @@ do_return:
   return ret;
 }
 
-ncclResult_t ncclLaunchKernelAfter_NoCuda(struct ncclComm* comm, struct ncclKernelPlan* plan) {
+ncclResult_t ncclLaunchKernelAfter_NoCuda(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 中文索引·体内调用 hostStreamPlanTask。 */
   if (!plan->isHostCbEnq) {
     // we are not using the host stream for proxy ops and reclaimation submission, call
     // hostStreamPlanTask directly
@@ -2086,7 +2086,7 @@ struct KernelFinishCallback {
   struct ncclCommEventCallback base;
   uint32_t workFifoConsumed;
 };
-ncclResult_t KernelFinishCallback_fn(struct ncclComm* comm, struct ncclCommEventCallback* cb) {
+ncclResult_t KernelFinishCallback_fn(struct ncclComm* comm, struct ncclCommEventCallback* cb) { /* 中文索引·体内调用 cudaEventDestroy、free。 */
   struct KernelFinishCallback* me = (struct KernelFinishCallback*)cb;
   comm->workFifoConsumed = me->workFifoConsumed;
   CUDACHECK(cudaEventDestroy(me->base.event));
@@ -2095,7 +2095,7 @@ ncclResult_t KernelFinishCallback_fn(struct ncclComm* comm, struct ncclCommEvent
 }
 } // namespace
 
-ncclResult_t ncclLaunchFinish(struct ncclComm* comm) {
+ncclResult_t ncclLaunchFinish(struct ncclComm* comm) { /* 中文索引·体内调用 ncclIntruQueueEmpty、ncclIntruQueueConstruct。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   if (!ncclIntruQueueEmpty(&planner->planQueue)) {
     // Reset queue to empty without destroying plans since those will be sent
@@ -2198,7 +2198,7 @@ ncclResult_t ncclGetCollNetSupport(struct ncclComm* comm, struct ncclTaskColl* i
   return ncclSuccess;
 }
 
-ncclResult_t ncclGetRegBuff(struct ncclComm* comm, struct ncclTaskColl* info, int* regBuff) {
+ncclResult_t ncclGetRegBuff(struct ncclComm* comm, struct ncclTaskColl* info, int* regBuff) { /* 中文索引·体内调用 ncclTypeSize、ncclFuncSendCount。 */
   struct ncclReg* regSendBuf = NULL;
   struct ncclReg* regRecvBuf = NULL;
   bool isSendValid, isRecvValid;
@@ -2219,7 +2219,7 @@ ncclResult_t ncclGetRegBuff(struct ncclComm* comm, struct ncclTaskColl* info, in
 // Finally, nChannels will be overriden by the plugin setting.
 ncclResult_t ncclGetAlgoInfo(struct ncclComm* comm, struct ncclTaskColl* info, int collNetSupport, int nvlsSupport,
                              int numPipeOps, ncclSimInfo_t* simInfo /* = NULL*/
-) {
+) { /* 中文索引·体内调用 ncclTypeSize、ncclFuncMaxSendRecvCount。 */
   size_t elementSize = ncclTypeSize(info->datatype);
   size_t nBytes = elementSize * ncclFuncMaxSendRecvCount(info->func, comm->nRanks, info->count);
   info->algorithm = NCCL_ALGO_UNDEF;
@@ -2281,7 +2281,7 @@ ncclResult_t ncclGetAlgoInfo(struct ncclComm* comm, struct ncclTaskColl* info, i
   }
   INFO(NCCL_TUNING, "Best tuning, algorithm, %s, protocol, %s", ncclAlgoToString(bestTuning.algo),
        ncclProtoToString(bestTuning.proto));
-  info->algorithm = bestTuning.algo;
+  /* 中文图解·host｜bestTuning 回写 algorithm、protocol 和 nWarps，随后选择设备函数与 chunk 参数。 */ info->algorithm = bestTuning.algo;
   info->protocol = bestTuning.proto;
   info->nWarps = bestTuning.nWarps;
   // Tuner pluging override
@@ -2293,7 +2293,7 @@ ncclResult_t ncclGetAlgoInfo(struct ncclComm* comm, struct ncclTaskColl* info, i
 
 static ncclResult_t calcCollChunking(struct ncclComm* comm, struct ncclTaskColl* info, int nChannels, size_t nBytes,
                                      /*outputs*/ uint32_t* outChunkSize, uint32_t* outDirectFlags,
-                                     struct ncclProxyOp* proxyOp) {
+                                     struct ncclProxyOp* proxyOp) { /* 中文索引·体内调用 ncclProtoGrainSize、ncclGetChunkSteps。 */
   ncclPattern_t pattern;
   size_t grainSize = ncclProtoGrainSize(info->protocol);
 
@@ -2331,7 +2331,7 @@ static ncclResult_t calcCollChunking(struct ncclComm* comm, struct ncclTaskColl*
 
   int nstepsPerLoop, nchunksPerLoop;
   size_t loopOffset = 0;
-  int stepSize = comm->buffSizes[info->protocol] / NCCL_STEPS;
+  /* 中文图解·fifo｜Host 的 stepSize 是字节。Simple Ring 把一个 chunk 表示为若干 FIFO step。 */ int stepSize = comm->buffSizes[info->protocol] / NCCL_STEPS;
   int chunkSteps = ncclGetChunkSteps(info->protocol, info->algorithm, info->chunkSteps);
   int sliceSteps = ncclGetSliceSteps(info->protocol, info->algorithm, info->sliceSteps);
   int chunkSize = ncclGetChunkSize(info->protocol, stepSize, chunkSteps);
@@ -2439,7 +2439,7 @@ static ncclResult_t calcCollChunking(struct ncclComm* comm, struct ncclTaskColl*
   }
 
   // Compute nSteps for proxies
-  chunkSize = chunkSize / grainSize * grainSize; // align chunkSize to multiple grainSize
+  /* 中文图解·fifo｜按协议粒度向下对齐 chunk 字节数，确保设备端可用整数个 grain 表示。 */ chunkSize = chunkSize / grainSize * grainSize; // align chunkSize to multiple grainSize
   switch (pattern) {
   case ncclPatternTreeUp:
   case ncclPatternTreeDown:
@@ -2482,7 +2482,7 @@ static ncclResult_t calcCollChunking(struct ncclComm* comm, struct ncclTaskColl*
   size_t loopSize = size_t(nChannels) * nchunksPerLoop * chunkSize;
   int nLoops = (int)DIVUP(nBytes, loopSize);
   memset(proxyOp, 0, sizeof(*proxyOp));
-  proxyOp->nsteps = nstepsPerLoop * nLoops * chunkSteps;
+  /* 中文图解·transport｜proxy 的 nsteps 按算法每圈推进、圈数和 chunkSteps 计算。每个网络请求还要查看 sliceSteps 与实际传输大小。 */ proxyOp->nsteps = nstepsPerLoop * nLoops * chunkSteps;
   proxyOp->sliceSteps = sliceSteps;
   proxyOp->chunkSteps = chunkSteps;
   proxyOp->chunkSize = chunkSize;
@@ -2596,7 +2596,7 @@ static ncclResult_t calcCollChunking(struct ncclComm* comm, struct ncclTaskColl*
   return ncclSuccess;
 }
 
-static ncclResult_t hostToDevRedOp(ncclDevRedOpFull* opFull, ncclRedOp_t op, ncclDataType_t datatype, ncclComm* comm) {
+static ncclResult_t hostToDevRedOp(ncclDevRedOpFull* opFull, ncclRedOp_t op, ncclDataType_t datatype, ncclComm* comm) { /* 中文索引·体内调用 ncclTypeSize、uint64_t。 */
   union {
     int8_t i8;
     uint8_t u8;
@@ -2702,7 +2702,7 @@ static ncclResult_t hostToDevRedOp(ncclDevRedOpFull* opFull, ncclRedOp_t op, ncc
   return ncclSuccess;
 }
 
-ncclResult_t ncclPlannerSetCapturingGraph(struct ncclComm* comm, struct ncclInfo* info) {
+ncclResult_t ncclPlannerSetCapturingGraph(struct ncclComm* comm, struct ncclInfo* info) { /* 中文索引·体内调用 ncclCudaGetCapturingGraph、ncclCudaGraphSame。 */
   struct ncclKernelPlanner* planner = &comm->planner;
   if (info->stream != planner->streamRecent || planner->streams == nullptr) {
     planner->streamRecent = info->stream;
@@ -2733,7 +2733,7 @@ ncclResult_t ncclPlannerSetCapturingGraph(struct ncclComm* comm, struct ncclInfo
 }
 
 static ncclResult_t p2pTaskAppend(struct ncclComm* comm, struct ncclInfo* info, ncclFunc_t coll, ncclFunc_t collAPI,
-                                  void* buff, size_t count, ncclDataType_t datatype, int peer, bool allowUB) {
+                                  void* buff, size_t count, ncclDataType_t datatype, int peer, bool allowUB) { /* 中文索引·体内调用 ncclTypeSize、ncclGroupCommJoin。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   // Determine peer and basic parameters.
@@ -2821,7 +2821,7 @@ static ncclResult_t p2pTaskAppend(struct ncclComm* comm, struct ncclInfo* info, 
 // significant): no resource cap or algorithm selection (ncclCollConfigNeedAggIsolate), no CGA
 // cluster size, and no per-call CTAPolicy override. CTAPolicy is resolved in place before this
 // runs, so it is compared against the comm default (commCTAPolicy).
-static bool collConfigIsProfilerTagOnly(const ncclCollConfig_t* config, int commCTAPolicy) {
+static bool collConfigIsProfilerTagOnly(const ncclCollConfig_t* config, int commCTAPolicy) { /* 中文索引·体内调用 ncclCollConfigNeedAggIsolate。 */
   if (config->size == 0) return false; // no user config at all (not profiler-tag-only)
   if (ncclCollConfigNeedAggIsolate(config)) return false;
   if (config->cgaClusterSize != NCCL_CONFIG_UNDEF_INT) return false;
@@ -2829,7 +2829,7 @@ static bool collConfigIsProfilerTagOnly(const ncclCollConfig_t* config, int comm
   return true;
 }
 
-static ncclResult_t collTaskAppend(struct ncclComm* comm, struct ncclInfo* info, struct ncclDevRedOpFull opDev) {
+static ncclResult_t collTaskAppend(struct ncclComm* comm, struct ncclInfo* info, struct ncclDevRedOpFull opDev) { /* 中文索引·体内调用 ncclGroupCommJoin、ncclPlannerSetCapturingGraph。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   // Must be in thread local group before tasks can be alloc'd in `comm->memScoped`.
@@ -2885,7 +2885,7 @@ static ncclResult_t collTaskAppend(struct ncclComm* comm, struct ncclInfo* info,
     size_t elementSize = ncclTypeSize(t->datatype);
     if (t->func == ncclFuncAllGather || t->func == ncclFuncBroadcast || t->func == ncclFuncAlltoAll) {
       t->count *= elementSize;
-      t->datatype = ncclInt8;
+      /* 中文图解·layout｜AllGather、Broadcast 等在常规任务中归一为 int8，之后的一个内部元素等于一个字节。 */ t->datatype = ncclInt8;
       elementSize = 1;
     }
     t->trafficBytes = t->count * elementSize * ncclFuncTrafficPerByte(t->func, comm->nRanks);
@@ -2937,7 +2937,7 @@ static void ncclCeInitAsyncJobFree(void* _job) {
   delete (struct ncclCeInitAsyncJob*)_job;
 }
 
-static ncclResult_t ncclCeInitJob(struct ncclAsyncJob* job_) {
+static ncclResult_t ncclCeInitJob(struct ncclAsyncJob* job_) { /* 中文索引·体内调用 cudaSetDevice、ncclCeInit。 */
   struct ncclCeInitAsyncJob* job = (struct ncclCeInitAsyncJob*)job_;
   ncclResult_t ret = ncclSuccess;
 
@@ -2952,7 +2952,7 @@ fail:
 }
 
 static ncclResult_t ceCollTaskAppend(struct ncclComm* comm, struct ncclInfo* info, struct ncclDevrWindow* sendWin,
-                                     struct ncclDevrWindow* recvWin, struct ncclDevRedOpFull opDev) {
+                                     struct ncclDevrWindow* recvWin, struct ncclDevRedOpFull opDev) { /* 中文索引·体内调用 ncclParamEnqueueRearchEnable、ncclMgmtTaskEnqueue。 */
   ncclResult_t ret = ncclSuccess;
   struct ncclKernelPlanner* planner = &comm->planner;
   struct ncclCeInitAsyncJob* ceInitJob = nullptr;
@@ -3027,7 +3027,7 @@ fail:
   goto exit;
 }
 
-static ncclResult_t rmaTaskAppend(struct ncclComm* comm, struct ncclInfo* info) {
+static ncclResult_t rmaTaskAppend(struct ncclComm* comm, struct ncclInfo* info) { /* 中文索引·体内调用 ncclCudaDriverVersion、ncclShadowPoolToHost。 */
   struct ncclKernelPlanner* planner = &comm->planner;
 
   void const* srcBuff = info->sendbuff;
@@ -3265,7 +3265,7 @@ static ncclResult_t rmaTaskAppend(struct ncclComm* comm, struct ncclInfo* info) 
 
 // TODO(raw task): move this raw task capture implementation into raw_task.cc
 // once the remaining enqueue-local profiler and red-op dependencies are split.
-static ncclResult_t rawTaskAppend(struct ncclComm* comm, struct ncclInfo* info) {
+static ncclResult_t rawTaskAppend(struct ncclComm* comm, struct ncclInfo* info) { /* 中文索引·体内调用 ncclTypeSize、ncclIntruQueueEnqueue。 */
   struct ncclRawTaskQueue* rtq = &comm->rawTaskQueue;
   struct ncclRawTask* t;
 
@@ -3401,7 +3401,7 @@ static bool ncclInfoHasLaunchCompletionEvent(const struct ncclInfo* info) {
   return info->count != 0 && ncclCollConfigGetLaunchCompletionEvent(&info->collConfig) != nullptr;
 }
 
-static void ncclRecordCollConfigLaunchCompletionEvent(struct ncclComm* comm) {
+static void ncclRecordCollConfigLaunchCompletionEvent(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamEnqueueRearchEnable、ncclGroupCommJoin。 */
   // Multi-rank operations join through their task append function. Single-rank collectives
   // execute immediately, so join them here to retain the count until group validation.
   if (comm->nRanks == 1) {
@@ -3414,11 +3414,11 @@ static void ncclRecordCollConfigLaunchCompletionEvent(struct ncclComm* comm) {
 
 // Converts `info` to a task and adds it to `comm->planner`. Single-rank collectives
 // execute immediately and do not need a task.
-static ncclResult_t taskAppend(struct ncclComm* comm, struct ncclInfo* info) {
+static ncclResult_t taskAppend(struct ncclComm* comm, struct ncclInfo* info) { /* 中文索引·体内调用 ncclInfoHasLaunchCompletionEvent、ncclParamEnqueueRearchEnable。 */
   ncclFunc_t collAPI = info->coll;
   bool hasLaunchCompletionEvent = ncclInfoHasLaunchCompletionEvent(info);
 
-  if (ncclParamEnqueueRearchEnable()) {
+  /* 中文图解·host｜重构开关是实际入口分叉；默认路径继续区分点对点、RMA、单 rank 及普通集合通信。 */ if (ncclParamEnqueueRearchEnable()) {
     NCCLCHECK(rawTaskAppend(comm, info));
   } else if (info->coll == ncclFuncSend || info->coll == ncclFuncRecv) {
     NCCLCHECK(p2pTaskAppend(comm, info, info->coll, collAPI, (void*)info->recvbuff, info->count, info->datatype,
@@ -3567,7 +3567,7 @@ static ncclResult_t taskAppend(struct ncclComm* comm, struct ncclInfo* info) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclEnqueueCheck(struct ncclInfo* info) {
+ncclResult_t ncclEnqueueCheck(struct ncclInfo* info) { /* 中文索引·体内调用 CommCheck、ncclGroupErrCheck。 */
   // Early-out on invalid or revoked communicator
   ncclResult_t ret = CommCheck(info->comm, info->opName, "comm");
   if (ret != ncclSuccess) return ncclGroupErrCheck(ret);
@@ -3625,7 +3625,7 @@ fail:
 NCCL_API(ncclResult_t, ncclRedOpCreatePreMulSum, ncclRedOp_t* op, void* scalar, ncclDataType_t datatype,
          ncclScalarResidence_t residence, ncclComm_t comm);
 ncclResult_t ncclRedOpCreatePreMulSum(ncclRedOp_t* op, void* scalar, ncclDataType_t datatype,
-                                      ncclScalarResidence_t residence, ncclComm_t comm) {
+                                      ncclScalarResidence_t residence, ncclComm_t comm) { /* 中文索引·体内调用 CommCheck、ncclCommEnsureReady。 */
   NCCLCHECK(CommCheck(comm, "ncclRedOpCreatePreMulSum", "comm"));
   /* join init thread before creating PreMulSum op. */
   NCCLCHECK(ncclCommEnsureReady(comm));
@@ -3666,7 +3666,7 @@ ncclResult_t ncclRedOpCreatePreMulSum(ncclRedOp_t* op, void* scalar, ncclDataTyp
 }
 
 NCCL_API(ncclResult_t, ncclRedOpDestroy, ncclRedOp_t op, ncclComm_t comm);
-ncclResult_t ncclRedOpDestroy(ncclRedOp_t op, ncclComm_t comm) {
+ncclResult_t ncclRedOpDestroy(ncclRedOp_t op, ncclComm_t comm) { /* 中文索引·体内调用 ncclUserRedOpMangle。 */
   if (0 <= int(op) && int(op) < int(ncclNumOps)) {
     WARN("ncclRedOpDestroy : operator is a NCCL builtin.");
     return ncclInvalidArgument;

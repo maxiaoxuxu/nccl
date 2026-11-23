@@ -28,7 +28,7 @@ static unsigned long subsys[NUM_LIBS] = {
   NCCL_INIT | NCCL_ENV
 };
 
-static void* tryOpenLib(char* name, int* err, char* errStr) {
+static void* tryOpenLib(char* name, int* err, char* errStr) { /* 中文索引·体内调用 strlen、strncasecmp。 */
   *err = 0;
   if (nullptr == name || strlen(name) == 0) {
     return nullptr;
@@ -62,13 +62,13 @@ static void appendNameToList(char* nameList, int* leftChars, char* name) {
 }
 
 #if defined(NCCL_OS_LINUX)
-static char* getLibPath(void* handle) {
+static char* getLibPath(void* handle) { /* 中文索引·体内调用 dlinfo、strdup。 */
   struct link_map* lm;
   if (dlinfo(handle, RTLD_DI_LINKMAP, &lm) != 0) return nullptr;
   else return strdup(lm->l_name);
 }
 #elif defined(NCCL_OS_WINDOWS)
-static char* getLibPath(void* handle) {
+static char* getLibPath(void* handle) { /* 中文索引·体内调用 GetModuleFileNameA、strdup。 */
   char path[PATH_MAX];
   DWORD len = GetModuleFileNameA((HMODULE)handle, path, PATH_MAX);
   if (len == 0 || len >= PATH_MAX) return nullptr;
@@ -76,7 +76,7 @@ static char* getLibPath(void* handle) {
 }
 #endif
 
-static void* openPluginLib(enum ncclPluginType type, const char* libName) {
+static void* openPluginLib(enum ncclPluginType type, const char* libName) { /* 中文索引·体内调用 strlen、snprintf。 */
   int openErr, len = PATH_MAX;
   char libName_[MAX_STR_LEN] = {0};
   char openErrStr[MAX_STR_LEN + 1] = {0};
@@ -153,7 +153,7 @@ void* ncclOpenEnvPluginLib(const char* name) {
   return openPluginLib(ncclPluginTypeEnv, name);
 }
 
-void* ncclGetGinPluginLib(enum ncclPluginType type) {
+void* ncclGetGinPluginLib(enum ncclPluginType type) { /* 中文索引·体内调用 strdup、ncclOsDlopen。 */
   if (libNames[ncclPluginTypeGin]) {
     // increment the reference counter of the gin library
     libNames[type] = strdup(libNames[ncclPluginTypeGin]);
@@ -163,7 +163,7 @@ void* ncclGetGinPluginLib(enum ncclPluginType type) {
   return libHandles[type];
 }
 
-void* ncclGetNetPluginLib(enum ncclPluginType type) {
+void* ncclGetNetPluginLib(enum ncclPluginType type) { /* 中文索引·体内调用 strdup、ncclOsDlopen。 */
   if (libNames[ncclPluginTypeNet]) {
     // increment the reference counter of the net library
     libNames[type] = strdup(libNames[ncclPluginTypeNet]);
@@ -173,7 +173,7 @@ void* ncclGetNetPluginLib(enum ncclPluginType type) {
   return libHandles[type];
 }
 
-ncclResult_t ncclClosePluginLib(void* handle, enum ncclPluginType type) {
+ncclResult_t ncclClosePluginLib(void* handle, enum ncclPluginType type) { /* 中文索引·体内调用 ncclOsDlclose、free。 */
   if (handle && libHandles[type] == handle) {
     ncclOsDlclose(handle);
     libHandles[type] = nullptr;
@@ -188,14 +188,14 @@ ncclResult_t ncclClosePluginLib(void* handle, enum ncclPluginType type) {
 // Close a plugin library by handle. Unlike ncclClosePluginLib() the handle does not have to
 // be the most recently opened one for `type`, which is what lets the profiler keep several
 // libraries open at the same time (openPluginLib only tracks the last one per type).
-ncclResult_t ncclClosePluginLibHandle(void* handle, enum ncclPluginType type) {
+ncclResult_t ncclClosePluginLibHandle(void* handle, enum ncclPluginType type) { /* 中文索引·体内调用 ncclClosePluginLib、ncclOsDlclose。 */
   if (handle == nullptr) return ncclSuccess;
   if (libHandles[type] == handle) return ncclClosePluginLib(handle, type);
   ncclOsDlclose(handle);
   return ncclSuccess;
 }
 
-void ncclDetachPluginLibHandle(void* handle, enum ncclPluginType type) {
+void ncclDetachPluginLibHandle(void* handle, enum ncclPluginType type) { /* 中文索引·体内调用 free。 */
   if (libHandles[type] != handle) return;
   libHandles[type] = nullptr;
   free(ncclPluginLibPaths[type]);

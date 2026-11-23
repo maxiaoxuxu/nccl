@@ -1,0 +1,137 @@
+"""Verify annotated blobs, local references and source-derived CPU examples. Run from any directory."""
+import argparse
+import hashlib
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+from urllib.parse import unquote
+from xml.etree import ElementTree
+
+ROOT = Path(__file__).resolve().parents[2]
+DOC = ROOT / "docs/zh_CN"
+BASE = "ad2d192c1f279aefcaf340f67e07880b65a1116b"
+NOTES = re.compile(rb" /\* " + "中文索引·".encode() + rb"[^\n]*? \*/|/\* " + "中文图解·".encode() + rb"[^\n]*? \*/ ")
+
+
+def verify_sources():
+    listing = subprocess.check_output(["git", "ls-tree", "-r", "-z", BASE, "--", "src"], cwd=ROOT)
+    annotated = notes = 0
+    for entry in listing.rstrip(b"\0").split(b"\0"):
+        meta, path = entry.split(b"\t", 1)
+        data = (ROOT / path.decode()).read_bytes()
+        clean, count = NOTES.subn(b"", data)
+        digest = hashlib.sha1(b"blob %d\0" % len(clean) + clean).hexdigest()
+        assert digest == meta.split()[2].decode(), path.decode()
+        annotated += count != 0
+        notes += count
+    print(f"源码还原通过：{annotated} 个带注释文件，{notes} 处注释。")
+
+
+def verify_links():
+    files = [ROOT / "START_HERE_ZH.md", *DOC.rglob("*.md")]
+    n = 0
+    for file in files:
+        for target in re.findall(r"\]\(([^)\s]+)\)", file.read_text()):
+            if target.startswith(("https:", "http:", "#")):
+                continue
+            path, _, anchor = target.partition("#")
+            link = (file.parent / unquote(path)).resolve()
+            assert link.exists(), (file, target)
+            if re.fullmatch(r"L\d+", anchor):
+                assert 1 <= int(anchor[1:]) <= len(link.read_bytes().splitlines()), (file, target)
+            n += 1
+    for svg in (DOC / "figures").glob("*.svg"):
+        ElementTree.parse(svg)
+    print(f"文档链接及行号通过：{n} 个本地引用。")
+
+
+def compile_examples():
+    # Keep function bodies from the branch verbatim, including the CUDA ring loop.
+    def extract(file, first, last="\n}"):
+        text = NOTES.sub(b"", (ROOT / file).read_bytes()).decode()
+        start = text.index(first)
+        end = text.index(last, start) + len(last)
+        return text[start:end] + "\n"
+
+    defs = [
+        ("src/include/device.h", "#define NCCL_STEPS ", "\n"),
+        ("src/include/coll_sizes.h", "#define ALLREDUCE_SLICESTEPS ", "\n"),
+        ("src/include/coll_sizes.h", "#define ALLREDUCE_CHUNKSTEPS ", "\n"),
+        ("src/include/channel.h", "static constexpr size_t ncclMinTrafficPerChannel", ";"),
+        ("src/include/channel.h", "struct ncclCollChannelLayout {", "\n};"),
+        ("src/channel.cc", "size_t ncclCollTrafficPerChannel("),
+        ("src/channel.cc", "struct ncclCollChannelLayout ncclComputeCollChannelLayout("),
+        ("src/include/device.h", "struct alignas(16) ncclDevWorkColl {", "\n};"),
+        ("src/include/device.h", "__host__ __device__ constexpr int ncclProtoGrainSize("),
+        ("src/include/device.h", "template <typename Int>\n__host__ __device__ inline void ncclCollCbdPart("),
+        ("src/include/device.h", "inline __host__ __device__ void ncclP2pPartBounds("),
+        ("src/include/coll_sizes.h", "template <typename Int>\n__host__ __device__ inline Int ncclSimpleSliceSize("),
+        ("src/include/coll_sizes.h", "template <typename Int>\n__host__ __device__ inline Int ncclElementAlignedDivUp("),
+    ]
+    header = (Path(__file__).with_name("cpu_ring.cc.in")).read_text()
+    funcs = "\n".join(extract(*args) for args in defs)
+    ring = extract("src/device/all_reduce.h", "template <typename T, typename RedOp, typename Proto>\n__device__ __forceinline__ void runRing(")
+    code = header.replace("/* SOURCE_HELPERS */", funcs).replace("/* SOURCE_RING */", ring)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp)
+        (path / "test.cc").write_text(code)
+        subprocess.run(["c++", "-std=c++17", "-O2", str(path / "test.cc"), "-o", str(path / "test")], check=True)
+        subprocess.run([str(path / "test")], check=True)
+
+
+def verify_reader():
+    from base64 import b64decode
+    import gzip
+    from html.parser import HTMLParser
+    import json
+    from urllib.parse import parse_qs
+
+    reader = (DOC / "reader.html").read_text()
+
+    def payload(element):
+        return re.search(r'<script[^>]* id="' + element + r'"[^>]*>(.*?)</script>', reader, re.S)[1]
+
+    chapters = json.loads(payload("chapters"))
+    figures = json.loads(payload("figs"))
+    db = json.loads(gzip.decompress(b64decode(payload("packed"))))
+    for path, source in db["source"].items():
+        assert (ROOT / path).read_bytes() == source.encode(), path
+    for path, notes in db["manual"].items():
+        lines = db["source"][path].splitlines()
+        for line, (figure, note) in notes.items():
+            assert figure in figures and note in lines[int(line) - 1], (path, line)
+    for figure, uri in figures.items():
+        data = b64decode(uri.split(",", 1)[1])
+        assert (DOC / "figures" / (figure + ".svg")).read_bytes() == data, figure
+
+    class ChapterLinks(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "img":
+                assert attrs["src"] in figures.values(), attrs["src"][:80]
+            if tag == "a":
+                href = attrs["href"]
+                assert href.startswith("#"), href
+                params = parse_qs(href[1:])
+                if "file" in params:
+                    lines = db["source"][params["file"][0]].splitlines()
+                    assert 1 <= int(params["line"][0]) <= len(lines), href
+                else:
+                    assert params["chapter"][0] in chapters, href
+
+    for _, body in chapters.values():
+        ChapterLinks().feed(body)
+    print(f"离线文件通过：{len(chapters)} 个专题，{len(figures)} 张内嵌原图，{len(db['source'])} 个源码文件。")
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--docs-only", action="store_true")
+    args = p.parse_args()
+    verify_links()
+    verify_reader()
+    if not args.docs_only:
+        verify_sources()
+        compile_examples()

@@ -21,13 +21,13 @@ ncclResult_t ncclGin_getGinProperties(ncclGinProperties_t* ginProps) {
 }
 
 static ncclResult_t ncclGin_connect(void* ctx, void* handles[], int nranks, int rank, void* listenComm, void** collComm,
-                                    volatile uint32_t* abortFlag) {
+                                    volatile uint32_t* abortFlag) { /* 中文索引·体内调用 ncclGin_v13->connect。 */
   (void)abortFlag;
   return ncclGin_v13->connect(ctx, handles, nranks, rank, listenComm, collComm);
 }
 
 static ncclResult_t ncclGin_createContext(void* collComm, ncclGinConfig_v15_t* config, void** ginCtx,
-                                          ncclNetDeviceHandle_v11_t** devHandle) {
+                                          ncclNetDeviceHandle_v11_t** devHandle) { /* 中文索引·体内调用 memset、ncclGin_v13->createContext。 */
   ncclGinConfig_v13_t config_v13;
   memset(&config_v13, 0, sizeof(config_v13));
   config_v13.nSignals = config->nSignals;
@@ -38,7 +38,7 @@ static ncclResult_t ncclGin_createContext(void* collComm, ncclGinConfig_v15_t* c
   return ncclGin_v13->createContext(collComm, &config_v13, ginCtx, devHandle);
 }
 
-ncclGin_t* getNcclGin_v13(void* lib) {
+ncclGin_t* getNcclGin_v13(void* lib) { /* 中文索引·体内调用 ncclOsDlsym。 */
   ncclGin_v13 = (ncclGin_v13_t*)ncclOsDlsym(lib, "ncclGinPlugin_v13");
   if (ncclGin_v13) {
     INFO(NCCL_INIT | NCCL_NET, "GIN/Plugin: Loaded gin plugin %s (v13)", ncclGin_v13->name);

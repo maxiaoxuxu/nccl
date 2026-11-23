@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 // TODO: switch from pipe() to socketpair(AF_UNIX, SOCK_STREAM, 0) to align with the Windows implementation
-ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) {
+ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) { /* 中文索引·体内调用 pipe。 */
   int fds[2];
   SYSCHECK(pipe(fds), "pipe");
   pair[0] = fds[0];
@@ -18,7 +18,7 @@ ncclResult_t ncclOsSocketPairCreate(ncclSocketPairDescriptor pair[2]) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) {
+ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) { /* 中文索引·体内调用 close、strerror。 */
   ncclResult_t firstError = ncclSuccess;
   for (int i = 0; i < 2; i++) {
     if (pair[i] != NCCL_SOCKET_PAIR_INVALID) {
@@ -32,14 +32,14 @@ ncclResult_t ncclOsSocketPairClose(ncclSocketPairDescriptor pair[2]) {
   return firstError;
 }
 
-ncclResult_t ncclOsSocketPairWrite(ncclSocketPairDescriptor descriptor, const void* buf, size_t len, size_t* written) {
+ncclResult_t ncclOsSocketPairWrite(ncclSocketPairDescriptor descriptor, const void* buf, size_t len, size_t* written) { /* 中文索引·体内调用 write。 */
   ssize_t n;
   SYSCHECK(n = write(descriptor, buf, len), "write");
   *written = (size_t)n;
   return ncclSuccess;
 }
 
-ncclResult_t ncclOsSocketPairRead(ncclSocketPairDescriptor descriptor, void* buf, size_t len, size_t* nread) {
+ncclResult_t ncclOsSocketPairRead(ncclSocketPairDescriptor descriptor, void* buf, size_t len, size_t* nread) { /* 中文索引·体内调用 read。 */
   ssize_t n;
   SYSCHECK(n = read(descriptor, buf, len), "read");
   *nread = (size_t)n;

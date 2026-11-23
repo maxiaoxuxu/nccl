@@ -41,7 +41,7 @@
 #include "doca_verbs_dev.hpp"
 #include "doca_verbs_dev_sdk_wrapper.h"
 
-static bool parse_global_traffic_class(const char *line, uint8_t *traffic_class) {
+static bool parse_global_traffic_class(const char *line, uint8_t *traffic_class) { /* 中文索引·体内调用 strncmp、strtol。 */
     static constexpr char prefix[] = "Global tclass=";
     if (line == nullptr || strncmp(line, prefix, sizeof(prefix) - 1) != 0) return false;
 
@@ -60,7 +60,7 @@ static bool parse_global_traffic_class(const char *line, uint8_t *traffic_class)
 }
 
 doca_error_t doca_verbs_query_global_traffic_class(doca_dev_t *net_dev, uint16_t port_num,
-                                                   uint8_t *global_traffic_class) {
+                                                   uint8_t *global_traffic_class) { /* 中文索引·体内调用 doca_verbs_sdk_wrapper_dev_get_ibv_ctx、net_dev->open->get_ctx。 */
     doca_error_t status = DOCA_SUCCESS;
     const char *device_name;
     char path[PATH_MAX];

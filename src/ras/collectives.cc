@@ -66,7 +66,7 @@ static int rasCollCommsMissingRankSearch(const void* k, const void* e);
 ///////////////////////////////////////////////////////////////////////////////////////
 
 // Returns the index of the first available entry in the rasCollectives array, enlarging the array if necessary.
-static ncclResult_t getNewCollEntry(struct rasCollective** pColl) {
+static ncclResult_t getNewCollEntry(struct rasCollective** pColl) { /* 中文索引·体内调用 ncclCalloc、clockNano。 */
   struct rasCollective* coll;
   int nRasConns;
   ncclResult_t ret = ncclSuccess;
@@ -112,7 +112,7 @@ void rasCollReqInit(struct rasCollRequest* req) {
 // pColl provides on return a pointer to the allocated rasCollective structure to track this collective (unless
 // it's a broadcast, which require no such tracking).
 ncclResult_t rasNetSendCollReq(const struct rasCollRequest* req, bool* pAllDone, struct rasCollective** pColl,
-                               struct rasConnection* fromConn) {
+                               struct rasConnection* fromConn) { /* 中文索引·体内调用 getNewCollEntry、memcpy。 */
   struct rasCollective* coll = nullptr;
   struct rasCollRequest* reqMod = (struct rasCollRequest*)req;
   size_t reqLen = 0;
@@ -173,7 +173,7 @@ exit:
 // the message came from, if any).
 static ncclResult_t rasLinkSendCollReq(struct rasLink* link, struct rasCollective* coll,
                                        const struct rasCollRequest* req, size_t reqLen,
-                                       struct rasConnection* fromConn) {
+                                       struct rasConnection* fromConn) { /* 中文索引·体内调用 rasConnSendCollReq。 */
   for (struct rasLinkConn* linkConn = link->conns; linkConn; linkConn = linkConn->next) {
     if (linkConn->conn && linkConn->conn != fromConn && !linkConn->conn->linkFlag) {
       // We send collective messages through fully established and operational connections only.
@@ -191,7 +191,7 @@ static ncclResult_t rasLinkSendCollReq(struct rasLink* link, struct rasCollectiv
 }
 
 // Sends a collective message down a particular connection.
-static ncclResult_t rasConnSendCollReq(struct rasConnection* conn, const struct rasCollRequest* req, size_t reqLen) {
+static ncclResult_t rasConnSendCollReq(struct rasConnection* conn, const struct rasCollRequest* req, size_t reqLen) { /* 中文索引·体内调用 rasMsgLength、rasMsgAlloc。 */
   struct rasMsg* msg = nullptr;
   int msgLen = rasMsgLength(RAS_MSG_COLLREQ) + reqLen;
 
@@ -207,7 +207,7 @@ static ncclResult_t rasConnSendCollReq(struct rasConnection* conn, const struct 
 // Handles the RAS_MSG_COLLREQ collective message request on the receiver side.  Primarily deals with duplicates and
 // re-broadcasts the message to local peers, though in case of a very limited RAS network it might be done right away,
 // in which case it can immediately send the response.
-ncclResult_t rasMsgHandleCollReq(struct rasMsg* msg, struct rasSocket* sock) {
+ncclResult_t rasMsgHandleCollReq(struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、memcmp。 */
   bool allDone = false;
   struct rasCollective* coll = nullptr;
   char line[SOCKET_NAME_MAXLEN + 1];
@@ -281,7 +281,7 @@ exit:
 // Sends a collective response back to the process we received the collective request from.
 // Invoked when we are finished waiting for the collective responses from other peers (i.e., either there weren't
 // any peers (unlikely), the peers sent their responses (likely), or we timed out.
-static ncclResult_t rasCollReadyResp(struct rasCollective* coll) {
+static ncclResult_t rasCollReadyResp(struct rasCollective* coll) { /* 中文索引·体内调用 rasConnSendCollResp、rasCollHistoryAdd。 */
   if (coll->fromConn) {
     // For remotely-initiated collectives, send the response back.
     NCCLCHECK(rasConnSendCollResp(coll->fromConn, &coll->rootAddr, coll->rootId, coll->peers, coll->nPeers, coll->data,
@@ -302,7 +302,7 @@ static ncclResult_t rasCollReadyResp(struct rasCollective* coll) {
 // a cumulative response from this process and all the processes that we forwarded the request to.
 static ncclResult_t rasConnSendCollResp(struct rasConnection* conn, const union ncclSocketAddress* rootAddr,
                                         uint64_t rootId, const union ncclSocketAddress* peers, int nPeers,
-                                        const char* data, int nData, int nLegTimeouts) {
+                                        const char* data, int nData, int nLegTimeouts) { /* 中文索引·体内调用 rasMsgLength、rasMsgAlloc。 */
   struct rasMsg* msg = nullptr;
   int msgLen = rasMsgLength(RAS_MSG_COLLRESP) + nPeers * sizeof(*peers);
   int dataOffset = 0;
@@ -331,7 +331,7 @@ static ncclResult_t rasConnSendCollResp(struct rasConnection* conn, const union 
 // Handles the collective response on the receiver side.  Finds the corresponding rasCollective structure, merges
 // the data from the response into the accumulated data.  If all the responses have been accounted for, sends the
 // accumulated response back.
-ncclResult_t rasMsgHandleCollResp(struct rasMsg* msg, struct rasSocket* sock) {
+ncclResult_t rasMsgHandleCollResp(struct rasMsg* msg, struct rasSocket* sock) { /* 中文索引·体内调用 ncclSocketToString、memcmp。 */
   struct rasCollective* coll;
   char line[SOCKET_NAME_MAXLEN + 1];
 
@@ -384,7 +384,7 @@ exit:
 
 // Removes a connection from all ongoing collectives.  Called when a connection is experiencing a delay or is being
 // terminated.
-void rasCollsPurgeConn(struct rasConnection* conn) {
+void rasCollsPurgeConn(struct rasConnection* conn) { /* 中文索引·体内调用 ncclSocketToString、rasCollFree。 */
   for (struct rasCollective* coll = rasCollectivesHead; coll;) {
     struct rasCollective* collNext = coll->next;
     char line[SOCKET_NAME_MAXLEN + 1];
@@ -413,7 +413,7 @@ void rasCollsPurgeConn(struct rasConnection* conn) {
 }
 
 // Adds a collective id to the duplicate-suppression history.
-static void rasCollHistoryAdd(const union ncclSocketAddress* rootAddr, uint64_t rootId) {
+static void rasCollHistoryAdd(const union ncclSocketAddress* rootAddr, uint64_t rootId) { /* 中文索引·体内调用 memcpy。 */
   nRasCollHistory = std::min(nRasCollHistory + 1, COLL_HISTORY_SIZE);
   memcpy(&rasCollHistory[rasCollHistNextIdx].rootAddr, rootAddr, sizeof(rasCollHistory[rasCollHistNextIdx].rootAddr));
   rasCollHistory[rasCollHistNextIdx].rootId = rootId;
@@ -427,7 +427,7 @@ void rasCollRecordHistory(const struct rasCollective* coll) {
 }
 
 // Frees a rasCollective entry and any memory associated with it.
-void rasCollFree(struct rasCollective* coll) {
+void rasCollFree(struct rasCollective* coll) { /* 中文索引·体内调用 free。 */
   if (coll == nullptr) return;
 
   free(coll->fwdConns);
@@ -452,7 +452,7 @@ void rasCollFree(struct rasCollective* coll) {
 // problematic connections, they could still exceed the 5s total.  So after 10s we give up waiting no matter what
 // and send back whatever we have.  Unfortunately, the peer that the RAS client is connected to will in all likelihood
 // time out first, so at that point any delayed responses that eventually arrive are likely to be too late...
-void rasCollsHandleTimeouts(int64_t now, int64_t* nextWakeup) {
+void rasCollsHandleTimeouts(int64_t now, int64_t* nextWakeup) { /* 中文索引·体内调用 ncclSocketToString、rasCollReadyResp。 */
   for (struct rasCollective* coll = rasCollectivesHead; coll;) {
     struct rasCollective* collNext = coll->next;
     if (coll->timeout > 0) {
@@ -522,7 +522,7 @@ void rasCollsHandleTimeouts(int64_t now, int64_t* nextWakeup) {
 // For this particular collective, we keep some reduced statistical data (min/max/avg travel time) as well
 // as connection-specific info in case we observed a negative min travel time (which, ideally, shouldn't happen,
 // but the system clocks may not be perfectly in sync).
-static ncclResult_t rasCollConnsInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) {
+static ncclResult_t rasCollConnsInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) { /* 中文索引·体内调用 rasCollDataLength、ncclCalloc。 */
   struct rasCollConns connsData = {.travelTimeMin = INT64_MAX, .travelTimeMax = INT64_MIN};
   struct rasCollConns* pConnsData;
 
@@ -568,7 +568,7 @@ static ncclResult_t rasCollConnsInit(struct rasCollRequest** pReq, size_t* pReqL
 }
 
 // Merges incoming collective RAS_COLL_CONNS response message into the local accumulated data.
-static ncclResult_t rasCollConnsMerge(struct rasCollective* coll, struct rasMsg* msg) {
+static ncclResult_t rasCollConnsMerge(struct rasCollective* coll, struct rasMsg* msg) { /* 中文索引·体内调用 rasMsgLength、ncclRealloc。 */
   struct rasCollConns* collData;
   struct rasCollConns* msgData;
   int dataOffset = rasMsgLength(RAS_MSG_COLLRESP) + msg->collResp.nPeers * sizeof(*msg->collResp.peers);
@@ -611,7 +611,7 @@ static ncclResult_t rasCollConnsMerge(struct rasCollective* coll, struct rasMsg*
 // than "rank xyz missing").
 // Every "new" communicator is also recorded in the (updated) request, so that when that request is forwarded to our
 // peers, those peers don't needlessly send us the same data.
-static ncclResult_t rasCollCommsInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) {
+static ncclResult_t rasCollCommsInit(struct rasCollRequest** pReq, size_t* pReqLen, char** pData, int* pNData) { /* 中文索引·体内调用 rasCollDataLength、qsort。 */
   ncclResult_t ret = ncclSuccess;
   struct rasCollComms* commsData;
   int nComms = 0, nRanks = 0, nMissingRanks = 0;
@@ -805,7 +805,7 @@ fail:
 }
 
 // Merges incoming collective RAS_COLL_COMMS response message into the local accumulated data.
-static ncclResult_t rasCollCommsMerge(struct rasCollective* coll, struct rasMsg* msg) {
+static ncclResult_t rasCollCommsMerge(struct rasCollective* coll, struct rasMsg* msg) { /* 中文索引·体内调用 rasMsgLength、memset。 */
   struct rasCollComms* collData; // Data previously stored (locally) by our process.
   struct rasCollComms* msgData; // Data just received from another process.
   union ncclSocketAddress emptyAddr;
@@ -1039,7 +1039,7 @@ static ncclResult_t rasCollCommsMerge(struct rasCollective* coll, struct rasMsg*
 }
 
 // Checks if a given communicator is in the skipMissingRanksComms array of the request.
-static bool rasCollCommsSkipMissing(const struct rasCollRequest* req, struct ncclComm* comm) {
+static bool rasCollCommsSkipMissing(const struct rasCollRequest* req, struct ncclComm* comm) { /* 中文索引·体内调用 bsearch。 */
   struct rasCommId id;
   id.commHash = comm->commHash;
   id.hostHash = comm->peerInfo->hostHash;
@@ -1112,7 +1112,7 @@ static int rasCollCommsMissingRankSearch(const void* k, const void* e) {
 }
 
 // Invoked during RAS termination to release all the allocated resources.
-void rasCollectivesTerminate() {
+void rasCollectivesTerminate() { /* 中文索引·体内调用 rasCollFree。 */
   for (struct rasCollective* coll = rasCollectivesHead; coll;) {
     struct rasCollective* collNext = coll->next;
     rasCollFree(coll);

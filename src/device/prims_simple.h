@@ -47,14 +47,14 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
   uint64_t accSize;
 
   // Don't use barrier 0 as it's used by the final sync
-  __device__ void barrier() {
+  __device__ void barrier() { /* 中文索引·体内调用 __syncwarp、barrier_sync。 */
     if (nthreads == WARP_SIZE) __syncwarp();
     else {
       int bar = 15 - group;
       barrier_sync(bar, nthreads);
     }
   }
-  __device__ void subBarrier() {
+  __device__ void subBarrier() { /* 中文索引·体内调用 __syncwarp、barrier_sync。 */
     if (nworkers == WARP_SIZE) __syncwarp();
     else {
       int bar = 15 - group - (nworkers != nthreads ? 1 : 0);
@@ -67,7 +67,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
     barrier_sync(15, isHierarchical ? NCCL_PAT_MULTI_RPN_NWORKERS : NCCL_PAT_NWORKERS);
   }
 
-  __device__ bool barrierAny(int vote) {
+  __device__ bool barrierAny(int vote) { /* 中文索引·体内调用 __any_sync、barrier_red_or。 */
     if (nthreads == WARP_SIZE) {
       return __any_sync(~0u, vote);
     } else {
@@ -75,7 +75,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
       return barrier_red_or(vote, name, nthreads);
     }
   }
-  __device__ bool subBarrierAny(int vote) {
+  __device__ bool subBarrierAny(int vote) { /* 中文索引·体内调用 __any_sync、barrier_red_or。 */
     if (nworkers == WARP_SIZE) {
       return __any_sync(~0u, vote);
     } else {
@@ -84,7 +84,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
     }
   }
 
-  inline __device__ uint64_t loadStepValue(uint64_t* ptr) {
+  inline __device__ uint64_t loadStepValue(uint64_t* ptr) { /* 中文索引·体内调用 cvta_to_global、ld_volatile_global。 */
 #if __CUDA_ARCH__ >= 900 && CUDART_VERSION >= 12010
     if (flags & NvlsMinPolling) {
       uint64_t ans;
@@ -101,13 +101,13 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
   }
 
   template <int DirectRecv, int DirectSend, int Recv, int Send, int Src, int Dst>
-  __device__ __forceinline__ void waitPeer(intptr_t srcIx, intptr_t dstIx, int offset, int nelts) {
+  __device__ __forceinline__ void waitPeer(intptr_t srcIx, intptr_t dstIx, int offset, int nelts) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     const bool isSendNotRecv = (Send && Recv) ? (flags & RoleWaitSend) : Send;
     // Yes, for some template arguments this code will be unreachable.  That's fine.
     // coverity[dead_error_line]
     if ((flags & (Recv * RoleWaitRecv)) || (flags & (Send * RoleWaitSend))) {
       int spins = 0;
-      while (connStepCache + (isSendNotRecv ? NCCL_STEPS : 0) < step + StepPerSlice) {
+      /* 中文图解·fifo｜接收角色等对端发布到目标 step，发送角色还会把八个可循环槽位计入可用额度。 */ while (connStepCache + (isSendNotRecv ? NCCL_STEPS : 0) < step + StepPerSlice) {
         connStepCache = loadStepValue(connStepPtr);
         if (checkAbort(flags, Aborted, spins)) break;
         // if (spins == 0) {
@@ -135,7 +135,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
         }
       } else if ((flags & ConnFifoEnabled) && connFifo[step % NCCL_STEPS].mode == NCCL_MODE_OFFSET) {
         ptrs[index] = connEltsFifo + loadSsize(&connFifo[step % NCCL_STEPS].offset) / sizeof(T);
-      } else if (isSendNotRecv && DirectSend) {
+      /* 中文图解·fifo｜DirectWrite 有直接指针时按用户目标地址偏移；FIFO 路径按绝对 step 对 NCCL_STEPS 取模。 */ } else if (isSendNotRecv && DirectSend) {
         if (flags & DirectWrite) {
           ptrs[index] = directBuff + dstIx + offset;
         } else if (flags & DirectRead) {
@@ -165,9 +165,9 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
   }
 
   template <int Recv, int Send>
-  inline __device__ void postPeer(bool dataStored) {
+  inline __device__ void postPeer(bool dataStored) { /* 中文索引·体内调用 fence_acq_rel_sys、st_relaxed_sys_global。 */
     if (flags & (Recv * RolePostRecv | Send * RolePostSend)) {
-      step += StepPerSlice;
+      /* 中文图解·fifo｜发布角色每处理一个 slice 前进 StepPerSlice；等待角色维护自己的步进变量。 */ step += StepPerSlice;
       if (Send && (flags & RolePostSend) && (dataStored || (flags & ConnFifoEnabled))) {
         fence_acq_rel_sys();
       }
@@ -176,13 +176,13 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
   }
 
   template <int DirectRecv1, int DirectSend1, int Recv, int Send, int SrcBuf, int DstBuf>
-  __device__ __forceinline__ void genericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) {
+  __device__ __forceinline__ void genericOp(intptr_t srcIx, intptr_t dstIx, int nelem, bool postOp) { /* 中文索引·体内调用 ncclSimpleSliceSize、subBarrier。 */
     constexpr int DirectRecv = 1 && Direct && DirectRecv1;
     constexpr int DirectSend = 1 && Direct && DirectSend1;
     constexpr int Src = SrcBuf != -1;
     constexpr int Dst = DstBuf != -1;
 
-    nelem = nelem < 0 ? 0 : nelem;
+    /* 中文图解·fifo｜尾块的 nelem 可以小于零；在计算有效区间前统一钳到零。 */ nelem = nelem < 0 ? 0 : nelem;
     int sliceSize = ncclSimpleSliceSize(nelem, SlicePerChunk, stepSize * StepPerSlice);
     int slice = 0;
     int offset = 0;
@@ -218,7 +218,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
       NVCC_PRAGMA_UNROLL_DISABLED
 #endif
       do {
-        sliceSize = sliceSize < nelem - offset ? sliceSize : nelem - offset;
+        /* 中文图解·fifo｜这次 slice 的实际长度最多到 nelem；最后一次切片可以比名义长度短。 */ sliceSize = sliceSize < nelem - offset ? sliceSize : nelem - offset;
         if (tid == 0) {
           T* userInput = (T*)ncclShmem.groups[group].userInput;
           T* userOutput = (T*)ncclShmem.groups[group].userOutput;
@@ -276,7 +276,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
           workSize = 0;
         }
         barrier(); // This barrier has a counterpart in following loop
-        postPeer<Recv, Send>(0 < workSize);
+        /* 中文图解·fifo｜发布完成后推进有效元素 offset，使下一个 slice 接着本次写入的位置处理。 */ postPeer<Recv, Send>(0 < workSize);
         offset += sliceSize;
         slice += 1;
         // Yes, for some template arguments this code will be unreachable.  That's fine.
@@ -289,7 +289,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
     // worker perf is the limiter, perf-wise this loop is effectively unentered,
     // hence just a single branch insn.
     NVCC_PRAGMA_UNROLL_DISABLED
-    while (slice < SlicePerChunk) {
+    /* 中文图解·fifo｜余下的空 slice 仍完成对应同步，保证对端看到相同的协议推进次数。 */ while (slice < SlicePerChunk) {
       sliceSize = sliceSize < nelem - offset ? sliceSize : nelem - offset;
       { // Only workers could have Wait roles so we know the slice must be empty
         // since we've exited the loop above.
@@ -304,13 +304,13 @@ class Primitives<T, RedOp, Fan, Direct, ProtoSimple<SlicePerChunk, StepPerSlice,
   }
 
 public:
-  static inline __device__ void sendPeerNotify(int peer, int connIndex, int steps) {
+  static inline __device__ void sendPeerNotify(int peer, int connIndex, int steps) { /* 中文索引·体内调用 st_relaxed_sys_global。 */
     ncclDevChannelPeer* peerPtr = ncclShmem.channel.peers[peer];
     peerPtr->send[connIndex].step += steps;
     st_relaxed_sys_global(peerPtr->send[connIndex].tail, peerPtr->send[connIndex].step);
   }
 
-  static inline __device__ void recvPeerNotify(int peer, int connIndex, int steps) {
+  static inline __device__ void recvPeerNotify(int peer, int connIndex, int steps) { /* 中文索引·体内调用 st_relaxed_sys_global、ld_volatile_global。 */
     int spins = 0;
     ncclDevChannelPeer* peerPtr = ncclShmem.channel.peers[peer];
     peerPtr->recv[connIndex].step += steps;
@@ -322,7 +322,7 @@ public:
   }
 
   template <int Recv, int Send, typename Fn>
-  __device__ __forceinline__ void process(Fn&& fn, uint32_t sendDirectFlag = 0, uint32_t recvDirectFlag = 0) {
+  __device__ __forceinline__ void process(Fn&& fn, uint32_t sendDirectFlag = 0, uint32_t recvDirectFlag = 0) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     NVCC_PRAGMA_UNROLL_DISABLED
     for (int slice = 0; slice < SlicePerChunk; slice++) {
       if (tid < nworkers) {
@@ -407,7 +407,7 @@ private:
   template <int DirectRecv1, int DirectSend1, int Recv, int Send, bool Remap = false>
   __device__ __forceinline__ void ScatterGatherOp(intptr_t inpIx, intptr_t outIx, ssize_t totalElem, int peerElem,
                                                   ssize_t peerOffset, int skip, int shift, bool postOp,
-                                                  const int* remap = nullptr) {
+                                                  const int* remap = nullptr) { /* 中文索引·体内调用 ncclSimpleSliceSize、subBarrier。 */
     constexpr int DirectRecv = 1 && Direct && DirectRecv1;
     constexpr int DirectSend = 1 && Direct && DirectSend1;
     int offset = 0; // slice offset
@@ -481,7 +481,7 @@ private:
   }
 
   __device__ __forceinline__ void loadRecvConn(ncclDevChannelPeer* peer, int connIndex, uint32_t direct, int ipcRegFlag,
-                                               int netRegFlag) {
+                                               int netRegFlag) { /* 中文索引·体内调用 ncclNetDeviceUnpackSetup、roundUp。 */
     conn = &peer->recv[connIndex];
     if (conn->netDeviceHandle.netDeviceType == NCCL_NET_DEVICE_UNPACK) {
       // handle must be a device ptr
@@ -535,7 +535,7 @@ private:
   }
 
   __device__ __forceinline__ void loadSendConn(ncclDevChannelPeer* peer, int connIndex, uint32_t direct, int ipcRegFlag,
-                                               int netRegFlag) {
+                                               int netRegFlag) { /* 中文索引·体内调用 roundUp、loadStepValue。 */
     conn = &peer->send[connIndex];
     step = conn->step;
     step = roundUp(step, SlicePerChunk * StepPerSlice);
@@ -624,7 +624,7 @@ public:
                         uint8_t connIndexSend = 0, struct ncclDevWorkColl* collWork = nullptr,
                         struct ncclDevWorkP2p* p2pWork = nullptr, int stepSize_ = 0, int mode = primsModeDefault)
     : tid(tid), nthreads(nthreads), tidInBlock(threadIdx.x), group(group),
-      stepSize(stepSize_ == 0 ? ncclShmem.comm.buffSizes[NCCL_PROTO_SIMPLE] / NCCL_STEPS / sizeof(T) : stepSize_) {
+      /* 中文图解·fifo｜设备 stepSize 默认以 T 元素计。与 Host 同名变量比较时须乘回 sizeof(T)。 */ stepSize(stepSize_ == 0 ? ncclShmem.comm.buffSizes[NCCL_PROTO_SIMPLE] / NCCL_STEPS / sizeof(T) : stepSize_) {
     int peer = -1;
     flags = 0;
     index = -1;
@@ -792,7 +792,7 @@ public:
     }
   }
 
-  __device__ ~Primitives() {
+  __device__ ~Primitives() { /* 中文索引·体内调用 checkAbort、ncclNetDeviceSaveHead。 */
     if (flags & PatMode) {
       if (patNvlsPeer != NULL) patNvlsPeer->conn->step = patNvlsPeer->step;
       return;
@@ -833,7 +833,7 @@ public:
   }
 
   __device__ void setDataPtrs(void const* inputBuf, void* outputBuf, uint64_t redOpArg, struct ncclDevWorkCollReg* work,
-                              uint8_t ipcReg, int peer) {
+                              uint8_t ipcReg, int peer) { /* 中文索引·体内调用 checkAbort。 */
     if (tid == 0) {
       ncclShmem.groups[group].userInput = (void*)inputBuf;
       ncclShmem.groups[group].userOutput = (void*)outputBuf;
@@ -1055,7 +1055,7 @@ public:
   // an NVLS step, but use per-group offsets and completion metadata.
   // Scatter one PAT step from user input into the local NVLS send FIFOs.
   __device__ __forceinline__ void patScatter(struct ncclPatStep* ps, struct ncclPatShmem* shmem, int psIdx,
-                                             int parallelFactor, int localRanks, size_t count) {
+                                             int parallelFactor, int localRanks, size_t count) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     int localIdx = psIdx % parallelFactor;
     bool skipped = ps->flags & PatSkipped;
     int nelem = skipped ? 0 : (ps->nelem < 0 ? 0 : ps->nelem);
@@ -1121,7 +1121,7 @@ public:
 
   // Use the local NVLS reduction as this PAT-RS step's local input.
   template <bool needsNvlsReduce = false>
-  __device__ __forceinline__ void patReduce(struct ncclPatStep* ps, struct ncclPatShmem* shmem) {
+  __device__ __forceinline__ void patReduce(struct ncclPatStep* ps, struct ncclPatShmem* shmem) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     struct ncclPatPeer* nvlsReducePeer = shmem->recvDims + NCCL_PAT_NDIMS;
     bool nvlsWaiter = needsNvlsReduce && (flags & RoleWaitPatNvls);
     bool nvlsPoster = needsNvlsReduce && (flags & RolePostPatNvls);
@@ -1256,7 +1256,7 @@ public:
   }
 
   __device__ __forceinline__ void patNvlsBcast(struct ncclPatStep* ps, struct ncclPatShmem* shmem, int workSize,
-                                               bool skipped) {
+                                               bool skipped) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     struct ncclPatPeer* nvlsBcastPeer = shmem->sendDims + NCCL_PAT_NDIMS;
 
     if (flags & RoleWaitPatNvls) {
@@ -1287,7 +1287,7 @@ public:
 
   // Forward PAT-AG output through the local NVLS broadcast when requested.
   template <bool needsBcast = false>
-  __device__ __forceinline__ void patCopy(struct ncclPatStep* ps, struct ncclPatShmem* shmem) {
+  __device__ __forceinline__ void patCopy(struct ncclPatStep* ps, struct ncclPatShmem* shmem) { /* 中文索引·体内调用 patNvlsBcast、loadStepValue。 */
     bool skipped = ps->flags & PatSkipped;
     if (skipped) {
       patBarrier</*isHierarchical=*/needsBcast>();
@@ -1408,7 +1408,7 @@ public:
 
   // Gather one PAT step from the local NVLS recv FIFOs into user-rank order.
   __device__ __forceinline__ void patGather(struct ncclPatStep* ps, struct ncclPatShmem* shmem, int psIdx,
-                                            int parallelFactor, size_t count) {
+                                            int parallelFactor, size_t count) { /* 中文索引·体内调用 loadStepValue、checkAbort。 */
     int localIdx = psIdx % parallelFactor;
     if ((flags & RoleWaitRecv) && localIdx == 0) {
       int spins = 0;

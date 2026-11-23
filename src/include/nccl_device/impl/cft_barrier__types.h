@@ -45,7 +45,7 @@ struct ncclCftBarrierSession_internal {
     *leOffset += (3 * handle.nBarriers + index * team.nRanks + peer) * NCCL_CFT_BARRIER_GRAN;
   }
 
-  NCCL_DEVICE_INLINE uint32_t* mcInbox() {
+  NCCL_DEVICE_INLINE uint32_t* mcInbox() { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer。 */
 #if CUDART_VERSION >= 13000
     void* state = ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
     return (uint32_t*)(reinterpret_cast<char (*)[NCCL_CFT_BARRIER_ALIGN]>(state) + (2 * handle.nBarriers + index));
@@ -54,7 +54,7 @@ struct ncclCftBarrierSession_internal {
 #endif
   }
 
-  NCCL_DEVICE_INLINE uint32_t* ucInbox(int peer) {
+  NCCL_DEVICE_INLINE uint32_t* ucInbox(int peer) { /* 中文索引·体内调用 ncclGetResourceBufferLocalPointer。 */
 #if CUDART_VERSION >= 13000
     void* state = ncclGetResourceBufferLocalPointer(comm, handle.bufHandle);
     return (uint32_t*)(reinterpret_cast<char (*)[NCCL_CFT_BARRIER_ALIGN]>(state) +

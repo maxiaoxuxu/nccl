@@ -86,7 +86,7 @@ static void *common_handle = nullptr;
 static void *verbs_handle = nullptr;
 static void *gpunetio_handle = nullptr;
 
-static void doca_gpunetio_sdk_wrapper_init(int *ret) {
+static void doca_gpunetio_sdk_wrapper_init(int *ret) { /* 中文索引·体内调用 getenv、memset。 */
     const char *doca_sdk_lib_path = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
     char libcommon_versioned_path[2048];
     char libcommon_path[2048];
@@ -258,14 +258,14 @@ exit_error:
     return;
 }
 
-static int init_gpunetio_sdk_wrapper(void) {
+static int init_gpunetio_sdk_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_gpunetio_sdk_wrapper_init, &ret);
     return ret;
 }
 
-static int get_sdk_wrapper_env_var(void) {
+static int get_sdk_wrapper_env_var(void) { /* 中文索引·体内调用 getenv、strcmp。 */
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
     if (!val) return -1;
@@ -276,7 +276,7 @@ static int get_sdk_wrapper_env_var(void) {
 }
 
 /* Wrapper function implementations */
-doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_create(const char *gpu_bus_id, void **gpu_dev) {
+doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_create(const char *gpu_bus_id, void **gpu_dev) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -303,7 +303,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_create(const char *gpu_bus_id, voi
     }
 }
 
-doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_destroy(void *gpu_dev) {
+doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_destroy(void *gpu_dev) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -323,7 +323,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_destroy(void *gpu_dev) {
 doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_mem_alloc(void *gpu_dev, size_t size,
                                                         size_t alignment,
                                                         enum doca_gpu_mem_type mtype,
-                                                        void **memptr_gpu, void **memptr_cpu) {
+                                                        void **memptr_gpu, void **memptr_cpu) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -340,7 +340,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_mem_alloc(void *gpu_dev, size_t si
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_mem_free(void *gpu_dev, void *memptr_gpu) {
+doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_mem_free(void *gpu_dev, void *memptr_gpu) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -358,7 +358,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_mem_free(void *gpu_dev, void *memp
 }
 
 doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_dmabuf_fd(void *gpu_dev, void *memptr_gpu,
-                                                        size_t size, int *dmabuf_fd) {
+                                                        size_t size, int *dmabuf_fd) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -375,7 +375,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_dmabuf_fd(void *gpu_dev, void *mem
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_verbs_req_notify_cq(void *gpu_dev, void *verbs_cq) {
+doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_verbs_req_notify_cq(void *gpu_dev, void *verbs_cq) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -399,7 +399,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_verbs_req_notify_cq(void *gpu_dev,
 }
 
 doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_cap_is_gpu_mem_umem_supported(void *gpu_dev,
-                                                                            void *net_dev) {
+                                                                            void *net_dev) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -424,7 +424,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_cap_is_gpu_mem_umem_supported(void
 }
 
 doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_cap_is_host_mem_umem_supported(void *gpu_dev,
-                                                                             void *net_dev) {
+                                                                             void *net_dev) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -449,7 +449,7 @@ doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_cap_is_host_mem_umem_supported(voi
 }
 
 doca_sdk_wrapper_error_t doca_gpu_sdk_wrapper_cap_is_nic_handler_gpu_sm_db_supported(
-    void *gpu_dev, void *net_dev) {
+    void *gpu_dev, void *net_dev) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_gpunetio_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {

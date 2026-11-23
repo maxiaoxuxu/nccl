@@ -55,7 +55,7 @@ ncclResult_t ncclShadowPoolToHost(struct ncclShadowPool*, void* devObj, void** o
 
 template <typename T>
 static inline ncclResult_t ncclShadowPoolAlloc(struct ncclShadowPool* pool, T** outDevObj, T** outHostObj,
-                                               cudaStream_t stream) {
+                                               cudaStream_t stream) { /* 中文索引·体内调用 ncclShadowPoolAlloc。 */
   void* devObj;
   void* hostObj;
   ncclResult_t got = ncclShadowPoolAlloc(pool, sizeof(T), &devObj, &hostObj, stream);

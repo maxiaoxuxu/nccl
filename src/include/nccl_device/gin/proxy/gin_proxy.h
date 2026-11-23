@@ -97,7 +97,7 @@ NCCL_DEVICE_INLINE ncclResult_t flush(ncclGinProxyGpuCtx_t* proxyCtx, uint32_t p
 
 template <typename Coop>
 NCCL_DEVICE_INLINE void postGfd(Coop coop, ncclGinProxyGpuCtx_t* proxyCtx, ncclGinProxyGfdShort_t* gfd, uint32_t pe,
-                                bool isGet = false) {
+                                bool isGet = false) { /* 中文索引·体内调用 loadConst、coop.thread_rank。 */
   using nccl::utility::loadConst;
   uint32_t* gpuQueueIndices = loadConst(&proxyCtx->pis);
   int const nRanks = loadConst(&proxyCtx->nranks);
@@ -149,7 +149,7 @@ __device__ __forceinline__ void buildGfd(ncclGinProxyGfdShort_t* gfd, ncclGinPro
                                          size_t srcOff, ncclGinWindow_t srcHandle, size_t dstOff,
                                          ncclGinWindow_t dstHandle, size_t size, ncclGinCounter_t counterId,
                                          ncclGinSignal_t signalId, uint64_t signalVal, ncclGinWindow_t signalWindow,
-                                         size_t signalOff, bool isStrongSignal = false) {
+                                         size_t signalOff, bool isStrongSignal = false) { /* 中文索引·体内调用 memcpy。 */
   for (int i = 0; i < ncclGinProxyGfdShortQwords; i++) {
     gfd->qword[i].flag.v = 1;
   }
@@ -191,7 +191,7 @@ __device__ __forceinline__ void buildGfd(ncclGinProxyGfdShort_t* gfd, ncclGinPro
 
 __device__ __forceinline__ void constructProxyOp(ncclGinProxyOp_t& op, bool isGet, bool isFlush, bool hasInline,
                                                  ncclGinSignalType signalType, ncclGinSignalOp_t signalOp,
-                                                 bool hasCounter) {
+                                                 bool hasCounter) { /* 中文索引·体内调用 __builtin_unreachable。 */
   op = (ncclGinProxyOp_t)(0);
   if (isGet) {
     op = static_cast<ncclGinProxyOp_t>(static_cast<uint16_t>(op) | static_cast<uint16_t>(ncclGinProxyOpGet));
@@ -231,7 +231,7 @@ __device__ __forceinline__ void constructProxyOp(ncclGinProxyOp_t& op, bool isGe
 template <typename Coop>
 NCCL_DEVICE_INLINE void get(Coop coop, ncclGinProxyGpuCtx_t* proxyCtx, int peer, ncclGinWindow_t remoteWnd,
                             size_t remoteOff, ncclGinWindow_t localWnd, size_t localOff, size_t bytes,
-                            ncclGinProxyGfdShort_t* desc) {
+                            ncclGinProxyGfdShort_t* desc) { /* 中文索引·体内调用 constructProxyOp、nccl::gin::proxy::buildGfd。 */
   using nccl::gin::proxy::DataChunkSize;
   while (bytes > 0) {
     size_t sendSize = min(bytes, DataChunkSize);
@@ -253,7 +253,7 @@ NCCL_DEVICE_INLINE void put(Coop coop, ncclGinProxyGfdShort_t* gfd, ncclGinProxy
                             ncclGinWindow_t dstWnd, size_t dstOff, T srcVal, bool hasInline, ncclGinWindow_t srcWnd,
                             size_t srcOff, size_t bytes, ncclGinSignalDescriptor signal, ncclGinSignalOp_t signalOp,
                             uint64_t signalVal, bool hasCounter, ncclGinCounter_t counterId,
-                            cuda::thread_scope required, cuda::thread_scope given) {
+                            cuda::thread_scope required, cuda::thread_scope given) { /* 中文索引·体内调用 cuda::atomic_thread_fence、constructProxyOp。 */
   if ((int)given > (int)cuda::thread_scope_system) {
     cuda::atomic_thread_fence(cuda::memory_order_release, cuda::thread_scope_system);
   }
@@ -374,7 +374,7 @@ struct ncclGinApi_Get<NCCL_NET_DEVICE_GIN_PROXY> {
 template <>
 struct ncclGinApi_FlushAsync<NCCL_NET_DEVICE_GIN_PROXY> {
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, int peer, ncclGinRequest_t* outRequest, bool hasDescriptor,
-                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags) {
+                                      ncclGinDescriptorSmem* descriptor, uint32_t optFlags) { /* 中文索引·体内调用 loadConst、lastIssuedGet.load。 */
     (void)hasDescriptor;
     (void)descriptor;
     using nccl::utility::loadConst;
@@ -428,7 +428,7 @@ struct ncclGinApi_SupportsStrongSignal<NCCL_NET_DEVICE_GIN_PROXY> {
 
 template <>
 struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_PROXY> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinCounter_t counterId) { /* 中文索引·体内调用 nccl::utility::loadConst。 */
     ncclGinProxyGpuCtx_t* proxyCtx = &((ncclGinProxyGpuCtx_t*)ctx.handle)[ctx.contextId];
     uint64_t* counter = nccl::utility::loadConst(&proxyCtx->counters) + counterId;
     *counter = 0;
@@ -437,7 +437,7 @@ struct ncclGinApi_ResetCounter<NCCL_NET_DEVICE_GIN_PROXY> {
 
 template <>
 struct ncclGinApi_GetSignalPtr<NCCL_NET_DEVICE_GIN_PROXY> {
-  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) {
+  NCCL_DEVICE_INLINE static ncclGinOffsetPtr call(ncclGinCtx ctx, ncclGinSignal_t signalId) { /* 中文索引·体内调用 nccl::utility::loadConst。 */
     ncclGinProxyGpuCtx_t* proxyCtx = &((ncclGinProxyGpuCtx_t*)ctx.handle)[ctx.contextId];
     return {nccl::utility::loadConst(&proxyCtx->signals) + signalId,
             nccl::utility::loadConst(&proxyCtx->signalOffsets)[signalId]};
@@ -461,7 +461,7 @@ struct ncclGinApi_BarrierOptions<NCCL_NET_DEVICE_GIN_PROXY> {
 
 template <>
 struct ncclGinApi_ResetSignal<NCCL_NET_DEVICE_GIN_PROXY> {
-  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) {
+  NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, ncclGinSignalDescriptor signal) { /* 中文索引·体内调用 ncclGetLocalPointer、nccl::utility::loadConst。 */
     ncclGinProxyGpuCtx_t* proxyCtx = &((ncclGinProxyGpuCtx_t*)ctx.handle)[ctx.contextId];
     if (signal.type == NCCL_GIN_SIGNAL_TYPE_VA) {
       uint64_t* signalPtr = (uint64_t*)ncclGetLocalPointer(signal.vaSignal.ncclWindow, signal.vaSignal.signalOffset);
@@ -478,7 +478,7 @@ template <>
 struct ncclGinApi_Flush<NCCL_NET_DEVICE_GIN_PROXY> {
   template <typename Coop>
   NCCL_DEVICE_INLINE static void call(ncclGinCtx ctx, Coop coop, bool hasDescriptor, ncclGinDescriptorSmem* descriptor,
-                                      cuda::memory_order ord, uint32_t* abortFlag) {
+                                      cuda::memory_order ord, uint32_t* abortFlag) { /* 中文索引·体内调用 coop.thread_rank、coop.size。 */
     NVCC_PRAGMA_UNROLL_DISABLED
     for (int pe = coop.thread_rank(); pe < ctx.nRanks; pe += coop.size()) {
       ncclGinRequest_t request;

@@ -41,7 +41,7 @@ struct ncclTransport nvlsTransport = {"NVLS",
                                       {NULL, NULL, nvlsRecvFree, NULL, NULL, NULL, NULL, NULL}};
 
 // Release a consumer's UC physical memory and its mapping (inverse of nvlsAllocBindUc's alloc).
-static ncclResult_t nvlsFreeUc(struct ncclComm* comm, struct ncclNvlsUcSegment* uc) {
+static ncclResult_t nvlsFreeUc(struct ncclComm* comm, struct ncclNvlsUcSegment* uc) { /* 中文索引·体内调用 ncclCuMemFree、memset。 */
   if (uc->ptr) {
     INFO(NCCL_NVLS, "NVLS release UC handle %llx ptr %p size %zu", uc->handle, uc->ptr, uc->size);
     // Unmaps/frees/releases and untracks the persistent ncclMemTrack entry from nvlsAllocBindUc.
@@ -67,7 +67,7 @@ NCCL_PARAM(NvlsTreeMaxChunkSize, "NVLSTREE_MAX_CHUNKSIZE", -2);
 // Same allocation size and per-slot chunk size; only slot addressing changes.
 NCCL_PARAM(NvlsFifoLayout, "NVLS_FIFO_LAYOUT", -1);
 
-static ncclResult_t ncclNvlsGetFifoLayout(struct ncclComm* comm, int* layout) {
+static ncclResult_t ncclNvlsGetFifoLayout(struct ncclComm* comm, int* layout) { /* 中文索引·体内调用 ncclParamNvlsFifoLayout。 */
   int64_t requested = ncclParamNvlsFifoLayout();
   if (requested < -1 || requested > 2) {
     WARN("NCCL_NVLS_FIFO_LAYOUT=%ld is invalid (expected -1, 0, 1 or 2)", requested);
@@ -112,7 +112,7 @@ static const char* ncclNvlsFifoLayoutName(int layout) {
 
 // Returns optimal NVLSTree tuning parameters for VeraRubin multi-node configurations.
 static ncclResult_t ncclNvlsTreeRubinTuning(struct ncclComm* comm, int* nChannels, int* chunkSize,
-                                            int* treeMaxChunkSize) {
+                                            int* treeMaxChunkSize) { /* 中文索引·体内调用 pow2Up。 */
   *treeMaxChunkSize = 512 * 1024;
 
   int nDomains = comm->nNodes;
@@ -167,7 +167,7 @@ static ncclResult_t ncclNvlsTreeSm100Tuning(struct ncclComm* comm, int* nChannel
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvlsChannels(struct ncclComm* comm, int* nChannels, int* chunkSize, int* treeMaxChunkSize) {
+ncclResult_t ncclNvlsChannels(struct ncclComm* comm, int* nChannels, int* chunkSize, int* treeMaxChunkSize) { /* 中文索引·体内调用 ncclNvlsTreeSm100Tuning、ncclNvlsTreeRubinTuning。 */
   int channels = 0;
 
   if (comm->minCompCap >= 100 && comm->nNodes > 1 && !RUBIN_AND_LATER(comm->minCompCap)) {
@@ -205,7 +205,7 @@ ncclResult_t ncclNvlsChannels(struct ncclComm* comm, int* nChannels, int* chunkS
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvlsTuning(struct ncclComm* comm) {
+ncclResult_t ncclNvlsTuning(struct ncclComm* comm) { /* 中文索引·体内调用 ncclGetEnv、strlen。 */
   int chunkSize = 0;
   int treeMaxChunkSize = 0;
   const char* chunkSizeEnv = ncclGetEnv("NCCL_NVLS_CHUNKSIZE");
@@ -236,7 +236,7 @@ ncclResult_t ncclNvlsTuning(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvlsInit(struct ncclComm* comm) {
+ncclResult_t ncclNvlsInit(struct ncclComm* comm) { /* 中文索引·体内调用 ncclParamNvlsEnable、ncclTopoGetGpuCount。 */
   comm->nvlsSupport = 0;
   comm->nvlsChannels = 0;
 
@@ -273,7 +273,7 @@ ncclResult_t ncclNvlsInit(struct ncclComm* comm) {
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvlsTreeConnect(struct ncclComm* comm) {
+ncclResult_t ncclNvlsTreeConnect(struct ncclComm* comm) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、ncclTransportP2pConnect。 */
   ncclResult_t ret = ncclSuccess;
   if (comm && ncclNvlsTransportEnabled(comm) && comm->nNodes > 1) {
     for (int c = 0; c < comm->nvlsChannels; c++) {
@@ -296,7 +296,7 @@ fail:
 
 // Allocate UC backing for a consumer and bind it into its resolved MC-group slice.
 static ncclResult_t nvlsAllocBindUc(struct ncclComm* comm, const struct ncclMcPartition* partition, size_t size,
-                                    cudaStream_t stream, struct ncclNvlsUcSegment* outUc) {
+                                    cudaStream_t stream, struct ncclNvlsUcSegment* outUc) { /* 中文索引·体内调用 memset、cuMemGetAllocationGranularity。 */
   CUmemAllocationProp ucprop;
   ncclResult_t ret = ncclSuccess;
   size_t ucsize = size;
@@ -349,7 +349,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclNvlsBufferSetup(struct ncclComm* comm) {
+ncclResult_t ncclNvlsBufferSetup(struct ncclComm* comm) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、ncclNvlsFifoSlotStride。 */
   int nHeads = -1;
   int headRank = -1;
   ncclResult_t res = ncclSuccess;
@@ -484,7 +484,7 @@ static ncclResult_t nvlsMapSharedSlots(struct ncclComm* comm, struct ncclComm* p
   return ncclSuccess;
 }
 
-ncclResult_t ncclNvlsSetup(struct ncclComm* comm, struct ncclComm* parent) {
+ncclResult_t ncclNvlsSetup(struct ncclComm* comm, struct ncclComm* parent) { /* 中文索引·体内调用 ncclNvlsTransportEnabled、ncclCalloc。 */
   ncclResult_t res = ncclSuccess;
   size_t typeSize;
   char shmPath[sizeof("/dev/shm/nccl-XXXXXX")];
@@ -695,7 +695,7 @@ fail:
   goto exit;
 }
 
-ncclResult_t ncclNvlsFree(struct ncclComm* comm) {
+ncclResult_t ncclNvlsFree(struct ncclComm* comm) { /* 中文索引·体内调用 ncclAtomicRefCountDecrement、ncclShmClose。 */
   struct ncclNvlsSharedRes* resources = (struct ncclNvlsSharedRes*)comm->nvlsResources;
   ncclResult_t ret = ncclSuccess;
   if (resources == NULL) return ncclSuccess;
@@ -726,7 +726,7 @@ ncclResult_t ncclNvlsFree(struct ncclComm* comm) {
 // that cannot take this path; a NULL record travels through the gathers as an ineligible
 // payload. Even on error the caller must still call ncclNvlsUbRegister, since peers
 // cannot see this rank's failure.
-static ncclResult_t nvlsFindLocalReg(struct ncclComm* comm, const void* buff, size_t size, struct ncclReg** outReg) {
+static ncclResult_t nvlsFindLocalReg(struct ncclComm* comm, const void* buff, size_t size, struct ncclReg** outReg) { /* 中文索引·体内调用 ncclRegFind、ncclRegLocalIsValid。 */
   struct ncclReg* reg = NULL;
   bool isValid = false;
   void* base = NULL;
@@ -746,7 +746,7 @@ static ncclResult_t nvlsFindLocalReg(struct ncclComm* comm, const void* buff, si
 
 ncclResult_t ncclNvlsLocalRegisterBuffer(struct ncclComm* comm, const void* sendbuff, void* recvbuff,
                                          size_t sendbuffSize, size_t recvbuffSize, int* outRegBufUsed,
-                                         void** outRegBufSend, void** outRegBufRecv) {
+                                         void** outRegBufSend, void** outRegBufRecv) { /* 中文索引·体内调用 ncclNvlsUbEnabled、nvlsFindLocalReg。 */
   ncclResult_t ret = ncclSuccess;
 
   *outRegBufUsed = 0;
@@ -778,7 +778,7 @@ struct ncclNvlsCleanupCallback {
   struct ncclComm* comm;
 };
 
-static ncclResult_t cleanupNvls(struct ncclComm* comm, struct ncclCommCallback* cb) {
+static ncclResult_t cleanupNvls(struct ncclComm* comm, struct ncclCommCallback* cb) { /* 中文索引·体内调用 ncclCommGraphDeregister、free。 */
   struct ncclNvlsCleanupCallback* obj = (struct ncclNvlsCleanupCallback*)cb;
   ncclResult_t ret = ncclCommGraphDeregister(obj->comm, obj->reg);
   free(obj);
@@ -789,7 +789,7 @@ static ncclResult_t cleanupNvls(struct ncclComm* comm, struct ncclCommCallback* 
 // nvlsFindLocalReg. The reference is taken only on success, so the caller releases
 // exactly the records it was handed.
 static ncclResult_t nvlsGraphReg(struct ncclComm* comm, const void* buff, size_t size, struct ncclReg** outReg,
-                                 struct ncclNvlsCleanupCallback** outRecord) {
+                                 struct ncclNvlsCleanupCallback** outRecord) { /* 中文索引·体内调用 ncclCuMemGetAddressRange、ncclParamMultiSegmentRegister。 */
   ncclResult_t ret = ncclSuccess;
 
   struct ncclReg* reg = NULL;
@@ -824,7 +824,7 @@ fail:
 ncclResult_t ncclNvlsGraphRegisterBuffer(
   struct ncclComm* comm, const void* sendbuff, void* recvbuff, size_t sendbuffSize, size_t recvbuffSize,
   int* outRegBufUsed, void** outRegBufSend, void** outRegBufRecv,
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueEltsAdded) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue, int* nCleanupQueueEltsAdded) { /* 中文索引·体内调用 ncclNvlsUbEnabled、nvlsGraphReg。 */
   ncclResult_t ret = ncclSuccess;
   *outRegBufUsed = 0;
   *outRegBufSend = NULL;

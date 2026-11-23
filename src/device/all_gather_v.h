@@ -20,13 +20,13 @@ __device__ __forceinline__ void setDataPtrsHelper(Primitives<T, RedOp, FanSymmet
 template <typename T, typename RedOp>
 __device__ __forceinline__ void setDataPtrsHelper(
   Primitives<T, RedOp, FanSymmetric<1>, 0, ProtoSimple<1, 1>, 0, 0>& prims, void const* srcBuf, void* dstBuf,
-  uint64_t redOpArg) {
+  uint64_t redOpArg) { /* 中文索引·体内调用 prims.setDataPtrs。 */
   prims.setDataPtrs(srcBuf, dstBuf, redOpArg, nullptr, 0, 0);
 }
 } // namespace
 
 template <typename T, typename RedOp, typename Proto>
-__device__ __forceinline__ void runAllGatherV() {
+__device__ __forceinline__ void runAllGatherV() { /* 中文索引·体内调用 setDataPtrsHelper、__syncthreads。 */
   int tid = threadIdx.x;
   int tn = blockDim.x;
   ncclRing* ring = &ncclShmem.channel.ring;

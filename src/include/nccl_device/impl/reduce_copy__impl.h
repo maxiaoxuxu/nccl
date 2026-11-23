@@ -46,7 +46,7 @@ template <int UNROLL_PACKS, int UNROLL_SOURCE, typename T, typename Pack, typena
           bool SINGLE_SRC>
 NCCL_DEVICE_INLINE IntCount reduceCopyLoopCoreImpl(Coop coop, SrcLambda srcLambda, int nSrc, DstLambda dstLambda,
                                                    int nDst, RedOp const& redOp, IntCount totalPacks,
-                                                   IntCount basePackIdx) {
+                                                   IntCount basePackIdx) { /* 中文索引·体内调用 coop.thread_rank、coop.size。 */
   static_assert(!SINGLE_SRC || UNROLL_SOURCE == 1, "UNROLL_SOURCE must be 1 when SINGLE_SRC is set");
 
   constexpr int warpSize = 32;
@@ -242,7 +242,7 @@ struct ReduceCopyLoopParams {
 template <int UNROLL_PACKS, typename T, typename Pack, typename RedOp, typename IntCount, typename Coop,
           bool srcMultimem, bool dstMultimem, typename SrcLambda, typename DstLambda, bool SkipTail>
 NCCL_DEVICE_INLINE IntCount reduceCopyLoop(Coop coop, SrcLambda srcLambda, int nSrc, DstLambda dstLambda, int nDst,
-                                           RedOp const& redOp, IntCount count) {
+                                           RedOp const& redOp, IntCount count) { /* 中文索引·体内调用 coop.size。 */
   const int coopSize = coop.size();
   constexpr int warpSize = 32;
   constexpr int defaultStride = CoopStride<Coop>::value;
@@ -288,7 +288,7 @@ NCCL_DEVICE_INLINE IntCount reduceCopyLoop(Coop coop, SrcLambda srcLambda, int n
 template <typename T, typename RedOp, typename IntCount, typename Coop, bool srcMultimem, bool dstMultimem,
           typename SrcLambda, typename DstLambda>
 NCCL_DEVICE_INLINE void reduceCopyScalarLoop(Coop coop, SrcLambda srcLambda, int nSrc, DstLambda dstLambda, int nDst,
-                                             RedOp const& redOp, IntCount count) {
+                                             RedOp const& redOp, IntCount count) { /* 中文索引·体内调用 __device__、srcLambda。 */
   if (count == 0) return;
 
   // Default scalar path: one element per pack.
@@ -317,7 +317,7 @@ template <typename T, typename RedOp, typename Coop, bool srcMultimem, bool dstM
           typename DstLambda, typename IntCount, int UNROLL_ELTS>
 NCCL_DEVICE_INLINE void reduceCopy(Coop coop, SrcLambda srcLambda, int nSrc, DstLambda dstLambda, int nDst,
                                    RedOp const& redOp, IntCount count, IntCount alignOffset = 0,
-                                   int maxPackBytes = 16) {
+                                   int maxPackBytes = 16) { /* 中文索引·体内调用 __device__、srcLambda。 */
   // Step 1: Process scalar prefix to achieve alignment (if needed)
   // alignOffset is already computed by the alignment functions - use it directly
   IntCount processedElts = 0;
@@ -427,7 +427,7 @@ NCCL_DEVICE_INLINE void reduceCopy(Coop coop, SrcLambda srcLambda, int nSrc, Dst
 // fit (each at least 32B). Extra warps stay idle and rejoin at coop.sync().
 template <typename T, typename IntCount, typename Coop, typename DstLambda>
 NCCL_DEVICE_INLINE void lsaCopyTma(Coop coop, T* srcPtr, DstLambda dstLambda, int nDst, IntCount count, char* smemPtr,
-                                   int smemBytesTotal) {
+                                   int smemBytesTotal) { /* 中文索引·体内调用 size_t、coop.thread_rank。 */
   using Pack = EltPackForBytes<T, 16>;
   using Bar = cuda::barrier<cuda::thread_scope_block>;
   constexpr int warpSize = 32;

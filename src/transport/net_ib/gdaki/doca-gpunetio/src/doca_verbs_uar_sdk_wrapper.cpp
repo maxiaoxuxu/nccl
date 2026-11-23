@@ -58,7 +58,7 @@ static doca_verbs_uar_reg_addr_get_t p_doca_verbs_uar_reg_addr_get = nullptr;
 
 static void *common_handle = nullptr;
 
-static void doca_verbs_sdk_wrapper_init(int *ret) {
+static void doca_verbs_sdk_wrapper_init(int *ret) { /* 中文索引·体内调用 getenv、memset。 */
     const char *doca_sdk_lib_path = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
     char libcommon_versioned_path[doca_sdk_path_length];
     char libcommon_path[doca_sdk_path_length];
@@ -117,14 +117,14 @@ exit_error:
     return;
 }
 
-static int init_verbs_sdk_wrapper(void) {
+static int init_verbs_sdk_wrapper(void) { /* 中文索引·体内调用 std::call_once。 */
     static int ret = 0;
     static std::once_flag once;
     std::call_once(once, doca_verbs_sdk_wrapper_init, &ret);
     return ret;
 }
 
-static int get_sdk_wrapper_env_var(void) {
+static int get_sdk_wrapper_env_var(void) { /* 中文索引·体内调用 getenv、strcmp。 */
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
     if (!val) return -1;
@@ -136,7 +136,7 @@ static int get_sdk_wrapper_env_var(void) {
 
 /* Wrapper function implementations */
 doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_create(
-    doca_dev_t *net_dev, enum doca_verbs_uar_allocation_type allocation_type, void **uar) {
+    doca_dev_t *net_dev, enum doca_verbs_uar_allocation_type allocation_type, void **uar) { /* 中文索引·体内调用 getenv、get_sdk_wrapper_env_var。 */
     doca_error_t doca_err = DOCA_SUCCESS;
     const char *val = getenv(DOCA_SDK_LIB_PATH_ENV_VAR);
 
@@ -176,7 +176,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_create(
     return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_destroy(void *uar) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_destroy(void *uar) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -193,7 +193,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_destroy(void *uar) {
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_get_id(void *uar, uint32_t *uar_id) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_get_id(void *uar, uint32_t *uar_id) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {
@@ -210,7 +210,7 @@ doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_get_id(void *uar, uint32_t *
         return DOCA_SDK_WRAPPER_NOT_SUPPORTED;
 }
 
-doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_reg_addr_get(void *uar, void **reg) {
+doca_sdk_wrapper_error_t doca_verbs_sdk_wrapper_uar_reg_addr_get(void *uar, void **reg) { /* 中文索引·体内调用 get_sdk_wrapper_env_var、init_verbs_sdk_wrapper。 */
     doca_error_t doca_err;
 
     if (get_sdk_wrapper_env_var() > 0) {

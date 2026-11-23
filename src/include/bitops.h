@@ -26,7 +26,7 @@ constexpr static __host__ __device__ Int minval(Int a) {
   return a;
 }
 template <typename Int, typename... More>
-constexpr static __host__ __device__ Int minval(Int a, Int b, More... more) {
+constexpr static __host__ __device__ Int minval(Int a, Int b, More... more) { /* 中文索引·体内调用 minval。 */
 #if __CUDA_ARCH__
   return minval(min(a, b), more...);
 #else
@@ -39,7 +39,7 @@ constexpr static __host__ __device__ Int maxval(Int a) {
   return a;
 }
 template <typename Int, typename... More>
-constexpr static __host__ __device__ Int maxval(Int a, Int b, More... more) {
+constexpr static __host__ __device__ Int maxval(Int a, Int b, More... more) { /* 中文索引·体内调用 maxval。 */
 #if __CUDA_ARCH__
   return maxval(max(a, b), more...);
 #else
@@ -143,14 +143,14 @@ constexpr __host__ __device__ uint64_t idivRcp64(uint64_t x) {
   return uint64_t(-1) / x + isPow2(x);
 }
 
-static __host__ __device__ uint32_t mul32hi(uint32_t a, uint32_t b) {
+static __host__ __device__ uint32_t mul32hi(uint32_t a, uint32_t b) { /* 中文索引·体内调用 __umulhi、uint64_t。 */
 #if __CUDA_ARCH__
   return __umulhi(a, b);
 #else
   return uint64_t(a) * b >> 32;
 #endif
 }
-static __host__ __device__ uint64_t mul64hi(uint64_t a, uint64_t b) {
+static __host__ __device__ uint64_t mul64hi(uint64_t a, uint64_t b) { /* 中文索引·体内调用 __umul64hi、__umulh。 */
 #if __CUDA_ARCH__
   return __umul64hi(a, b);
 #elif defined(NCCL_OS_WINDOWS)
@@ -162,7 +162,7 @@ static __host__ __device__ uint64_t mul64hi(uint64_t a, uint64_t b) {
 
 // Produce the reciprocal of x*y given their respective reciprocals. This incurs
 // no integer division on device.
-static __host__ __device__ uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_t y, uint32_t yrcp) {
+static __host__ __device__ uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 mul32hi。 */
   if (xrcp == 0) return yrcp;
   if (yrcp == 0) return xrcp;
   uint32_t rcp = mul32hi(xrcp, yrcp);
@@ -170,7 +170,7 @@ static __host__ __device__ uint32_t imulRcp32(uint32_t x, uint32_t xrcp, uint32_
   if (x * y <= rem) rcp += 1;
   return rcp;
 }
-static __host__ __device__ uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_t y, uint64_t yrcp) {
+static __host__ __device__ uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 mul64hi。 */
   if (xrcp == 0) return yrcp;
   if (yrcp == 0) return xrcp;
   uint64_t rcp = mul64hi(xrcp, yrcp);
@@ -181,7 +181,7 @@ static __host__ __device__ uint64_t imulRcp64(uint64_t x, uint64_t xrcp, uint64_
 
 // Fast integer division where divisor has precomputed reciprocal.
 // idivFast(x, y, idivRcp(y)) == x/y
-static __host__ __device__ void idivmodFast32(uint32_t* quo, uint32_t* rem, uint32_t x, uint32_t y, uint32_t yrcp) {
+static __host__ __device__ void idivmodFast32(uint32_t* quo, uint32_t* rem, uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 mul32hi。 */
   uint32_t q = x, r = 0;
   if (yrcp != 0) {
     q = mul32hi(x, yrcp);
@@ -194,7 +194,7 @@ static __host__ __device__ void idivmodFast32(uint32_t* quo, uint32_t* rem, uint
   *quo = q;
   *rem = r;
 }
-static __host__ __device__ void idivmodFast64(uint64_t* quo, uint64_t* rem, uint64_t x, uint64_t y, uint64_t yrcp) {
+static __host__ __device__ void idivmodFast64(uint64_t* quo, uint64_t* rem, uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 mul64hi。 */
   uint64_t q = x, r = 0;
   if (yrcp != 0) {
     q = mul64hi(x, yrcp);
@@ -208,30 +208,30 @@ static __host__ __device__ void idivmodFast64(uint64_t* quo, uint64_t* rem, uint
   *rem = r;
 }
 
-static __host__ __device__ uint32_t idivFast32(uint32_t x, uint32_t y, uint32_t yrcp) {
+static __host__ __device__ uint32_t idivFast32(uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 idivmodFast32。 */
   uint32_t q, r;
   idivmodFast32(&q, &r, x, y, yrcp);
   return q;
 }
-static __host__ __device__ uint32_t idivFast64(uint64_t x, uint64_t y, uint64_t yrcp) {
+static __host__ __device__ uint32_t idivFast64(uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 idivmodFast64。 */
   uint64_t q, r;
   idivmodFast64(&q, &r, x, y, yrcp);
   return (uint32_t)q;
 }
 
-static __host__ __device__ uint32_t imodFast32(uint32_t x, uint32_t y, uint32_t yrcp) {
+static __host__ __device__ uint32_t imodFast32(uint32_t x, uint32_t y, uint32_t yrcp) { /* 中文索引·体内调用 idivmodFast32。 */
   uint32_t q, r;
   idivmodFast32(&q, &r, x, y, yrcp);
   return r;
 }
-static __host__ __device__ uint64_t imodFast64(uint64_t x, uint64_t y, uint64_t yrcp) {
+static __host__ __device__ uint64_t imodFast64(uint64_t x, uint64_t y, uint64_t yrcp) { /* 中文索引·体内调用 idivmodFast64。 */
   uint64_t q, r;
   idivmodFast64(&q, &r, x, y, yrcp);
   return r;
 }
 
 template <typename Int>
-static __host__ __device__ int countOneBits(Int x) {
+static __host__ __device__ int countOneBits(Int x) { /* 中文索引·体内调用 __popc、__popcll。 */
 #if __CUDA_ARCH__
   if (sizeof(Int) <= sizeof(unsigned int)) {
     return __popc((unsigned int)x);
@@ -257,7 +257,7 @@ static __host__ __device__ int countOneBits(Int x) {
 
 // Returns index of first one bit or returns -1 if mask is zero.
 template <typename Int>
-static __host__ __device__ int firstOneBit(Int mask) {
+static __host__ __device__ int firstOneBit(Int mask) { /* 中文索引·体内调用 __ffs、__ffsll。 */
   int i;
 #if __CUDA_ARCH__
   if (sizeof(Int) <= sizeof(int)) {
@@ -282,14 +282,14 @@ static __host__ __device__ int firstOneBit(Int mask) {
 }
 
 template <typename Int>
-static __host__ __device__ int popFirstOneBit(Int* mask) {
+static __host__ __device__ int popFirstOneBit(Int* mask) { /* 中文索引·体内调用 firstOneBit。 */
   Int tmp = *mask;
   *mask &= *mask - 1;
   return firstOneBit(tmp);
 }
 
 template <typename Int>
-static __host__ __device__ int log2Down(Int x) {
+static __host__ __device__ int log2Down(Int x) { /* 中文索引·体内调用 __clz、__clzll。 */
   int w, n;
 #if __CUDA_ARCH__
   if (sizeof(Int) <= sizeof(int)) {
@@ -321,7 +321,7 @@ static __host__ __device__ int log2Down(Int x) {
 }
 
 template <typename Int>
-static __host__ __device__ int log2Up(Int x) {
+static __host__ __device__ int log2Up(Int x) { /* 中文索引·体内调用 __clz、__clzll。 */
   int w, n;
   if (x != 0) x -= 1;
 #if __CUDA_ARCH__
@@ -359,14 +359,14 @@ static __host__ __device__ Int pow2Up(Int x) {
 }
 
 template <typename Int>
-static __host__ __device__ Int pow2Down(Int x) {
+static __host__ __device__ Int pow2Down(Int x) { /* 中文索引·体内调用 Int、log2Down。 */
   // True, log2Down can return -1, but we don't normally pass 0 as an argument...
   // coverity[negative_shift]
   return Int(1) << log2Down(x);
 }
 
 template <typename UInt, int nSubBits>
-static __host__ UInt reverseSubBits(UInt x) {
+static __host__ UInt reverseSubBits(UInt x) { /* 中文索引·体内调用 UInt。 */
   if (nSubBits >= 16 && 8 * sizeof(UInt) == nSubBits) {
     switch (8 * sizeof(UInt)) {
     case 16:
@@ -440,7 +440,7 @@ struct ncclToUnsigned<unsigned long long> {
 
 // Reverse the bottom nBits bits of x. The top bits will be overwritten with 0's.
 template <typename Int>
-static __host__ __device__ Int reverseBits(Int x, int nBits) {
+static __host__ __device__ Int reverseBits(Int x, int nBits) { /* 中文索引·体内调用 __brev、__brevll。 */
   using UInt = typename ncclToUnsigned<Int>::type;
   union {
     UInt ux;
@@ -467,7 +467,7 @@ static __host__ __device__ Int reverseBits(Int x, int nBits) {
 // has nearly the full range of uint32_t except it only keeps the top 3 bits
 // beneath the leading 1 bit and thus has a max value of 0xf0000000.
 
-static __host__ __device__ uint32_t u32fpEncode(uint32_t x, int bitsPerPow2) {
+static __host__ __device__ uint32_t u32fpEncode(uint32_t x, int bitsPerPow2) { /* 中文索引·体内调用 __clz。 */
   int log2x;
 #if __CUDA_ARCH__
   log2x = 31 - __clz(x | 1);
@@ -499,7 +499,7 @@ static __host__ __device__ uint32_t u32fp8Decode(uint8_t x) {
 
 // The hash isn't just a function of the bytes but also where the bytes are split
 // into different calls to eatHash().
-static __host__ __device__ void eatHash(uint64_t acc[2], const void* bytes, size_t size) {
+static __host__ __device__ void eatHash(uint64_t acc[2], const void* bytes, size_t size) { /* 中文索引·体内调用 memcpy。 */
   char const* ptr = (char const*)bytes;
   acc[0] ^= size;
   while (size != 0) {
@@ -536,7 +536,7 @@ static __host__ __device__ uint64_t digestHash(uint64_t const acc[2]) {
   return h;
 }
 
-static __host__ __device__ uint64_t getHash(const void* bytes, size_t size) {
+static __host__ __device__ uint64_t getHash(const void* bytes, size_t size) { /* 中文索引·体内调用 eatHash、digestHash。 */
   uint64_t acc[2] = {1, 1};
   eatHash(acc, bytes, size);
   return digestHash(acc);

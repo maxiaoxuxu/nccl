@@ -10,7 +10,7 @@
 
 ncclResult_t ncclRegisterP2pNetBuffer(
   struct ncclComm* comm, void* userbuff, size_t size, struct ncclConnector* conn, int* regFlag, void** handle,
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue) { /* 中文索引·体内调用 ncclParamGraphRegister、ncclNetGraphRegisterBuffer。 */
   ncclResult_t ret = ncclSuccess;
 
   *regFlag = 0;
@@ -27,7 +27,7 @@ ncclResult_t ncclRegisterP2pNetBuffer(
 
 ncclResult_t ncclRegisterP2pIpcBuffer(
   struct ncclComm* comm, void* userbuff, size_t size, int peerRank, int* regFlag, void** regAddr,
-  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue) {
+  struct ncclIntruQueue<struct ncclCommCallback, &ncclCommCallback::next>* cleanupQueue) { /* 中文索引·体内调用 ncclParamGraphRegister、ncclIpcGraphRegisterBuffer。 */
   ncclResult_t ret = ncclSuccess;
   uintptr_t offset = 0;
   uintptr_t* peerRmtAddrs = NULL;
