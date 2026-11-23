@@ -57,6 +57,14 @@ def compile_examples():
 
     defs = [
         ("src/include/device.h", "#define NCCL_STEPS ", "\n"),
+        ("src/include/device.h", "#define NCCL_MAX_TREE_ARITY_TOP ", "\n"),
+        ("src/include/device.h", "#define NCCL_MAX_TREE_ARITY ", "\n"),
+        ("src/include/device.h", "constexpr int ncclFlowTreeIndexChild0", ";"),
+        ("src/include/device.h", "constexpr int ncclFlowTreeIndexChild1", ";"),
+        ("src/include/device.h", "struct ncclTree {", "\n};"),
+        ("src/include/coll_sizes.h", "inline int ncclGetChunkSteps("),
+        ("src/include/coll_sizes.h", "inline int ncclGetSliceSteps("),
+        ("src/include/coll_sizes.h", "inline size_t ncclGetChunkSize("),
         ("src/include/coll_sizes.h", "#define ALLREDUCE_SLICESTEPS ", "\n"),
         ("src/include/coll_sizes.h", "#define ALLREDUCE_CHUNKSTEPS ", "\n"),
         ("src/include/channel.h", "static constexpr size_t ncclMinTrafficPerChannel", ";"),
@@ -71,9 +79,25 @@ def compile_examples():
         ("src/include/coll_sizes.h", "template <typename Int>\n__host__ __device__ inline Int ncclElementAlignedDivUp("),
     ]
     header = (Path(__file__).with_name("cpu_ring.cc.in")).read_text()
+    for macro in ("NCCL_PROTO_SIMPLE", "NCCL_PROTO_LL", "NCCL_PROTO_LL128", "NCCL_ALGO_RING", "NCCL_ALGO_TREE"):
+        defs.insert(0, ("src/include/plugin/nccl_tuner.h", "#define " + macro + " ", "\n"))
     funcs = "\n".join(extract(*args) for args in defs)
     ring = extract("src/device/all_reduce.h", "template <typename T, typename RedOp, typename Proto>\n__device__ __forceinline__ void runRing(")
     code = header.replace("/* SOURCE_HELPERS */", funcs).replace("/* SOURCE_RING */", ring)
+    tree_defs = [
+        ("src/graph/trees.cc", "ncclResult_t ncclGetBtree("),
+        ("src/graph/trees.cc", "ncclResult_t ncclGetDtree("),
+        ("src/graph/connect.cc", "static ncclResult_t setTreeUp("),
+        ("src/graph/connect.cc", "static ncclResult_t setTreeDown("),
+        ("src/graph/connect.cc", "static ncclResult_t connectTrees("),
+    ]
+    for name in ("runTreeSplit", "runTreeUpDown"):
+        tree_defs.append(("src/device/all_reduce.h",
+                          "template <typename T, typename RedOp, typename Proto>\n"
+                          "__device__ __forceinline__ void " + name + "("))
+    tree_test = Path(__file__).with_name("cpu_tree.cc.in").read_text()
+    code = code.replace("/* TREE_TEST */", tree_test.replace("/* SOURCE_TREE */",
+                        "\n".join(extract(*args) for args in tree_defs)))
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp)
         (path / "test.cc").write_text(code)

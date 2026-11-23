@@ -9,7 +9,6 @@
 #define __device__
 #define __forceinline__ inline
 #define DIVUP(x,y) (((x)+(y)-1)/(y))
-constexpr int NCCL_PROTO_SIMPLE=0, NCCL_PROTO_LL=1, NCCL_PROTO_LL128=2;
 constexpr int WARP_SIZE=32, NCCL_LL128_SHMEM_ELEMS_PER_THREAD=8, NCCL_LL128_LINEELEMS=16, NCCL_LL128_DATAELEMS=15;
 using std::min;
 template<class T,class U> T divUp(T v,U d){return DIVUP(v,d);}
@@ -18,10 +17,11 @@ template<class T,class U> T alignUp(T v,U a){return divUp(v,a)*a;}
 /* SOURCE_HELPERS */
 
 struct ncclRing {int prev,next,index;};
-struct {struct {ncclRing ring;} channel; struct {int nRanks;} comm; unsigned channelId;} ncclShmem;
+struct {struct {ncclRing ring; ncclTree tree;} channel; struct {int nRanks;} comm; unsigned channelId;} ncclShmem;
 template<int> struct FanSymmetric {};
+template<int, int> struct FanAsymmetric {};
 struct Sum {};
-struct Simple {static constexpr int Id=NCCL_PROTO_SIMPLE;};
+struct Simple {static constexpr int Id=NCCL_PROTO_SIMPLE, MaxGroupWidth=1;};
 struct Event {char op; ssize_t offset; int count;};
 std::vector<Event> trace;
 template<class T,class Op,class Fan,int D,class Proto,int P> struct Primitives {
@@ -31,6 +31,8 @@ template<class T,class Op,class Fan,int D,class Proto,int P> struct Primitives {
   void directRecvReduceDirectSend(ssize_t i,ssize_t,int n){event('A',i,n);}
   void directRecvReduceCopyDirectSend(ssize_t i,ssize_t,int n,bool){event('F',i,n);}
   void directRecvCopyDirectSend(ssize_t i,ssize_t,int n){event('C',i,n);}
+  void directRecvReduceCopy(ssize_t i,ssize_t,int n,bool post){assert(post);event('U',i,n);}
+  void directSendFromOutput(ssize_t i,int n){event('B',i,n);}
   void directRecv(ssize_t i,int n){event('R',i,n);}
 };
 
@@ -78,6 +80,8 @@ void checkRouting(int ranks, size_t count) {
   for(auto &out:output) for(int visits:out)assert(visits==1);
 }
 
+/* TREE_TEST */
+
 int main(){
   constexpr size_t count=4194303;
   auto budget=ncclCollTrafficPerChannel(count*4*2,2);
@@ -116,4 +120,5 @@ int main(){
     assert(prev==bytes);
   }
   std::printf("PASS: two-channel FP32 example, four-channel Lo/Mid/Hi layout, %d Ring routing cases, 56 P2P layouts.\n",cases);
+  checkTreeExample();
 }
