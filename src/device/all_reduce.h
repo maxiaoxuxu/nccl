@@ -303,7 +303,7 @@ struct RunWorkColl<ncclFuncAllReduce, T, RedOp, NCCL_ALGO_COLLNET_DIRECT, NCCL_P
           tid - tidStartReduce, nThreadsReduce, direct->down, &direct->out, work->sendbuff, work->recvbuff,
           work->redOpArg, 3 * Proto::MaxGroupWidth, 1, 1, work);
         for (ssize_t gridOffset = 0; gridOffset < size; gridOffset += loopSize) {
-          ssize_t offset = work->netRegUsed ? gridOffset + (bid + direct->headRank * nChannels) * chunkSize :
+          /* 中文图解·special-layout｜注册网络用户缓冲时通道编号变化最快，普通布局中变化最快的是 headRank。 */ ssize_t offset = work->netRegUsed ? gridOffset + (bid + direct->headRank * nChannels) * chunkSize :
                                               gridOffset + (bid * direct->nHeads + direct->headRank) * chunkSize;
           int nelem = min(chunkSize, size - offset);
           prims.recvReduceDirectSend(offset, offset, nelem);

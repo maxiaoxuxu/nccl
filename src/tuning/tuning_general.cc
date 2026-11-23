@@ -176,7 +176,7 @@ ncclResult_t ncclTuningGetChannels(struct ncclTuningInput_t* const input, struct
     nc = input->comm->nvlsChannels;
   } else {
     // Ring/Tree/one-RPN PAT channel tuning
-    while (input->nBytes < nc * nt * threadThreshold) {
+    /* 中文图解·tuning｜普通 Ring/Tree 先按字节数减通道；到一个通道后，再由下一循环缩线程。 */ while (input->nBytes < nc * nt * threadThreshold) {
       if (nc >= 2) nc--;
       else break;
     }

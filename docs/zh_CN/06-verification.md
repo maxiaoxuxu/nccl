@@ -1,6 +1,6 @@
 # 离线阅读、编辑器定位与核验
 
-**在线**打开 [数据切分](01-data-layout.md) 或 [Ring](02-ring.md)。图为仓库内的 SVG，静态页面即可显示。**离线**保存 [reader.html](reader.html)，用支持 DecompressionStream 的现代 Edge、Chrome 或 Firefox 打开。六章正文、图像、索引及收录的源码均已内嵌。点章节末的源码链接可以直接跳到行；在源码页搜索 runRing 或 ncclComputeCollChannelLayout 并按文件区分同名定义。点击函数步骤中的行号会高亮对应语句。图旁列出可追溯的源码位置。
+**在线**打开 [数据切分](01-data-layout.md) 或 [Ring](02-ring.md)。图为仓库内的 SVG，静态页面即可显示。**离线**保存 [reader.html](reader.html)，用支持 DecompressionStream 的现代 Edge、Chrome 或 Firefox 打开。十个专题的正文、图像、索引及收录的源码均已内嵌。点章节末的源码链接可以直接跳到行；在源码页搜索 runRing 或 ncclComputeCollChannelLayout 并按文件区分同名定义。点击函数步骤中的行号会高亮对应语句。图旁列出可追溯的源码位置。
 
 ## 从编辑器选中一行跳图
 
@@ -37,6 +37,9 @@ python3 tools/zh_walkthrough/verify.py
 |轮次、尾块与空块|2–8 ranks、12 种长度共 84 组，包括零元素、部分尾圈和多圈。逐跳检查发送与接收地址吻合、每个 rank 对每块归约恰有一次贡献、每个输出元素恰好完成一次；另查 56 组 P2P 分区连续覆盖。|
 |Tree 双树与尾块|调用 ncclGetDtree、connectTrees、runTreeSplit 与 runTreeUpDown 的源码函数体，核对四个 rank 的两套父子关系、上行与广播原语、每通道 16 个 chunk 的起点和长度。|
 |三种 Ring 协议|复算相同输入的通道布局与末圈 C3 区间。提取 LL、LL128 的 waitSend 长度表达式，覆盖短消息、整批和尾块。|
+|调优与实际通道|用指定拓扑参数直接运行 Ring/Tree 初始化和模拟、最小代价选择、线程缩减及通道布局函数；核对 4 KiB 与 16 MiB 少 4 B 两个结果。|
+|五种 Ring 的用户地址|除 AllReduce 轮次外，再运行 AllGather、ReduceScatter、Broadcast、Reduce 的原版 runRing；检查非顺序环的全局槽位、root 角色、原地及异地复制。|
+|PAT 调度|直接运行 PatAGAlgorithm 和 PatRSAlgorithm 的 host 分支，覆盖 2–8 ranks 中每个 rank、两种区间，检查有效步长度、地址范围、尾块和终止条件。|
 |物理执行边界|上述 CPU 桩刻意只记录路由和区间。GPU 内存序、DMA/RDMA 可见性、CUDA 模板构建、真实 P2P/IB 时延和吞吐量需相应工具链与硬件验证。|
 
 只检查文档可运行 `python3 tools/zh_walkthrough/verify.py --docs-only`。索引覆盖 src 下 C/C++/CUDA 与 nccl.h.in，跳过第三方 nvtx3 头文件。语法索引保留未展开宏和编译条件，各平台特化的实际实例化集合取决于构建；步骤标签表示源文件中的语句位置，调用宏、条件分支和两个同名特化须结合上下文阅读。

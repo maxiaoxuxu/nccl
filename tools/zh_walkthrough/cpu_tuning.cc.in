@@ -1,0 +1,95 @@
+// CPU fixture: model a single SM90 NVLink node. The generator inserts the
+// branch's protocol constants, model functions and selection loop below.
+#include <algorithm>
+#include <cassert>
+#include <cfloat>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+
+#define DIVUP(x,y) (((x)+(y)-1)/(y))
+#define NCCLCHECK(call) do { int rc=(call); if (rc) return rc; } while (0)
+#define TRACE(...) ((void)0)
+using ncclResult_t = int;
+constexpr int ncclSuccess=0, ncclInvalidUsage=1;
+enum { ncclFuncBroadcast, ncclFuncReduce, ncclFuncAllGather, ncclFuncReduceScatter, ncclFuncAllReduce, NCCL_NUM_FUNCTIONS };
+enum { ncclFloat32, ncclFloat8e4m3, ncclFloat8e5m2 };
+enum { NCCL_TOPO_CPU_ARCH_X86, NCCL_TOPO_CPU_VENDOR_INTEL, NCCL_TOPO_CPU_VENDOR_AMD, NCCL_TOPO_CPU_VENDOR_MIXED };
+// Only comparisons against these out-of-scope identifiers occur in the fixture.
+constexpr int ncclSymkKernelId_Count=42, ncclCeMethodId_Count=2, NCCL_TUNING_COUNT=60, NCCL_TUNING_CE_METHOD_ID_OFFSET=58;
+constexpr int NCCL_MAX_DEV_WORK_BATCH_COLLS=1; // numPipeOps=1 in every case, so ceil(1/B) is 1 for any B>=1.
+int ncclParamNetOverhead() { return -2; }
+int log2i(size_t n) { return n==0 ? -1 : int(8*sizeof(unsigned long long)-1-__builtin_clzll(n)); }
+
+/* MODEL_CONSTANTS */
+
+struct Graph { float bwIntra, bwInter, latencyInter; int nChannels, typeIntra, sameChannels; };
+struct Context {
+  ncclTunerConstants_t tuningConstants;
+  float generalLatencies[NCCL_NUM_FUNCTIONS][NCCL_NUM_ALGORITHMS][NCCL_NUM_PROTOCOLS];
+  float generalBandwidths[NCCL_NUM_FUNCTIONS][NCCL_NUM_ALGORITHMS][NCCL_NUM_PROTOCOLS];
+  int maxThreads[NCCL_NUM_ALGORITHMS][NCCL_NUM_PROTOCOLS], threadThresholds[NCCL_NUM_ALGORITHMS][NCCL_NUM_PROTOCOLS];
+};
+struct ncclComm {
+  int nRanks, nNodes, minCompCap, nChannels, maxLocalRanks, maxTreePattern, cpuArch, cpuVendor, nvlsChannels, isOneRPN;
+  Graph graphs[NCCL_NUM_ALGORITHMS];
+  struct { struct { int nHeads; } collnetDirect; } channels[1];
+  Context tuningContext;
+};
+struct ncclTuningInput_t { ncclComm* comm; int func, datatype, numPipeOps; size_t nBytes; };
+struct ncclTuningResult_t { int algo, proto, symKernelId, valid, nChannels, maxChannels, nWarps; float timeUs, selectionTimeUs; };
+struct ncclTuningResultListNode { ncclTuningResult_t result; ncclTuningResultListNode* next; };
+struct ncclTuningResultList_t { ncclTuningResultListNode* head; };
+struct ncclTuningModelState {};
+void ncclTuningPlatformChannelTuning(ncclTuningInput_t* in, ncclTuningResult_t*, int*) { assert(in->comm->minCompCap==90); }
+
+/* MODEL_FUNCTIONS */
+
+int main() {
+  ncclComm comm{};
+  comm.nRanks=comm.maxLocalRanks=4; comm.nNodes=1; comm.minCompCap=90; comm.nChannels=2;
+  comm.maxTreePattern=NCCL_TOPO_PATTERN_BALANCED_TREE; // explicit input from the topology stage
+  comm.tuningContext.tuningConstants=ncclTunerConstantsDefaults;
+  int enabled[NCCL_NUM_FUNCTIONS]={};
+  for (int algo : {NCCL_ALGO_TREE, NCCL_ALGO_RING}) {
+    comm.graphs[algo]={40,40,0,1,PATH_NVL,1};
+    for (int proto=0; proto<NCCL_NUM_PROTOCOLS; ++proto) {
+      int id=algo*NCCL_NUM_PROTOCOLS+proto;
+      auto init=algo==NCCL_ALGO_RING ? ncclTuningRingModelInit : ncclTuningTreeModelInit;
+      assert(init(&comm,id,enabled,nullptr)==ncclSuccess);
+      const int threads[]={NCCL_LL_MAX_NTHREADS,NCCL_LL128_MAX_NTHREADS,NCCL_SIMPLE_MAX_NTHREADS};
+      const int threshold[]={NCCL_LL_THREAD_THRESHOLD*(algo==NCCL_ALGO_RING ? comm.nRanks : 1),
+                             NCCL_LL128_THREAD_THRESHOLD,NCCL_SIMPLE_THREAD_THRESHOLD};
+      comm.tuningContext.maxThreads[algo][proto]=threads[proto];
+      comm.tuningContext.threadThresholds[algo][proto]=threshold[proto];
+    }
+  }
+  for (size_t bytes : {4096u,16777212u}) {
+    ncclTuningInput_t input{&comm,ncclFuncAllReduce,ncclFloat32,1,bytes};
+    ncclTuningResultListNode candidates[6]{};
+    ncclTuningResultList_t list{};
+    for (int i=0; i<6; ++i) {
+      auto& node=candidates[i];
+      auto& r=node.result;
+      r.algo=i/NCCL_NUM_PROTOCOLS; r.proto=i%NCCL_NUM_PROTOCOLS; r.symKernelId=ncclSymkKernelId_Count; r.valid=1;
+      auto sim=r.algo==NCCL_ALGO_RING ? ncclTuningRingModelSim : ncclTuningTreeModelSim;
+      assert(sim(&input,&r,nullptr)==ncclSuccess && r.valid && r.timeUs>0);
+      std::printf("  %zu bytes  %s/%s  %.3f us\n",bytes,r.algo==NCCL_ALGO_RING?"Ring":"Tree",
+                  r.proto==NCCL_PROTO_LL?"LL":r.proto==NCCL_PROTO_LL128?"LL128":"Simple",r.timeUs);
+      node.next=list.head; list.head=&node;
+    }
+    ncclTuningResult_t best{};
+    assert(ncclTuningSelectBestTuning(&list,&best)==ncclSuccess);
+    assert(ncclTuningGetChannels(&input,&best,true)==ncclSuccess);
+    int small=bytes==4096;
+    assert(best.algo==NCCL_ALGO_RING && best.proto==(small?NCCL_PROTO_LL:NCCL_PROTO_SIMPLE));
+    assert(best.nChannels==(small?1:2) && best.nWarps==(small?4:17));
+    int weight=small?8:2;
+    auto budget=ncclCollTrafficPerChannel(bytes*weight,best.maxChannels);
+    auto layout=ncclComputeCollChannelLayout(bytes/4,4,weight,budget,0,0,comm.nChannels);
+    assert(layout.nChannels==best.nChannels);
+    assert(layout.countLo==(small?1024:2097152) && layout.countHi==(small?0:2097151));
+    std::printf("  selected id=%d, %d channel(s), %d warps, Lo=%zu Hi=%zu\n",
+                best.algo*3+best.proto,best.nChannels,best.nWarps,layout.countLo,layout.countHi);
+  }
+}

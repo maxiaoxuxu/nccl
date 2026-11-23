@@ -1340,7 +1340,7 @@ ncclResult_t ncclTopoCompute(ncclTopoSystem* system, struct ncclTopoGraph* graph
 
   // Skip speeds at which the most loaded GPU exceeds its NVLink bandwidth (totalBw). See ncclTopoGraphMaxGpuLoad.
   NCCLCHECKGOTO(ncclTopoGraphMaxGpuLoad(system, graph, &maxGpuLoad), ret, exit);
-  while ((speedArray[speedIndex] > maxBw || speedArray[speedIndex] * maxGpuLoad > totalBw) &&
+  /* 中文图解·tuning｜第一档同时受单路径上限和最重 GPU 总负载约束，随后才进行图搜索。 */ while ((speedArray[speedIndex] > maxBw || speedArray[speedIndex] * maxGpuLoad > totalBw) &&
          speedIndex < nspeeds - 1) {
     speedIndex++;
   }

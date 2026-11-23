@@ -49,7 +49,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
     }
 
     // step k-1: reduce this buffer and data, which will produce the final result
-    rankDest = ringRanks[0];
+    /* 中文图解·collective-addresses｜最后对本全局 rank 的长输入段归约，结果写到本地短输出。 */ rankDest = ringRanks[0];
     offset = dataOffset + rankDest * count;
     /* 中文图解·five｜最后把本 rank 对应段的归约结果写到较短输出中的 dataOffset。 */ prims.recvReduceCopy(offset, dataOffset, nelem, /*postOp=*/true);
   }

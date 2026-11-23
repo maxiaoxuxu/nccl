@@ -16,8 +16,8 @@ template<class T,class U> T alignUp(T v,U a){return divUp(v,a)*a;}
 
 /* SOURCE_HELPERS */
 
-struct ncclRing {int prev,next,index;};
-struct {struct {ncclRing ring; ncclTree tree;} channel; struct {int nRanks;} comm; unsigned channelId;} ncclShmem;
+struct ncclRing {int prev,next,index; int userRanks[8];};
+struct {struct {ncclRing ring; ncclTree tree;} channel; struct {int nRanks,rank;} comm; unsigned channelId;} ncclShmem;
 template<int> struct FanSymmetric {};
 template<int, int> struct FanAsymmetric {};
 struct Sum {};
@@ -144,7 +144,10 @@ void checkRingProtocols() {
 
 /* TREE_TEST */
 
+/* COLLECTIVE_TEST */
+
 int main(){
+  ring_address_test::run();
   constexpr size_t count=4194303;
   auto budget=ncclCollTrafficPerChannel(count*4*2,2);
   auto layout=ncclComputeCollChannelLayout(count,4,2,budget,0,0,2);

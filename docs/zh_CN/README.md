@@ -8,6 +8,10 @@
 |同一个 Ring 末块换 LL 或 LL128，FIFO 上发多长？|[三个协议的容量、尾圈地址、flag 和发送粒度](08-ring-protocols.md)|
 |谁创建通道、选算法、打包计划并启动 kernel？|[communicator、Host 调度与 GPU 执行](03-execution.md)|
 |AlltoAll、P2P、跨机 IB 怎样继续切分？|[peer 段、4 KiB 对齐、FIFO、QP 和 MR](04-transport.md)|
+|为什么相同四卡，小消息用 1 个通道，大消息用 2 个？|[拓扑初筛、候选模型、阈值和最后的 launch](09-tuning.md)|
+|用户段按全局 rank 还是环位置编号？|[在非顺序四卡环上逐跳核对五种操作](10-ring-addresses.md)|
+|NIC 完成、GPU 用完、计划释放分别看哪个字段？|[CUDA Graph、Proxy、IB 完成与回收](11-completion.md)|
+|换成专门算法后，段地址和通信步骤怎样变化？|[CollNetDirect、NVLS、NVLSTree 和 PAT，含地址表和实际调度轨迹](12-special-algorithms.md)|
 |要按函数名、类型或路径查定义和分支？|[文件与符号索引](05-index.md) · [离线源码图解](reader.html)|
 |如何核验算例、从 Source Insight 或 VS Code 跳图？|[使用与核验](06-verification.md)|
 

@@ -62,7 +62,7 @@ __device__ __forceinline__ void runRing(int tid, int nthreads, struct ncclDevWor
       // k-2 steps: copy to next GPU
       for (int j = 1; j < nranks - 1; ++j) {
         rankDest = ringRanks[nranks - j];
-        offset = dataOffset + rankDest * count;
+        /* 中文图解·collective-addresses｜收到的段按全局 rank 计算输出槽；环为 0→2→1→3 时，rank 2 先转发段 0。 */ offset = dataOffset + rankDest * count;
         prims.directRecvCopyDirectSend(offset, offset, nelem);
       }
 

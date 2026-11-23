@@ -4,4 +4,6 @@
 
 [同一个末块换 LL 或 LL128](docs/zh_CN/08-ring-protocols.md) · [四节点双树与尾块](docs/zh_CN/07-tree-allreduce.md) · [全仓目录与按问题导航](docs/zh_CN/README.md) · [初始化到 kernel](docs/zh_CN/03-execution.md) · [跨机与 QP/MR](docs/zh_CN/04-transport.md) · [文件与符号索引](docs/zh_CN/05-index.md) · [单文件离线阅读器](docs/zh_CN/reader.html) · [Source Insight、VS Code 和核验方法](docs/zh_CN/06-verification.md)
 
+[六个候选怎样选出实际通道](docs/zh_CN/09-tuning.md) · [五种 Ring 的四卡逐跳地址](docs/zh_CN/10-ring-addresses.md) · [Graph、Proxy 和 IB 的完成时序](docs/zh_CN/11-completion.md) · [CollNet、NVLS、PAT 的不同地址公式](docs/zh_CN/12-special-algorithms.md)
+
 GitHub 在线看 Markdown 和 SVG。离线搜索请下载 reader.html，用现代浏览器打开；也可在源码中搜索“中文图解”找到逐项说明。

@@ -1666,7 +1666,7 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct 
             }
           }
           subGroup->requests[step % NCCL_STEPS] = NULL;
-          if (totalSize > 0 && p == NCCL_PROTO_SIMPLE && needFlush) {
+          /* 中文图解·completion｜Simple 非空接收且 GDR 要求 flush 时，才进入读回或插件 flush 分支。 */ if (totalSize > 0 && p == NCCL_PROTO_SIMPLE && needFlush) {
             // GDRCOPY support
             struct recvNetResources* resources = (struct recvNetResources*)(subGroup->connection->transportResources);
             if (resources->gdcFlush) {
@@ -1737,7 +1737,7 @@ static ncclResult_t recvProxyProgress(struct ncclProxyState* proxyState, struct 
               std::atomic_thread_fence(std::memory_order_seq_cst);
               struct recvNetResources* resources = (struct recvNetResources*)(sub->connection->transportResources);
               volatile uint64_t* recvTail = resources->gdcSync ? resources->gdcSync : &resources->recvMem->tail;
-              *recvTail = sub->base + sub->transmitted;
+              /* 中文图解·completion｜这里只发布网络接收进度；GPU 消费进度由随后读取的 head 确认。 */ *recvTail = sub->base + sub->transmitted;
               if (resources->gdcSync) wc_store_fence(); // Flush out WC write
             }
           }

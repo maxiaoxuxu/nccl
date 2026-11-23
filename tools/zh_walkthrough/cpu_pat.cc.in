@@ -1,0 +1,50 @@
+// Compile the PAT schedule generators in their native host mode.
+#include <cassert>
+#include <cstdio>
+#include <initializer_list>
+#include <sys/types.h>
+
+#define __host__
+#define __device__
+#define COMPILER_CLZ __builtin_clz
+#define COMPILER_CLZL __builtin_clzl
+#define COMPILER_CLZLL __builtin_clzll
+#define COMPILER_FFS __builtin_ffs
+#define COMPILER_POPCOUNT32 __builtin_popcount
+
+/* SOURCE_PAT */
+
+template<class Generator>
+void trace(const char* name, int rank, int nranks, int count, int begin, int end, int chunk) {
+  Generator schedule(chunk*sizeof(float), 8, 8, begin, end, count, chunk, rank, nranks);
+  bool tailSeen=false;
+  for (int sequence=0; sequence < 4096; ++sequence) {
+    ncclPatStep op{};
+    schedule.getNextOp(&op);
+    assert(op.flags & PatUsed);
+    if (!(op.flags & PatSkipped)) {
+      assert(op.nelem > 0 && op.nelem <= chunk);
+      assert(op.inpIx < size_t(count*nranks) && op.outIx < size_t(count*nranks));
+      if (op.nelem == (end-begin-1)%chunk+1) tailSeen=true;
+      if (rank==2 && nranks==4 && count==4)
+        std::printf("  PAT %s step %d: recvDim=%d sendDim=%d inpIx=%zu outIx=%zu nelem=%d last=%d\n",
+                    name,sequence,op.recvDim,op.sendDim,op.inpIx,op.outIx,op.nelem,op.last);
+    }
+    if (op.last==2) { assert(tailSeen); return; }
+  }
+  assert(false && "PAT scheduler failed to terminate");
+}
+
+int main() {
+  for (int n=2; n<=8; ++n) {
+    for(int r=0; r<n; ++r) {
+      for(int count : {4,19}) {
+        int end=count==4 ? 2 : count;
+        int chunk=count==4 ? 1 : 4;
+        trace<PatAGAlgorithm<float>>("AG",r,n,count,1,end,chunk);
+        trace<PatRSAlgorithm<float>>("RS",r,n,count,1,end,chunk);
+      }
+    }
+  }
+  std::puts("PAT: checked 140 one-rank-per-node schedules including tails and non-powers of two.");
+}

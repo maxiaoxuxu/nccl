@@ -162,7 +162,7 @@ static ncclResult_t ncclTuningSelectBestTuning(
       TRACE(NCCL_TUNING, "A/P/S %s/%s/%s, time: %f, selection time: %f", ncclAlgoToString(tuning.algo),
             ncclProtoToString(tuning.proto), ncclSymkKernelIdToString(tuning.symKernelId), tuning.timeUs,
             selectionTimeUs);
-      if (selectionTimeUs < bestSelectionTimeUs) {
+      /* 中文图解·tuning｜在有效候选中严格比较选择耗时；4 KiB 示例在此选中 Ring/LL。 */ if (selectionTimeUs < bestSelectionTimeUs) {
         *bestTuning = tuning;
         bestSelectionTimeUs = selectionTimeUs;
       }

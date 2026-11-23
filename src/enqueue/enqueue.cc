@@ -252,7 +252,7 @@ static void finishPlan(struct ncclComm* comm, struct ncclKernelPlan* plan) { /* 
 
   // If we can fit everything into the kernel args we do so.
   if (sizeof(ncclDevKernelArgs) + batchBytes + workBytes <= comm->workArgsBytes) {
-    plan->workStorageType = ncclDevWorkStorageTypeArgs;
+    /* 中文图解·completion｜参数空间放得下时，捕获计划和普通计划都可以把 work 内嵌在 Args。 */ plan->workStorageType = ncclDevWorkStorageTypeArgs;
   }
   plan->kernelArgsSize = sizeof(struct ncclDevKernelArgs) + batchBytes;
   plan->kernelArgsSize += (plan->workStorageType == ncclDevWorkStorageTypeArgs) ? workBytes : 0;
