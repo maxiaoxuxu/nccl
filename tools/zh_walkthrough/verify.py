@@ -56,6 +56,10 @@ def compile_examples():
         return text[start:end] + "\n"
 
     defs = [
+        ("src/include/device.h", "#define WARP_SIZE ", "\n"),
+        ("src/include/device.h", "#define NCCL_LL_MAX_NTHREADS ", "\n"),
+        ("src/include/nccl_device/impl/ll__types.h", "#define NCCL_LL_LINES_PER_THREAD ", "\n"),
+        ("src/include/nccl_device/impl/ll__types.h", "union ncclLLFifoLine {", "\n};"),
         ("src/include/device.h", "#define NCCL_STEPS ", "\n"),
         ("src/include/device.h", "#define NCCL_MAX_TREE_ARITY_TOP ", "\n"),
         ("src/include/device.h", "#define NCCL_MAX_TREE_ARITY ", "\n"),
@@ -81,9 +85,27 @@ def compile_examples():
     header = (Path(__file__).with_name("cpu_ring.cc.in")).read_text()
     for macro in ("NCCL_PROTO_SIMPLE", "NCCL_PROTO_LL", "NCCL_PROTO_LL128", "NCCL_ALGO_RING", "NCCL_ALGO_TREE"):
         defs.insert(0, ("src/include/plugin/nccl_tuner.h", "#define " + macro + " ", "\n"))
+    ll128_types = "src/include/nccl_device/impl/ll128__types.h"
+    for macro in ("NCCL_LL128_LINESIZE", "NCCL_LL128_LINEELEMS", "NCCL_LL128_DATAELEMS",
+                  "NCCL_LL128_SHMEM_ELEMS_PER_THREAD", "NCCL_LL128_ELEMS_PER_THREAD", "NCCL_LL128_MAX_NTHREADS"):
+        defs.insert(0, (ll128_types, "#define " + macro + " ", "\n"))
+    defs.extend([
+        ("src/init.cc", "#define DEFAULT_LL_BUFFSIZE ", "))\n"),
+        ("src/init.cc", "#define DEFAULT_LL128_BUFFSIZE ", "\n"),
+        ("src/init.cc", "#define DEFAULT_BUFFSIZE ", "\n"),
+    ])
     funcs = "\n".join(extract(*args) for args in defs)
     ring = extract("src/device/all_reduce.h", "template <typename T, typename RedOp, typename Proto>\n__device__ __forceinline__ void runRing(")
     code = header.replace("/* SOURCE_HELPERS */", funcs).replace("/* SOURCE_RING */", ring)
+    # Run the actual argument to waitSend with a CPU recorder. Memory accesses
+    # and the CUDA synchronization surrounding the expression stay on the device.
+    for marker, file, constants in (
+        ("LL_LENGTH", "src/device/prims_ll.h", ["EltPerLine"]),
+        ("LL128_LENGTH", "src/device/prims_ll128.h", ["WireWordPerSlice", "DataEltPerSlice"]),
+    ):
+        declarations = "".join(extract(file, "static constexpr int " + name + " =", ";") for name in constants)
+        length = extract(file, "if (SEND) waitSend(divUp(nelem,", ";")
+        code = code.replace("/* " + marker + " */", declarations + length)
     tree_defs = [
         ("src/graph/trees.cc", "ncclResult_t ncclGetBtree("),
         ("src/graph/trees.cc", "ncclResult_t ncclGetDtree("),

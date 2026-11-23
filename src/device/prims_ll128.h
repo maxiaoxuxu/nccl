@@ -303,7 +303,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL128, P2p, isNetOffload>
     const int nwarps = nthreads / WARP_SIZE;
     nelem = nelem < 0 ? 0 : nelem;
 
-    if (SEND) waitSend(divUp(nelem, DataEltPerSlice) * WireWordPerSlice * sizeof(uint64_t));
+    /* 中文图解·ring-protocols｜LL128 以 warp slice 登记发送长度。一个 2048 B 的 slice 最多装 480 个 FP32。 */ if (SEND) waitSend(divUp(nelem, DataEltPerSlice) * WireWordPerSlice * sizeof(uint64_t));
     barrier();
     nelem -= DataEltPerSlice * warp;
     srcPtr += DataEltPerSlice * warp;

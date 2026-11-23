@@ -244,7 +244,7 @@ class Primitives<T, RedOp, Fan, Direct, ProtoLL, P2p, isNetOffload>
 
     // Always waitSend in case of cleanup
     nelem = nelem < 0 ? 0 : nelem;
-    if (SEND) waitSend(divUp(nelem, EltPerLine) * sizeof(ncclLLFifoLine));
+    /* 中文图解·ring-protocols｜LL 一个 16 B 行最多装 8 B 用户数据。发送长度按整行向上取整。 */ if (SEND) waitSend(divUp(nelem, EltPerLine) * sizeof(ncclLLFifoLine));
 
     nelem -= tid * EltPerLine;
     srcElts += tid * EltPerLine;

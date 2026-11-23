@@ -5,6 +5,7 @@
 |一份输入被切几层？怎么计算 offset？|[通道、圈、chunk、slice，含完整 FP32 算例与变量表](01-data-layout.md)|
 |同一块如何在四张卡上归约，最后落到哪个地址？|[五种 Ring 的逐步原语、缓冲布局与其他算法](02-ring.md)|
 |相同输入改走 Tree，每棵树的根是谁、每个 rank 处理哪段？|[四节点双树、线程分组与尾块算例](07-tree-allreduce.md)|
+|同一个 Ring 末块换 LL 或 LL128，FIFO 上发多长？|[三个协议的容量、尾圈地址、flag 和发送粒度](08-ring-protocols.md)|
 |谁创建通道、选算法、打包计划并启动 kernel？|[communicator、Host 调度与 GPU 执行](03-execution.md)|
 |AlltoAll、P2P、跨机 IB 怎样继续切分？|[peer 段、4 KiB 对齐、FIFO、QP 和 MR](04-transport.md)|
 |要按函数名、类型或路径查定义和分支？|[文件与符号索引](05-index.md) · [离线源码图解](reader.html)|

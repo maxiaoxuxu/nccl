@@ -1,4 +1,4 @@
-// Host harness for the source walkthrough. Replace the two marked sections with verbatim source.
+// verify.py inserts branch definitions and expressions at the marked positions.
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -9,7 +9,7 @@
 #define __device__
 #define __forceinline__ inline
 #define DIVUP(x,y) (((x)+(y)-1)/(y))
-constexpr int WARP_SIZE=32, NCCL_LL128_SHMEM_ELEMS_PER_THREAD=8, NCCL_LL128_LINEELEMS=16, NCCL_LL128_DATAELEMS=15;
+struct alignas(16) int4 { int x, y, z, w; };  // Host stand-in for the CUDA vector in ncclLLFifoLine.
 using std::min;
 template<class T,class U> T divUp(T v,U d){return DIVUP(v,d);}
 template<class T,class U> T alignUp(T v,U a){return divUp(v,a)*a;}
@@ -80,6 +80,68 @@ void checkRouting(int ranks, size_t count) {
   for(auto &out:output) for(int visits:out)assert(visits==1);
 }
 
+template<int Protocol>
+struct RingProtocol { static constexpr int Id = Protocol; };
+
+// Each body receives the branch's packing constants and its original waitSend call.
+template<typename T>
+int llSendBytes(int nelem) {
+  constexpr bool SEND = true;
+  int bytes = -1;
+  auto waitSend = [&](int length) { bytes = length; };
+  /* LL_LENGTH */
+  return bytes;
+}
+
+template<typename T>
+int ll128SendBytes(int nelem) {
+  constexpr bool SEND = true;
+  int bytes = -1;
+  auto waitSend = [&](int length) { bytes = length; };
+  /* LL128_LENGTH */
+  return bytes;
+}
+
+template<int Protocol>
+void checkProtocolTail(int bufferBytes, int trafficWeight, int expectedPayload,
+                       int loops, ssize_t tailStart, int tailCount) {
+  constexpr size_t count = 4194303;
+  constexpr size_t eltSize = sizeof(float);
+  auto budget = ncclCollTrafficPerChannel(count * eltSize * trafficWeight, 2);
+  auto layout = ncclComputeCollChannelLayout(count, eltSize, trafficWeight, budget, 0, 0, 2);
+  assert(layout.nChannels == 2 && layout.countLo == 2097152 && layout.countHi == 2097151);
+  int steps = ncclGetChunkSteps(Protocol, NCCL_ALGO_RING, ALLREDUCE_CHUNKSTEPS);
+  size_t bytes = ncclGetChunkSize(Protocol, bufferBytes / NCCL_STEPS, steps);
+  int grain = ncclProtoGrainSize(Protocol);
+  assert(bytes == size_t(expectedPayload) && bytes % grain == 0);
+  ncclDevWorkColl work{};
+  work.channelHi = 1;
+  work.cbd.countLo = layout.countLo;
+  work.cbd.countHi = layout.countHi;
+  work.cbd.chunkGrainsLo = work.cbd.chunkGrainsHi = bytes / grain;
+  ncclShmem.comm.nRanks = 4;
+  ncclShmem.channelId = 1;
+  ncclShmem.channel.ring.index = 0;
+  trace.clear();
+  runRing<float, Sum, RingProtocol<Protocol>>(0, 1, &work);
+  constexpr int opsPerLoop = 7;
+  assert(trace.size() == size_t(loops * opsPerLoop));
+  const auto& send = trace.at((loops - 1) * opsPerLoop);
+  assert(send.op == 'S' && send.offset == tailStart && send.count == tailCount);
+  assert(size_t(send.offset + send.count) == count);
+}
+
+void checkRingProtocols() {
+  checkProtocolTail<NCCL_PROTO_SIMPLE>(DEFAULT_BUFFSIZE, 2, 2097152, 1, 3670016, 524287);
+  checkProtocolTail<NCCL_PROTO_LL>(DEFAULT_LL_BUFFSIZE, 8, 32768, 64, 4186112, 8191);
+  checkProtocolTail<NCCL_PROTO_LL128>(DEFAULT_LL128_BUFFSIZE, 2, 576000, 4, 4102016, 92287);
+  assert(llSendBytes<float>(1) == 16 && ll128SendBytes<float>(1) == 2048);
+  assert(llSendBytes<float>(480) == 3840 && ll128SendBytes<float>(480) == 2048);
+  assert(llSendBytes<float>(481) == 3856 && ll128SendBytes<float>(481) == 4096);
+  assert(llSendBytes<float>(8191) == 65536 && ll128SendBytes<float>(92287) == 395264);
+  std::puts("PASS: Ring protocol capacities, last C3 offsets, LL line and LL128 warp-slice send sizes.");
+}
+
 /* TREE_TEST */
 
 int main(){
@@ -121,4 +183,5 @@ int main(){
   }
   std::printf("PASS: two-channel FP32 example, four-channel Lo/Mid/Hi layout, %d Ring routing cases, 56 P2P layouts.\n",cases);
   checkTreeExample();
+  checkRingProtocols();
 }

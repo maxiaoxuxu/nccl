@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc">
+  <title id="title">同一个 Ring chunk 在三种协议中的发送粒度</title>
+  <desc id="desc">Simple 按有效 slice 发布长度。LL 每行交错存两个数据字和两个标志。LL128 每行十五个数据字和一个标志，每次发送长度向上取整到十六行。</desc>
+  <defs>
+    <pattern id="words" x="200" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#c6e7ef"/>
+      <path d="M0 0V32" stroke="#fff" stroke-width="2"/>
+    </pattern>
+    <style>
+      text {font:17px system-ui,"Microsoft YaHei",sans-serif;fill:#19384b}
+      .head {font-weight:700;font-size:23px}
+      .name {font-weight:700;font-size:21px}
+      .note {font-size:15px}
+    </style>
+  </defs>
+  <rect width="900" height="420" rx="14" fill="#f7fafb"/>
+  <text class="head" x="28" y="41">从用户数据到发送 FIFO</text>
+  <rect x="580" y="23" width="21" height="18" fill="#c6e7ef"/><text class="note" x="610" y="38">数据</text>
+  <rect x="675" y="23" width="21" height="18" fill="#f4c178"/><text class="note" x="705" y="38">就绪标志 flag</text>
+  <path d="M28 58H872 M28 165H872 M28 275H872" stroke="#bcced5"/>
+  <text class="name" x="28" y="101">Simple</text>
+  <rect x="200" y="76" width="252" height="34" rx="3" fill="#c6e7ef"/>
+  <rect x="460" y="76" width="252" height="34" rx="3" fill="#c6e7ef"/>
+  <text x="325" y="99" text-anchor="middle">slice 0</text><text x="585" y="99" text-anchor="middle">slice 1</text>
+  <text x="200" y="139">本例 Ring 每个 chunk 有两片，各登记本片的有效字节数。</text>
+  <text class="name" x="28" y="209">LL</text>
+  <rect x="200" y="184" width="128" height="34" fill="#c6e7ef"/><rect x="328" y="184" width="128" height="34" fill="#f4c178"/>
+  <rect x="456" y="184" width="128" height="34" fill="#c6e7ef"/><rect x="584" y="184" width="128" height="34" fill="#f4c178"/>
+  <text x="264" y="207" text-anchor="middle">data1 · 4 B</text><text x="392" y="207" text-anchor="middle">flag1 · 4 B</text>
+  <text x="520" y="207" text-anchor="middle">data2 · 4 B</text><text x="648" y="207" text-anchor="middle">flag2 · 4 B</text>
+  <text x="200" y="247">一行 16 B，装 2 个 FP32。普通步按整行发布长度。</text>
+  <text class="name" x="28" y="320">LL128</text>
+  <rect x="200" y="294" width="480" height="32" fill="url(#words)"/><rect x="680" y="294" width="32" height="32" fill="#f4c178"/>
+  <text x="200" y="353">一行 128 B，装 15 个数据字和 1 个 flag。每个字 8 B。</text>
+  <text x="200" y="388">16 行组成一个 warp slice：最多 480 个 FP32，登记 2,048 B。</text>
+</svg>

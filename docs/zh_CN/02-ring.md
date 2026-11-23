@@ -53,3 +53,5 @@
 |LL / LL128 Ring|仍有环位置、channel 区间和逻辑 chunk|设备模板分别走 LLGenericOp、GenericOp。LL 16 B 行含 8 B 数据，LL128 128 B 行含 120 B 数据；Host 在计算可用 chunk 时扣除标志开销。Simple 的两片、每片两步仅用于相应 Simple 特化。[容量计算](../../src/include/coll_sizes.h#L115) · [LL](../../src/device/prims_ll.h#L239) · [LL128](../../src/device/prims_ll128.h#L297)|
 
 同一 API 还有选路条件。例如普通 Broadcast 可被批量广播优化收进 AllGatherV 队列，NET 注册且 one-RPN 的 Ring AllGather 可以采用大 chunk 并分工进行本地复制。读性能日志时要先确认实际落到哪条实现。[Broadcast 建任务](../../src/enqueue/enqueue.cc#L2849) · [注册 AllGather 的代理覆盖](../../src/enqueue/enqueue.cc#L2534)
+
+[同一组四卡输入换 Simple、LL 和 LL128，逐个核对尾圈与 FIFO 字节数](08-ring-protocols.md)。
